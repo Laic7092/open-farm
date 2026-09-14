@@ -41,6 +41,7 @@ const TITLE_SCENE: String = "res://scenes/title/title_screen.tscn"
 
 
 func _ready() -> void:
+	PointerInput.hide_cursor()
 	GameState.set_playtime_counting(true)
 	EventBus.pause_menu_toggle_requested.connect(_on_pause_menu_requested)
 
@@ -59,6 +60,12 @@ static func return_to_title(tree: SceneTree) -> void:
 	tree.paused = false
 	SceneRouter.clear_world_cache()
 	tree.change_scene_to_file(TITLE_SCENE)
+
+
+func _input(event: InputEvent) -> void:
+	# 纯键盘操作：指针事件一律吞掉，避免隐藏的光标误触 UI。
+	if PointerInput.is_pointer(event):
+		get_viewport().set_input_as_handled()
 
 
 func _unhandled_input(event: InputEvent) -> void:
