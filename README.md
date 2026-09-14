@@ -395,3 +395,4 @@ Godot 导入后即可无缝循环。
 - 本仓库的 [架构与设计决策](docs/architecture.md) —— 每个"为什么不按常见教程写"的答案、以及踩过的 Godot 坑
 - 本仓库的 [美术资源规范](docs/art_pipeline.md) —— 为什么美术也应当是代码，以及怎么加新素材
 - 本仓库的 [音频资源规范](docs/audio_pipeline.md) —— 为什么音频也应当是代码，以及怎么加新音色
+- [AGENTS.md](AGENTS.md) —— 给编码 Agent 的项目速览（新会话自动加载，少做侦察）
