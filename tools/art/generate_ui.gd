@@ -31,6 +31,7 @@ func _initialize() -> void:
 	Art.save_png(_button(P.UI_PANEL_DARK.lerp(P.UI_BORDER, 0.6), false), DIR.path_join("button_disabled.png"))
 	Art.save_png(_slot(P.UI_SLOT, P.UI_SLOT_HOVER), DIR.path_join("slot.png"))
 	Art.save_png(_slot(P.UI_SLOT_HOVER, P.UI_GOLD), DIR.path_join("slot_selected.png"))
+	Art.save_png(_list_focus(), DIR.path_join("list_focus.png"))
 	Art.save_png(_bar(P.STAMINA_BACK), DIR.path_join("bar_back.png"))
 	Art.save_png(_bar(P.STAMINA_FILL), DIR.path_join("bar_fill.png"))
 	Art.save_png(_icon_coin(), DIR.path_join("icon_coin.png"))
@@ -98,6 +99,17 @@ func _button_focus() -> Image:
 		Vector2i(0, 0), Vector2i(size.x - 1, 0), Vector2i(0, size.y - 1), Vector2i(size.x - 1, size.y - 1)
 	]:
 		Art.px(image, corner.x, corner.y, Color(0, 0, 0, 0))
+	return image
+
+
+## 列表焦点框：只画一圈金边，中间保持透明。
+##
+## [ItemList] 把 focus 样式画在[b]所有条目之上[/b]（Godot 的绘制顺序如此），
+## 所以这里不能像按钮那样填底色——否则整张列表会被一块不透明色盖住。
+func _list_focus() -> Image:
+	var size := Layout.UI_SLOT_SIZE
+	var image := Art.new_image(size.x, size.y)
+	Art.frame_rect(image, Rect2i(0, 0, size.x, size.y), P.UI_GOLD)
 	return image
 
 

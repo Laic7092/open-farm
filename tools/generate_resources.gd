@@ -175,7 +175,8 @@ func _build_theme() -> void:
 	theme.set_font_size(&"font_size", &"Button", Layout.TILE - 4)
 
 	theme.set_stylebox(&"panel", &"ItemList", panel)
-	theme.set_stylebox(&"focus", &"ItemList", slot_selected)
+	# 焦点框只画边：ItemList 会把它盖在条目上，填色会遮住整张列表。
+	theme.set_stylebox(&"focus", &"ItemList", _stylebox("list_focus.png", 2, 2))
 	theme.set_stylebox(&"selected", &"ItemList", slot_selected)
 	theme.set_stylebox(&"selected_focus", &"ItemList", slot_selected)
 	theme.set_color(&"font_color", &"ItemList", Palette.UI_TEXT)

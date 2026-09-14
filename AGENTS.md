@@ -107,6 +107,8 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 - `AudioServer.add_bus() / set_bus_send() / get_bus_index()` 可在运行时建总线。
 - `--quit-after <n>` 是主循环迭代数；`-s` 脚本的 `_initialize()` 在主循环开始前同步跑完。
 - `.godot/imported/<file>-<hash>.<ext>` 的 hash **基于路径**：重新生成同名文件不会改 `.import`。
+- `ItemList` 把 `focus` 样式画在**所有条目之上**：焦点样式只能画边（`list_focus.png`），
+  填底色会把整张列表盖住（`Button` 的 `focus` 是背景，不受影响）。
 
 ## 7. 提交
 
