@@ -3,7 +3,7 @@ extends CharacterBody2D
 ## 玩家角色。
 ##
 ## 职责边界：
-## [br]- 持有体力 / 背包 / 工具腰带这些[b]属于角色自己[/b]的状态
+## [br]- 持有体力 / 背包这些[b]属于角色自己[/b]的状态（物品栏只是背包的快捷视图）
 ## [br]- 提供朝向、动画、目标格子等[b]能力[/b]给状态机使用
 ## [br]- 处理"面前有东西就交互"这类[b]输入意图[/b]
 ##
@@ -13,7 +13,7 @@ extends CharacterBody2D
 ## 玩家所在分组（全局唯一，场景路由与存档都依赖它）。
 const GROUP: StringName = &"player"
 
-## 开局自带的工具。
+## 开局自带的工具（作为普通道具放进背包，不会消耗）。
 ##
 ## 斧头与镐子必须自带：世界会自己长树长石头，玩家没有清理手段的话，
 ## "更真实的世界"就变成了"走不动的世界"。
@@ -32,10 +32,10 @@ const DEFAULT_TOOLS: Array[StringName] = [
 var facing: Facing.Direction = Facing.Direction.DOWN
 ## 体力。
 var stats: PlayerStats
-## 背包。
+## 背包（唯一存放道具的地方，工具也在里面）。
 var inventory: Inventory
-## 工具腰带。
-var tool_belt: ToolBelt
+## 物品栏：背包前几格的快捷访问视图，不存放任何道具。
+var item_bar: ItemBar
 ## 手动选中的种子；为空时自动取背包里的第一种种子。
 var selected_seed_id: StringName = &""
 
@@ -55,7 +55,9 @@ var _nearby: Array[Interactable] = []
 func _init() -> void:
 	stats = PlayerStats.new()
 	inventory = Inventory.new()
-	tool_belt = ToolBelt.new(DEFAULT_TOOLS)
+	item_bar = ItemBar.new(inventory)
+	# 背包是唯一的道具来源；它一变就通知 UI 重新读一遍。
+	inventory.changed.connect(_on_inventory_changed)
 
 
 func _enter_tree() -> void:
@@ -71,10 +73,10 @@ func _ready() -> void:
 	interaction_area.area_exited.connect(_on_area_exited)
 
 	sprite.flip_h = Facing.flip_h(facing)
-	_emit_all()
-
+	_grant_default_tools()
 	if not inventory.has(&"turnip_seed"):
 		inventory.add(&"turnip_seed", 5)
+	_emit_all()
 
 
 func _exit_tree() -> void:
@@ -84,9 +86,9 @@ func _exit_tree() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# 状态机（子节点）先收到事件并可能消费掉；这里只处理"随时可用"的快捷键。
 	if event.is_action_pressed(&"tool_next"):
-		tool_belt.next()
+		item_bar.next()
 	elif event.is_action_pressed(&"tool_prev"):
-		tool_belt.prev()
+		item_bar.prev()
 	elif event.is_action_pressed(&"open_inventory"):
 		EventBus.inventory_toggle_requested.emit()
 	elif event.is_action_pressed(&"give_gift"):
@@ -244,7 +246,7 @@ func to_dict() -> Dictionary:
 		"selected_seed_id": String(selected_seed_id),
 		"stats": stats.to_dict(),
 		"inventory": inventory.to_dict(),
-		"tool_belt": tool_belt.to_dict(),
+		"item_bar": item_bar.to_dict(),
 	}
 
 
@@ -264,9 +266,13 @@ func from_dict(data: Dictionary) -> void:
 	var raw_inventory: Variant = data.get("inventory", {})
 	if raw_inventory is Dictionary:
 		inventory.from_dict(raw_inventory)
-	var raw_belt: Variant = data.get("tool_belt", {})
-	if raw_belt is Dictionary:
-		tool_belt.from_dict(raw_belt)
+	# 旧存档把工具单独放在 tool_belt 里；先并回背包，再补齐开局工具。
+	_migrate_legacy_tool_belt(data)
+	_grant_default_tools()
+
+	var raw_bar: Variant = data.get("item_bar", {})
+	if raw_bar is Dictionary:
+		item_bar.from_dict(raw_bar)
 	_emit_all()
 
 
@@ -340,8 +346,37 @@ func _on_day_rollover(_date: GameDate) -> void:
 		stats.refill()
 
 
+## 背包内容变化后转发给 UI（物品栏与背包界面都订阅 [signal EventBus.inventory_changed]）。
+func _on_inventory_changed() -> void:
+	EventBus.inventory_changed.emit()
+
+
 func _emit_all() -> void:
 	EventBus.stamina_changed.emit(stats.stamina, stats.max_stamina)
 	EventBus.inventory_changed.emit()
-	EventBus.tool_changed.emit(tool_belt.selected_id(), tool_belt.selected_index())
+	EventBus.hand_changed.emit(item_bar.selected_item_id(), item_bar.hand_index())
 	EventBus.player_facing_changed.emit(facing)
+
+
+## 保证背包里一定有开局工具（幂等：已有就不再加）。
+func _grant_default_tools() -> void:
+	for tool_id: StringName in DEFAULT_TOOLS:
+		if not inventory.has(tool_id):
+			inventory.add(tool_id, 1)
+
+
+## 把旧存档 [code]tool_belt[/code] 里的工具并回背包。
+##
+## 旧版本把工具当成"背包之外的永久库存"，新版本里工具就是普通道具；
+## 这里只做一次性兼容，缺的工具之后由 [method _grant_default_tools] 补齐。
+func _migrate_legacy_tool_belt(data: Dictionary) -> void:
+	var legacy: Variant = data.get("tool_belt", {})
+	if not (legacy is Dictionary):
+		return
+	var raw: Variant = (legacy as Dictionary).get("tools", [])
+	if not (raw is Array):
+		return
+	for entry: Variant in raw:
+		var tool_id := StringName(str(entry))
+		if tool_id != &"" and not inventory.has(tool_id):
+			inventory.add(tool_id, 1)

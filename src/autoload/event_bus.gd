@@ -39,8 +39,8 @@ signal money_changed(money: int, delta: int)
 signal inventory_changed()
 ## 背包已满，新物品放不下。
 signal inventory_full(item_id: StringName)
-## 当前手持工具切换。
-signal tool_changed(tool_id: StringName, index: int)
+## 当前手持道具切换（即物品栏选中的那一格）；[param index] 为背包下标。
+signal hand_changed(item_id: StringName, index: int)
 ## 玩家朝向变化。
 signal player_facing_changed(direction: Facing.Direction)
 

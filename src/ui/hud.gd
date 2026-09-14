@@ -5,9 +5,9 @@ extends Control
 ## 单向数据流：HUD 只[b]订阅[/b] [EventBus]，从不主动去问游戏状态，
 ## 因此它可以在任何场景里存在，也不影响任何模拟逻辑。
 ##
-## 本轮整理目标：把文字压缩到必要信息（天气 / 预报 / 手持都改成图标），
-## 并在底部加入常驻物品栏。物品栏前半段是工具腰带，后半段是背包前几格，
-## 这样 Q / R 切换工具时不需要低头找文字，也能一眼看到刚捡到的道具。
+## 底部常驻物品栏只是背包前几格的[b]快捷访问视图[/b]，不存放任何道具；
+## 工具也放在背包里。Q / R 在装有工具的格子之间切换，
+## 因此不需要低头找文字，也能一眼看到刚捡到的道具。
 
 ## 浮动提示停留时长（秒）。
 const TOAST_DURATION: float = 2.2
@@ -15,8 +15,8 @@ const TOAST_DURATION: float = 2.2
 ## 天气图标：与 [method Weather.to_key] 的返回值一一对应。
 const WEATHER_ICON_DIR: String = "res://assets/ui"
 
-## 底部物品栏格数。前几格显示工具腰带，剩余格显示背包前几格。
-const ITEM_BAR_SIZE: int = 12
+## 底部物品栏格数（= 背包的前几格）。
+const ITEM_BAR_SIZE: int = ItemBar.SIZE
 
 ## 物品栏格子场景。
 const HUD_SLOT_SCENE: PackedScene = preload("res://scenes/ui/hud_slot.tscn")
@@ -52,7 +52,7 @@ func _ready() -> void:
 	EventBus.festival_day_started.connect(_on_festival_day_started)
 	EventBus.money_changed.connect(_on_money_changed)
 	EventBus.stamina_changed.connect(_on_stamina_changed)
-	EventBus.tool_changed.connect(_on_tool_changed)
+	EventBus.hand_changed.connect(_on_hand_changed)
 	EventBus.inventory_changed.connect(_on_inventory_changed)
 	EventBus.interaction_prompt_changed.connect(_on_prompt_changed)
 	EventBus.notification_requested.connect(_on_notification)
@@ -72,7 +72,7 @@ func _refresh_all() -> void:
 	_refresh_weather()
 	_on_money_changed(GameState.money, 0)
 	_refresh_item_bar()
-	_refresh_tool_icon()
+	_refresh_hand()
 
 
 func _refresh_date() -> void:
@@ -117,21 +117,21 @@ func _weather_icon(weather: Weather.Type) -> Texture2D:
 	return texture
 
 
-func _refresh_tool_icon() -> void:
-	var tool_id := _player_tool_id()
+func _refresh_hand() -> void:
+	var item_id := _hand_item_id()
 	# 旧的手持文字行已经隐藏，但保留节点以便兼容外部查找；
-	# 真正的手持工具由底部物品栏高亮显示。
-	tool_label.text = Text.tool_name(tool_id)
-	tool_icon.texture = _item_icon(tool_id)
+	# 真正的手持道具由底部物品栏高亮显示。
+	tool_label.text = Text.item_name(item_id)
+	tool_icon.texture = _item_icon(item_id)
 
 
 func _player() -> Player:
 	return get_tree().get_first_node_in_group(Player.GROUP) as Player
 
 
-func _player_tool_id() -> StringName:
+func _hand_item_id() -> StringName:
 	var player := _player()
-	return player.tool_belt.selected_id() if player != null else &""
+	return player.item_bar.selected_item_id() if player != null else &""
 
 
 # ---------------------------------------------------------------- 物品栏
@@ -151,7 +151,9 @@ func _build_item_bar() -> void:
 		_item_slots.append(slot)
 
 
-## 刷新底部物品栏：工具腰带 + 背包前几格。
+## 刷新底部物品栏：直接映射背包的前几格。
+##
+## 物品栏不存放任何道具，所以这里只做"读背包 + 标出当前手持格"。
 func _refresh_item_bar() -> void:
 	if _item_slots.is_empty():
 		return
@@ -162,25 +164,17 @@ func _refresh_item_bar() -> void:
 			slot.clear()
 		return
 
-	var tool_ids: Array[StringName] = player.tool_belt.tool_ids
-	var selected_index := player.tool_belt.selected_index()
-	var bar_index := 0
-
-	for tool_index: int in mini(tool_ids.size(), _item_slots.size()):
-		_item_slots[bar_index].set_item(tool_ids[tool_index], 1, tool_index == selected_index)
-		bar_index += 1
-
-	var inventory: Inventory = player.inventory
-	for inventory_index: int in inventory.capacity:
-		if bar_index >= _item_slots.size():
-			break
-		var inventory_slot: InventorySlot = inventory.slots[inventory_index]
-		_item_slots[bar_index].set_item(inventory_slot.item_id, inventory_slot.count)
-		bar_index += 1
-
-	while bar_index < _item_slots.size():
-		_item_slots[bar_index].clear()
-		bar_index += 1
+	var item_bar: ItemBar = player.item_bar
+	var selected := item_bar.hand_index()
+	for bar_index: int in _item_slots.size():
+		var backpack_index := item_bar.slot_index(bar_index)
+		if backpack_index < 0:
+			_item_slots[bar_index].clear()
+			continue
+		var inventory_slot: InventorySlot = player.inventory.slots[backpack_index]
+		_item_slots[bar_index].set_item(
+			inventory_slot.item_id, inventory_slot.count, backpack_index == selected
+		)
 
 
 # ---------------------------------------------------------------- 事件
@@ -210,9 +204,8 @@ func _on_stamina_changed(current: int, maximum: int) -> void:
 	stamina_bar.value = current
 
 
-func _on_tool_changed(tool_id: StringName, _index: int) -> void:
-	tool_label.text = Text.tool_name(tool_id)
-	tool_icon.texture = _item_icon(tool_id)
+func _on_hand_changed(_item_id: StringName, _index: int) -> void:
+	_refresh_hand()
 	_refresh_item_bar()
 
 
@@ -220,7 +213,7 @@ func _on_inventory_changed() -> void:
 	_refresh_item_bar()
 
 
-## 手持工具的图标：工具既是 [ToolData] 也是 [ItemData]，图标挂在道具上。
+## 手持道具的图标：工具本身就是 [ItemData]，图标挂在道具上。
 func _item_icon(item_id: StringName) -> Texture2D:
 	var item := Database.get_item(item_id)
 	return item.icon if item != null else null

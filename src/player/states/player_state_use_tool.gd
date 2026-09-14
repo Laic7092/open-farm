@@ -22,7 +22,7 @@ func enter(_previous: State) -> void:
 	player = actor as Player
 	_elapsed = 0.0
 	_applied = false
-	_tool = player.tool_belt.selected_tool()
+	_tool = player.item_bar.selected_tool()
 	_cell = player.target_cell()
 	player.velocity = Vector2.ZERO
 	player.play_animation(&"use")

@@ -179,7 +179,7 @@ add_child（同一个实例）→ _enter_tree     ← 没有 _ready 了
 | 只做一次的初始化 | `_init()` 或 `_ready()` | 背包/体力的构造（`_init`）、铺地面（`_ready`） |
 | 只跑一次但要能重跑 | 显式方法 | `FarmGrid.paint_ground()` 是幂等的，重跑无害 |
 
-`Player` 的 `stats`/`inventory`/`tool_belt` 放在 `_init()` 而不是 `_ready()`，
+`Player` 的 `stats`/`inventory`/`item_bar` 放在 `_init()` 而不是 `_ready()`，
 就是为了让"多次进出树"这件事永远不会意外重置玩家状态。
 
 ### 3.3 用有序钩子而不是信号做日结转
