@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/crops.png" id="1_texture"]
+[ext_resource type="Script" path="res://src/farm/crop.gd" id="2_script"]
+
+[node name="Crop" type="Sprite2D"]
+texture = ExtResource("1_texture")
+hframes = 5
+script = ExtResource("2_script")

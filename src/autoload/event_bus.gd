@@ -1,0 +1,104 @@
+extends Node
+## 全局事件总线（Autoload：`EventBus`）。
+##
+## [b]为什么需要它[/b]：Godot 最佳实践建议"用信号而不是硬引用"，
+## 但把信号连到[code]get_node("../../../HUD")[/code]这类长路径上同样脆弱。
+## 事件总线把"谁发出"和"谁关心"彻底解耦：生产者只 emit，消费者只 connect，
+## 双方都不需要知道对方是否存在。
+##
+## [b]使用约定[/b]
+## [br]- 本脚本[b]只允许声明信号[/b]，不写任何逻辑与状态；
+## [br]- 一对一的父子通信仍然直接用节点信号，不要绕道 EventBus；
+## [br]- 需要"确定性执行顺序"的模拟逻辑请用 [method GameClock.register_day_hook]，
+##   不要依赖信号连接顺序（信号回调顺序在 Godot 中不作保证）。
+
+# ---------------------------------------------------------------- 时间 / 日历
+
+## 游戏内分钟推进（用于时钟 UI 刷新）。
+signal minute_changed(hour: int, minute: int)
+## 整点。
+signal hour_changed(hour: int)
+## 日期推进（季节 / 年份变化时也会先发对应信号再发本信号）。
+signal day_changed(date: GameDate)
+## 季节变化。
+signal season_changed(season: Season.Type)
+## 年份变化。
+signal year_changed(year: int)
+## 天气变化。
+signal weather_changed(weather: Weather.Type)
+
+# ---------------------------------------------------------------- 玩家
+
+## 体力变化。
+signal stamina_changed(current: int, maximum: int)
+## 体力归零（需要昏倒 / 强制回家）。
+signal stamina_depleted()
+## 金钱变化；[param delta] 为本次增量。
+signal money_changed(money: int, delta: int)
+## 背包内容变化。
+signal inventory_changed()
+## 背包已满，新物品放不下。
+signal inventory_full(item_id: StringName)
+## 当前手持工具切换。
+signal tool_changed(tool_id: StringName, index: int)
+## 玩家朝向变化。
+signal player_facing_changed(direction: Facing.Direction)
+
+# ---------------------------------------------------------------- 农场
+
+## 成功翻地。
+signal tile_tilled(cell: Vector2i)
+## 成功浇水。
+signal tile_watered(cell: Vector2i)
+## 播种成功。
+signal crop_planted(cell: Vector2i, crop_id: StringName)
+## 作物生长阶段变化。
+signal crop_stage_changed(cell: Vector2i, stage: int)
+## 收获成功。
+signal crop_harvested(cell: Vector2i, item_id: StringName, amount: int)
+## 作物枯死。
+signal crop_died(cell: Vector2i)
+## 使用了工具（含失败尝试，用于播放动画/音效反馈）。
+signal tool_used(tool_id: StringName, cell: Vector2i, success: bool)
+
+# ---------------------------------------------------------------- 交互 / 对话 / 商店
+
+## 玩家进入 / 离开可交互范围，[param prompt_key] 为空表示无提示。
+signal interaction_prompt_changed(prompt_key: StringName)
+## 请求 UI 播放一段对话。
+signal dialogue_requested(dialogue: DialogueData)
+## 对话开始 / 结束。
+signal dialogue_started(dialogue: DialogueData)
+signal dialogue_finished(dialogue: DialogueData)
+## 请求打开商店。
+signal shop_requested(shop_id: StringName)
+## 商店开关。
+signal shop_opened(shop: ShopData)
+signal shop_closed()
+## 一笔交易完成；[param is_purchase] 为 true 表示玩家买入。
+signal transaction_completed(
+	item_id: StringName, count: int, total_price: int, is_purchase: bool
+)
+
+# ---------------------------------------------------------------- 存档 / 场景
+
+## 存档 / 读档完成。
+signal save_completed(slot: int, success: bool)
+signal load_completed(slot: int, success: bool)
+## 场景切换开始 / 结束。
+signal scene_transition_started(target: StringName)
+signal scene_transition_finished(target: StringName)
+
+# ---------------------------------------------------------------- UI / 系统
+
+## 请求显示一条浮动提示。
+##
+## [param args] 为具名占位符表，会交给 [method String.format] 填充，
+## 例如 [code]{"item": "萝卜", "count": 3}[/code] 对应文案 "收获了 {item} ×{count}"。
+signal notification_requested(text_key: StringName, args: Dictionary)
+## 请求打开 / 关闭背包。
+signal inventory_toggle_requested()
+## 请求打开 / 关闭系统菜单。
+signal pause_menu_toggle_requested()
+## 全局暂停状态变化（打开菜单 / 对话 / 商店时）。
+signal game_paused_changed(paused: bool)

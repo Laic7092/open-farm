@@ -1,0 +1,27 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/ui/ui_root.gd" id="1_ui_root"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dialogue_box.tscn" id="3_dialogue"]
+[ext_resource type="PackedScene" path="res://scenes/ui/inventory_ui.tscn" id="4_inventory"]
+[ext_resource type="PackedScene" path="res://scenes/ui/shop_ui.tscn" id="5_shop"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="6_pause"]
+
+[node name="UiRoot" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_ui_root")
+
+[node name="Hud" parent="." instance=ExtResource("2_hud")]
+unique_name_in_owner = true
+
+[node name="DialogueBox" parent="." instance=ExtResource("3_dialogue")]
+unique_name_in_owner = true
+
+[node name="InventoryUi" parent="." instance=ExtResource("4_inventory")]
+unique_name_in_owner = true
+
+[node name="ShopUi" parent="." instance=ExtResource("5_shop")]
+unique_name_in_owner = true
+
+[node name="PauseMenu" parent="." instance=ExtResource("6_pause")]
+unique_name_in_owner = true

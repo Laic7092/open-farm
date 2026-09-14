@@ -1,4 +1,12 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# 引擎可执行文件（开发环境把它放在仓库根目录，不入版本库）
 godot
+
+# 工具产物：截图、临时存档
+.tmp/
+
+# gdUnit4 生成的测试报告
+reports/

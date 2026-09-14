@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="1_q2cdq"]
+
+[resource]
+script = ExtResource("1_q2cdq")
+id = &"watering_can"
+display_name_key = &"ITEM_WATERING_CAN"
+description_key = &"TOOL_WATERING_CAN_DESC"
+category = 2
+stack_limit = 1
+sellable = false
+tool_id = &"watering_can"

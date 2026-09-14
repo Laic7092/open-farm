@@ -1,0 +1,88 @@
+keys,zh_CN,en
+SEASON_SPRING,春,Spring
+SEASON_SUMMER,夏,Summer
+SEASON_FALL,秋,Fall
+SEASON_WINTER,冬,Winter
+WEATHER_SUNNY,晴,Sunny
+WEATHER_CLOUDY,阴,Cloudy
+WEATHER_RAINY,雨,Rainy
+WEATHER_STORMY,暴风雨,Stormy
+WEATHER_SNOWY,雪,Snowy
+DATE_FORMAT,第 {year} 年 {season} {day} 日,Year {year} {season} {day}
+HUD_MONEY,{value}G,{value}G
+HUD_STAMINA,体力,Stamina
+HUD_TOOL,手持,Equipped
+HUD_FORECAST,明日 {weather},Tomorrow: {weather}
+HUD_TIME,{time},{time}
+PROMPT_INTERACT,按 E 交互,Press E to interact
+PROMPT_ENTER,按 E 进入,Press E to enter
+PROMPT_TALK,按 E 交谈,Press E to talk
+PROMPT_SHOP,按 E 进入商店,Press E to shop
+PROMPT_BED,按 E 睡觉,Press E to sleep
+PROMPT_SHIPPING_BIN,按 E 出货,Press E to ship
+NOTIFY_SAVED,已保存到存档 {slot},Saved to slot {slot}
+NOTIFY_LOADED,已读取存档 {slot},Loaded slot {slot}
+NOTIFY_SAVE_FAILED,保存失败,Saving failed
+NOTIFY_LOAD_FAILED,读档失败,Loading failed
+NOTIFY_INVENTORY_FULL,背包满了,Inventory full
+NOTIFY_STAMINA_DEPLETED,体力耗尽了……,You are out of stamina...
+NOTIFY_NOTHING_HAPPENED,什么也没发生,Nothing happened
+NOTIFY_NOTHING_TO_SHIP,没有可以出货的东西,Nothing to ship
+NOTIFY_OUT_OF_STOCK,库存不足,Out of stock
+NOTIFY_SLEEPING,睡觉了……,Sleeping...
+NOTIFY_SHIPPED,出货 {count} 件，收入 {total}G,Shipped {count} items for {total}G
+NOTIFY_CROP_HARVESTED,收获了 {item} ×{count},Harvested {item} x{count}
+NOTIFY_PLANTED,种下了 {item},Planted {item}
+NOTIFY_TILE_TILLED,翻好了土,Soil tilled
+NOTIFY_TILE_WATERED,浇好了水,Watered
+NOTIFY_CANNOT_TILL,这里不能翻地,Cannot till here
+NOTIFY_OUT_OF_SEASON,这个季节种不了,Out of season
+NOTIFY_NOT_ENOUGH_MONEY,钱不够,Not enough money
+NOTIFY_CROP_DIED,作物枯死了,A crop withered
+ITEM_TURNIP_SEED,萝卜种子,Turnip Seeds
+ITEM_TURNIP,萝卜,Turnip
+ITEM_POTATO_SEED,土豆种子,Potato Seeds
+ITEM_POTATO,土豆,Potato
+ITEM_TOMATO_SEED,番茄种子,Tomato Seeds
+ITEM_TOMATO,番茄,Tomato
+ITEM_HOE,锄头,Hoe
+ITEM_WATERING_CAN,洒水壶,Watering Can
+ITEM_SICKLE,镰刀,Sickle
+ITEM_WOOD,木材,Wood
+TOOL_HOE_DESC,用来翻地，把草地变成可耕种的土地。,Tills grass into farmable soil.
+TOOL_WATERING_CAN_DESC,给作物浇水，作物才会生长。,Waters crops so they keep growing.
+TOOL_SICKLE_DESC,清除枯死的作物。,Clears withered crops.
+SHOP_GENERAL_STORE,杂货店,General Store
+SHOP_UI_TITLE,商店,Shop
+SHOP_UI_BUY,购买,Buy
+SHOP_UI_SELL,卖出,Sell
+SHOP_UI_PRICE,单价 {value}G,{value}G each
+SHOP_UI_STOCK,库存 {value},Stock {value}
+SHOP_UI_UNLIMITED,充足,Plenty
+SHOP_UI_CLOSE,离开,Leave
+SHOP_UI_OWNED,持有 {value},Owned {value}
+SHOP_UI_HINT,方向键选择，E 确认，Esc 离开,Arrows to select / E to confirm / Esc to leave
+INVENTORY_TITLE,背包,Inventory
+INVENTORY_HINT,按 Tab 或 Esc 关闭,Press Tab or Esc to close
+INVENTORY_EMPTY,（空）,（empty）
+DIALOGUE_ADVANCE_HINT,按 E 继续,Press E to continue
+NPC_MERCHANT,杂货店老板,Store Owner
+NPC_MAYOR,村长,Mayor
+DIALOGUE_MERCHANT_GREETING,欢迎光临，今天要买点什么吗？,Welcome! Buying anything today?
+DIALOGUE_MERCHANT_WEATHER,今天天气不错，地里的活儿会顺利的。,Nice weather today. Good for the fields.
+DIALOGUE_MERCHANT_RAIN,下雨天不用浇水，可以省点力气。,Rain saves you the watering.
+DIALOGUE_MERCHANT_CLOSING,谢谢惠顾，慢走！,Thanks, come again!
+DIALOGUE_MAYOR_GREETING,早啊，年轻人。农场就交给你了。,Morning. The farm is in your hands now.
+DIALOGUE_MAYOR_TIP,别忘了给作物浇水，不然它们会枯掉的。,Don't forget to water your crops, or they wilt.
+DIALOGUE_MAYOR_SEASON,换季的时候，能种的东西就变了。,When the season turns, so do your crops.
+CROP_TURNIP,萝卜,Turnip
+CROP_POTATO,土豆,Potato
+CROP_TOMATO,番茄,Tomato
+MENU_TITLE,菜单,Menu
+MENU_RESUME,继续游戏,Resume
+MENU_SAVE,保存进度,Save
+MENU_LOAD,读取进度,Load
+MENU_QUIT,退出,Quit
+MENU_PAUSED,游戏已暂停,Paused
+GAME_TITLE,牧场物语 · 复刻,Open Farm
+GAME_SUBTITLE,一个用 Godot 4 搭建的农场生活模拟原型,A farming-life prototype built with Godot 4

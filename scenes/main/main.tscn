@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ui_root.tscn" id="2_ui_root"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="WorldHost" type="Node2D" parent="." groups=["world_host"]]
+unique_name_in_owner = true
+
+[node name="UiRoot" parent="." instance=ExtResource("2_ui_root")]
+unique_name_in_owner = true

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="1_pkq13"]
+
+[resource]
+script = ExtResource("1_pkq13")
+id = &"wood"
+display_name_key = &"ITEM_WOOD"
+sell_price = 5

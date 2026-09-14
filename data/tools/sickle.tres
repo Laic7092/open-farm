@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ToolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/tool_data.gd" id="1_7nivw"]
+
+[resource]
+script = ExtResource("1_7nivw")
+id = &"sickle"
+display_name_key = &"ITEM_SICKLE"
+kind = 5
+stamina_cost = 1

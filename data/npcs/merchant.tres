@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="NpcData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/merchant_greeting.tres" id="1_jjrxm"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="2_6tut3"]
+
+[resource]
+script = ExtResource("2_6tut3")
+id = &"merchant"
+display_name_key = &"NPC_MERCHANT"
+default_dialogue = ExtResource("1_jjrxm")
+shop_id = &"general_store"

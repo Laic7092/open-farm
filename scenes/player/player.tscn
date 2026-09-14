@@ -1,0 +1,62 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://src/player/player.gd" id="1_player"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/player_frames.tres" id="2_frames"]
+[ext_resource type="Script" path="res://src/core/state_machine.gd" id="3_state_machine"]
+[ext_resource type="Script" path="res://src/player/states/player_state_idle.gd" id="4_idle"]
+[ext_resource type="Script" path="res://src/player/states/player_state_walk.gd" id="5_walk"]
+[ext_resource type="Script" path="res://src/player/states/player_state_use_tool.gd" id="6_use_tool"]
+[ext_resource type="Script" path="res://src/farm/farm_interactor.gd" id="7_interactor"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(10, 8)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_reach"]
+radius = 20.0
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 1
+motion_mode = 1
+script = ExtResource("1_player")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+unique_name_in_owner = true
+sprite_frames = ExtResource("2_frames")
+animation = &"idle_down"
+autoplay = "idle_down"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 4)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="InteractionArea" type="Area2D" parent="."]
+unique_name_in_owner = true
+collision_layer = 0
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea"]
+position = Vector2(0, 2)
+shape = SubResource("CircleShape2D_reach")
+
+[node name="FarmInteractor" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("7_interactor")
+
+[node name="StateMachine" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("3_state_machine")
+initial_state_name = &"idle"
+
+[node name="Idle" type="Node" parent="StateMachine"]
+script = ExtResource("4_idle")
+
+[node name="Walk" type="Node" parent="StateMachine"]
+script = ExtResource("5_walk")
+
+[node name="UseTool" type="Node" parent="StateMachine"]
+script = ExtResource("6_use_tool")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position_smoothing_enabled = true
+position_smoothing_speed = 8.0

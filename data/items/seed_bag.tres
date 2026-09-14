@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="1_kxci4"]
+
+[resource]
+script = ExtResource("1_kxci4")
+id = &"seed_bag"
+display_name_key = &"ITEM_SEED_BAG"
+category = 2
+sellable = false
+tool_id = &"seed_bag"

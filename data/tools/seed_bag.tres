@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ToolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/tool_data.gd" id="1_tad8s"]
+
+[resource]
+script = ExtResource("1_tad8s")
+id = &"seed_bag"
+display_name_key = &"ITEM_SEED_BAG"
+kind = 2
+stamina_cost = 1

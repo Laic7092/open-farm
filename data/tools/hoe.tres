@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="ToolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/tool_data.gd" id="1_rx8py"]
+
+[resource]
+script = ExtResource("1_rx8py")
+id = &"hoe"
+display_name_key = &"ITEM_HOE"

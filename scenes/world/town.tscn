@@ -1,0 +1,66 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
+[ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
+[ext_resource type="Script" path="res://src/world/world_bounds.gd" id="3_bounds"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="4_player"]
+[ext_resource type="Script" path="res://src/core/spawn_point.gd" id="5_spawn"]
+[ext_resource type="Script" path="res://src/world/scene_door.gd" id="6_door"]
+[ext_resource type="PackedScene" path="res://scenes/npc/npc.tscn" id="7_npc"]
+[ext_resource type="Script" path="res://src/world/town_ground.gd" id="8_ground"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
+size = Vector2(16, 16)
+
+[node name="Town" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_world")
+world_id = &"town"
+camera_limits = Rect2(0, 0, 640, 416)
+default_spawn_id = &"from_farm"
+
+[node name="Ground" type="TileMapLayer" parent="."]
+z_index = -20
+tile_set = ExtResource("2_tileset")
+script = ExtResource("8_ground")
+ground_area = Rect2i(0, 0, 40, 26)
+
+[node name="Bounds" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("3_bounds")
+bounds = Rect2(8, 8, 624, 400)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="FromFarm" type="Marker2D" parent="Spawns"]
+position = Vector2(72, 360)
+script = ExtResource("5_spawn")
+spawn_id = &"from_farm"
+facing = 3
+
+[node name="Interactables" type="Node2D" parent="."]
+
+[node name="ToFarm" type="Area2D" parent="Interactables"]
+position = Vector2(40, 360)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("6_door")
+prompt_key = &"PROMPT_ENTER"
+target_scene = "res://scenes/world/farm.tscn"
+target_spawn_id = &"from_town"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToFarm"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="Npcs" type="Node2D" parent="."]
+
+[node name="Merchant" parent="Npcs" instance=ExtResource("7_npc")]
+position = Vector2(328, 168)
+
+[node name="Mayor" parent="Npcs" instance=ExtResource("7_npc")]
+position = Vector2(408, 232)
+npc_id = &"mayor"
+
+[node name="Player" parent="." instance=ExtResource("4_player")]
+position = Vector2(72, 360)

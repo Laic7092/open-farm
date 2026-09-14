@@ -1,0 +1,109 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
+[ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
+[ext_resource type="Script" path="res://src/farm/farm_grid.gd" id="3_farm_grid"]
+[ext_resource type="PackedScene" path="res://scenes/farm/crop.tscn" id="4_crop"]
+[ext_resource type="Script" path="res://src/world/world_bounds.gd" id="5_bounds"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="6_player"]
+[ext_resource type="Script" path="res://src/core/spawn_point.gd" id="7_spawn"]
+[ext_resource type="Script" path="res://src/world/bed.gd" id="8_bed"]
+[ext_resource type="Script" path="res://src/world/shipping_bin.gd" id="9_bin"]
+[ext_resource type="Script" path="res://src/world/scene_door.gd" id="10_door"]
+[ext_resource type="PackedScene" path="res://scenes/npc/npc.tscn" id="11_npc"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
+size = Vector2(16, 16)
+
+[node name="Farm" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_world")
+world_id = &"farm"
+camera_limits = Rect2(0, 0, 768, 480)
+default_spawn_id = &"start"
+
+[node name="Ground" type="TileMapLayer" parent="."]
+z_index = -20
+tile_set = ExtResource("2_tileset")
+
+[node name="Soil" type="TileMapLayer" parent="."]
+z_index = -10
+tile_set = ExtResource("2_tileset")
+
+[node name="Crops" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="FarmGrid" type="Node2D" parent="." node_paths=PackedStringArray("ground_layer", "soil_layer", "crops_root")]
+script = ExtResource("3_farm_grid")
+ground_layer = NodePath("../Ground")
+soil_layer = NodePath("../Soil")
+crops_root = NodePath("../Crops")
+crop_scene = ExtResource("4_crop")
+farmable_area = Rect2i(4, 8, 24, 12)
+ground_area = Rect2i(0, 0, 48, 30)
+persistence_id = &"farm_grid"
+
+[node name="Bounds" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("5_bounds")
+bounds = Rect2(8, 8, 752, 464)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="Start" type="Marker2D" parent="Spawns"]
+position = Vector2(104, 328)
+script = ExtResource("7_spawn")
+spawn_id = &"start"
+
+[node name="FromTown" type="Marker2D" parent="Spawns"]
+position = Vector2(728, 408)
+script = ExtResource("7_spawn")
+spawn_id = &"from_town"
+facing = 2
+
+[node name="Interactables" type="Node2D" parent="."]
+
+[node name="Bed" type="Area2D" parent="Interactables"]
+position = Vector2(40, 360)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("8_bed")
+persistence_id = &"farm_bed"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/Bed"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="ShippingBin" type="Area2D" parent="Interactables"]
+position = Vector2(152, 360)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("9_bin")
+persistence_id = &"farm_shipping_bin"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ShippingBin"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="ToTown" type="Area2D" parent="Interactables"]
+position = Vector2(744, 440)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("10_door")
+prompt_key = &"PROMPT_ENTER"
+target_scene = "res://scenes/world/town.tscn"
+target_spawn_id = &"from_farm"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToTown"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="Npcs" type="Node2D" parent="."]
+
+[node name="Merchant" parent="Npcs" instance=ExtResource("11_npc")]
+position = Vector2(488, 168)
+
+[node name="Mayor" parent="Npcs" instance=ExtResource("11_npc")]
+position = Vector2(584, 232)
+npc_id = &"mayor"
+
+[node name="Player" parent="." instance=ExtResource("6_player")]
+position = Vector2(104, 328)

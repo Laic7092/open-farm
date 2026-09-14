@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ShopData" format=3]
+
+[ext_resource type="Script" path="res://src/data/shop_data.gd" id="1_41vot"]
+[ext_resource type="Script" path="res://src/data/shop_stock.gd" id="2_iac7g"]
+
+[sub_resource type="Resource" id="Resource_t0k2w"]
+script = ExtResource("2_iac7g")
+item_id = &"turnip_seed"
+price_override = 20
+
+[sub_resource type="Resource" id="Resource_x45wp"]
+script = ExtResource("2_iac7g")
+item_id = &"potato_seed"
+price_override = 35
+
+[sub_resource type="Resource" id="Resource_ujkte"]
+script = ExtResource("2_iac7g")
+item_id = &"tomato_seed"
+price_override = 50
+
+[resource]
+script = ExtResource("1_41vot")
+id = &"general_store"
+display_name_key = &"SHOP_GENERAL_STORE"
+stock = Array[ExtResource("2_iac7g")]([SubResource("Resource_t0k2w"), SubResource("Resource_x45wp"), SubResource("Resource_ujkte")])
