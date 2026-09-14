@@ -1,10 +1,12 @@
 [gd_resource type="Resource" script_class="ItemData" format=3]
 
-[ext_resource type="Script" path="res://src/data/item_data.gd" id="1_bprmv"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/tomato.png" id="1_23xjw"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_ibq12"]
 
 [resource]
-script = ExtResource("1_bprmv")
+script = ExtResource("2_ibq12")
 id = &"tomato"
 display_name_key = &"ITEM_TOMATO"
 category = 1
 sell_price = 70
+icon = ExtResource("1_23xjw")

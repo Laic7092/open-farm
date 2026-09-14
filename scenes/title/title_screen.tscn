@@ -1,0 +1,188 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/ui/title_screen.gd" id="1_title"]
+[ext_resource type="Texture2D" path="res://assets/title/backdrop.png" id="2_backdrop"]
+[ext_resource type="Texture2D" path="res://assets/title/cloud_a.png" id="3_cloud_a"]
+[ext_resource type="Texture2D" path="res://assets/title/cloud_b.png" id="4_cloud_b"]
+[ext_resource type="Texture2D" path="res://assets/title/plate.png" id="5_plate"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_plate"]
+content_margin_left = 22.0
+content_margin_top = 10.0
+content_margin_right = 22.0
+content_margin_bottom = 12.0
+texture = ExtResource("5_plate")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+
+[node name="TitleScreen" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_title")
+
+[node name="Backdrop" type="TextureRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_backdrop")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Clouds" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Cloud1" type="TextureRect" parent="Clouds"]
+unique_name_in_owner = true
+offset_left = 404.0
+offset_top = 30.0
+offset_right = 500.0
+offset_bottom = 56.0
+mouse_filter = 2
+modulate = Color(1, 1, 1, 0.9)
+texture = ExtResource("4_cloud_b")
+
+[node name="Cloud2" type="TextureRect" parent="Clouds"]
+unique_name_in_owner = true
+offset_left = 96.0
+offset_top = 62.0
+offset_right = 160.0
+offset_bottom = 84.0
+mouse_filter = 2
+modulate = Color(1, 1, 1, 0.65)
+texture = ExtResource("3_cloud_a")
+
+[node name="Cloud3" type="TextureRect" parent="Clouds"]
+unique_name_in_owner = true
+offset_left = 520.0
+offset_top = 96.0
+offset_right = 584.0
+offset_bottom = 118.0
+mouse_filter = 2
+modulate = Color(1, 1, 1, 0.45)
+texture = ExtResource("3_cloud_a")
+
+[node name="TitleBlock" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -204.0
+offset_top = 20.0
+offset_right = 204.0
+offset_bottom = 116.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Plate" type="PanelContainer" parent="TitleBlock"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_plate")
+
+[node name="Text" type="VBoxContainer" parent="TitleBlock/Plate"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="TitleLabel" type="Label" parent="TitleBlock/Plate/Text"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.55, 1)
+theme_override_colors/font_outline_color = Color(0.14, 0.09, 0.06, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 36
+text = "牧场物语 · 复刻"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="TitleBlock/Plate/Text"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.94, 0.9, 0.82, 1)
+theme_override_colors/font_outline_color = Color(0.14, 0.09, 0.06, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+text = "一个用 Godot 4 搭建的农场生活模拟原型"
+horizontal_alignment = 1
+
+[node name="Menu" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 44.0
+offset_top = -78.0
+offset_right = 272.0
+offset_bottom = 122.0
+grow_vertical = 2
+theme_override_constants/separation = 6
+
+[node name="ContinueButton" type="Button" parent="Menu"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(228, 28)
+layout_mode = 2
+
+[node name="SaveInfoLabel" type="Label" parent="Menu"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.94, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 3
+
+[node name="NewGameButton" type="Button" parent="Menu"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(228, 28)
+layout_mode = 2
+
+[node name="LanguageButton" type="Button" parent="Menu"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(228, 28)
+layout_mode = 2
+
+[node name="QuitButton" type="Button" parent="Menu"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(228, 28)
+layout_mode = 2
+
+[node name="Footer" type="HBoxContainer" parent="."]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -26.0
+offset_right = -12.0
+offset_bottom = -8.0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="HintLabel" type="Label" parent="Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.93, 0.72, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+
+[node name="FooterLabel" type="Label" parent="Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.82, 0.85, 0.92, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 2

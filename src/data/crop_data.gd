@@ -31,6 +31,11 @@ extends Resource
 @export_range(0, 99999) var base_sell_price: int = 0
 ## 每次收获额外产出 1 个的概率。
 @export_range(0.0, 1.0, 0.01) var bonus_yield_chance: float = 0.0
+## 生长图：[code]assets/sprites/crops/<id>.png[/code]，5 列 = 4 个生长阶段 + 枯死形态。
+##
+## 由 [code]tools/generate_sample_data.gd[/code] 按 id 自动填好，
+## 因此"新增一种作物"只要在美术生成器里加一行外观，场景与代码都不用动。
+@export var sprite_sheet: Texture2D
 
 
 ## 从播种到成熟需要的总有效生长天数。

@@ -1,11 +1,13 @@
 [gd_resource type="Resource" script_class="ItemData" format=3]
 
-[ext_resource type="Script" path="res://src/data/item_data.gd" id="1_kxci4"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/seed_bag.png" id="1_vr2ab"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_3b4by"]
 
 [resource]
-script = ExtResource("1_kxci4")
+script = ExtResource("2_3b4by")
 id = &"seed_bag"
 display_name_key = &"ITEM_SEED_BAG"
 category = 2
 sellable = false
+icon = ExtResource("1_vr2ab")
 tool_id = &"seed_bag"

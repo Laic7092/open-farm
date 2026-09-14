@@ -9,12 +9,26 @@ extends Node2D
 @export var world_id: StringName = &"farm"
 ## 相机可移动的矩形范围（世界坐标），防止镜头拍到地图外的空白。
 @export var camera_limits: Rect2 = Rect2(0, 0, 640, 360)
-## 外部没有指定出生点时使用哪个。
+## 每次本场景被切换到时使用哪个出生点。
 @export var default_spawn_id: StringName = &"default"
+## 是否自动挂载天气特效（雨雪与色调）。室内场景可以关掉。
+@export var weather_effects: bool = true
 
 
 func _ready() -> void:
 	_apply_camera_limits()
+	if weather_effects:
+		_ensure_weather_fx()
+
+
+## 天气特效由基类统一挂载，而不是每个世界场景各写一份：
+## 新增一张地图时，"下雨要看得见"这件事自动成立。
+func _ensure_weather_fx() -> void:
+	if get_node_or_null(^"WeatherFx") != null:
+		return
+	var fx := WeatherFx.new()
+	fx.name = "WeatherFx"
+	add_child(fx)
 
 
 ## 每次本场景被切换到时调用（包括从 [SceneRouter] 的缓存里重新挂载）。

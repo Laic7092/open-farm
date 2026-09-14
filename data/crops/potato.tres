@@ -1,9 +1,10 @@
 [gd_resource type="Resource" script_class="CropData" format=3]
 
-[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_5ugq8"]
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_b28l8"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/potato.png" id="2_k7vch"]
 
 [resource]
-script = ExtResource("1_5ugq8")
+script = ExtResource("1_b28l8")
 id = &"potato"
 display_name_key = &"CROP_POTATO"
 seed_item_id = &"potato_seed"
@@ -11,3 +12,4 @@ harvest_item_id = &"potato"
 days_per_stage = Array[int]([2, 2, 2])
 seed_price = 35
 base_sell_price = 90
+sprite_sheet = ExtResource("2_k7vch")

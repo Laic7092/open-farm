@@ -1,9 +1,11 @@
 [gd_resource type="Resource" script_class="ItemData" format=3]
 
-[ext_resource type="Script" path="res://src/data/item_data.gd" id="1_pkq13"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/wood.png" id="1_qnvr4"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_6crmk"]
 
 [resource]
-script = ExtResource("1_pkq13")
+script = ExtResource("2_6crmk")
 id = &"wood"
 display_name_key = &"ITEM_WOOD"
 sell_price = 5
+icon = ExtResource("1_qnvr4")

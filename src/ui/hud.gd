@@ -8,17 +8,25 @@ extends Control
 ## 浮动提示停留时长（秒）。
 const TOAST_DURATION: float = 2.2
 
+## 天气图标：与 [method Weather.to_key] 的返回值一一对应。
+const WEATHER_ICON_DIR: String = "res://assets/ui"
+
 @onready var date_label: Label = %DateLabel
 @onready var time_label: Label = %TimeLabel
 @onready var weather_label: Label = %WeatherLabel
+@onready var weather_icon: TextureRect = %WeatherIcon
 @onready var money_label: Label = %MoneyLabel
 @onready var forecast_label: Label = %ForecastLabel
+@onready var forecast_icon: TextureRect = %ForecastIcon
+@onready var tool_icon: TextureRect = %ToolIcon
 @onready var stamina_bar: ProgressBar = %StaminaBar
 @onready var tool_label: Label = %ToolLabel
 @onready var prompt_label: Label = %PromptLabel
 @onready var toast_label: Label = %ToastLabel
 
 var _toast_tween: Tween
+## 天气图标缓存：贴着同一个文件反复 load 会让每帧的 HUD 刷新变成磁盘 IO。
+var _weather_icons: Dictionary[StringName, Texture2D] = {}
 
 
 func _ready() -> void:
@@ -45,10 +53,9 @@ func _refresh_all() -> void:
 	_refresh_time()
 	_refresh_weather()
 	_on_money_changed(GameState.money, 0)
-	tool_label.text = "%s: %s" % [
-		Text.key(&"HUD_TOOL"),
-		Text.tool_name(_player_tool_id()),
-	]
+	var tool_id := _player_tool_id()
+	tool_label.text = "%s: %s" % [Text.key(&"HUD_TOOL"), Text.tool_name(tool_id)]
+	tool_icon.texture = _item_icon(tool_id)
 
 
 func _refresh_date() -> void:
@@ -61,9 +68,22 @@ func _refresh_time() -> void:
 
 func _refresh_weather() -> void:
 	weather_label.text = Text.weather_name(WeatherSystem.current)
+	weather_icon.texture = _weather_icon(WeatherSystem.current)
 	forecast_label.text = Text.format(&"HUD_FORECAST", {
 		"weather": Text.weather_name(WeatherSystem.forecast),
 	})
+	forecast_icon.texture = _weather_icon(WeatherSystem.forecast)
+
+
+## 取天气图标；找不到时返回 null（HUD 会只显示文字）。
+func _weather_icon(weather: Weather.Type) -> Texture2D:
+	var key := Weather.to_key(weather)
+	if _weather_icons.has(key):
+		return _weather_icons[key]
+	var path := "%s/weather_%s.png" % [WEATHER_ICON_DIR, key]
+	var texture: Texture2D = load(path) if ResourceLoader.exists(path) else null
+	_weather_icons[key] = texture
+	return texture
 
 
 func _player_tool_id() -> StringName:
@@ -96,6 +116,13 @@ func _on_stamina_changed(current: int, maximum: int) -> void:
 
 func _on_tool_changed(tool_id: StringName, _index: int) -> void:
 	tool_label.text = "%s: %s" % [Text.key(&"HUD_TOOL"), Text.tool_name(tool_id)]
+	tool_icon.texture = _item_icon(tool_id)
+
+
+## 手持工具的图标：工具既是 [ToolData] 也是 [ItemData]，图标挂在道具上。
+func _item_icon(item_id: StringName) -> Texture2D:
+	var item := Database.get_item(item_id)
+	return item.icon if item != null else null
 
 
 func _on_prompt_changed(prompt_key: StringName) -> void:

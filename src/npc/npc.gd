@@ -41,7 +41,11 @@ func _ready() -> void:
 	if persistence_id != &"":
 		Persistence.register(self, persistence_id)
 
-	if idle_bob:
+	# 动画来自 NpcData：同一个 npc.tscn 换个 npc_id 就换一张脸。
+	if data != null and data.frames != null:
+		sprite.sprite_frames = data.frames
+
+	if idle_bob and _has_idle_animation():
 		sprite.play(&"idle_down")
 
 	EventBus.dialogue_finished.connect(_on_dialogue_finished)
@@ -50,6 +54,11 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if EventBus.dialogue_finished.is_connected(_on_dialogue_finished):
 		EventBus.dialogue_finished.disconnect(_on_dialogue_finished)
+
+
+## 只有拿到动画数据时才播放，避免"数据缺失 → 场景报错"的连锁反应。
+func _has_idle_animation() -> bool:
+	return sprite.sprite_frames != null and sprite.sprite_frames.has_animation(&"idle_down")
 
 
 ## 当前季节应该说的话。

@@ -6,7 +6,7 @@ extends Sprite2D
 ## 由 [FarmGrid] 在状态变化后调用 [method refresh] 同步画面。
 
 ## 精灵图集中枯死形态的帧号（最后一帧）。
-const WITHERED_FRAME: int = 4
+const WITHERED_FRAME: int = AtlasLayout.CROP_WITHERED_COLUMN
 
 var state: CropState
 var data: CropData
@@ -16,6 +16,9 @@ var data: CropData
 func setup(p_state: CropState, p_data: CropData) -> void:
 	state = p_state
 	data = p_data
+	# 贴图跟着作物数据走：场景里不硬编码图集，新增作物不需要改任何代码。
+	if data != null and data.sprite_sheet != null:
+		texture = data.sprite_sheet
 	refresh()
 
 

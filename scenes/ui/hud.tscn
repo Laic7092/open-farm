@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://src/ui/hud.gd" id="1_hud"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_clock.png" id="2_icon_clock"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_coin.png" id="3_icon_coin"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_stamina.png" id="4_icon_stamina"]
 
 [node name="Hud" type="Control"]
 anchors_preset = 15
@@ -17,8 +20,7 @@ offset_top = 4.0
 offset_right = 220.0
 offset_bottom = 58.0
 mouse_filter = 2
-theme_override_constants/separation = 0
-theme_override_constants/outline_size = 4
+theme_override_constants/separation = 1
 
 [node name="DateLabel" type="Label" parent="TopLeft"]
 unique_name_in_owner = true
@@ -28,7 +30,20 @@ theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
 theme_override_constants/outline_size = 4
 text = "第 1 年 春 1 日"
 
-[node name="TimeLabel" type="Label" parent="TopLeft"]
+[node name="TimeRow" type="HBoxContainer" parent="TopLeft"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="ClockIcon" type="TextureRect" parent="TopLeft/TimeRow"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("2_icon_clock")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TimeLabel" type="Label" parent="TopLeft/TimeRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -36,7 +51,21 @@ theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
 theme_override_constants/outline_size = 4
 text = "06:00"
 
-[node name="WeatherLabel" type="Label" parent="TopLeft"]
+[node name="WeatherRow" type="HBoxContainer" parent="TopLeft"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="WeatherIcon" type="TextureRect" parent="TopLeft/WeatherRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="WeatherLabel" type="Label" parent="TopLeft/WeatherRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.85, 0.92, 1, 1)
@@ -53,47 +82,102 @@ offset_right = -6.0
 offset_bottom = 44.0
 grow_horizontal = 0
 mouse_filter = 2
-theme_override_constants/separation = 0
+theme_override_constants/separation = 1
 
-[node name="MoneyLabel" type="Label" parent="TopRight"]
+[node name="MoneyRow" type="HBoxContainer" parent="TopRight"]
+layout_mode = 2
+alignment = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="CoinIcon" type="TextureRect" parent="TopRight/MoneyRow"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("3_icon_coin")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MoneyLabel" type="Label" parent="TopRight/MoneyRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.92, 0.55, 1)
 theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
 theme_override_constants/outline_size = 4
 text = "0G"
-horizontal_alignment = 2
 
-[node name="ForecastLabel" type="Label" parent="TopRight"]
+[node name="ForecastRow" type="HBoxContainer" parent="TopRight"]
+layout_mode = 2
+alignment = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="ForecastIcon" type="TextureRect" parent="TopRight/ForecastRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+modulate = Color(1, 1, 1, 0.8)
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ForecastLabel" type="Label" parent="TopRight/ForecastRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.85, 0.95, 1)
 theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
 theme_override_constants/outline_size = 4
 text = "明日 晴"
-horizontal_alignment = 2
 
 [node name="BottomLeft" type="VBoxContainer" parent="."]
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 6.0
-offset_top = -40.0
-offset_right = 200.0
+offset_top = -46.0
+offset_right = 220.0
 offset_bottom = -6.0
 grow_vertical = 0
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_override_constants/separation = 3
 
-[node name="StaminaBar" type="ProgressBar" parent="BottomLeft"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 10)
+[node name="StaminaRow" type="HBoxContainer" parent="BottomLeft"]
 layout_mode = 2
-size_flags_horizontal = 0
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="StaminaIcon" type="TextureRect" parent="BottomLeft/StaminaRow"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture = ExtResource("4_icon_stamina")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StaminaBar" type="ProgressBar" parent="BottomLeft/StaminaRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 12)
+layout_mode = 2
+size_flags_vertical = 4
 max_value = 100.0
 value = 100.0
 show_percentage = false
 
-[node name="ToolLabel" type="Label" parent="BottomLeft"]
+[node name="ToolRow" type="HBoxContainer" parent="BottomLeft"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="ToolIcon" type="TextureRect" parent="BottomLeft/ToolRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ToolLabel" type="Label" parent="BottomLeft/ToolRow"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -108,9 +192,9 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -200.0
-offset_top = -60.0
+offset_top = -66.0
 offset_right = 200.0
-offset_bottom = -42.0
+offset_bottom = -48.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
@@ -126,9 +210,9 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -260.0
-offset_top = -32.0
+offset_top = -36.0
 offset_right = 260.0
-offset_bottom = -10.0
+offset_bottom = -14.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2

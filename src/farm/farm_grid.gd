@@ -243,21 +243,52 @@ func advance_day(date: GameDate, weather_waters: bool) -> void:
 
 # ---------------------------------------------------------------- 地面绘制
 
-## 用代码铺地面：区域铺草，最下一行与最左一列铺小路。
+## 用代码铺地面。不用 TileMap 手绘数据而是脚本铺，是为了让"农场多大"
+## 只由 [member ground_area] 一个数字决定（改大小不用重画地图）。
+##
+## 布局：左下两条小路交汇，农舍门前一小段石板路，其余是带深浅变化的草地，
+## 边角点缀荒草与碎石。所有图案都由坐标算出，因此每次进游戏完全一致。
 func paint_ground() -> void:
 	if ground_layer == null:
 		return
 	ground_layer.clear()
 	var path_row: int = ground_area.position.y + ground_area.size.y - 1
 	var path_column: int = ground_area.position.x
+
 	for cell: Vector2i in GridUtils.cells_in_area(ground_area.position, ground_area.size):
-		var atlas: Vector2i = FarmAtlas.GRASS
-		if cell.y == path_row or cell.x == path_column:
+		var atlas: Vector2i = _grass_variant(cell)
+		# 最下两行 + 最左两列是通路，正好把农舍与农田连起来。
+		if cell.y >= path_row - 1 or cell.x <= path_column + 1:
 			atlas = FarmAtlas.PATH
+		# 右下的荒地：视觉上把"可耕种区"和"地图边缘"区分开。
+		elif cell.x > farmable_area.end.x + 3 and cell.y > farmable_area.end.y + 3:
+			atlas = _wild_variant(cell)
 		ground_layer.set_cell(cell, FarmAtlas.SOURCE_ID, atlas)
 
+	# 农舍门前的石板路（房子在左上，路通向农场大门）。
+	for y: int in range(2, farmable_area.position.y - 1):
+		ground_layer.set_cell(Vector2i(6, y), FarmAtlas.SOURCE_ID, FarmAtlas.PATH_STONE)
+		ground_layer.set_cell(Vector2i(7, y), FarmAtlas.SOURCE_ID, FarmAtlas.PATH_STONE)
 
-## 撒装饰：农田上方一排栅栏（中间留门）、四周点缀花丛与灌木。
+
+## 草地明暗：两种草皮按坐标交错，避免一整块纯色看起来像贴图没加载。
+func _grass_variant(cell: Vector2i) -> Vector2i:
+	if (cell.x * 3 + cell.y * 5) % 7 < 3:
+		return FarmAtlas.GRASS_ALT
+	return FarmAtlas.GRASS
+
+
+## 荒地：杂草 + 偶尔一块碎石。
+func _wild_variant(cell: Vector2i) -> Vector2i:
+	var roll: int = (cell.x * 7 + cell.y * 11) % 13
+	if roll == 0:
+		return FarmAtlas.PEBBLE
+	if roll < 5:
+		return FarmAtlas.TALL_GRASS
+	return FarmAtlas.GRASS_ALT
+
+
+## 撒装饰：农田上方一排栅栏（中间留门）、四周点缀花丛、灌木与杂物。
 ##
 ## 刻意不用随机数——地图每次生成都应当一模一样，否则每次进场景画面都在跳。
 func paint_decorations() -> void:
@@ -271,6 +302,9 @@ func paint_decorations() -> void:
 		if cell.x == gate_x:
 			continue
 		ground_layer.set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.FENCE)
+	# 栅栏门两侧的门柱
+	ground_layer.set_cell(Vector2i(gate_x - 1, fence_row), FarmAtlas.SOURCE_ID, FarmAtlas.FENCE_GATE)
+	ground_layer.set_cell(Vector2i(gate_x + 1, fence_row), FarmAtlas.SOURCE_ID, FarmAtlas.FENCE_GATE)
 
 	var decorations := {
 		Vector2i(farmable_area.position.x - 2, fence_row): FarmAtlas.BUSH,
@@ -281,6 +315,22 @@ func paint_decorations() -> void:
 		Vector2i(farmable_area.position.x + 3, farmable_area.end.y + 2): FarmAtlas.SIGN,
 		Vector2i(farmable_area.position.x + 8, farmable_area.end.y + 2): FarmAtlas.FLOWERS,
 		Vector2i(farmable_area.position.x + 14, farmable_area.end.y + 3): FarmAtlas.BUSH,
+		# 新增：一边一片花圃，田边几个草垛与木箱，让农场看起来"在用"。
+		Vector2i(farmable_area.position.x + 2, fence_row - 1): FarmAtlas.FLOWER_BED,
+		Vector2i(farmable_area.position.x + 3, fence_row - 1): FarmAtlas.FLOWER_BED,
+		Vector2i(farmable_area.end.x - 2, fence_row - 1): FarmAtlas.FLOWER_BED,
+		Vector2i(farmable_area.end.x - 1, fence_row - 1): FarmAtlas.FLOWER_BED,
+		Vector2i(farmable_area.end.x + 2, farmable_area.position.y + 6): FarmAtlas.HAY,
+		Vector2i(farmable_area.end.x + 3, farmable_area.position.y + 7): FarmAtlas.HAY,
+		Vector2i(farmable_area.end.x + 2, farmable_area.position.y + 9): FarmAtlas.CRATE,
+		Vector2i(farmable_area.end.x + 2, farmable_area.end.y + 4): FarmAtlas.MUSHROOM,
+		Vector2i(farmable_area.position.x - 1, farmable_area.end.y + 3): FarmAtlas.FLOWER_BLUE,
+		Vector2i(farmable_area.position.x + 20, farmable_area.end.y + 4): FarmAtlas.FLOWER_RED,
+		Vector2i(farmable_area.position.x + 24, farmable_area.end.y + 2): FarmAtlas.STUMP_TILE,
+		Vector2i(farmable_area.position.x + 26, farmable_area.end.y + 5): FarmAtlas.WELL_TOP,
+		Vector2i(farmable_area.position.x + 31, farmable_area.position.y + 2): FarmAtlas.MUSHROOM,
+		Vector2i(farmable_area.position.x + 33, farmable_area.position.y + 8): FarmAtlas.PEBBLE,
+		Vector2i(farmable_area.position.x + 30, farmable_area.end.y + 6): FarmAtlas.TALL_GRASS,
 	}
 	for cell: Vector2i in decorations:
 		if ground_area.has_point(cell):

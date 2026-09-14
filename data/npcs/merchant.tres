@@ -1,11 +1,13 @@
 [gd_resource type="Resource" script_class="NpcData" format=3]
 
-[ext_resource type="Resource" path="res://data/dialogue/merchant_greeting.tres" id="1_jjrxm"]
-[ext_resource type="Script" path="res://src/data/npc_data.gd" id="2_6tut3"]
+[ext_resource type="Resource" path="res://data/dialogue/merchant_greeting.tres" id="1_6tut3"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_merchant_frames.tres" id="2_wp1os"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="3_u88sx"]
 
 [resource]
-script = ExtResource("2_6tut3")
+script = ExtResource("3_u88sx")
 id = &"merchant"
 display_name_key = &"NPC_MERCHANT"
-default_dialogue = ExtResource("1_jjrxm")
+frames = ExtResource("2_wp1os")
+default_dialogue = ExtResource("1_6tut3")
 shop_id = &"general_store"

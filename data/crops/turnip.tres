@@ -1,9 +1,10 @@
 [gd_resource type="Resource" script_class="CropData" format=3]
 
-[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_wedoq"]
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_0nf5k"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/turnip.png" id="2_124lj"]
 
 [resource]
-script = ExtResource("1_wedoq")
+script = ExtResource("1_0nf5k")
 id = &"turnip"
 display_name_key = &"CROP_TURNIP"
 seed_item_id = &"turnip_seed"
@@ -11,3 +12,4 @@ harvest_item_id = &"turnip"
 seed_price = 20
 base_sell_price = 45
 bonus_yield_chance = 0.1
+sprite_sheet = ExtResource("2_124lj")

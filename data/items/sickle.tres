@@ -1,13 +1,15 @@
 [gd_resource type="Resource" script_class="ItemData" format=3]
 
-[ext_resource type="Script" path="res://src/data/item_data.gd" id="1_ueqwf"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/sickle.png" id="1_r7rqw"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_gc273"]
 
 [resource]
-script = ExtResource("1_ueqwf")
+script = ExtResource("2_gc273")
 id = &"sickle"
 display_name_key = &"ITEM_SICKLE"
 description_key = &"TOOL_SICKLE_DESC"
 category = 2
 stack_limit = 1
 sellable = false
+icon = ExtResource("1_r7rqw")
 tool_id = &"sickle"

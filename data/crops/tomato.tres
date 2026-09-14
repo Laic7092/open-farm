@@ -1,9 +1,10 @@
 [gd_resource type="Resource" script_class="CropData" format=3]
 
-[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_qe2sr"]
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_8qcig"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/tomato.png" id="2_sc0jv"]
 
 [resource]
-script = ExtResource("1_qe2sr")
+script = ExtResource("1_8qcig")
 id = &"tomato"
 display_name_key = &"CROP_TOMATO"
 seed_item_id = &"tomato_seed"
@@ -13,3 +14,4 @@ seasons = Array[int]([1])
 regrow_days = 3
 seed_price = 50
 base_sell_price = 70
+sprite_sheet = ExtResource("2_sc0jv")

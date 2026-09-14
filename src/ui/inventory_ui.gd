@@ -9,7 +9,7 @@ extends Control
 ##
 ## 与 [code]item_slot.tscn[/code] 的宽度、以及面板宽度三者互相约束：
 ## 改动其中任何一个都要同步检查另外两个，否则文字会被裁掉。
-const COLUMNS: int = 5
+const COLUMNS: int = 4
 
 @onready var grid: GridContainer = %Slots
 @onready var title_label: Label = %TitleLabel

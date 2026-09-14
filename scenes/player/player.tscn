@@ -1,7 +1,7 @@
 [gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://src/player/player.gd" id="1_player"]
-[ext_resource type="SpriteFrames" path="res://assets/sprites/player_frames.tres" id="2_frames"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/player_frames.tres" id="2_frames"]
 [ext_resource type="Script" path="res://src/core/state_machine.gd" id="3_state_machine"]
 [ext_resource type="Script" path="res://src/player/states/player_state_idle.gd" id="4_idle"]
 [ext_resource type="Script" path="res://src/player/states/player_state_walk.gd" id="5_walk"]

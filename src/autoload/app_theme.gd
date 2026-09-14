@@ -5,11 +5,12 @@ extends Node
 ## [br]1. [b]语言[/b]——Godot 默认完全跟随系统语言，
 ##    而 [code]internationalization/locale/fallback[/code] 只在"某个键缺翻译"时兜底，
 ##    不会改变整体语言。这里显式匹配一次，保证中文玩家默认看到中文。
-## [br]2. [b]中文字体[/b]——[code]assets/fonts/ui_font.tres[/code] 用的是 [SystemFont]，
-##    它会向操作系统要字体。但有些环境（精简 Linux 容器、WSL、
-##    未装 CJK 包的发行版）fontconfig 里根本没有中文字体，
-##    结果就是满屏"豆腐块"。这里在启动时探测一次，
-##    必要时从已知路径里加载一个中文字体作为兜底。
+## [br]2. [b]中文字体[/b]——默认字体是 [code]tools/art/generate_font.gd[/code] 生成的
+##    像素位图字体（[code]assets/fonts/pixel_cjk.fnt[/code]），它只覆盖项目里
+##    [b]真正用到[/b]的那些字。主题里已经把 [SystemFont] 挂在它的 fallback 链上，
+##    但有些环境（精简 Linux 容器、WSL、未装 CJK 包的发行版）fontconfig 里
+##    根本没有中文字体——那样一个新加的、不在子集里的字就会变成"豆腐块"。
+##    这里在启动时探测一次，必要时从已知路径加载一个中文字体补进链子。
 ##
 ## 这两件事都属于"表现层设置"，因此不放 [GameState]（那是玩法状态）。
 
@@ -19,8 +20,8 @@ const DEFAULT_LOCALE: String = "zh_CN"
 ## 用来探测字体是否覆盖中文的字符。
 const CJK_PROBE_CHAR: int = 0x7267  # "牧"
 
-## 项目设置里指定的默认字体路径。
-const PROJECT_FONT_SETTING: String = "gui/theme/custom_font"
+## 生成出来的像素字体路径（字体子集的来源，测试也用它）。
+const PIXEL_FONT_PATH: String = "res://assets/fonts/pixel_cjk.fnt"
 
 ## 找不到系统 CJK 字体时，依次尝试加载的绝对路径。
 ##
@@ -84,7 +85,14 @@ func font_supports_chinese() -> bool:
 
 
 ## 当前生效的默认字体。
+##
+## 顺序：项目主题（[code]gui/theme/custom[/code]，即生成的 game_theme.tres）
+## → 引擎默认主题 → 引擎兜底字体。
+## 项目主题必须排第一：它才是玩家真正看到的那套字体。
 func current_font() -> Font:
+	var project := ThemeDB.get_project_theme()
+	if project != null and project.default_font != null:
+		return project.default_font
 	var theme := ThemeDB.get_default_theme()
 	if theme != null and theme.default_font != null:
 		return theme.default_font
@@ -131,9 +139,14 @@ func _attach_fallback(base: Font, extra: Font) -> void:
 		chain.append(extra)
 	variation.fallbacks = chain
 
-	var theme := ThemeDB.get_default_theme()
-	if theme != null:
-		theme.default_font = variation
+	# 优先改项目主题：那才是控件的默认字体来源。
+	var project := ThemeDB.get_project_theme()
+	if project != null:
+		project.default_font = variation
+	else:
+		var theme := ThemeDB.get_default_theme()
+		if theme != null:
+			theme.default_font = variation
 	ThemeDB.fallback_font = variation
 
 

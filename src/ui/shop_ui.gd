@@ -84,7 +84,10 @@ func _refresh_buy_list() -> void:
 				stock_text,
 			]
 		)
-		buy_list.set_item_disabled(buy_list.item_count - 1, item == null)
+		var row := buy_list.item_count - 1
+		if item != null and item.icon != null:
+			buy_list.set_item_icon(row, item.icon)
+		buy_list.set_item_disabled(row, item == null)
 
 
 func _refresh_sell_list() -> void:
@@ -108,6 +111,8 @@ func _refresh_sell_list() -> void:
 				Text.format(&"SHOP_UI_PRICE", {"value": unit}),
 			]
 		)
+		if item.icon != null:
+			sell_list.set_item_icon(sell_list.item_count - 1, item.icon)
 
 
 func _refresh_info() -> void:

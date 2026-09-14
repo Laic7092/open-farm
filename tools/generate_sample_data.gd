@@ -9,6 +9,10 @@ extends SceneTree
 ## 之后策划直接在 Inspector 里改数值即可，不需要再碰这个脚本。
 ## 只有"重置示例数据"时才需要重新运行它。
 ##
+## 它同时负责把 [code]tools/art/*.gd[/code] 生成的贴图挂到数据上
+## （[code]icon[/code] / [code]sprite_sheet[/code] / [code]frames[/code]），
+## 因此请在跑完 [code]tools/build_assets.sh[/code] 之后再运行本脚本。
+##
 ## 用法：[code]godot --headless --path . -s res://tools/generate_sample_data.gd[/code]
 
 const CROP_DIR: String = "res://data/crops"
@@ -17,6 +21,11 @@ const TOOL_DIR: String = "res://data/tools"
 const DIALOGUE_DIR: String = "res://data/dialogue"
 const NPC_DIR: String = "res://data/npcs"
 const SHOP_DIR: String = "res://data/shops"
+
+## 美术资源目录（由 tools/art/*.gd 生成，这里只负责"把图挂到数据上"）。
+const CROP_SHEET_DIR: String = "res://assets/sprites/crops"
+const ITEM_ICON_DIR: String = "res://assets/sprites/items"
+const NPC_FRAMES_DIR: String = "res://assets/sprites/actors"
 
 
 func _initialize() -> void:
@@ -81,6 +90,7 @@ func _build_crops() -> void:
 	turnip.seed_price = 20
 	turnip.base_sell_price = 45
 	turnip.bonus_yield_chance = 0.1
+	turnip.sprite_sheet = _crop_sheet(&"turnip")
 	_save(turnip, CROP_DIR.path_join("turnip.tres"))
 
 	# 土豆：春季主力，6 天成熟，收益更高。
@@ -94,6 +104,7 @@ func _build_crops() -> void:
 	potato.seasons = [Season.Type.SPRING] as Array[Season.Type]
 	potato.seed_price = 35
 	potato.base_sell_price = 90
+	potato.sprite_sheet = _crop_sheet(&"potato")
 	_save(potato, CROP_DIR.path_join("potato.tres"))
 
 	# 番茄：夏季多次收获作物，收获后 3 天重新结果。
@@ -108,6 +119,7 @@ func _build_crops() -> void:
 	tomato.regrow_days = 3
 	tomato.seed_price = 50
 	tomato.base_sell_price = 70
+	tomato.sprite_sheet = _crop_sheet(&"tomato")
 	_save(tomato, CROP_DIR.path_join("tomato.tres"))
 
 
@@ -128,6 +140,7 @@ func _build_items() -> void:
 	wood.buy_price = 0
 	wood.sell_price = 5
 	wood.stack_limit = 99
+	wood.icon = _item_icon(&"wood")
 	_save(wood, ITEM_DIR.path_join("wood.tres"))
 
 	_tool_item(&"hoe", &"ITEM_HOE", &"TOOL_HOE_DESC", &"hoe")
@@ -140,6 +153,7 @@ func _build_items() -> void:
 	seed_bag.category = ItemData.Category.TOOL
 	seed_bag.tool_id = &"seed_bag"
 	seed_bag.sellable = false
+	seed_bag.icon = _item_icon(&"seed_bag")
 	_save(seed_bag, ITEM_DIR.path_join("seed_bag.tres"))
 
 
@@ -158,6 +172,7 @@ func _seed_item(
 	item.buy_price = price
 	item.sell_price = sell_price
 	item.stack_limit = 99
+	item.icon = _item_icon(item_id)
 	_save(item, ITEM_DIR.path_join("%s.tres" % item_id))
 
 
@@ -168,6 +183,7 @@ func _crop_item(item_id: StringName, name_key: StringName, sell_price: int) -> v
 	item.category = ItemData.Category.CROP
 	item.sell_price = sell_price
 	item.stack_limit = 99
+	item.icon = _item_icon(item_id)
 	_save(item, ITEM_DIR.path_join("%s.tres" % item_id))
 
 
@@ -185,6 +201,7 @@ func _tool_item(
 	item.tool_id = tool_id
 	item.stack_limit = 1
 	item.sellable = false
+	item.icon = _item_icon(item_id)
 	_save(item, ITEM_DIR.path_join("%s.tres" % item_id))
 
 
@@ -227,12 +244,14 @@ func _build_npcs() -> void:
 	merchant.display_name_key = &"NPC_MERCHANT"
 	merchant.default_dialogue = _load(DIALOGUE_DIR.path_join("merchant_greeting.tres"))
 	merchant.shop_id = &"general_store"
+	merchant.frames = _npc_frames(&"merchant")
 	_save(merchant, NPC_DIR.path_join("merchant.tres"))
 
 	var mayor := NpcData.new()
 	mayor.id = &"mayor"
 	mayor.display_name_key = &"NPC_MAYOR"
 	mayor.default_dialogue = _load(DIALOGUE_DIR.path_join("mayor_greeting.tres"))
+	mayor.frames = _npc_frames(&"mayor")
 	_save(mayor, NPC_DIR.path_join("mayor.tres"))
 
 
@@ -261,6 +280,32 @@ func _stock(item_id: StringName, price: int) -> ShopStock:
 
 
 # ---------------------------------------------------------------- 工具方法
+
+## 取作物生长图；缺图时返回 null（游戏会退回场景里的占位贴图）。
+func _crop_sheet(crop_id: StringName) -> Texture2D:
+	return _texture(CROP_SHEET_DIR.path_join("%s.png" % crop_id))
+
+
+## 取道具图标。
+func _item_icon(item_id: StringName) -> Texture2D:
+	return _texture(ITEM_ICON_DIR.path_join("%s.png" % item_id))
+
+
+## 取 NPC 动画。
+func _npc_frames(npc_id: StringName) -> SpriteFrames:
+	var path: String = NPC_FRAMES_DIR.path_join("npc_%s_frames.tres" % npc_id)
+	if not ResourceLoader.exists(path):
+		push_warning("缺少 NPC 动画 %s（先跑 tools/build_assets.sh）" % path)
+		return null
+	return ResourceLoader.load(path) as SpriteFrames
+
+
+func _texture(path: String) -> Texture2D:
+	if not ResourceLoader.exists(path):
+		push_warning("缺少贴图 %s（先跑 tools/build_assets.sh）" % path)
+		return null
+	return ResourceLoader.load(path) as Texture2D
+
 
 func _load(path: String) -> Resource:
 	if not ResourceLoader.exists(path):

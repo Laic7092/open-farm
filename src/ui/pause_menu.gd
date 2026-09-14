@@ -13,6 +13,7 @@ signal close_requested()
 @onready var save_button: Button = %SaveButton
 @onready var load_button: Button = %LoadButton
 @onready var quit_button: Button = %QuitButton
+@onready var title_button: Button = %TitleButton
 
 
 func _ready() -> void:
@@ -22,11 +23,13 @@ func _ready() -> void:
 	save_button.text = Text.key(&"MENU_SAVE")
 	load_button.text = Text.key(&"MENU_LOAD")
 	quit_button.text = Text.key(&"MENU_QUIT")
+	title_button.text = Text.key(&"MENU_TITLE")
 
 	resume_button.pressed.connect(func() -> void: close_requested.emit())
 	save_button.pressed.connect(_on_save_pressed)
 	load_button.pressed.connect(_on_load_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
+	title_button.pressed.connect(_on_title_pressed)
 
 
 func open() -> void:
@@ -49,3 +52,9 @@ func _on_load_pressed() -> void:
 
 func _on_quit_pressed() -> void:
 	get_tree().quit()
+
+
+## 回到标题页：丢掉当前这一局，重新走"标题 → 开新档 / 读档"的流程。
+func _on_title_pressed() -> void:
+	close()
+	Main.return_to_title(get_tree())

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -11,6 +11,22 @@
 [ext_resource type="Script" path="res://src/world/shipping_bin.gd" id="9_bin"]
 [ext_resource type="Script" path="res://src/world/scene_door.gd" id="10_door"]
 [ext_resource type="PackedScene" path="res://scenes/npc/npc.tscn" id="11_npc"]
+[ext_resource type="Script" path="res://src/world/world_prop.gd" id="12_prop"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/house.png" id="20_house"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/barn.png" id="21_barn"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/tree.png" id="22_tree"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/tree_pine.png" id="23_pine"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/well.png" id="24_well"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/signpost.png" id="25_sign"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/lamp.png" id="26_lamp"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/flower_pot.png" id="27_pot"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/chicken.png" id="28_chicken"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/rock.png" id="29_rock"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/rock_big.png" id="30_rock_big"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/stump.png" id="31_stump"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/mailbox.png" id="32_mailbox"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/bed.png" id="33_bed_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/shipping_bin.png" id="34_bin_tex"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
 size = Vector2(16, 16)
@@ -49,6 +65,145 @@ collision_mask = 0
 script = ExtResource("5_bounds")
 bounds = Rect2(8, 8, 752, 464)
 
+[node name="Props" type="Node2D" parent="."]
+
+[node name="House" type="Sprite2D" parent="Props"]
+position = Vector2(100, 66)
+texture = ExtResource("20_house")
+script = ExtResource("12_prop")
+solid_size = Vector2(58, 14)
+solid_offset = Vector2(0, 24)
+
+[node name="HouseLamp" type="Sprite2D" parent="Props"]
+position = Vector2(150, 84)
+texture = ExtResource("26_lamp")
+script = ExtResource("12_prop")
+
+[node name="HousePot" type="Sprite2D" parent="Props"]
+position = Vector2(146, 108)
+texture = ExtResource("27_pot")
+script = ExtResource("12_prop")
+
+[node name="GateSign" type="Sprite2D" parent="Props"]
+position = Vector2(268, 92)
+texture = ExtResource("25_sign")
+script = ExtResource("12_prop")
+
+[node name="Mailbox" type="Sprite2D" parent="Props"]
+position = Vector2(20, 404)
+texture = ExtResource("32_mailbox")
+script = ExtResource("12_prop")
+
+[node name="Barn" type="Sprite2D" parent="Props"]
+position = Vector2(600, 76)
+texture = ExtResource("21_barn")
+script = ExtResource("12_prop")
+solid_size = Vector2(54, 16)
+solid_offset = Vector2(0, 20)
+
+[node name="BarnPot" type="Sprite2D" parent="Props"]
+position = Vector2(552, 106)
+texture = ExtResource("27_pot")
+script = ExtResource("12_prop")
+
+[node name="Chicken1" type="Sprite2D" parent="Props"]
+position = Vector2(636, 112)
+texture = ExtResource("28_chicken")
+script = ExtResource("12_prop")
+
+[node name="Chicken2" type="Sprite2D" parent="Props"]
+position = Vector2(664, 118)
+texture = ExtResource("28_chicken")
+script = ExtResource("12_prop")
+
+[node name="Well" type="Sprite2D" parent="Props"]
+position = Vector2(524, 296)
+texture = ExtResource("24_well")
+script = ExtResource("12_prop")
+solid_size = Vector2(20, 10)
+solid_offset = Vector2(0, 12)
+
+[node name="Stump" type="Sprite2D" parent="Props"]
+position = Vector2(476, 264)
+texture = ExtResource("31_stump")
+script = ExtResource("12_prop")
+
+[node name="Rock1" type="Sprite2D" parent="Props"]
+position = Vector2(508, 196)
+texture = ExtResource("29_rock")
+script = ExtResource("12_prop")
+
+[node name="Rock2" type="Sprite2D" parent="Props"]
+position = Vector2(690, 232)
+texture = ExtResource("30_rock_big")
+script = ExtResource("12_prop")
+solid_size = Vector2(24, 10)
+solid_offset = Vector2(0, 6)
+
+[node name="Rock3" type="Sprite2D" parent="Props"]
+position = Vector2(548, 432)
+texture = ExtResource("30_rock_big")
+script = ExtResource("12_prop")
+solid_size = Vector2(24, 10)
+solid_offset = Vector2(0, 6)
+
+[node name="Chicken3" type="Sprite2D" parent="Props"]
+position = Vector2(596, 452)
+texture = ExtResource("28_chicken")
+script = ExtResource("12_prop")
+
+[node name="Pot1" type="Sprite2D" parent="Props"]
+position = Vector2(212, 446)
+texture = ExtResource("27_pot")
+script = ExtResource("12_prop")
+
+[node name="Pot2" type="Sprite2D" parent="Props"]
+position = Vector2(244, 452)
+texture = ExtResource("27_pot")
+script = ExtResource("12_prop")
+
+[node name="Tree1" type="Sprite2D" parent="Props"]
+position = Vector2(184, 80)
+texture = ExtResource("22_tree")
+script = ExtResource("12_prop")
+solid_size = Vector2(10, 8)
+solid_offset = Vector2(0, 20)
+
+[node name="Tree2" type="Sprite2D" parent="Props"]
+position = Vector2(222, 74)
+texture = ExtResource("23_pine")
+script = ExtResource("12_prop")
+solid_size = Vector2(10, 8)
+solid_offset = Vector2(0, 20)
+
+[node name="Tree3" type="Sprite2D" parent="Props"]
+position = Vector2(664, 74)
+texture = ExtResource("22_tree")
+script = ExtResource("12_prop")
+solid_size = Vector2(10, 8)
+solid_offset = Vector2(0, 20)
+
+[node name="Tree4" type="Sprite2D" parent="Props"]
+position = Vector2(706, 80)
+texture = ExtResource("23_pine")
+script = ExtResource("12_prop")
+solid_size = Vector2(10, 8)
+solid_offset = Vector2(0, 20)
+
+[node name="Tree5" type="Sprite2D" parent="Props"]
+position = Vector2(748, 176)
+texture = ExtResource("22_tree")
+script = ExtResource("12_prop")
+solid_size = Vector2(10, 8)
+solid_offset = Vector2(0, 20)
+
+[node name="Tree6" type="Sprite2D" parent="Props"]
+position = Vector2(688, 448)
+texture = ExtResource("23_pine")
+script = ExtResource("12_prop")
+solid_size = Vector2(10, 8)
+solid_offset = Vector2(0, 20)
+
 [node name="Spawns" type="Node2D" parent="."]
 
 [node name="Start" type="Marker2D" parent="Spawns"]
@@ -63,6 +218,7 @@ spawn_id = &"from_town"
 facing = 2
 
 [node name="Interactables" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="Bed" type="Area2D" parent="Interactables"]
 position = Vector2(40, 360)
@@ -70,6 +226,10 @@ collision_layer = 8
 collision_mask = 0
 script = ExtResource("8_bed")
 persistence_id = &"farm_bed"
+
+[node name="Sprite" type="Sprite2D" parent="Interactables/Bed"]
+texture = ExtResource("33_bed_tex")
+offset = Vector2(0, -3)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/Bed"]
 shape = SubResource("RectangleShape2D_tile")
@@ -80,6 +240,10 @@ collision_layer = 8
 collision_mask = 0
 script = ExtResource("9_bin")
 persistence_id = &"farm_shipping_bin"
+
+[node name="Sprite" type="Sprite2D" parent="Interactables/ShippingBin"]
+texture = ExtResource("34_bin_tex")
+offset = Vector2(0, -1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ShippingBin"]
 shape = SubResource("RectangleShape2D_tile")

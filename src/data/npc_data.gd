@@ -9,6 +9,11 @@ extends Resource
 @export var display_name_key: StringName = &""
 ## 立绘 / 头像。
 @export var portrait: Texture2D
+## 行走 / 待机动画：[code]assets/sprites/actors/npc_<id>_frames.tres[/code]。
+##
+## 放在数据里而不是场景里，是为了让"这个 NPC 长什么样"跟着身份走——
+## 同一个 [code]npc.tscn[/code] 实例换一个 [member id] 就换一张脸。
+@export var frames: SpriteFrames
 ## 默认对白。
 @export var default_dialogue: DialogueData
 ## 按季节覆盖的对白（键为 [enum Season.Type] 的整数）。

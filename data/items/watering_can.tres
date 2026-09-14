@@ -1,13 +1,15 @@
 [gd_resource type="Resource" script_class="ItemData" format=3]
 
-[ext_resource type="Script" path="res://src/data/item_data.gd" id="1_q2cdq"]
+[ext_resource type="Texture2D" path="res://assets/sprites/items/watering_can.png" id="1_khya3"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_qhcmd"]
 
 [resource]
-script = ExtResource("1_q2cdq")
+script = ExtResource("2_qhcmd")
 id = &"watering_can"
 display_name_key = &"ITEM_WATERING_CAN"
 description_key = &"TOOL_WATERING_CAN_DESC"
 category = 2
 stack_limit = 1
 sellable = false
+icon = ExtResource("1_khya3")
 tool_id = &"watering_can"

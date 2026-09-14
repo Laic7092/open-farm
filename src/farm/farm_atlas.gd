@@ -1,22 +1,53 @@
 class_name FarmAtlas
 extends RefCounted
-## [code]assets/sprites/tileset_farm.png[/code] 的图集坐标常量。
+## 地形图集坐标的运行时别名。
 ##
-## 把"魔法数字"集中在常量里，TileSet 的排版变化只需要改这一个文件。
-## 由 [code]tools/generate_placeholder_art.gd[/code] 保证图集与这些常量一致。
+## 真正的定义在 [AtlasLayout]——那里是[b]生成器与运行时代码共用[/b]的唯一事实来源。
+## 这个类只是把常用格子再导出一次，让 [code]FarmGrid[/code] / [code]TownGround[/code]
+## 里写 [code]FarmAtlas.GRASS[/code] 比 [code]AtlasLayout.GRASS[/code] 更贴近语境。
+##
+## [b]规范[/b]：不要在别处再写死坐标；需要新格子时先加到 [AtlasLayout]，
+## 在这里补一行别名，然后跑 [code]./tools/build_assets.sh[/code]。
 
 ## TileSet 中唯一图集源的下标。
 const SOURCE_ID: int = 0
 
-const GRASS := Vector2i(0, 0)
-const GRASS_ALT := Vector2i(1, 0)
-const PATH := Vector2i(2, 0)
-const SOIL_DRY := Vector2i(3, 0)
-const SOIL_WET := Vector2i(4, 0)
-const WATER := Vector2i(5, 0)
-const STONE := Vector2i(6, 0)
-const WOOD := Vector2i(7, 0)
-const FLOWERS := Vector2i(0, 1)
-const FENCE := Vector2i(1, 1)
-const BUSH := Vector2i(2, 1)
-const SIGN := Vector2i(3, 1)
+# ---- 基础地表
+const GRASS := AtlasLayout.GRASS
+const GRASS_ALT := AtlasLayout.GRASS_ALT
+const PATH := AtlasLayout.PATH
+const SOIL_DRY := AtlasLayout.SOIL_DRY
+const SOIL_WET := AtlasLayout.SOIL_WET
+
+# ---- 水与石木
+const WATER := AtlasLayout.WATER
+const WATER_EDGE := AtlasLayout.WATER_EDGE
+const STONE := AtlasLayout.STONE
+const WOOD := AtlasLayout.WOOD
+const PATH_STONE := AtlasLayout.PATH_STONE
+const GRAVEL := AtlasLayout.GRAVEL
+const SAND := AtlasLayout.SAND
+const DIRT := AtlasLayout.DIRT
+
+# ---- 植被与装饰
+const FLOWERS := AtlasLayout.FLOWERS
+const FLOWER_RED := AtlasLayout.FLOWER_RED
+const FLOWER_BLUE := AtlasLayout.FLOWER_BLUE
+const FLOWER_BED := AtlasLayout.FLOWER_BED
+const BUSH := AtlasLayout.BUSH
+const TALL_GRASS := AtlasLayout.TALL_GRASS
+const MUSHROOM := AtlasLayout.MUSHROOM
+const PEBBLE := AtlasLayout.PEBBLE
+const STUMP_TILE := AtlasLayout.STUMP_TILE
+const HAY := AtlasLayout.HAY
+const CRATE := AtlasLayout.CRATE
+
+# ---- 人造物
+const FENCE := AtlasLayout.FENCE
+const FENCE_GATE := AtlasLayout.FENCE_GATE
+const SIGN := AtlasLayout.SIGN
+const WELL_TOP := AtlasLayout.WELL_TOP
+const ROOF := AtlasLayout.ROOF
+const WALL := AtlasLayout.WALL
+const WINDOW := AtlasLayout.WINDOW
+const DOORWAY := AtlasLayout.DOORWAY
