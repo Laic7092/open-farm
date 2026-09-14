@@ -1,15 +1,25 @@
 class_name Hud
 extends Control
-## 常驻 HUD：日期 / 时间 / 天气 / 金钱 / 体力 / 手持工具 / 交互提示 / 浮动提示。
+## 常驻 HUD：日期 / 时间 / 天气 / 金钱 / 体力 / 物品栏 / 交互提示 / 浮动提示。
 ##
 ## 单向数据流：HUD 只[b]订阅[/b] [EventBus]，从不主动去问游戏状态，
 ## 因此它可以在任何场景里存在，也不影响任何模拟逻辑。
+##
+## 本轮整理目标：把文字压缩到必要信息（天气 / 预报 / 手持都改成图标），
+## 并在底部加入常驻物品栏。物品栏前半段是工具腰带，后半段是背包前几格，
+## 这样 Q / R 切换工具时不需要低头找文字，也能一眼看到刚捡到的道具。
 
 ## 浮动提示停留时长（秒）。
 const TOAST_DURATION: float = 2.2
 
 ## 天气图标：与 [method Weather.to_key] 的返回值一一对应。
 const WEATHER_ICON_DIR: String = "res://assets/ui"
+
+## 底部物品栏格数。前几格显示工具腰带，剩余格显示背包前几格。
+const ITEM_BAR_SIZE: int = 12
+
+## 物品栏格子场景。
+const HUD_SLOT_SCENE: PackedScene = preload("res://scenes/ui/hud_slot.tscn")
 
 @onready var date_label: Label = %DateLabel
 @onready var time_label: Label = %TimeLabel
@@ -21,12 +31,15 @@ const WEATHER_ICON_DIR: String = "res://assets/ui"
 @onready var tool_icon: TextureRect = %ToolIcon
 @onready var stamina_bar: ProgressBar = %StaminaBar
 @onready var tool_label: Label = %ToolLabel
+@onready var inventory_bar: HBoxContainer = %InventoryBar
 @onready var prompt_label: Label = %PromptLabel
 @onready var toast_label: Label = %ToastLabel
 
 var _toast_tween: Tween
 ## 天气图标缓存：贴着同一个文件反复 load 会让每帧的 HUD 刷新变成磁盘 IO。
 var _weather_icons: Dictionary[StringName, Texture2D] = {}
+## 物品栏格子，按从左到右排列。
+var _item_slots: Array[HudSlot] = []
 
 
 func _ready() -> void:
@@ -38,11 +51,13 @@ func _ready() -> void:
 	EventBus.money_changed.connect(_on_money_changed)
 	EventBus.stamina_changed.connect(_on_stamina_changed)
 	EventBus.tool_changed.connect(_on_tool_changed)
+	EventBus.inventory_changed.connect(_on_inventory_changed)
 	EventBus.interaction_prompt_changed.connect(_on_prompt_changed)
 	EventBus.notification_requested.connect(_on_notification)
 
 	toast_label.modulate.a = 0.0
 	prompt_label.text = ""
+	_build_item_bar()
 	_refresh_all()
 
 
@@ -53,9 +68,8 @@ func _refresh_all() -> void:
 	_refresh_time()
 	_refresh_weather()
 	_on_money_changed(GameState.money, 0)
-	var tool_id := _player_tool_id()
-	tool_label.text = "%s: %s" % [Text.key(&"HUD_TOOL"), Text.tool_name(tool_id)]
-	tool_icon.texture = _item_icon(tool_id)
+	_refresh_item_bar()
+	_refresh_tool_icon()
 
 
 func _refresh_date() -> void:
@@ -67,12 +81,19 @@ func _refresh_time() -> void:
 
 
 func _refresh_weather() -> void:
-	weather_label.text = Text.weather_name(WeatherSystem.current)
+	var weather_name := Text.weather_name(WeatherSystem.current)
+	var forecast_name := Text.weather_name(WeatherSystem.forecast)
+
+	# 天气 / 明日预报只保留图标；文字塞进 tooltip，减少屏幕上的常驻文案。
+	weather_label.text = weather_name
+	weather_label.visible = false
 	weather_icon.texture = _weather_icon(WeatherSystem.current)
-	forecast_label.text = Text.format(&"HUD_FORECAST", {
-		"weather": Text.weather_name(WeatherSystem.forecast),
-	})
+	weather_icon.tooltip_text = weather_name
+
+	forecast_label.text = Text.format(&"HUD_FORECAST", {"weather": forecast_name})
+	forecast_label.visible = false
 	forecast_icon.texture = _weather_icon(WeatherSystem.forecast)
+	forecast_icon.tooltip_text = Text.format(&"HUD_FORECAST", {"weather": forecast_name})
 
 
 ## 取天气图标；找不到时返回 null（HUD 会只显示文字）。
@@ -86,9 +107,70 @@ func _weather_icon(weather: Weather.Type) -> Texture2D:
 	return texture
 
 
+func _refresh_tool_icon() -> void:
+	var tool_id := _player_tool_id()
+	# 旧的手持文字行已经隐藏，但保留节点以便兼容外部查找；
+	# 真正的手持工具由底部物品栏高亮显示。
+	tool_label.text = Text.tool_name(tool_id)
+	tool_icon.texture = _item_icon(tool_id)
+
+
+func _player() -> Player:
+	return get_tree().get_first_node_in_group(Player.GROUP) as Player
+
+
 func _player_tool_id() -> StringName:
-	var player := get_tree().get_first_node_in_group(Player.GROUP) as Player
+	var player := _player()
 	return player.tool_belt.selected_id() if player != null else &""
+
+
+# ---------------------------------------------------------------- 物品栏
+
+func _build_item_bar() -> void:
+	for node: HudSlot in _item_slots:
+		node.queue_free()
+	_item_slots.clear()
+
+	if HUD_SLOT_SCENE == null:
+		push_error("Hud: 找不到 hud_slot.tscn")
+		return
+
+	for _index: int in ITEM_BAR_SIZE:
+		var slot := HUD_SLOT_SCENE.instantiate() as HudSlot
+		inventory_bar.add_child(slot)
+		_item_slots.append(slot)
+
+
+## 刷新底部物品栏：工具腰带 + 背包前几格。
+func _refresh_item_bar() -> void:
+	if _item_slots.is_empty():
+		return
+
+	var player := _player()
+	if player == null:
+		for slot: HudSlot in _item_slots:
+			slot.clear()
+		return
+
+	var tool_ids: Array[StringName] = player.tool_belt.tool_ids
+	var selected_index := player.tool_belt.selected_index()
+	var bar_index := 0
+
+	for tool_index: int in mini(tool_ids.size(), _item_slots.size()):
+		_item_slots[bar_index].set_item(tool_ids[tool_index], 1, tool_index == selected_index)
+		bar_index += 1
+
+	var inventory: Inventory = player.inventory
+	for inventory_index: int in inventory.capacity:
+		if bar_index >= _item_slots.size():
+			break
+		var inventory_slot: InventorySlot = inventory.slots[inventory_index]
+		_item_slots[bar_index].set_item(inventory_slot.item_id, inventory_slot.count)
+		bar_index += 1
+
+	while bar_index < _item_slots.size():
+		_item_slots[bar_index].clear()
+		bar_index += 1
 
 
 # ---------------------------------------------------------------- 事件
@@ -115,8 +197,13 @@ func _on_stamina_changed(current: int, maximum: int) -> void:
 
 
 func _on_tool_changed(tool_id: StringName, _index: int) -> void:
-	tool_label.text = "%s: %s" % [Text.key(&"HUD_TOOL"), Text.tool_name(tool_id)]
+	tool_label.text = Text.tool_name(tool_id)
 	tool_icon.texture = _item_icon(tool_id)
+	_refresh_item_bar()
+
+
+func _on_inventory_changed() -> void:
+	_refresh_item_bar()
 
 
 ## 手持工具的图标：工具既是 [ToolData] 也是 [ItemData]，图标挂在道具上。
@@ -133,6 +220,7 @@ func _on_notification(text_key: StringName, args: Dictionary) -> void:
 	var message := Text.format(text_key, args)
 	if message.is_empty():
 		return
+
 	toast_label.text = message
 
 	if _toast_tween != null and _toast_tween.is_valid():
