@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FloraData" format=3]
+
+[ext_resource type="Script" path="res://src/data/flora_data.gd" id="1_fgtk3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/flora/boulder.png" id="2_mahiu"]
+
+[resource]
+script = ExtResource("1_fgtk3")
+id = &"boulder"
+display_name_key = &"FLORA_BOULDER"
+kind = 2
+spawn_weight = Array[int]([1, 1, 1, 0])
+max_per_world = 5
+min_spacing = 3
+initial_weight = 1
+solid_from_stage = 0
+solid_size = Vector2(24, 10)
+solid_offset = Vector2(0, 6)
+tool_kind = 4
+stamina_cost = 3
+drop_item_id = &"stone"
+drop_amount = Vector2i(2, 3)
+sprite_sheet = ExtResource("2_mahiu")

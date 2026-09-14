@@ -27,6 +27,7 @@ GENERATORS=(
 	"tools/art/generate_props.gd"     # 建筑 / 家具 / 树木
 	"tools/art/generate_actors.gd"    # 玩家与 NPC
 	"tools/art/generate_crops.gd"     # 每种作物一张生长图
+	"tools/art/generate_flora.gd"     # 每种野生植被一张阶段表（树 / 草 / 石）
 	"tools/art/generate_items.gd"     # 道具图标
 	"tools/art/generate_ui.gd"        # UI 九宫格与图标
 	"tools/art/generate_title.gd"     # 标题页背景与云

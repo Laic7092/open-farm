@@ -14,8 +14,11 @@ extends CharacterBody2D
 const GROUP: StringName = &"player"
 
 ## 开局自带的工具。
+##
+## 斧头与镐子必须自带：世界会自己长树长石头，玩家没有清理手段的话，
+## "更真实的世界"就变成了"走不动的世界"。
 const DEFAULT_TOOLS: Array[StringName] = [
-	&"hoe", &"watering_can", &"sickle", &"seed_bag",
+	&"hoe", &"watering_can", &"sickle", &"seed_bag", &"axe", &"pickaxe",
 ]
 
 ## 走路速度（像素/秒）。
@@ -213,10 +216,15 @@ func from_dict(data: Dictionary) -> void:
 # ---------------------------------------------------------------- 内部
 
 func _try_harvest() -> bool:
-	var grid := interactor.current_grid()
-	if grid == null:
-		return false
 	var cell := target_cell()
+	var grid := interactor.current_grid()
+	if grid != null and _try_harvest_crop(grid, cell):
+		return true
+	return _try_pick_flora(cell)
+
+
+## 农田上的作物（成熟后徒手收）。
+func _try_harvest_crop(grid: FarmGrid, cell: Vector2i) -> bool:
 	var crop := grid.get_crop(cell)
 	if crop == null:
 		return false
@@ -232,6 +240,23 @@ func _try_harvest() -> bool:
 	inventory.add(item_id, amount)
 	EventBus.notification_requested.emit(
 		&"NOTIFY_CROP_HARVESTED", {"item": Text.item_name(item_id), "count": amount}
+	)
+	return true
+
+
+## 野外的花 / 蘑菇（[member FloraData.pickable_by_hand]）。
+func _try_pick_flora(cell: Vector2i) -> bool:
+	var field := interactor.current_flora()
+	if field == null or not field.occupied(cell):
+		return false
+	var outcome := field.clear(cell, ToolData.Kind.SICKLE, true)
+	var amount: int = int(outcome.get("amount", 0))
+	if amount <= 0:
+		return false
+	var item_id: StringName = outcome.get("item_id", &"")
+	inventory.add(item_id, amount)
+	EventBus.notification_requested.emit(
+		&"NOTIFY_FLORA_CLEARED", {"item": Text.item_name(item_id), "count": amount}
 	)
 	return true
 

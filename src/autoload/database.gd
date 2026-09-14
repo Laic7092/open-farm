@@ -8,6 +8,7 @@ extends Node
 ## 该节点不持有任何运行时状态，可以安全地在单元测试里反复调用 [method reload]。
 
 const CROP_DIR: String = "res://data/crops"
+const FLORA_DIR: String = "res://data/flora"
 const ITEM_DIR: String = "res://data/items"
 const TOOL_DIR: String = "res://data/tools"
 const NPC_DIR: String = "res://data/npcs"
@@ -18,6 +19,7 @@ const DIALOGUE_DIR: String = "res://data/dialogue"
 signal reloaded()
 
 var crops: Dictionary[StringName, CropData] = {}
+var floras: Dictionary[StringName, FloraData] = {}
 var items: Dictionary[StringName, ItemData] = {}
 var tools: Dictionary[StringName, ToolData] = {}
 var npcs: Dictionary[StringName, NpcData] = {}
@@ -32,6 +34,7 @@ func _ready() -> void:
 ## 重新扫描全部数据目录。
 func reload() -> void:
 	crops.clear()
+	floras.clear()
 	items.clear()
 	tools.clear()
 	npcs.clear()
@@ -39,6 +42,7 @@ func reload() -> void:
 	dialogues.clear()
 
 	_index(CROP_DIR, crops, "CropData")
+	_index(FLORA_DIR, floras, "FloraData")
 	_index(ITEM_DIR, items, "ItemData")
 	_index(TOOL_DIR, tools, "ToolData")
 	_index(NPC_DIR, npcs, "NpcData")
@@ -52,6 +56,10 @@ func reload() -> void:
 
 func get_crop(id: StringName) -> CropData:
 	return crops.get(id) as CropData
+
+
+func get_flora(id: StringName) -> FloraData:
+	return floras.get(id) as FloraData
 
 
 func get_item(id: StringName) -> ItemData:
@@ -89,6 +97,13 @@ func require_crop(id: StringName) -> CropData:
 	return crop
 
 
+func require_flora(id: StringName) -> FloraData:
+	var data := get_flora(id)
+	if data == null:
+		push_error("Database: 找不到野生植被 '%s'" % id)
+	return data
+
+
 func require_shop(id: StringName) -> ShopData:
 	var shop := get_shop(id)
 	if shop == null:
@@ -99,7 +114,7 @@ func require_shop(id: StringName) -> ShopData:
 ## 所有数据资源的总数，便于进度校验与测试。
 func total_count() -> int:
 	return (
-		crops.size() + items.size() + tools.size()
+		crops.size() + floras.size() + items.size() + tools.size()
 		+ npcs.size() + shops.size() + dialogues.size()
 	)
 
@@ -107,7 +122,7 @@ func total_count() -> int:
 ## 对全部资源跑一遍自检；返回形如 ["CropData(turnip): id 不能为空"] 的问题列表。
 func validate_all() -> PackedStringArray:
 	var problems := PackedStringArray()
-	for bucket: Dictionary in [crops, items, tools, npcs, shops, dialogues]:
+	for bucket: Dictionary in [crops, floras, items, tools, npcs, shops, dialogues]:
 		for key: StringName in bucket:
 			var resource: Resource = bucket[key]
 			if not resource.has_method(&"validate"):

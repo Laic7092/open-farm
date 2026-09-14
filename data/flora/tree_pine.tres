@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FloraData" format=3]
+
+[ext_resource type="Script" path="res://src/data/flora_data.gd" id="1_eweuk"]
+[ext_resource type="Texture2D" path="res://assets/sprites/flora/tree_pine.png" id="2_6xifa"]
+
+[resource]
+script = ExtResource("1_eweuk")
+id = &"tree_pine"
+display_name_key = &"FLORA_TREE_PINE"
+kind = 0
+days_per_stage = Array[int]([3, 3, 3])
+spawn_weight = Array[int]([3, 3, 3, 1])
+max_per_world = 10
+min_spacing = 3
+initial_weight = 4
+solid_from_stage = 2
+solid_offset = Vector2(0, 6)
+tool_kind = 3
+stamina_cost = 3
+drop_item_id = &"wood"
+drop_amount = Vector2i(2, 3)
+sprite_sheet = ExtResource("2_6xifa")

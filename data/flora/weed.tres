@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FloraData" format=3]
+
+[ext_resource type="Script" path="res://src/data/flora_data.gd" id="1_k1iv7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/flora/weed.png" id="2_ggxpq"]
+
+[resource]
+script = ExtResource("1_k1iv7")
+id = &"weed"
+display_name_key = &"FLORA_WEED"
+days_per_stage = Array[int]([1])
+spawn_weight = Array[int]([7, 8, 5, 0])
+rain_bonus = 3
+max_per_world = 60
+initial_weight = 6
+grows_on_farmland = true
+drop_item_id = &"fiber"
+drop_chance = 0.7
+sprite_sheet = ExtResource("2_ggxpq")

@@ -82,3 +82,21 @@ func test_from_dict_uses_safe_defaults() -> void:
 	assert_int(restored.year).is_equal(1)
 	assert_int(restored.season).is_equal(Season.Type.SPRING)
 	assert_int(restored.day).is_equal(1)
+
+
+func test_from_absolute_day_is_the_inverse_of_absolute_day() -> void:
+	var date := GameDate.new(1, Season.Type.SPRING, 1)
+	for _i: int in GameDate.DAYS_PER_YEAR * 2 + 3:
+		var restored := GameDate.from_absolute_day(date.absolute_day())
+		assert_bool(restored.equals(date)).override_failure_message(
+			"第 %d 天还原成了 %s，期望 %s" % [date.absolute_day(), restored, date]
+		).is_true()
+		date.advance_day()
+
+
+func test_from_absolute_day_clamps_negative_input() -> void:
+	var restored := GameDate.from_absolute_day(-99)
+	assert_int(restored.absolute_day()).is_equal(0)
+	assert_int(restored.year).is_equal(1)
+	assert_int(restored.season).is_equal(Season.Type.SPRING)
+	assert_int(restored.day).is_equal(1)

@@ -61,6 +61,17 @@ signal crop_died(cell: Vector2i)
 ## 使用了工具（含失败尝试，用于播放动画/音效反馈）。
 signal tool_used(tool_id: StringName, cell: Vector2i, success: bool)
 
+# ---------------------------------------------------------------- 野生植被
+
+## 世界各处自然冒出了一株新芽。
+signal flora_spawned(cell: Vector2i, flora_id: StringName)
+## 野生植被长到了新的阶段。
+signal flora_grown(cell: Vector2i, stage: int)
+## 野生植被被清除（[param amount] 为 0 表示这次什么也没掉）。
+signal flora_cleared(
+	cell: Vector2i, flora_id: StringName, item_id: StringName, amount: int
+)
+
 # ---------------------------------------------------------------- 交互 / 对话 / 商店
 
 ## 玩家进入 / 离开可交互范围，[param prompt_key] 为空表示无提示。

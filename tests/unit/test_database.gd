@@ -8,8 +8,19 @@ func test_all_expected_crops_are_loaded() -> void:
 	assert_bool(Database.crops.has(&"tomato")).is_true()
 
 
+func test_all_expected_flora_are_loaded() -> void:
+	for flora_id: StringName in [
+		&"tree_oak", &"tree_pine", &"weed", &"rock", &"boulder", &"flower", &"mushroom"
+	]:
+		assert_object(Database.get_flora(flora_id)).override_failure_message(
+			"缺少野生植被 %s" % flora_id
+		).is_not_null()
+
+
 func test_all_expected_tools_are_loaded() -> void:
-	for tool_id: StringName in [&"hoe", &"watering_can", &"sickle", &"seed_bag"]:
+	for tool_id: StringName in [
+		&"hoe", &"watering_can", &"sickle", &"seed_bag", &"axe", &"pickaxe"
+	]:
 		assert_object(Database.get_tool(tool_id)).is_not_null()
 
 
@@ -58,6 +69,17 @@ func test_shop_stock_only_sells_known_items() -> void:
 		var shop := Database.get_shop(shop_id)
 		for entry: ShopStock in shop.stock:
 			assert_object(Database.get_item(entry.item_id)).is_not_null()
+
+
+## 野生植被的产出必须指向真实道具，否则砍树时背包会收到一个不存在的 id。
+func test_every_flora_drop_points_at_a_real_item() -> void:
+	for flora_id: StringName in Database.floras:
+		var data := Database.get_flora(flora_id)
+		if data.drop_item_id == &"":
+			continue
+		assert_object(Database.get_item(data.drop_item_id)).override_failure_message(
+			"野生植被 %s 的产出 %s 不存在" % [flora_id, data.drop_item_id]
+		).is_not_null()
 
 
 func test_npc_shop_references_exist() -> void:

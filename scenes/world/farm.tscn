@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3]
+[gd_scene load_steps=29 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -11,6 +11,8 @@
 [ext_resource type="Script" path="res://src/world/shipping_bin.gd" id="9_bin"]
 [ext_resource type="Script" path="res://src/world/scene_door.gd" id="10_door"]
 [ext_resource type="Script" path="res://src/world/world_prop.gd" id="12_prop"]
+[ext_resource type="Script" path="res://src/world/flora_field.gd" id="13_flora_field"]
+[ext_resource type="PackedScene" path="res://scenes/world/flora.tscn" id="14_flora"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/house.png" id="20_house"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/barn.png" id="21_barn"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/tree.png" id="22_tree"]
@@ -57,6 +59,18 @@ crop_scene = ExtResource("4_crop")
 farmable_area = Rect2i(4, 8, 24, 12)
 ground_area = Rect2i(0, 0, 48, 30)
 persistence_id = &"farm_grid"
+
+[node name="FloraField" type="Node2D" parent="." node_paths=PackedStringArray("ground_layer", "flora_root")]
+script = ExtResource("13_flora_field")
+ground_layer = NodePath("../Ground")
+flora_root = NodePath("..")
+flora_scene = ExtResource("14_flora")
+growth_area = Rect2i(1, 1, 46, 28)
+persistence_id = &"flora_farm"
+initial_budget = 45
+daily_budget = 3
+max_total = 140
+world_seed = 1
 
 [node name="Bounds" type="StaticBody2D" parent="."]
 collision_layer = 1
@@ -122,30 +136,6 @@ script = ExtResource("12_prop")
 solid_size = Vector2(20, 10)
 solid_offset = Vector2(0, 12)
 
-[node name="Stump" type="Sprite2D" parent="Props"]
-position = Vector2(476, 264)
-texture = ExtResource("31_stump")
-script = ExtResource("12_prop")
-
-[node name="Rock1" type="Sprite2D" parent="Props"]
-position = Vector2(508, 196)
-texture = ExtResource("29_rock")
-script = ExtResource("12_prop")
-
-[node name="Rock2" type="Sprite2D" parent="Props"]
-position = Vector2(690, 232)
-texture = ExtResource("30_rock_big")
-script = ExtResource("12_prop")
-solid_size = Vector2(24, 10)
-solid_offset = Vector2(0, 6)
-
-[node name="Rock3" type="Sprite2D" parent="Props"]
-position = Vector2(548, 432)
-texture = ExtResource("30_rock_big")
-script = ExtResource("12_prop")
-solid_size = Vector2(24, 10)
-solid_offset = Vector2(0, 6)
-
 [node name="Chicken3" type="Sprite2D" parent="Props"]
 position = Vector2(596, 452)
 texture = ExtResource("28_chicken")
@@ -161,47 +151,6 @@ position = Vector2(244, 452)
 texture = ExtResource("27_pot")
 script = ExtResource("12_prop")
 
-[node name="Tree1" type="Sprite2D" parent="Props"]
-position = Vector2(184, 80)
-texture = ExtResource("22_tree")
-script = ExtResource("12_prop")
-solid_size = Vector2(10, 8)
-solid_offset = Vector2(0, 20)
-
-[node name="Tree2" type="Sprite2D" parent="Props"]
-position = Vector2(222, 74)
-texture = ExtResource("23_pine")
-script = ExtResource("12_prop")
-solid_size = Vector2(10, 8)
-solid_offset = Vector2(0, 20)
-
-[node name="Tree3" type="Sprite2D" parent="Props"]
-position = Vector2(664, 74)
-texture = ExtResource("22_tree")
-script = ExtResource("12_prop")
-solid_size = Vector2(10, 8)
-solid_offset = Vector2(0, 20)
-
-[node name="Tree4" type="Sprite2D" parent="Props"]
-position = Vector2(706, 80)
-texture = ExtResource("23_pine")
-script = ExtResource("12_prop")
-solid_size = Vector2(10, 8)
-solid_offset = Vector2(0, 20)
-
-[node name="Tree5" type="Sprite2D" parent="Props"]
-position = Vector2(748, 176)
-texture = ExtResource("22_tree")
-script = ExtResource("12_prop")
-solid_size = Vector2(10, 8)
-solid_offset = Vector2(0, 20)
-
-[node name="Tree6" type="Sprite2D" parent="Props"]
-position = Vector2(688, 448)
-texture = ExtResource("23_pine")
-script = ExtResource("12_prop")
-solid_size = Vector2(10, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="Spawns" type="Node2D" parent="."]
 

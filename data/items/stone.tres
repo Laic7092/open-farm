@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/stone.png" id="1_ofji2"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_am6s0"]
+
+[resource]
+script = ExtResource("2_am6s0")
+id = &"stone"
+display_name_key = &"ITEM_STONE"
+sell_price = 8
+icon = ExtResource("1_ofji2")

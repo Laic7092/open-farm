@@ -63,12 +63,13 @@ open-farm/
 │   ├── art/                   # 调色板与图集排版表（生成器与运行时共用的事实来源）
 │   ├── autoload/              # 全局单例（见下方"八大单例"）
 │   ├── core/                  # 与玩法无关的基础设施：日期、季节、朝向、状态机、交互基类
-│   ├── data/                  # 数据资源的类定义（CropData / ItemData / …）
+│   ├── data/                  # 数据资源的类定义（CropData / FloraData / ItemData / …）
 │   ├── player/                # 玩家实体、体力、背包、工具带、状态机状态
 │   ├── farm/                  # 农田网格、作物生长规则、工具→农场的翻译层
 │   ├── npc/                   # NPC
 │   ├── shop/                  # 商店交易规则（纯逻辑，可单测）
 │   ├── world/                 # 世界场景基类、天气、边界墙、传送门、床、出货箱
+│   │                          #   以及野生植被系统（FloraData/State/Growth/Field）
 │   ├── ui/                    # HUD、对话框、背包、商店、系统菜单、UI 总入口
 │   └── main/                  # 游戏主入口
 ├── scenes/                    # 场景文件，目录结构与 src/ 一一对应
@@ -77,7 +78,7 @@ open-farm/
 │   ├── i18n/strings.csv       # 翻译表（zh_CN / en）
 │   ├── fonts/pixel_cjk.fnt    # 像素中文字体（1100 字形子集 + PNG 图集）
 │   ├── fonts/ui_font.tres     # 子集外字符的系统字体兜底
-│   ├── sprites/{actors,crops,items,props,weather}/
+│   ├── sprites/{actors,crops,flora,items,props,weather}/
 │   ├── ui/                    # UI 九宫格与图标
 │   ├── title/                 # 标题页背景与云
 │   ├── tilesets/              # 组装出来的 TileSet
@@ -106,12 +107,13 @@ open-farm/
 ### 三条贯穿全局的设计原则
 
 **1. 数据驱动，而不是代码驱动**
-作物、道具、工具、NPC、对话、商店全部是 `Resource`（`res://data/**/*.tres`）。
+作物、野生植被、道具、工具、NPC、对话、商店全部是 `Resource`（`res://data/**/*.tres`）。
 新增一种作物 = 往 `data/crops/` 丢一个 `.tres`，**不需要改任何脚本**。
 
 ```gdscript
 # 脚本里只认 id
 var crop := Database.get_crop(&"turnip")
+var tree := Database.get_flora(&"tree_oak")
 ```
 
 **2. 静态数据与运行时状态严格分离**
@@ -128,8 +130,31 @@ UI 通过 `EventBus` 单向订阅，从不主动查询游戏状态；
 # 日结转流水线（顺序即依赖顺序）
 1. WeatherSystem  掷出当天天气
 2. FarmGrid       作物生长 / 枯死 / 浇水标记重置
-3. Player         恢复体力
+3. FloraField     野生植被生长 / 扩散（树、杂草、石头……）
+4. Player         恢复体力
 ```
+
+### 世界为什么会自己长东西
+
+`FloraField` 是"世界自然生长"的唯一权威状态，和 `FarmGrid` 完全同构：
+格子状态放在 `Dictionary[Vector2i, FloraState]` 里、视图节点按需生成、存档就是一次 `to_dict`。
+区别在于农田是"玩家种、玩家管"，而它是"自己长、自己扩散"。
+
+每天按顺序做两件事：**先让已经长出来的植被长大，再按季节/天气权重撒新芽**。
+能不能落在某一格，要过四道关：
+
+1. 在 `growth_area` 内，且该格还没东西；
+2. 地表必须是**自然地表**（`FloraGrowth.NATURAL_GROUND` 白名单）——
+   路、石板、水、木地板、栅栏、花圃自动被排除，因为它们被画进了地面图层；
+3. 一次 `intersect_shape` 物理查询不能碰到任何实心东西（房子、水井、手摆的家具都在 layer 1）；
+4. 不在出生点 / 门（所有 `Interactable`）附近，也不在玩家脚边。
+
+另外还有一道**连通性守卫**：只有当一个新芽/一次生长会变成"挡路"的时候，
+才做一次 BFS 比较可达格数；如果它会把地图切成两半，这次生长就被撤销。
+于是"一夜之间树把门口堵死"在结构上不会发生。
+
+不在场的地图不跑日结转（钩子在 `_exit_tree` 里注销），而是下次进图时把离开的天数
+一次性补算（单次上限 60 天）——这就是"去小镇待三天，回来树苗长高了"。
 
 ### 场景切换为什么不用 `change_scene_to_file`
 
@@ -164,6 +189,16 @@ Main
 2. 在 `data/items/` 加对应的种子道具（`category = SEED`、`crop_id` 指向它）和收获物。
 3. 在 `assets/i18n/strings.csv` 加名字翻译键。
 4. 商店上架：在 `data/shops/general_store.tres` 的 `stock` 里加一条 `ShopStock`。
+
+### 加一种野生植被
+
+1. 在 `data/flora/` 新建 `FloraData`（或看 `tools/generate_sample_data.gd` 里 `_build_flora()` 的示例）。
+   关键字段：`spawn_weight`（四个季节的扩散权重，0 = 该季不长）、
+   `initial_weight`（新地图开局播种权重）、`days_per_stage`（空数组 = 不生长，石头就是这样）、
+   `solid_from_stage`（从第几阶段开始挡人）、`tool_kind`（用什么工具清）。
+2. 在 `tools/art/generate_flora.gd` 里加一行外观 → 跑一次 `./tools/build_assets.sh`。
+3. 在 `assets/i18n/strings.csv` 加名字翻译键（重跑 `build_assets.sh` 会把新汉字打进像素字体）。
+4. 想让某张地图多长/少长：改那张地图 `FloraField` 的 `initial_budget` / `daily_budget` / `max_total`。
 
 ### 加一个 NPC
 
@@ -253,6 +288,10 @@ func from_dict(data: Dictionary) -> void: ...
 - **世界场景常驻内存**：切过的地图实例会一直保留（这是为了让农田进度跨场景不丢）。
   地图数量上来之后需要改成"按需卸载 + 状态外置到存档层"。
 - **NPC 没有日程与寻路**：目前是站桩 + 按季节切换对白。
+- **野生植被是"进图补算"而不是后台模拟**：不在场的地图不跑日结转，
+  而是在重新进入时把离开的天数一次性补算掉（单次最多 60 天）。
+  要做到真正连续的后台模拟，需要把状态外置到 autoload，和当前"状态在场景里"的架构冲突。
+- **野草会侵占农田空地**：没翻耕的地上会长草，清掉才能翻地——这是刻意的设计，不是 bug。
 - **出货箱是"一键全卖"**：原作是逐件投放 + 次日结算，接口已预留。
 - **存档只有一个槽位**：标题页的"继续游戏"读最近的存档，快捷存读档固定在槽位 0，
   还没有多槽位的选择界面。

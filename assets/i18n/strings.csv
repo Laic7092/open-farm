@@ -48,10 +48,27 @@ ITEM_TOMATO,番茄,Tomato
 ITEM_HOE,锄头,Hoe
 ITEM_WATERING_CAN,洒水壶,Watering Can
 ITEM_SICKLE,镰刀,Sickle
+ITEM_AXE,斧头,Axe
+ITEM_PICKAXE,镐子,Pickaxe
 ITEM_WOOD,木材,Wood
+ITEM_STONE,石材,Stone
+ITEM_FIBER,纤维,Fiber
+ITEM_FLOWER,野花,Wildflower
+ITEM_MUSHROOM,蘑菇,Mushroom
 TOOL_HOE_DESC,用来翻地，把草地变成可耕种的土地。,Tills grass into farmable soil.
 TOOL_WATERING_CAN_DESC,给作物浇水，作物才会生长。,Waters crops so they keep growing.
-TOOL_SICKLE_DESC,清除枯死的作物。,Clears withered crops.
+TOOL_SICKLE_DESC,清除枯死的作物，也可以割草。,Clears withered crops and cuts weeds.
+TOOL_AXE_DESC,砍倒树木，得到木材。,Chops trees down for wood.
+TOOL_PICKAXE_DESC,砸碎石头，得到石材。,Smashes rocks for stone.
+FLORA_TREE_OAK,阔叶树,Oak Tree
+FLORA_TREE_PINE,松树,Pine Tree
+FLORA_WEED,杂草,Weed
+FLORA_ROCK,石头,Rock
+FLORA_BOULDER,巨石,Boulder
+FLORA_FLOWER,野花,Wildflower
+FLORA_MUSHROOM,蘑菇,Mushroom
+NOTIFY_FLORA_CLEARED,采到了 {item} ×{count},Gathered {item} x{count}
+NOTIFY_FLORA_BLOCKED,这里长着东西，得先清理,Something is growing here
 SHOP_GENERAL_STORE,杂货店,General Store
 SHOP_UI_TITLE,商店,Shop
 SHOP_UI_BUY,购买,Buy

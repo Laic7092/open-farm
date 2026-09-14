@@ -53,6 +53,21 @@ func days_until(other: GameDate) -> int:
 	return other.absolute_day() - absolute_day()
 
 
+## [method absolute_day] 的逆运算：把"自游戏开始以来的第几天"还原成日期。
+##
+## 用于"世界在你离开的这几天里也在生长"这类补算：只知道过了几天，
+## 但需要按天分别拿到当时的季节。
+static func from_absolute_day(value: int) -> GameDate:
+	var total: int = maxi(value, 0)
+	var year: int = total / DAYS_PER_YEAR + 1
+	var day_of_year: int = total % DAYS_PER_YEAR
+	return GameDate.new(
+		year,
+		Season.from_index(day_of_year / Season.DAYS_PER_SEASON),
+		day_of_year % Season.DAYS_PER_SEASON + 1,
+	)
+
+
 ## 值相等比较；[code]==[/code] 对 RefCounted 比较的是引用，这里需要显式方法。
 func equals(other: GameDate) -> bool:
 	if other == null:

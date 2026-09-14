@@ -29,6 +29,10 @@ var _phase: int = 0
 ## 跨场景往返测试用的锚点。
 var _anchor_cell: Vector2i = Vector2i.ZERO
 var _anchor_tilled: int = 0
+## 野生植被锚点：验证"离开这几天，世界也在长"。
+var _anchor_flora_cell: Vector2i = Vector2i(-1, -1)
+var _anchor_flora_days: int = 0
+var _anchor_flora_total: int = 0
 
 
 func _ready() -> void:
@@ -115,6 +119,7 @@ func _run_checks() -> void:
 	_check_spawn()
 	_check_clock()
 	_check_farming()
+	_check_flora()
 	_check_shop()
 	_check_save_load()
 	_check_ui()
@@ -122,8 +127,9 @@ func _run_checks() -> void:
 
 func _check_database() -> void:
 	_check(Database.crops.size() >= 3, "作物数据应当至少有 3 种")
+	_check(Database.floras.size() >= 7, "野生植被数据应当至少有 7 种")
 	_check(Database.items.size() >= 10, "道具数据应当至少有 10 种")
-	_check(Database.tools.size() >= 4, "工具数据应当至少有 4 种")
+	_check(Database.tools.size() >= 6, "工具数据应当至少有 6 种")
 	_check(Database.shops.has(&"general_store"), "应当存在 general_store 商店")
 	_check(Database.npcs.has(&"merchant"), "应当存在 merchant NPC")
 	var problems := Database.validate_all()
@@ -183,6 +189,10 @@ func _check_farming() -> void:
 	var cell: Vector2i = grid.farmable_area.position + Vector2i(1, 1)
 	_check(grid.is_farmable(cell), "农田区域内应当可以耕种")
 
+	# 田里可能已经长了杂草——这本身就是"更真实的世界"的一部分，
+	# 但要让翻地/播种的断言稳定，先把它清掉。
+	_clear_flora_at(cell)
+
 	_check(grid.till(cell), "应当可以翻地")
 	_check(not grid.till(cell), "重复翻地应当失败")
 	_check(grid.water(cell), "应当可以浇水")
@@ -205,6 +215,99 @@ func _check_farming() -> void:
 	_check_eq(String(outcome.get("item_id", &"")), "turnip", "收获产物应当是萝卜")
 	_check(int(outcome.get("amount", 0)) >= 1, "收获数量应当至少为 1")
 	_check(grid.get_crop(cell) == null, "一次性作物收获后应当从地里消失")
+
+
+# ---------------------------------------------------------------- 野生植被
+
+## 世界自然生长系统的端到端检查：开局有植被、过一天会长、对的工具能清掉。
+func _check_flora() -> void:
+	var field := _flora_field()
+	_check(field != null, "农场场景应当包含 FloraField")
+	if field == null:
+		return
+
+	_check(field.total() > 0, "开局农场应当已经自然长出植被")
+
+	var resolved: int = 0
+	for cell: Vector2i in field.flora:
+		if Database.get_flora(field.flora[cell].flora_id) != null:
+			resolved += 1
+	_check_eq(resolved, field.total(), "每一株野生植被都应当能解析到数据")
+
+	# 生长：睡一觉之后再回来看那株长了几天。
+	var growing := _first_growing_flora(field)
+	if growing != Vector2i(-1, -1):
+		var before: int = field.flora[growing].days_grown
+		GameClock.sleep_until_morning()
+		if field.occupied(growing):
+			_check(
+				field.flora[growing].days_grown > before,
+				"过一天之后野生植被应当长了一点"
+			)
+		else:
+			_fail("睡了一觉之后那株植被不该消失")
+
+	_check(_clear_one_flora(field), "用对应的工具应当能清掉一株野生植被")
+
+
+## 找一株"今天确实会生长"的植被。
+func _first_growing_flora(field: FloraField) -> Vector2i:
+	for cell: Vector2i in field.flora:
+		var data := Database.get_flora(field.flora[cell].flora_id)
+		if data != null and FloraGrowth.can_grow(data, GameClock.date.season):
+			return cell
+	return Vector2i(-1, -1)
+
+
+## 用 [FarmInteractor] 走一遍真实的工具链路，清掉任意一株植被。
+func _clear_one_flora(field: FloraField) -> bool:
+	var player := _player()
+	if player == null:
+		return false
+	# 先快照一份格子：工具生效会改动 field.flora，不能边遍历边删。
+	var cells: Array[Vector2i] = []
+	for cell: Vector2i in field.flora:
+		cells.append(cell)
+	for cell: Vector2i in cells:
+		var data := Database.get_flora(field.flora[cell].flora_id)
+		if data == null:
+			continue
+		var tool := Database.get_tool(_tool_id_for_kind(data.tool_kind))
+		if tool == null:
+			continue
+		var before: int = field.total()
+		if player.interactor.use_tool(tool, cell) and field.total() < before:
+			return true
+	return false
+
+
+func _tool_id_for_kind(kind: ToolData.Kind) -> StringName:
+	match kind:
+		ToolData.Kind.HOE:
+			return &"hoe"
+		ToolData.Kind.WATERING_CAN:
+			return &"watering_can"
+		ToolData.Kind.AXE:
+			return &"axe"
+		ToolData.Kind.PICKAXE:
+			return &"pickaxe"
+		ToolData.Kind.SICKLE:
+			return &"sickle"
+		_:
+			return &"seed_bag"
+
+
+## 把某一格上的植被清掉（冒烟测试里用来给"翻地"腾地方）。
+func _clear_flora_at(cell: Vector2i) -> void:
+	var field := _flora_field()
+	if field == null or not field.occupied(cell):
+		return
+	var state := field.flora_at(cell)
+	if state == null:
+		return
+	var data := Database.get_flora(state.flora_id)
+	if data != null:
+		field.clear(cell, data.tool_kind)
 
 
 func _check_shop() -> void:
@@ -275,11 +378,20 @@ func _prepare_persistence_anchor() -> void:
 	if grid == null:
 		return
 	_anchor_cell = grid.farmable_area.position + Vector2i(3, 3)
+	_clear_flora_at(_anchor_cell)
 	grid.till(_anchor_cell)
 	grid.water(_anchor_cell)
 	grid.plant(_anchor_cell, &"potato_seed", Season.Type.SPRING)
 	_anchor_tilled = grid.tilled_count()
 	_check(grid.get_crop(_anchor_cell) != null, "锚点格子应当已种下土豆")
+
+	# 另记一株野生植被：离开这几天它应当靠"进图补算"继续长大。
+	var field := _flora_field()
+	if field != null:
+		_anchor_flora_cell = _first_growing_flora(field)
+		_anchor_flora_total = field.total()
+		if _anchor_flora_cell != Vector2i(-1, -1):
+			_anchor_flora_days = field.flora[_anchor_flora_cell].days_grown
 
 
 func _check_town() -> void:
@@ -290,6 +402,7 @@ func _check_town() -> void:
 	_check_eq(String(world.get(&"world_id")), "town", "切换后应当在小镇")
 	_check(_player() != null, "小镇里应当有玩家")
 	_check(_farm_grid() == null, "小镇里不应该有农场网格")
+	_check(_flora_field() != null, "小镇也应当有自己的野生植被")
 
 	var spawn := _find_spawn(&"from_farm")
 	_check(spawn != null, "小镇应当有 from_farm 出生点")
@@ -304,6 +417,10 @@ func _check_town() -> void:
 		"NPC 应当已从小镇移入 twon"
 	)
 
+	# 在别的地图上过一天：农场不在场景树里，它的日结转钩子是注销的，
+	# 所以农场的植被只能靠"重新进图时补算"追上——这正是下面要验证的。
+	GameClock.sleep_until_morning()
+
 
 func _check_twon() -> void:
 	var world := _world()
@@ -313,6 +430,7 @@ func _check_twon() -> void:
 	_check_eq(String(world.get(&"world_id")), "twon", "切换后应当在大场景 twon")
 	_check(_player() != null, "twon 里应当有玩家")
 	_check(_farm_grid() == null, "twon 里不应该有农场网格")
+	_check(_flora_field() != null, "twon 也应当有自己的野生植被")
 
 	var limits: Rect2 = world.get(&"camera_limits")
 	_check(
@@ -370,6 +488,21 @@ func _check_farm_state_survived() -> void:
 			"往返后日结转钩子应当仍然生效（作物应当继续生长）"
 		)
 
+	# 关键回归：不在场的地图靠"重新进图时补算"继续生长。
+	var field := _flora_field()
+	_check(field != null, "返回后应当能找到 FloraField")
+	if field == null:
+		return
+	_check(
+		field.total() >= _anchor_flora_total,
+		"往返后野生植被总数不该变少（%d → %d）" % [_anchor_flora_total, field.total()]
+	)
+	if _anchor_flora_cell != Vector2i(-1, -1) and field.occupied(_anchor_flora_cell):
+		_check(
+			field.flora[_anchor_flora_cell].days_grown > _anchor_flora_days,
+			"在小镇过了一天之后，农场的植被应当已经补算生长过"
+		)
+
 
 # ---------------------------------------------------------------- 工具
 
@@ -379,6 +512,10 @@ func _world() -> Node:
 
 func _farm_grid() -> FarmGrid:
 	return get_tree().get_first_node_in_group(FarmGrid.GROUP) as FarmGrid
+
+
+func _flora_field() -> FloraField:
+	return get_tree().get_first_node_in_group(FloraField.GROUP) as FloraField
 
 
 func _player() -> Player:

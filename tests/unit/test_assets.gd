@@ -26,6 +26,13 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://assets/sprites/props/tree.png",
 	"res://assets/sprites/props/bed.png",
 	"res://assets/sprites/props/shipping_bin.png",
+	"res://assets/sprites/flora/tree_oak.png",
+	"res://assets/sprites/flora/tree_pine.png",
+	"res://assets/sprites/flora/weed.png",
+	"res://assets/sprites/flora/rock.png",
+	"res://assets/sprites/flora/boulder.png",
+	"res://assets/sprites/flora/flower.png",
+	"res://assets/sprites/flora/mushroom.png",
 	"res://assets/sprites/weather/rain_drop.png",
 	"res://assets/sprites/weather/snow_flake.png",
 	"res://assets/ui/panel.png",
@@ -81,6 +88,27 @@ func test_crop_png_matches_atlas_layout() -> void:
 			continue
 		assert_int(crop.sprite_sheet.get_width()).is_equal(Layout.CROP_SIZE.x)
 		assert_int(crop.sprite_sheet.get_height()).is_equal(Layout.CROP_SIZE.y)
+
+
+## 野生植被的阶段表必须挂上、且放得下"成熟"那一列。
+##
+## 列数对不上时 [Flora] 会画出空帧（植株凭空消失），所以这条检查不能省。
+func test_flora_stage_sheets_match_layout() -> void:
+	for flora_id: StringName in Database.floras:
+		var data := Database.get_flora(flora_id)
+		assert_object(data.sprite_sheet).override_failure_message(
+			"野生植被 %s 没有挂阶段图" % flora_id
+		).is_not_null()
+		if data.sprite_sheet == null:
+			continue
+		assert_int(data.sprite_sheet.get_width() % Layout.FLORA_COLUMNS).override_failure_message(
+			"野生植被 %s 的贴图宽度不是 %d 列的整数倍" % [flora_id, Layout.FLORA_COLUMNS]
+		).is_equal(0)
+		var needed_columns: int = data.stage_count() + 1
+		assert_bool(needed_columns <= Layout.FLORA_COLUMNS).override_failure_message(
+			"野生植被 %s 需要 %d 列，图集只有 %d 列"
+				% [flora_id, needed_columns, Layout.FLORA_COLUMNS]
+		).is_true()
 
 
 func test_title_backdrop_matches_viewport() -> void:

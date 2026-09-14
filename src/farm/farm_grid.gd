@@ -134,6 +134,9 @@ func tilled_count() -> int:
 func till(cell: Vector2i) -> bool:
 	if not is_farmable(cell):
 		return false
+	# 田里先得把野草清掉，否则草下面那层土翻不动。
+	if flora_blocks(cell):
+		return false
 	var tile := get_tile(cell)
 	if tile.tilled or tile.has_crop():
 		return false
@@ -158,7 +161,7 @@ func water(cell: Vector2i) -> bool:
 
 ## 播种。[param season] 由调用方传入，保证本方法不依赖全局时钟、可单测。
 func plant(cell: Vector2i, seed_item_id: StringName, season: Season.Type) -> bool:
-	if not is_farmable(cell):
+	if not is_farmable(cell) or flora_blocks(cell):
 		return false
 	var tile := get_tile(cell)
 	if not tile.tilled or tile.has_crop():
@@ -459,6 +462,17 @@ func _prune_tile(cell: Vector2i) -> void:
 	var tile: FarmTile = tiles.get(cell) as FarmTile
 	if tile != null and tile.is_pristine():
 		tiles.erase(cell)
+
+
+## 这一格上是不是长着野生植被（杂草会侵占农田，必须先清掉才能翻地 / 播种）。
+##
+## 唯一的反向依赖（农田 → 植被）就这一处：用分组软查询而不是成员引用，
+## 于是没有植被系统的场景（比如纯农田测试）完全不受影响。
+func flora_blocks(cell: Vector2i) -> bool:
+	if not is_inside_tree():
+		return false
+	var field := get_tree().get_first_node_in_group(FloraField.GROUP) as FloraField
+	return field != null and field.occupied(cell)
 
 
 func _on_day_rollover(date: GameDate) -> void:

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/pickaxe.png" id="1_xe13y"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_yrfcx"]
+
+[resource]
+script = ExtResource("2_yrfcx")
+id = &"pickaxe"
+display_name_key = &"ITEM_PICKAXE"
+description_key = &"TOOL_PICKAXE_DESC"
+category = 2
+stack_limit = 1
+sellable = false
+icon = ExtResource("1_xe13y")
+tool_id = &"pickaxe"

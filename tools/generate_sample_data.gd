@@ -16,6 +16,7 @@ extends SceneTree
 ## 用法：[code]godot --headless --path . -s res://tools/generate_sample_data.gd[/code]
 
 const CROP_DIR: String = "res://data/crops"
+const FLORA_DIR: String = "res://data/flora"
 const ITEM_DIR: String = "res://data/items"
 const TOOL_DIR: String = "res://data/tools"
 const DIALOGUE_DIR: String = "res://data/dialogue"
@@ -24,16 +25,20 @@ const SHOP_DIR: String = "res://data/shops"
 
 ## 美术资源目录（由 tools/art/*.gd 生成，这里只负责"把图挂到数据上"）。
 const CROP_SHEET_DIR: String = "res://assets/sprites/crops"
+const FLORA_SHEET_DIR: String = "res://assets/sprites/flora"
 const ITEM_ICON_DIR: String = "res://assets/sprites/items"
 const NPC_FRAMES_DIR: String = "res://assets/sprites/actors"
 
 
 func _initialize() -> void:
-	for directory: String in [CROP_DIR, ITEM_DIR, TOOL_DIR, DIALOGUE_DIR, NPC_DIR, SHOP_DIR]:
+	for directory: String in [
+		CROP_DIR, FLORA_DIR, ITEM_DIR, TOOL_DIR, DIALOGUE_DIR, NPC_DIR, SHOP_DIR
+	]:
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(directory))
 
 	_build_tools()
 	_build_crops()
+	_build_flora()
 	_build_items()
 	_build_dialogues()
 	_build_npcs()
@@ -73,6 +78,21 @@ func _build_tools() -> void:
 	seed_bag.kind = ToolData.Kind.SEED
 	seed_bag.stamina_cost = 1
 	_save(seed_bag, TOOL_DIR.path_join("seed_bag.tres"))
+
+	# 斧头 / 镐子：世界会自己长树长石，必须给玩家清理手段。
+	var axe := ToolData.new()
+	axe.id = &"axe"
+	axe.display_name_key = &"ITEM_AXE"
+	axe.kind = ToolData.Kind.AXE
+	axe.stamina_cost = 3
+	_save(axe, TOOL_DIR.path_join("axe.tres"))
+
+	var pickaxe := ToolData.new()
+	pickaxe.id = &"pickaxe"
+	pickaxe.display_name_key = &"ITEM_PICKAXE"
+	pickaxe.kind = ToolData.Kind.PICKAXE
+	pickaxe.stamina_cost = 3
+	_save(pickaxe, TOOL_DIR.path_join("pickaxe.tres"))
 
 
 # ---------------------------------------------------------------- 作物
@@ -123,6 +143,148 @@ func _build_crops() -> void:
 	_save(tomato, CROP_DIR.path_join("tomato.tres"))
 
 
+# ---------------------------------------------------------------- 野生植被
+
+## 世界各处会自己长出来的东西。
+##
+## 数值调法：
+## [br]- [code]spawn_weight[/code] 是"每天冒出来的概率权重"，0 = 这个季节不冒
+## [br]- [code]initial_weight[/code] 是新地图开局播种的权重（树多、草少）
+## [br]- [code]days_per_stage[/code] 为空 = 不生长（石头就是这样"不会变"的）
+func _build_flora() -> void:
+	# 阔叶树：8 天从树苗长到成树，成树开始挡路（前两个阶段能穿过去）。
+	_flora(&"tree_oak", &"FLORA_TREE_OAK", FloraData.Kind.TREE, [2, 3, 3], {
+		"spawn_weight": [5, 5, 3, 0],
+		"rain_bonus": 1,
+		"initial_weight": 5,
+		"max_per_world": 12,
+		"min_spacing": 3,
+		"solid_from_stage": 2,
+		"solid_size": Vector2(10, 8),
+		"solid_offset": Vector2(0, 6),
+		"tool_kind": ToolData.Kind.AXE,
+		"stamina_cost": 3,
+		"drop_item_id": &"wood",
+		"drop_amount": Vector2i(2, 3),
+	})
+
+	# 松树：慢一点、冬季也在长，是冬天唯一会变高变大的东西。
+	_flora(&"tree_pine", &"FLORA_TREE_PINE", FloraData.Kind.TREE, [3, 3, 3], {
+		"spawn_weight": [3, 3, 3, 1],
+		"initial_weight": 4,
+		"max_per_world": 10,
+		"min_spacing": 3,
+		"solid_from_stage": 2,
+		"solid_size": Vector2(10, 8),
+		"solid_offset": Vector2(0, 6),
+		"tool_kind": ToolData.Kind.AXE,
+		"stamina_cost": 3,
+		"drop_item_id": &"wood",
+		"drop_amount": Vector2i(2, 3),
+	})
+
+	# 杂草：一天就长成，会侵占农田空地——"早上起来田里长草"就是它。
+	_flora(&"weed", &"FLORA_WEED", FloraData.Kind.WEED, [1], {
+		"spawn_weight": [7, 8, 5, 0],
+		"rain_bonus": 3,
+		"initial_weight": 6,
+		"max_per_world": 60,
+		"grows_on_farmland": true,
+		"tool_kind": ToolData.Kind.SICKLE,
+		"stamina_cost": 1,
+		"drop_item_id": &"fiber",
+		"drop_amount": Vector2i(1, 1),
+		"drop_chance": 0.7,
+	})
+
+	# 石头：不生长、不会变，砸了出石材。
+	_flora(&"rock", &"FLORA_ROCK", FloraData.Kind.ROCK, [], {
+		"spawn_weight": [3, 3, 3, 1],
+		"initial_weight": 4,
+		"max_per_world": 14,
+		"min_spacing": 2,
+		"solid_from_stage": 0,
+		"solid_size": Vector2(12, 8),
+		"solid_offset": Vector2(0, 4),
+		"tool_kind": ToolData.Kind.PICKAXE,
+		"stamina_cost": 3,
+		"drop_item_id": &"stone",
+		"drop_amount": Vector2i(1, 2),
+	})
+
+	# 大石头：稀少，挡路，出的石材更多。
+	_flora(&"boulder", &"FLORA_BOULDER", FloraData.Kind.ROCK, [], {
+		"spawn_weight": [1, 1, 1, 0],
+		"initial_weight": 1,
+		"max_per_world": 5,
+		"min_spacing": 3,
+		"solid_from_stage": 0,
+		"solid_size": Vector2(24, 10),
+		"solid_offset": Vector2(0, 6),
+		"tool_kind": ToolData.Kind.PICKAXE,
+		"stamina_cost": 3,
+		"drop_item_id": &"stone",
+		"drop_amount": Vector2i(2, 3),
+	})
+
+	# 野花：两天开花，可以徒手采。
+	_flora(&"flower", &"FLORA_FLOWER", FloraData.Kind.FLOWER, [1, 1], {
+		"spawn_weight": [5, 4, 2, 0],
+		"rain_bonus": 2,
+		"initial_weight": 4,
+		"max_per_world": 25,
+		"grows_on_farmland": true,
+		"pickable_by_hand": true,
+		"tool_kind": ToolData.Kind.SICKLE,
+		"stamina_cost": 1,
+		"drop_item_id": &"flower",
+		"drop_amount": Vector2i(1, 1),
+		"drop_chance": 0.8,
+	})
+
+	# 蘑菇：不生长，秋天雨后一夜之间冒出来，徒手采。
+	_flora(&"mushroom", &"FLORA_MUSHROOM", FloraData.Kind.MUSHROOM, [], {
+		"spawn_weight": [0, 1, 4, 0],
+		"rain_bonus": 6,
+		"max_per_world": 12,
+		"min_spacing": 1,
+		"pickable_by_hand": true,
+		"tool_kind": ToolData.Kind.SICKLE,
+		"stamina_cost": 1,
+		"drop_item_id": &"mushroom",
+		"drop_amount": Vector2i(1, 1),
+	})
+
+
+## 建一个野生植被资源并挂上阶段图。
+func _flora(
+	flora_id: StringName,
+	name_key: StringName,
+	kind: FloraData.Kind,
+	days_per_stage: Array,
+	overrides: Dictionary
+) -> void:
+	var data := FloraData.new()
+	data.id = flora_id
+	data.display_name_key = name_key
+	data.kind = kind
+	data.days_per_stage.clear()
+	for days: int in days_per_stage:
+		data.days_per_stage.append(days)
+	# 注意：spawn_weight 是 Array[int]。Object.set() 对"类型化数组"会静默失败
+	# （赋进去的是无类型 Array，属性保持默认值），所以这里必须逐项 append。
+	if overrides.has("spawn_weight"):
+		data.spawn_weight.clear()
+		for weight: int in overrides["spawn_weight"]:
+			data.spawn_weight.append(weight)
+	for key: String in overrides:
+		if key == "spawn_weight":
+			continue
+		data.set(key, overrides[key])
+	data.sprite_sheet = _flora_sheet(flora_id)
+	_save(data, FLORA_DIR.path_join("%s.tres" % flora_id))
+
+
 # ---------------------------------------------------------------- 道具
 
 func _build_items() -> void:
@@ -143,9 +305,18 @@ func _build_items() -> void:
 	wood.icon = _item_icon(&"wood")
 	_save(wood, ITEM_DIR.path_join("wood.tres"))
 
+	# 野生植被的三种产出：砍树出木材（上面已经有了），砸石出石材，割草出纤维。
+	_material_item(&"stone", &"ITEM_STONE", 8)
+	_material_item(&"fiber", &"ITEM_FIBER", 3)
+	# 野外采集物。
+	_material_item(&"flower", &"ITEM_FLOWER", 12)
+	_material_item(&"mushroom", &"ITEM_MUSHROOM", 25)
+
 	_tool_item(&"hoe", &"ITEM_HOE", &"TOOL_HOE_DESC", &"hoe")
 	_tool_item(&"watering_can", &"ITEM_WATERING_CAN", &"TOOL_WATERING_CAN_DESC", &"watering_can")
 	_tool_item(&"sickle", &"ITEM_SICKLE", &"TOOL_SICKLE_DESC", &"sickle")
+	_tool_item(&"axe", &"ITEM_AXE", &"TOOL_AXE_DESC", &"axe")
+	_tool_item(&"pickaxe", &"ITEM_PICKAXE", &"TOOL_PICKAXE_DESC", &"pickaxe")
 
 	var seed_bag := ItemData.new()
 	seed_bag.id = &"seed_bag"
@@ -181,6 +352,19 @@ func _crop_item(item_id: StringName, name_key: StringName, sell_price: int) -> v
 	item.id = item_id
 	item.display_name_key = name_key
 	item.category = ItemData.Category.CROP
+	item.sell_price = sell_price
+	item.stack_limit = 99
+	item.icon = _item_icon(item_id)
+	_save(item, ITEM_DIR.path_join("%s.tres" % item_id))
+
+
+## 野外素材 / 采集物：只能卖、不能买（buy_price 保持 0，也就不会破坏经济）。
+func _material_item(item_id: StringName, name_key: StringName, sell_price: int) -> void:
+	var item := ItemData.new()
+	item.id = item_id
+	item.display_name_key = name_key
+	item.category = ItemData.Category.MATERIAL
+	item.buy_price = 0
 	item.sell_price = sell_price
 	item.stack_limit = 99
 	item.icon = _item_icon(item_id)
@@ -284,6 +468,11 @@ func _stock(item_id: StringName, price: int) -> ShopStock:
 ## 取作物生长图；缺图时返回 null（游戏会退回场景里的占位贴图）。
 func _crop_sheet(crop_id: StringName) -> Texture2D:
 	return _texture(CROP_SHEET_DIR.path_join("%s.png" % crop_id))
+
+
+## 取野生植被的阶段表。
+func _flora_sheet(flora_id: StringName) -> Texture2D:
+	return _texture(FLORA_SHEET_DIR.path_join("%s.png" % flora_id))
 
 
 ## 取道具图标。

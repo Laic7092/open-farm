@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="FloraData" format=3]
+
+[ext_resource type="Script" path="res://src/data/flora_data.gd" id="1_lo0x6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/flora/mushroom.png" id="2_bxqrw"]
+
+[resource]
+script = ExtResource("1_lo0x6")
+id = &"mushroom"
+display_name_key = &"FLORA_MUSHROOM"
+kind = 4
+spawn_weight = Array[int]([0, 1, 4, 0])
+rain_bonus = 6
+max_per_world = 12
+min_spacing = 1
+pickable_by_hand = true
+drop_item_id = &"mushroom"
+sprite_sheet = ExtResource("2_bxqrw")

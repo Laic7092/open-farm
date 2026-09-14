@@ -14,6 +14,16 @@ signal interacted(actor: Node2D)
 ## 交互提示文案的翻译键，HUD 会用它显示"按 E 交谈"之类提示。
 @export var prompt_key: StringName = &"PROMPT_INTERACT"
 
+## 该分组内的节点周围禁止野生植被生长（门口、床边、出货箱……）。
+##
+## 由基类自动加入，于是"新加一个可交互物"自动获得"不会被树堵住"的性质，
+## 不需要在场景里逐个标注。
+const FLORA_BLOCKER_GROUP: StringName = &"flora_blocker"
+
+
+func _enter_tree() -> void:
+	add_to_group(FLORA_BLOCKER_GROUP)
+
 
 ## 是否当前可交互。
 func can_interact() -> bool:

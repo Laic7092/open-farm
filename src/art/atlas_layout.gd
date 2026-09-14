@@ -106,6 +106,26 @@ const NPC_SIZE := Vector2i(TILE * NPC_COLUMNS, TILE)
 ## [code]assets/sprites/items/<item_id>.png[/code]，一格 16×16。
 const ITEM_ICON_SIZE := Vector2i(16, 16)
 
+# ---------------------------------------------------------------- 野生植被
+
+## [code]assets/sprites/flora/<id>.png[/code] 固定 4 列。
+##
+## 用不到的列留空，而不是让每种植物各有一个列数：这样 [Flora] 只管
+## [code]frame = 阶段下标[/code]，不需要知道"这种草一共有几个阶段"。
+const FLORA_COLUMNS: int = 4
+
+## 树的单元格（树苗 / 小树 / 成树 / 老树）。
+const FLORA_TREE_CELL := Vector2i(32, 48)
+## 杂草 / 野花 / 蘑菇的单元格。
+const FLORA_SMALL_CELL := Vector2i(16, 16)
+## 大石头的单元格。
+const FLORA_ROCK_CELL := Vector2i(32, 24)
+
+
+## 某个体积的阶段表应有的尺寸。
+static func flora_sheet_size(cell: Vector2i) -> Vector2i:
+	return Vector2i(cell.x * FLORA_COLUMNS, cell.y)
+
 # ---------------------------------------------------------------- UI 九宫格
 
 ## 九宫格的切片边距（像素）：面板 / 按钮 / 槽位都用同一套圆角半径。

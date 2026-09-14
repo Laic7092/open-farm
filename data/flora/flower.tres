@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="FloraData" format=3]
+
+[ext_resource type="Script" path="res://src/data/flora_data.gd" id="1_rbgje"]
+[ext_resource type="Texture2D" path="res://assets/sprites/flora/flower.png" id="2_yebvm"]
+
+[resource]
+script = ExtResource("1_rbgje")
+id = &"flower"
+display_name_key = &"FLORA_FLOWER"
+kind = 3
+days_per_stage = Array[int]([1, 1])
+spawn_weight = Array[int]([5, 4, 2, 0])
+rain_bonus = 2
+max_per_world = 25
+initial_weight = 4
+grows_on_farmland = true
+pickable_by_hand = true
+drop_item_id = &"flower"
+drop_chance = 0.8
+sprite_sheet = ExtResource("2_yebvm")

@@ -25,9 +25,15 @@ func _initialize() -> void:
 	Art.save_png(_tomato(), _path("tomato"))
 	Art.save_png(_packet(&"tomato"), _path("tomato_seed"))
 	Art.save_png(_tool_hoe(), _path("hoe"))
+	Art.save_png(_tool_axe(), _path("axe"))
+	Art.save_png(_tool_pickaxe(), _path("pickaxe"))
 	Art.save_png(_watering_can(), _path("watering_can"))
 	Art.save_png(_sickle(), _path("sickle"))
 	Art.save_png(_wood(), _path("wood"))
+	Art.save_png(_stone(), _path("stone"))
+	Art.save_png(_fiber(), _path("fiber"))
+	Art.save_png(_flower(), _path("flower"))
+	Art.save_png(_mushroom(), _path("mushroom"))
 	Art.save_png(_seed_bag(), _path("seed_bag"))
 	print("道具图标生成完成 → ", DIR)
 	quit()
@@ -201,5 +207,86 @@ func _wood() -> Image:
 		Art.h_line(image, 3, y + 1, 9, P.WOOD_LIGHT)
 		Art.h_line(image, 3, y + 3, 10, P.TRUNK_DARK)
 	Art.ellipse(image, Vector2i(3, 7), Vector2i(1, 1), P.WOOD_LIGHT)
+	Art.outline(image)
+	return image
+
+
+# ---------------------------------------------------------------- 野外素材
+
+## 斧头：木柄 + 单侧斧刃（和锄头共用"斜握木柄"的画法，一眼能认出是一家人）。
+func _tool_axe() -> Image:
+	var image := _blank()
+	for i in 11:
+		Art.px(image, 4 + i, 12 - i, P.WOOD)
+		Art.px(image, 5 + i, 12 - i, P.WOOD_DARK)
+	# 斧刃：靠柄的顶端，一侧加厚
+	Art.rect(image, Rect2i(2, 8, 4, 5), P.STONE)
+	Art.rect(image, Rect2i(2, 8, 2, 5), P.STONE_LIGHT)
+	Art.rect(image, Rect2i(4, 9, 2, 3), P.STONE_DARK)
+	Art.outline(image)
+	return image
+
+
+## 镐：木柄 + 两侧对称的尖头。
+func _tool_pickaxe() -> Image:
+	var image := _blank()
+	for i in 11:
+		Art.px(image, 4 + i, 12 - i, P.WOOD)
+		Art.px(image, 5 + i, 12 - i, P.WOOD_DARK)
+	# 横着的镐头：中间粗两端尖
+	Art.h_line(image, 2, 8, 5, P.STONE)
+	Art.px(image, 1, 9, P.STONE_DARK)
+	Art.px(image, 7, 7, P.STONE_LIGHT)
+	Art.h_line(image, 3, 7, 3, P.STONE_LIGHT)
+	Art.px(image, 2, 9, P.STONE_DARK)
+	Art.outline(image)
+	return image
+
+
+func _stone() -> Image:
+	var image := _blank()
+	Art.ellipse(image, Vector2i(8, 10), Vector2i(6, 5), P.STONE_DARK)
+	Art.ellipse(image, Vector2i(8, 9), Vector2i(5, 4), P.STONE)
+	Art.ellipse(image, Vector2i(6, 7), Vector2i(2, 1), P.STONE_LIGHT)
+	Art.px(image, 11, 12, P.STONE_LIGHT)
+	Art.outline(image)
+	return image
+
+
+## 纤维：一小捆割下来的草。
+func _fiber() -> Image:
+	var image := _blank()
+	for blade: int in 3:
+		var x: int = 5 + blade * 3
+		Art.v_line(image, x, 4 + blade, 9, P.LEAF)
+		Art.px(image, x, 4 + blade, P.LEAF_LIGHT)
+		Art.px(image, x + 1, 12, P.LEAF_DARK)
+	# 中间捆一道绳
+	Art.h_line(image, 4, 9, 8, P.SEED_BROWN)
+	Art.h_line(image, 4, 10, 8, P.WOOD_DARK)
+	Art.outline(image)
+	return image
+
+
+func _flower() -> Image:
+	var image := _blank()
+	Art.v_line(image, 8, 8, 6, P.LEAF_DARK)
+	Art.px(image, 6, 11, P.LEAF)
+	Art.px(image, 10, 10, P.LEAF)
+	Art.circle(image, Vector2i(8, 6), 3, P.FLOWER_PINK)
+	Art.px(image, 8, 6, P.FLOWER_YELLOW)
+	Art.px(image, 7, 5, P.FLOWER_WHITE)
+	Art.outline(image)
+	return image
+
+
+func _mushroom() -> Image:
+	var image := _blank()
+	Art.rect(image, Rect2i(7, 9, 3, 5), P.MUSHROOM_STEM)
+	Art.ellipse(image, Vector2i(8, 8), Vector2i(6, 4), P.MUSHROOM_CAP)
+	Art.ellipse(image, Vector2i(8, 6), Vector2i(5, 3), P.MUSHROOM_CAP)
+	Art.px(image, 6, 6, P.WHITE)
+	Art.px(image, 10, 7, P.WHITE)
+	Art.px(image, 8, 5, P.WHITE)
 	Art.outline(image)
 	return image

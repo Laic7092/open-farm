@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FloraData" format=3]
+
+[ext_resource type="Script" path="res://src/data/flora_data.gd" id="1_kfjhq"]
+[ext_resource type="Texture2D" path="res://assets/sprites/flora/rock.png" id="2_gvhtt"]
+
+[resource]
+script = ExtResource("1_kfjhq")
+id = &"rock"
+display_name_key = &"FLORA_ROCK"
+kind = 2
+spawn_weight = Array[int]([3, 3, 3, 1])
+max_per_world = 14
+min_spacing = 2
+initial_weight = 4
+solid_from_stage = 0
+solid_size = Vector2(12, 8)
+solid_offset = Vector2(0, 4)
+tool_kind = 4
+stamina_cost = 3
+drop_item_id = &"stone"
+drop_amount = Vector2i(1, 2)
+sprite_sheet = ExtResource("2_gvhtt")

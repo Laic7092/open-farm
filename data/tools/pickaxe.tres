@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ToolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/tool_data.gd" id="1_d2ih5"]
+
+[resource]
+script = ExtResource("1_d2ih5")
+id = &"pickaxe"
+display_name_key = &"ITEM_PICKAXE"
+kind = 4
+stamina_cost = 3
