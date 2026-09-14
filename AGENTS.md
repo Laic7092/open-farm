@@ -2,6 +2,9 @@
 
 > 目的：新会话读完这一页就能动手，不必再逐文件侦察。
 > 本文件由 harness 作为工作区指令在**首次请求前自动加载**；动手前先看「铁律」与「坑」。
+>
+> 本文只收录"动手前必须知道"的浓缩信息。字段、规则、数值的**权威出处**是
+> [README 的文档地图](README.md#文档地图) 与 `docs/`；若本文与文档冲突，以文档为准，并顺手更新本文。
 
 ## 0. 一分钟速览
 
@@ -69,6 +72,7 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
   `tools/smoke_test.gd` + `smoke_test.tscn`；`tools/generate_sample_data.gd`（重置示例数据）。
 - `tests/unit/` gdUnit4（断言风格：`assert_int(x).override_failure_message("...").is_equal(y)`）。
 - `docs/`：`architecture.md`（为什么这么设计）、`art_pipeline.md`、`audio_pipeline.md`。
+  各文档的唯一职责见 [README 文档地图](README.md#文档地图)。
 
 **推荐的深读顺序**：`README.md` → `docs/architecture.md` → 相关 pipeline 文档 → `tests/unit/test_assets.gd`。
 
@@ -77,17 +81,18 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 1. **Godot 命令必须能自己退出**：`-s script.gd` 解析失败 → `_initialize()` 不执行 → `quit()` 不被调用
    → **永远挂住**。统一 `timeout 60 … --quit-after 3`；**不要用管道直接接 Godot**
    （管道会等进程退出、报错还会被缓冲吞掉），先重定向到文件再 `tail` / `grep`。
-   `build_assets.sh` 与 `check.sh` 已内置。
+   `build_assets.sh` 与 `check.sh` 已内置；唯一原文见 `docs/art_pipeline.md` 的「命令必须能自己退出」。
 2. **`-s` 脚本里不能用 autoload 全局名**（此时 autoload 尚未注册）。生成器用 `preload("res://...")`；
    要测 autoload 就跑**场景**（`tools/smoke_test.tscn`）。
 3. **本沙箱里 `user://` 不可写**：`SaveManager` / `Audio` 写 `user://` 会失败，必须静默降级；
    测试不要依赖持久化。冒烟测试把 `SaveManager.save_root` 重定向到 `res://.tmp`。
 4. **`.godot/` 不入库**：新 clone 或新增资源后必须 `--import`（`check.sh` 会自动做）。
-5. **生成物永不手改**：下一次跑生成器就会覆盖。接真素材 = 删生成器 + 放同名文件，游戏代码零改动。
+5. **生成物永不手改**：下一次跑生成器就会覆盖；要改画面 / 声音，就改生成器与调色板 / 音频目录。
 6. **确定性**：生成器尽量不用随机；判定标准是"连跑两次后 `git status` 干净"。
 7. `assets/i18n/strings.csv` 里 `MENU_TITLE` **重复定义**（`菜单` 与 `回到标题`，后者生效）——
    改菜单文案时别改错行。
-8. 世界场景常驻内存（为了跨场景保住农田进度），地图多起来要改成"卸载地图 + 状态外置"。
+8. 世界场景常驻内存（为了跨场景保住农田进度），地图多起来要改成"卸载地图 + 状态外置"；
+   完整的已知限制见 `README.md` 的「已知限制」。
 
 ## 6. 引擎行为（已在 4.7.2 实测，省得再写探针）
 

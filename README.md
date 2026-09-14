@@ -1,8 +1,26 @@
 # open-farm · 牧场物语复刻
 
-用 **Godot 4.7** 搭建的 2D 俯视角像素风农场生活模拟游戏（牧场物语 / 矿石镇风格）。
+用 **Godot 4.7.2** 搭建的 2D 俯视角像素风农场生活模拟游戏（牧场物语 / 矿石镇风格）。
 当前进度：**整体骨架已完成并可运行** —— 核心循环、玩家、农场、畜牧、NPC/经济、UI、存档、
-本地化、测试全部打通，等待填充内容与美术。
+本地化、测试全部打通；**美术、字体、BGM、音效全部由脚本生成**，内容可以继续扩展。
+
+---
+
+## 文档地图
+
+本文档体系按"**每件事只有一个权威出处**"组织。修改某个主题时只改它的归属文档，
+其它文档只写一句话概述 + 链接，**不要复制正文**——复制是文档漂移的头号来源。
+
+| 文档 | 唯一职责（权威内容） | 读者 |
+| --- | --- | --- |
+| `README.md`（本文） | 项目是什么、怎么跑 / 怎么玩、目录结构、扩展步骤、测试覆盖、已知限制、里程碑 | 人类开发者 |
+| [AGENTS.md](AGENTS.md) | 编码 Agent 的最短上手：铁律、速查表、踩过的坑 | AI / 自动化 |
+| [docs/architecture.md](docs/architecture.md) | 设计决策的**为什么**：分层、Autoload 依赖、生命周期、引擎坑的原理 | 维护者 |
+| [docs/art_pipeline.md](docs/art_pipeline.md) | 美术生成规范；**「Godot 命令必须能自己退出」的规范原文** | 改美术的人 |
+| [docs/audio_pipeline.md](docs/audio_pipeline.md) | 音频合成规范 | 改音频的人 |
+
+> **维护约定**：易漂移的内容（数值、命令、硬性规则、引擎事实）只在归属文档里写一次；
+> 能写成断言的规则，同时落进 `tests/unit/`（见「[规范如何被强制](docs/art_pipeline.md#7-规范如何被强制)」）。
 
 ---
 
@@ -12,12 +30,13 @@
 # 运行游戏
 ./godot --path .
 
-# 一键校验（导入缓存 + 269 个单元测试 + 122 项端到端冒烟检查）
-./tools/check.sh
+# 一键校验：导入缓存 + 单元测试 + 端到端冒烟测试
+# （测试数与覆盖见「测试」一节；外层 timeout 兜底，避免挂死）
+timeout 800 ./tools/check.sh
 
 # 只跑单元测试 / 只跑冒烟测试
-./tools/check.sh unit
-./tools/check.sh smoke
+timeout 800 ./tools/check.sh unit
+timeout 800 ./tools/check.sh smoke
 ```
 
 用编辑器打开：
@@ -52,9 +71,10 @@
 回农场对着畜舍按 `E` 把牲畜放养进去；对着**饲料槽**按 `E` 一次性喂饱全舍。
 喂够天数会成年，成年后每隔几天产出**鸡蛋** / **牛奶**，对着牲畜按 `E` 收走；
 每天第一次按 `E` 还会抚摸它、提升好感度（好感高时产出更多）。
-现有 NPC（商人会开店、村长会聊天）已经搬进新的大场景 **twon**，
-而且有自己的作息：到点走去商店 / 镇公所 / 广场，商人上班时才开店。
-农场右侧边缘的传送点通往小镇，农场上方的传送门通往 twon；两张图都通过场景切换独立进入，两个 NPC 都在 twon 里。
+现有 NPC（商人会开店、村长会聊天）都住在**大场景 `twon`**，而且有自己的作息：
+到点走去商店 / 镇公所 / 广场，商人上班时才开店。
+农场有两条出口：右侧传送点通往**小镇 `town`**，上方传送门通往 `twon`，
+两张图由 `SceneRouter` 独立进入；NPC 与日程标记目前只布置在 `twon`。
 按 `Esc` 打开菜单可以存读档、也可以回到标题页。
 
 ---
@@ -97,9 +117,15 @@ open-farm/
 
 ---
 
-## 架构
+## 架构概览
+
+本节只回答"是什么、在哪"；每个设计**为什么**这么写，见
+[docs/architecture.md](docs/architecture.md)（关键决策见 §3，子系统见 §10 / §11）。
 
 ### 九大单例（Autoload）
+
+启动顺序 = `project.godot` 的声明顺序；依赖图与约束见
+[architecture §2](docs/architecture.md#2-autoload-依赖图)。
 
 | 名称 | 职责 | 关键点 |
 | --- | --- | --- |
@@ -115,96 +141,29 @@ open-farm/
 
 ### 三条贯穿全局的设计原则
 
-**1. 数据驱动，而不是代码驱动**
-作物、野生植被、道具、工具、NPC、对话、商店全部是 `Resource`（`res://data/**/*.tres`）。
-新增一种作物 = 往 `data/crops/` 丢一个 `.tres`，**不需要改任何脚本**。
+1. **数据驱动**：作物 / 植被 / 道具 / 工具 / NPC / 对话 / 商店都是 `res://data/**/*.tres`，
+   脚本只认 id（`Database.get_crop(&"turnip")`）。新增内容 = 新增 `.tres`，零脚本改动。
+2. **静态数据 ↔ 运行时状态分离**：`XxxData`（`Resource`，不变）↔ `XxxState`
+   （`RefCounted`，会变）；规则写在 `XxxGrowth` / `XxxHusbandry` 的纯静态函数里，可脱离引擎单测。
+3. **信号解耦，顺序显式化**：UI 单向订阅 `EventBus`；有依赖顺序的日结转走
+   `GameClock.register_day_hook()` 的有序列表——顺序即流水线
+   （[architecture §3.3](docs/architecture.md#33-用有序钩子而不是信号做日结转)）。
 
-```gdscript
-# 脚本里只认 id
-var crop := Database.get_crop(&"turnip")
-var tree := Database.get_flora(&"tree_oak")
-```
+展开与代码示例见 [architecture §3](docs/architecture.md#3-关键设计决策)。
 
-**2. 静态数据与运行时状态严格分离**
-`CropData`（`Resource`，不变）↔ `CropState`（`RefCounted`，会变）。
-生长规则全在 `CropGrowth` 的纯静态函数里，因此可以脱离引擎循环直接单测。
+### 子系统速查
 
-**3. 用信号解耦，但要顺序的地方显式排序**
-UI 通过 `EventBus` 单向订阅，从不主动查询游戏状态；
-而"天气 → 作物生长 → 体力恢复"这类**有依赖顺序**的模拟逻辑走
-`GameClock.register_day_hook()` 的有序列表，不依赖信号回调顺序
-（Godot 不保证信号回调顺序）。
+| 子系统 | 权威状态 | 一句话 | 详见 |
+| --- | --- | --- | --- |
+| 世界自然生长 | `FloraField` | 每天"先长大、再按季节/天气撒新芽"；落点靠四道查询，连通性守卫防止堵门 | [§10](docs/architecture.md#10-世界自然生长野生植被) |
+| NPC 日程与寻路 | `NpcSchedule` + `NpcNavigator` | 日程返回"当前生效段"；通行性来自物理查询，A* 惰性查格、按格缓存 | [§11](docs/architecture.md#11-npc-日程与寻路) |
+| 场景切换 | `SceneRouter._world_cache` | 换 `WorldHost` 子节点而非 `change_scene_to_file`；地图实例缓存复用 | [§3.2](docs/architecture.md#32-世界场景换子节点不用-change_scene_to_file) |
+| 畜舍养殖 | `LivestockManager` | 与 `FarmGrid` 同构：状态在字典、视图可重建、规则纯静态、牲畜不会死 | [§3.3.1](docs/architecture.md#331-畜舍为什么是-farmgrid-的翻版) |
 
-```gdscript
-# 日结转流水线（顺序即依赖顺序）
-1. WeatherSystem  掷出当天天气
-2. FarmGrid       作物生长 / 枯死 / 浇水标记重置
-3. FloraField     野生植被生长 / 扩散（树、杂草、石头……）
-4. Player         恢复体力
-```
-
-### 世界为什么会自己长东西
-
-`FloraField` 是"世界自然生长"的唯一权威状态，和 `FarmGrid` 完全同构：
-格子状态放在 `Dictionary[Vector2i, FloraState]` 里、视图节点按需生成、存档就是一次 `to_dict`。
-区别在于农田是"玩家种、玩家管"，而它是"自己长、自己扩散"。
-
-每天按顺序做两件事：**先让已经长出来的植被长大，再按季节/天气权重撒新芽**。
-能不能落在某一格，要过四道关：
-
-1. 在 `growth_area` 内，且该格还没东西；
-2. 地表必须是**自然地表**（`FloraGrowth.NATURAL_GROUND` 白名单）——
-   路、石板、水、木地板、栅栏、花圃自动被排除，因为它们被画进了地面图层；
-3. 一次 `intersect_shape` 物理查询不能碰到任何实心东西（房子、水井、手摆的家具都在 layer 1）；
-4. 不在出生点 / 门（所有 `Interactable`）附近，也不在玩家脚边。
-
-另外还有一道**连通性守卫**：只有当一个新芽/一次生长会变成"挡路"的时候，
-才做一次 BFS 比较可达格数；如果它会把地图切成两半，这次生长就被撤销。
-于是"一夜之间树把门口堵死"在结构上不会发生。
-
-不在场的地图不跑日结转（钩子在 `_exit_tree` 里注销），而是下次进图时把离开的天数
-一次性补算（单次上限 60 天）——这就是"去小镇待三天，回来树苗长高了"。
-
-### NPC 为什么会自己走
-
-NPC 的一天写在 `NpcSchedule` 里：每条 `ScheduleEntry` 说"从某个时刻起去某个地点"。
-地点不是坐标，而是场景里的 `SchedulePoint` 标记（`point_id`）——
-重排地图只挪标记、不改数据。`NpcSchedule.entry_at()` 对任意分钟都有答案：
-凌晨没有条目时沿用前一天最后一段，于是日程天然循环。
-
-真正走起来分三步：
-
-1. `Npc` 每帧问日程"现在该去哪"，地点变化时把目标格交给导航网格；
-2. `NpcNavigator`（`WorldScene` 自动挂载）用 `GridPathfinder` 跑 A*。
-   可通行性来自 layer 1 的物理查询，房子、水井、长成的大树自动成为障碍；
-   结果按格缓存，日结转过刷新一次；
-3. NPC 沿路径逐格移动，走路 / 待机动画随朝向切换。
-
-`_enter_tree` 重连、日结转钩子这些"世界场景会被缓存复用"的坑，和植被系统是同一套写法。
-商人只在日程 `activity == "shop"` 时才开店。
-
-### 场景切换为什么不用 `change_scene_to_file`
-
-`Main.tscn` 的结构是：
-
-```
-Main
-├── WorldHost   ← 世界场景在这里换进换出（组 world_host）
-└── UiRoot      ← CanvasLayer，常驻
-```
-
-用 `change_scene_to_file` 会把整个当前场景顶掉，UI 和主入口跟着被销毁重建。
-改成"换 `WorldHost` 的子节点"之后，UI、全局输入、存档系统都不会因为一次传送被重建。
-
-更进一步，切过的地图会**保留实例**（只是移出场景树），再回去时直接挂回来。
-原因很直接：翻好的地、种下的作物就存在世界场景的节点里，
-每次传送都重建场景会让"种好菜去趟小镇，回来地全荒了"。
-代价是常驻内存——地图真的多起来时要改成"卸载地图 + 状态外置到存档层"。
-
-> 注意：Godot 的 `_ready()` 一个节点**一生只跑一次**，而世界场景会多次进出场景树。
-> 所以"每次进入都要做一遍"的事情必须放在 `_enter_tree()`；
-> 需要对外暴露的进入/离开时机，用 `WorldScene.on_world_enter()/on_world_exit()`。
-> 日结转钩子的注册就在 `_enter_tree()` 里，否则离开一次地图后就再也不会生长。
+> **生命周期铁律**：世界场景会缓存复用，`_ready()` 一生只跑一次。
+> "每次进图都要做一遍"的事情放 `_enter_tree()` / `WorldScene.on_world_enter()`；
+> 日结转钩子在 `_enter_tree()` 注册、`_exit_tree()` 注销，否则离开一次地图后就不再生长。
+> 原理见 [architecture §3.2.2](docs/architecture.md#322-_ready-一生只跑一次)。
 
 ---
 
@@ -283,69 +242,53 @@ func from_dict(data: Dictionary) -> void: ...
 | 音频规范 | `tests/unit/test_audio.gd` | WAV 真的是 22050 Hz / 16 bit / 单声道；BGM 带 `smpl` 循环点、音效不带；运行时总线就位、音量可调 |
 | 视觉回归 | `tools/screenshot.tscn` / `tools/ui_preview.tscn` | 标题页 + 农场 + 小镇 + twon 截图、各界面布局截图 |
 
+各层"做什么 / 不做什么"的策略见 [architecture §7](docs/architecture.md#7-测试策略)。
+
 ```bash
-./tools/check.sh          # 全部
-./tools/check.sh unit     # 只要单元测试
+timeout 800 ./tools/check.sh          # 全部（导入 + 单元 + 冒烟）
+timeout 800 ./tools/check.sh unit     # 只要单元测试
+timeout 800 ./tools/check.sh smoke    # 只要冒烟测试
 ```
 
 ---
 
 ## 美术资源：全部由脚本生成
 
-[b]仓库里不放手工二进制素材。[/b] 每一个像素、包括中文字体，都由
-`tools/art/*.gd` 生成；颜色只在 `src/art/palette.gd`、图集坐标只在
-`src/art/atlas_layout.gd`，生成器与运行时引用同一份常量。
+**仓库里不放手工二进制素材。** 每一个像素、包括中文字体，都由 `tools/art/*.gd` 生成；
+生成物提交进仓库，但**永不手改**。颜色只在 `src/art/palette.gd`、图集坐标只在
+`src/art/atlas_layout.gd`，生成器与运行时引用同一批常量。
 
-完整规范见 **[docs/art_pipeline.md](docs/art_pipeline.md)**，核心是五条硬性规则：
-颜色只来自调色板、坐标只来自排版表、生成必须确定性（跑两次 `git status` 要干净）、
-贴图挂在数据资源上、生成物提交但永不手改。
+五条硬性规则、目录职责与修改流程见
+**[docs/art_pipeline.md](docs/art_pipeline.md)**。
 
 ```bash
-# 重新生成全部美术、音频与字体（16 步，约 15 秒）
+# 重新生成全部美术、音频与字体（16 步）
 ./tools/build_assets.sh
-
-# 只重跑某一个生成器（例如只调了树的形状）
-timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/art/generate_props.gd
-timeout 60 ./godot --headless --path . --import
 
 # 重置示例数据（作物 / 牲畜 / 道具 / 商店 / NPC / 对话；会顺带挂上贴图）
 timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/generate_sample_data.gd
-
-# 截图（需要真实渲染后端，--headless 不可用）
-timeout 60 ./godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn   # 标题页 + 农场 + 小镇 + twon
-timeout 60 ./godot --path . --rendering-driver opengl3 res://tools/ui_preview.tscn   # 各界面布局
 ```
 
-> [b]Godot 命令必须能自己退出。[/b] `-s script.gd` 解析失败时 `quit()` 不会被调用，
-> Godot 会一直挂着。统一用 `timeout 60`（慢机器可用 `GODOT_TIMEOUT` 覆盖）加
-> `--quit-after 3`；`build_assets.sh` 与 `check.sh` 已内置。详见
-> [docs/art_pipeline.md](docs/art_pipeline.md) 的「命令必须能自己退出」一节。
-
-真美术到位后：**删掉对应的生成器、把图放到同名路径，游戏代码零改动**
-（运行时只认数据资源里的贴图字段与 `AtlasLayout` 的坐标）。
+改画面就改生成器与 `palette.gd` / `atlas_layout.gd` 后重跑 `build_assets.sh`；生成物永不手改。
+运行 Godot 命令的超时规范见
+[art_pipeline.md「命令必须能自己退出」](docs/art_pipeline.md#命令必须能自己退出)。
 
 ---
 
 ## 音频资源：同样由脚本生成
 
-[b]仓库里也不放手工音频素材。[/b] 4 首 BGM（标题 / 农场 / 小镇 / 夜晚）与 26 个音效
-全部由 `tools/audio/*.gd` 用振荡器、噪声与包络**合成**；格式统一
-22050 Hz / 16 bit / 单声道，并在 BGM 的 WAV 里写入标准 `smpl` 循环块，
-Godot 导入后即可无缝循环。
+**仓库里也不放手工音频素材。** 4 首 BGM（标题 / 农场 / 小镇 / 夜晚）与 26 个音效
+全部由 `tools/audio/*.gd` 合成；格式统一 22050 Hz / 16 bit / 单声道。
+运行时由 `Audio` 单例唯一播放，玩法代码里没有任何播放调用。
 
-运行时由 `Audio` 单例唯一播放：进农场 / 小镇按地图换曲、18:00 ~ 次日 06:00 换成夜曲，
-标题页固定放标题曲；翻地、浇水、收获、买卖、对话、脚步等全部订阅 `EventBus` 的既有信号——
-**玩法代码里没有任何播放调用**。系统菜单里的音乐 / 音效滑杆控制 `BGM` / `SFX` 两条总线，
-设置存在 `user://audio_settings.cfg`。
-
-完整规范见 **[docs/audio_pipeline.md](docs/audio_pipeline.md)**，核心同样是
-"格式只在目录里声明一次、噪声用哈希保证确定性、生成物提交但永不手改"。
+格式约定、循环块处理、目录职责与运行时接线见
+**[docs/audio_pipeline.md](docs/audio_pipeline.md)**。
 
 ```bash
-./tools/build_assets.sh     # 连音频一起重新生成（约 20 秒）
+./tools/build_assets.sh     # 连音频一起重新生成
 ```
 
-真音频到位后同样**删脚本、放同名 WAV，游戏代码零改动**。
+改声音就改 `tools/audio/*.gd` 与 `AudioCatalog` 后重跑 `build_assets.sh`；生成物永不手改。
 
 ---
 
@@ -354,7 +297,7 @@ Godot 导入后即可无缝循环。
 - **美术是脚本画的**：像素画由 `tools/art/*.gd` 生成，风格统一但细节有限——
   没有手绘的光影、渐变与逐帧动画，角色只有 3 个朝向 × 4 个姿势。
 - **音频也是脚本合成的**：BGM 是固定 BPM 的循环段、音效是振荡器 + 噪声，
-  没有真实乐器采样、没有人声，也不会随剧情动态配乐；换真音频只需替换同路径 WAV。
+  没有真实乐器采样、没有人声，也不会随剧情动态配乐——这是刻意的芯片音风格。
 - **中文只覆盖"用到的字"**：像素字体是子集（约 1100 字形），
   玩家名一类运行期才出现的生僻字要走系统字体兜底；
   精简容器里没有系统 CJK 字体时仍会显示方块。加了新文案请重跑 `build_assets.sh`。
@@ -381,7 +324,7 @@ Godot 导入后即可无缝循环。
 ## 后续里程碑建议
 
 1. **内容**：更多作物 / 季节作物、更多牲畜（鸭 / 羊）与畜舍升级、钓鱼、采矿。
-2. **表现**：手绘美术 / 真人配乐替换脚本生成物、Tilemap 地形自动过渡、昼夜光照。
+2. **表现**：更丰富的生成器画法（光影 / 更多逐帧动画）、Tilemap 地形自动过渡、昼夜光照。
 3. **系统**：好感度与恋爱、节日与事件、NPC 之间的避让与排队、工具升级与体力上限成长。
 4. **流程**：多存档槽选择界面、新手引导、结局与结算。
 5. **工程**：导出预设（Windows / Linux / macOS）、GitHub Actions 跑 `tools/check.sh`、帧率与内存基线。

@@ -7,11 +7,10 @@
 
 ## 1. 为什么
 
-骨架阶段没有任何美术。常见的做法是"先占位，等美术来了再替换"，
-于是仓库里出现一堆来源不明、无法审查、无法调整的
-`placeholder_xxx.png`，最后没人敢删。
+常见的做法是把图直接丢进仓库，于是出现一堆来源不明、无法审查、无法调整的
+二进制图片，最后没人敢删。
 
-这里换一条路：把"像素长什么样"写成代码。
+本项目不这么做：**把"像素长什么样"写成代码**，图片由脚本生成。
 
 | | 手工素材 | 脚本生成 |
 | --- | --- | --- |
@@ -19,7 +18,6 @@
 | 可审查性 | 二进制，git diff 只能看到"文件变了" | 代码 diff 就是画面 diff |
 | 可复现性 | 依赖某个人手里的 .psd | 任何人 clone 后跑一次得到逐像素相同的结果 |
 | 一致性 | 每张图各画各的，色调靠自觉 | 调色板集中在 `src/art/palette.gd` |
-| 换真美术 | 得先搞清哪张图对应哪个节点 | 删脚本、放同名 PNG，代码零改动 |
 
 这不是"为了省事"，而是把美术资源变成**可维护的工程资产**。
 
@@ -40,6 +38,7 @@ tools/art/                      ← 生成器（每个都能单独跑）
 ├── generate_actors.gd          ← 玩家与 NPC（共用一套角色画法）
 ├── generate_crops.gd           ← 每种作物一张生长图
 ├── generate_animals.gd         ← 每种牲畜一张状态表（幼崽 / 成年 / 可收）
+├── generate_flora.gd           ← 每种野生植被一张阶段表（树 / 草 / 石）
 ├── generate_items.gd           ← 道具图标
 ├── generate_ui.gd              ← UI 九宫格与图标
 ├── generate_title.gd           ← 标题页背景与云
@@ -59,10 +58,10 @@ assets/**                       ← 生成物（提交进仓库）
 生成器里**不允许**出现 `Color8(...)` 字面量。需要新颜色时先起个有意义的名字：
 
 ```gdscript
-// ❌ 生成器里直接写死
+# ❌ 生成器里直接写死
 Art.rect(image, area, Color8(150, 108, 72))
 
-// ✅ 从调色板取
+# ✅ 从调色板取
 Art.rect(image, area, P.SOIL_LIGHT)
 ```
 
@@ -74,11 +73,11 @@ Art.rect(image, area, P.SOIL_LIGHT)
 生成器与运行时**引用同一批常量**，所以"排版改了但代码没跟着改"在结构上不可能发生：
 
 ```gdscript
-// 生成器
+# 生成器
 Art.rect(image, Rect2i(Layout.GRASS * Layout.TILE, ...), ...)
 
-// 运行时
-const GRASS := AtlasLayout.GRASS          // FarmAtlas 里的一行别名
+# 运行时
+const GRASS := AtlasLayout.GRASS          # FarmAtlas 里的一行别名
 ```
 
 新增格子时，**只能往后追加**。已经发布过的坐标是存档与场景的隐式契约，
@@ -87,10 +86,10 @@ const GRASS := AtlasLayout.GRASS          // FarmAtlas 里的一行别名
 ### 3.3 生成必须确定性：用坐标哈希，不用 `RandomNumberGenerator`
 
 ```gdscript
-// ❌ 每次重跑都得到不同的噪点，git 里全是无意义的二进制 diff
+# ❌ 每次重跑都得到不同的噪点，git 里全是无意义的二进制 diff
 if rng.randf() < 0.2: ...
 
-// ✅ 同样的坐标永远得到同样的值
+# ✅ 同样的坐标永远得到同样的值
 if Art.noise(x, y, salt) < 0.2: ...
 ```
 
@@ -146,27 +145,25 @@ timeout 60 ./godot --path . --rendering-driver opengl3 res://tools/screenshot.ts
 # → res://.tmp/screenshots/{title,shot_00,town,twon}.png
 ```
 
-### 命令必须能自己退出（timeout 60s + --quit-after）
+### 命令必须能自己退出
 
-[code]-s script.gd[/code] 是把脚本当主循环来跑。脚本[b]解析失败[/b]时
-[code]_initialize()[/code] 根本不会执行，里面的 [code]quit()[/code] 自然也不会被调用，
-Godot 于是进入主循环一直等下去——CI 与本地脚本都会假死。
+> 本仓库所有 Godot 调用都有同一个硬性前提：**进程必须能自己结束**。
+> 这一节是该规范的**唯一原文**，其它文档只链接、不回述。
+
+`-s script.gd` 是把脚本当主循环来跑。脚本**解析失败**时 `_initialize()` 根本不会执行，
+里面的 `quit()` 自然也不会被调用，Godot 于是进入主循环一直等下去——CI 与本地脚本都会假死。
 
 所以本仓库运行 Godot 命令遵循两条约定：
 
-1. 用 [code]timeout[/code] 从外部兜底（万一卡在 [code]_initialize()[/code] 里，连主循环都到不了）；
-   默认 [b]60 秒[/b]，慢机器用环境变量 [code]GODOT_TIMEOUT[/code] 覆盖。
-2. 再带 [code]--quit-after 3[/code]，让 Godot 自己在几帧后收尾。
+1. 用 `timeout` 从外部兜底（万一卡在 `_initialize()` 里，连主循环都到不了）；
+   默认 **60 秒**，慢机器用环境变量 `GODOT_TIMEOUT` 覆盖。
+2. 再带 `--quit-after 3`，让 Godot 自己在几帧后收尾。
 
-[code]tools/build_assets.sh[/code] 与 [code]tools/check.sh[/code] 已经内置这两条，
-手动跑生成器时也照这个写法：
+`tools/build_assets.sh` 与 `tools/check.sh` 已经内置这两条；手动跑命令时照上方
+「怎么跑」里的写法即可。
 
-```bash
-timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/art/generate_props.gd
-```
-
-> 不要用 [code]| grep[/code] 直接接 Godot：管道会等进程退出，报错又会被缓冲吞掉。
-> 先把输出重定向到文件，等进程结束后再 [code]tail[/code] / [code]grep[/code] 文件。
+> 不要用 `| grep` 直接接 Godot：管道会等进程退出，报错又会被缓冲吞掉。
+> 先把输出重定向到文件，等进程结束后再 `tail` / `grep` 文件。
 
 ---
 
@@ -186,7 +183,7 @@ timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/art/generat
 也可以用环境变量指定：
 
 ```bash
-OPEN_FARM_FONT_SRC=/path/to/font.ttf ./godot --headless --path . \
+OPEN_FARM_FONT_SRC=/path/to/font.ttf timeout 60 ./godot --headless --path . --quit-after 3 \
     -s res://tools/art/generate_font.gd
 ```
 
@@ -201,18 +198,16 @@ OPEN_FARM_FONT_SRC=/path/to/font.ttf ./godot --headless --path . \
 
 ---
 
-## 6. 接真美术的姿势
+## 6. 修改与扩展美术
 
-脚本生成不是终点。真正的美术到位后：
+美术由脚本生成，所以调整画面 = 改代码后重跑：
 
-```
-1. 删掉对应的 generate_xxx.gd（或让它不再覆盖该文件）
-2. 把真美术放到同名路径，保持尺寸与图集排版不变
-3. 跑 ./tools/check.sh
-```
+1. 颜色改 `src/art/palette.gd`；尺寸 / 坐标改 `src/art/atlas_layout.gd`（已发布坐标只能追加）。
+2. 画法改对应的 `tools/art/generate_*.gd`；需要新原语时加到 `tools/art/art_lib.gd`。
+3. 跑 `./tools/build_assets.sh`，再跑 `./tools/check.sh` 确认规范未破。
 
-因为运行时只认 `AtlasLayout` 的坐标和数据资源里的贴图字段，
-**游戏代码一行都不用改**。想改尺寸/排版时才需要动 `atlas_layout.gd`。
+生成物（PNG / `.tres` / `.fnt`）会被重新覆盖，**不要手改**。
+因为运行时只认 `AtlasLayout` 的坐标与数据资源里的贴图字段，这些改动都不会波及玩法代码。
 
 ---
 

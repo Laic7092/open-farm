@@ -16,7 +16,6 @@
 | 可审查性 | 二进制，git diff 只能看到"文件变了" | 代码 diff 就是听感 diff |
 | 可复现性 | 依赖某个人手里的工程文件 | 任何人 clone 后跑一次得到逐采样相同的 WAV |
 | 一致性 | 每段声音各做各的，音量靠耳朵 | 格式、响度、音色全部集中在 `tools/audio/synth.gd` |
-| 换真音频 | 得先搞清哪段对应哪个事件 | 删脚本、放同名 WAV，代码零改动 |
 
 和美术的取舍完全一样：**把素材变成可维护的工程资产**。
 区别只在于"像素"换成了"波形"。
@@ -40,7 +39,7 @@ assets/audio/bgm/*.wav          ← 生成物（提交进仓库）
 tests/unit/test_audio.gd        ← 规范的可执行版本
 ```
 
-运行时**只认 [AudioCatalog] 里的 id**，生成器也按同一批 id 写文件，
+运行时**只认 `AudioCatalog` 里的 id**，生成器也按同一批 id 写文件，
 所以"改了文件名却忘了改播放代码"在结构上不可能发生。
 
 ---
@@ -50,22 +49,22 @@ tests/unit/test_audio.gd        ← 规范的可执行版本
 ### 3.1 格式统一：22050 Hz / 16 bit / 单声道 PCM
 
 采样率够做芯片音色，体积又足够小；单声道省一半空间，也符合复古气质。
-常量只在 [constant AudioCatalog.SAMPLE_RATE] 与 [constant Synth.SR] 各写一次，
+常量只在 `AudioCatalog.SAMPLE_RATE` 与 `Synth.SR` 各写一次，
 测试会把落盘结果和它对齐。
 
 ### 3.2 声音只能来自 `tools/audio/synth.gd` 的原语
 
-生成器里不允许直接拼 PCM 字节，只能用 [Synth] 提供的
+生成器里不允许直接拼 PCM 字节，只能用 `Synth` 提供的
 `tone` / `sweep` / `noise_burst` / `kick` / `snare` / `hat` / `melody` / `chord_sequence` / `arpeggio`。
 需要新音色时先在基座里加一个有名字的原语，而不是在某个音效函数里手搓循环。
 
 ### 3.3 生成必须确定性：噪声用位置哈希，不用 `RandomNumberGenerator`
 
 ```gdscript
-// ❌ 每次重跑都得到不同的噪声，git 里全是无意义的二进制 diff
+# ❌ 每次重跑都得到不同的噪声，git 里全是无意义的二进制 diff
 if rng.randf() < 0.2: ...
 
-// ✅ 同样的采样位置永远得到同样的值
+# ✅ 同样的采样位置永远得到同样的值
 Synth.noise_at(index, salt)
 ```
 
@@ -80,8 +79,8 @@ BGM 的 WAV 带一个标准 `smpl` 循环块，Godot 导入时按"从 WAV 检测
 
 ### 3.5 生成物提交，脚本是唯一来源
 
-生成出来的 WAV 与 `.import` 都提交进仓库：CI 与玩家不需要跑生成器。
-但**永远不要直接编辑它们**——下一次跑生成器就会覆盖。
+规则与美术一致（见 [art_pipeline.md §3.5](art_pipeline.md#35-生成物提交脚本是唯一来源)）：
+生成出来的 WAV 与 `.import` 都提交进仓库，供 CI 与玩家直接使用，但**永不手改**。
 
 ---
 
@@ -98,25 +97,23 @@ timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/audio/gener
 timeout 60 ./godot --headless --path . --import
 ```
 
-> **Godot 命令必须能自己退出**：脚本解析失败时 [code]_initialize()[/code] 不会执行、
-> [code]quit()[/code] 也不会被调用，Godot 会一直挂在主循环里。
-> 统一用 [code]timeout 60[/code] 从外部兜底并带 [code]--quit-after 3[/code] 让它自己收尾；
-> [code]build_assets.sh[/code] 与 [code]check.sh[/code] 已内置，完整说明见
-> [code]docs/art_pipeline.md[/code] 的「命令必须能自己退出」一节。
+> **Godot 命令必须能自己退出**：统一用 `timeout 60` 从外部兜底并带 `--quit-after 3`；
+> `build_assets.sh` 与 `check.sh` 已内置。规范的唯一原文见
+> [art_pipeline.md「命令必须能自己退出」](art_pipeline.md#命令必须能自己退出)。
 
-> **加了新音频怎么办？** 在 [AudioCatalog] 里加 id → 在对应生成器里写配方 →
-> 重跑 `build_assets.sh` → 需要时在 [AudioManager] 里接一个事件。
+> **加了新音频怎么办？** 在 `AudioCatalog` 里加 id → 在对应生成器里写配方 →
+> 重跑 `build_assets.sh` → 需要时在 `AudioManager`（Autoload 名 `Audio`）里接一个事件。
 
 ---
 
 ## 5. 运行时怎么响
 
-`Audio`（[AudioManager]）是唯一播放出口，它只做三件事：
+`Audio`（`src/autoload/audio_manager.gd`，类 `AudioManager`）是唯一播放出口，它只做三件事：
 
-1. **按场景与时间切 BGM**：世界场景进入时发 [signal EventBus.world_entered]，
+1. **按场景与时间切 BGM**：世界场景进入时发 `EventBus.world_entered`，
    白天放农场 / 小镇曲、18:00 ~ 次日 06:00 换成夜曲；标题页固定放标题曲。
 2. **订阅既有信号播音效**：翻地、浇水、播种、收获、买卖、对话、存读档、脚步……
-   全部通过 [EventBus] 的现有信号触发，**玩法代码里不出现任何播放调用**。
+   全部通过 `EventBus` 的现有信号触发，**玩法代码里不出现任何播放调用**。
 3. **管理两条总线**：启动时确保 `Master → BGM / SFX` 存在，
    设置菜单里的两个滑杆只改总线音量，并把设置存到 `user://audio_settings.cfg`。
 
@@ -126,23 +123,23 @@ timeout 60 ./godot --headless --path . --import
 
 ---
 
-## 6. 接真音频的姿势
+## 6. 修改与扩展音频
 
-脚本合成不是终点。真正的音频到位后：
+音频同样由脚本合成，调整听感 = 改代码后重跑：
 
-```
-1. 删掉对应的 generate_*.gd（或让它不再覆盖该文件）
-2. 把真音频放到同名路径，保持 22050 Hz / 16 bit / 单声道（或同步改 AudioCatalog）
-3. 跑 ./tools/check.sh
-```
+1. 新音色先在 `tools/audio/synth.gd` 里加一个有名字的原语。
+2. 在 `tools/audio/generate_sfx.gd` / `generate_bgm.gd` 里写配方；
+   新音频的 id 与路径加到 `src/audio/audio_catalog.gd`。
+3. 跑 `./tools/build_assets.sh`，再跑 `./tools/check.sh`。
 
-因为运行时只认 [AudioCatalog] 的 id 与路径，**游戏代码一行都不用改**。
+生成物（WAV / `.import`）会被重新覆盖，**不要手改**。
+因为运行时只认 `AudioCatalog` 的 id 与路径，这些改动都不会波及玩法代码。
 
 ---
 
 ## 7. 规范如何被强制
 
-[code]tests/unit/test_audio.gd[/code] 把上面的规则变成断言：
+`tests/unit/test_audio.gd` 把上面的规则变成断言：
 
 - 目录里声明的每个 id 都有对应 WAV；
 - WAV 真的是 22050 Hz / 16 bit / 单声道 PCM（直接解析文件头，不依赖导入）；
