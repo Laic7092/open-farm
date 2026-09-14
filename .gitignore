@@ -10,3 +10,6 @@ godot
 
 # gdUnit4 生成的测试报告
 reports/
+
+# 构建产物
+target/
