@@ -33,6 +33,10 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://assets/sprites/flora/boulder.png",
 	"res://assets/sprites/flora/flower.png",
 	"res://assets/sprites/flora/mushroom.png",
+	"res://assets/sprites/animals/chicken.png",
+	"res://assets/sprites/animals/cow.png",
+	"res://assets/sprites/props/coop.png",
+	"res://assets/sprites/props/trough.png",
 	"res://assets/sprites/weather/rain_drop.png",
 	"res://assets/sprites/weather/snow_flake.png",
 	"res://assets/ui/panel.png",
@@ -109,6 +113,23 @@ func test_flora_stage_sheets_match_layout() -> void:
 			"野生植被 %s 需要 %d 列，图集只有 %d 列"
 				% [flora_id, needed_columns, Layout.FLORA_COLUMNS]
 		).is_true()
+
+
+## 牲畜贴图必须挂上、且宽度是固定列数的整数倍。
+func test_animal_sheets_match_layout() -> void:
+	for animal_id: StringName in Database.animals:
+		var animal := Database.get_animal(animal_id)
+		assert_object(animal.sprite_sheet).override_failure_message(
+			"动物 %s 没有挂贴图" % animal_id
+		).is_not_null()
+		if animal.sprite_sheet == null:
+			continue
+		assert_int(
+			animal.sprite_sheet.get_width() % Layout.ANIMAL_COLUMNS
+		).override_failure_message(
+			"动物 %s 的贴图宽度不是 %d 列的整数倍" % [animal_id, Layout.ANIMAL_COLUMNS]
+		).is_equal(0)
+		assert_int(animal.sprite_sheet.get_height()).is_equal(Layout.ANIMAL_CELL)
 
 
 func test_title_backdrop_matches_viewport() -> void:

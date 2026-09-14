@@ -12,6 +12,7 @@ enum Category {
 	MATERIAL,  ## 素材（木材、石材……）
 	FOOD,      ## 食物
 	GIFT,      ## 礼物
+	ANIMAL,    ## 牲畜（放入畜舍后成为活体）
 }
 
 ## 唯一标识。
@@ -35,6 +36,8 @@ enum Category {
 @export var tool_id: StringName = &""
 ## 种子类道具指向的 [CropData] id。
 @export var crop_id: StringName = &""
+## 牲畜类道具指向的 [AnimalData] id。
+@export var animal_id: StringName = &""
 
 
 func is_stackable() -> bool:
@@ -56,6 +59,8 @@ func validate() -> PackedStringArray:
 		problems.append("工具类道具必须填写 tool_id")
 	if category == Category.SEED and crop_id == &"":
 		problems.append("种子类道具必须填写 crop_id")
+	if category == Category.ANIMAL and animal_id == &"":
+		problems.append("牲畜类道具必须填写 animal_id")
 	if sell_price > buy_price and buy_price > 0:
 		problems.append("sell_price 高于 buy_price，玩家可以无限刷钱")
 	return problems

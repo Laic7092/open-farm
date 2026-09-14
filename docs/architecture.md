@@ -14,17 +14,18 @@
         └───────────────▲──────────────────────────────┘
                         │ EventBus（单向：玩法 → UI）
         ┌───────────────┴──────────────────────────────┐
-  玩法  │ Player · FarmGrid · Npc · Shop · Bed · Door  │  场景内节点
+  玩法  │ Player · FarmGrid · Livestock · Npc · Shop   │  场景内节点
         └───────────────▲──────────────────────────────┘
                         │ 直接调用（同步、可断言）
         ┌───────────────┴──────────────────────────────┐
-  规则  │ CropGrowth · Season · Weather · GameDate ·   │  纯静态函数 / RefCounted
-        │ Inventory · PlayerStats · ToolBelt · Shop    │  ✔ 不依赖场景树，可直接单测
+  规则  │ CropGrowth · AnimalHusbandry · Season ·      │  纯静态函数 / RefCounted
+        │ Weather · Inventory · PlayerStats · Shop     │  ✔ 不依赖场景树，可直接单测
         └───────────────▲──────────────────────────────┘
                         │ Database.get_xxx(id)
         ┌───────────────┴──────────────────────────────┐
-  数据  │ CropData · ItemData · ToolData · NpcData ·   │  res://data/**/*.tres
-        │ DialogueData · ShopData （Resource）          │  策划在 Inspector 里改
+  数据  │ CropData · AnimalData · BuildingData ·       │  res://data/**/*.tres
+        │ ItemData · ToolData · NpcData · ShopData ·   │  策划在 Inspector 里改
+        │ DialogueData （Resource）                    │
         └──────────────────────────────────────────────┘
 ```
 
@@ -155,6 +156,19 @@ Godot **不保证同名信号的多个回调按连接顺序执行**。但日结�
 如果靠信号，某个版本改了回调排序，作物就会用昨天的天气生长，而且这种 bug
 极难复现。所以 `GameClock` 提供 `register_day_hook(callable)`，
 按注册顺序同步执行；钩子跑完之后才 emit `day_changed` 给 UI 这类观察者。
+
+### 3.3.1 畜舍为什么是 FarmGrid 的翻版
+
+牲畜养殖和作物是同一套骨架：`LivestockManager` 就是农田的 `FarmGrid`，
+`AnimalState` 就是 `CropState`，`AnimalHusbandry` 就是 `CropGrowth`。
+
+- 状态在 `LivestockManager.buildings` 里，视图 `Animal` 节点随时可以丢弃重建；
+- 日结转同样注册在 `_enter_tree()`，不在场的地图不跑；
+- 规则层是纯静态函数，喂食 / 好感度 / 产出计时全部可以脱离场景单测。
+
+和作物不同的一点：**牲畜不会死**。不喂食只会掉好感度并停止产出，
+因为牲畜是“资产”而不是“一季的投入”；是否成年、能不能收都由数据里的
+`mature_days` / `produce_days` 决定，代码里没有针对具体动物的分支。
 
 ### 3.4 状态机的初始状态必须延后一帧
 

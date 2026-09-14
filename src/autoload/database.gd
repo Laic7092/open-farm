@@ -8,6 +8,8 @@ extends Node
 ## 该节点不持有任何运行时状态，可以安全地在单元测试里反复调用 [method reload]。
 
 const CROP_DIR: String = "res://data/crops"
+const ANIMAL_DIR: String = "res://data/animals"
+const BUILDING_DIR: String = "res://data/buildings"
 const FLORA_DIR: String = "res://data/flora"
 const ITEM_DIR: String = "res://data/items"
 const TOOL_DIR: String = "res://data/tools"
@@ -19,6 +21,8 @@ const DIALOGUE_DIR: String = "res://data/dialogue"
 signal reloaded()
 
 var crops: Dictionary[StringName, CropData] = {}
+var animals: Dictionary[StringName, AnimalData] = {}
+var buildings: Dictionary[StringName, BuildingData] = {}
 var floras: Dictionary[StringName, FloraData] = {}
 var items: Dictionary[StringName, ItemData] = {}
 var tools: Dictionary[StringName, ToolData] = {}
@@ -34,6 +38,8 @@ func _ready() -> void:
 ## 重新扫描全部数据目录。
 func reload() -> void:
 	crops.clear()
+	animals.clear()
+	buildings.clear()
 	floras.clear()
 	items.clear()
 	tools.clear()
@@ -42,6 +48,8 @@ func reload() -> void:
 	dialogues.clear()
 
 	_index(CROP_DIR, crops, "CropData")
+	_index(ANIMAL_DIR, animals, "AnimalData")
+	_index(BUILDING_DIR, buildings, "BuildingData")
 	_index(FLORA_DIR, floras, "FloraData")
 	_index(ITEM_DIR, items, "ItemData")
 	_index(TOOL_DIR, tools, "ToolData")
@@ -56,6 +64,14 @@ func reload() -> void:
 
 func get_crop(id: StringName) -> CropData:
 	return crops.get(id) as CropData
+
+
+func get_animal(id: StringName) -> AnimalData:
+	return animals.get(id) as AnimalData
+
+
+func get_building(id: StringName) -> BuildingData:
+	return buildings.get(id) as BuildingData
 
 
 func get_flora(id: StringName) -> FloraData:
@@ -90,6 +106,20 @@ func require_item(id: StringName) -> ItemData:
 	return item
 
 
+func require_animal(id: StringName) -> AnimalData:
+	var data := get_animal(id)
+	if data == null:
+		push_error("Database: 找不到动物 '%s'" % id)
+	return data
+
+
+func require_building(id: StringName) -> BuildingData:
+	var data := get_building(id)
+	if data == null:
+		push_error("Database: 找不到畜舍 '%s'" % id)
+	return data
+
+
 func require_crop(id: StringName) -> CropData:
 	var crop := get_crop(id)
 	if crop == null:
@@ -114,15 +144,17 @@ func require_shop(id: StringName) -> ShopData:
 ## 所有数据资源的总数，便于进度校验与测试。
 func total_count() -> int:
 	return (
-		crops.size() + floras.size() + items.size() + tools.size()
-		+ npcs.size() + shops.size() + dialogues.size()
+		crops.size() + animals.size() + buildings.size() + floras.size()
+		+ items.size() + tools.size() + npcs.size() + shops.size() + dialogues.size()
 	)
 
 
 ## 对全部资源跑一遍自检；返回形如 ["CropData(turnip): id 不能为空"] 的问题列表。
 func validate_all() -> PackedStringArray:
 	var problems := PackedStringArray()
-	for bucket: Dictionary in [crops, floras, items, tools, npcs, shops, dialogues]:
+	for bucket: Dictionary in [
+		crops, animals, buildings, floras, items, tools, npcs, shops, dialogues
+	]:
 		for key: StringName in bucket:
 			var resource: Resource = bucket[key]
 			if not resource.has_method(&"validate"):

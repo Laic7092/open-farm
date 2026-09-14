@@ -39,6 +39,7 @@ tools/art/                      ← 生成器（每个都能单独跑）
 ├── generate_props.gd           ← 建筑 / 家具 / 树木（一物一图）
 ├── generate_actors.gd          ← 玩家与 NPC（共用一套角色画法）
 ├── generate_crops.gd           ← 每种作物一张生长图
+├── generate_animals.gd         ← 每种牲畜一张状态表（幼崽 / 成年 / 可收）
 ├── generate_items.gd           ← 道具图标
 ├── generate_ui.gd              ← UI 九宫格与图标
 ├── generate_title.gd           ← 标题页背景与云
@@ -102,6 +103,7 @@ if Art.noise(x, y, salt) < 0.2: ...
 | 数据 | 字段 | 来源 |
 | --- | --- | --- |
 | `CropData` | `sprite_sheet` | `assets/sprites/crops/<crop_id>.png` |
+| `AnimalData` | `sprite_sheet` | `assets/sprites/animals/<animal_id>.png` |
 | `ItemData` | `icon` | `assets/sprites/items/<item_id>.png` |
 | `NpcData` | `frames` | `assets/sprites/actors/npc_<npc_id>_frames.tres` |
 
@@ -118,7 +120,7 @@ CI 与玩家不需要跑生成器，也不需要本机装有中文字体。
 ## 4. 怎么跑
 
 ```bash
-./tools/build_assets.sh          # 全部重跑（12 步，约 20 秒）
+./tools/build_assets.sh          # 全部重跑（14 步，约 20 秒）
 ```
 
 顺序不能变，原因是 Godot 的导入管线：
@@ -201,7 +203,7 @@ OPEN_FARM_FONT_SRC=/path/to/font.ttf ./godot --headless --path . \
 | 每张生成物都存在且尺寸与 `AtlasLayout` 一致 | 改了排版忘了重新生成 |
 | TileSet 的瓦片数 ≥ 排版表声明的格数 | 图集与 TileSet 脱节 |
 | 翻译表里的每个字符都在像素字体子集里 | 新文案显示成方块 |
-| 每个 `ItemData.icon` / `CropData.sprite_sheet` / `NpcData.frames` 都挂上了 | 数据与美术脱节 |
+| 每个 `ItemData.icon` / `CropData.sprite_sheet` / `AnimalData.sprite_sheet` / `NpcData.frames` 都挂上了 | 数据与美术脱节 |
 | `palette.gd` 里的颜色不重复定义、可被生成器访问 | 调色板被绕过 |
 
 跑 `./tools/check.sh` 就会执行。

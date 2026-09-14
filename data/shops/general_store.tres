@@ -18,8 +18,23 @@ script = ExtResource("2_iac7g")
 item_id = &"tomato_seed"
 price_override = 50
 
+[sub_resource type="Resource" id="Resource_5itjm"]
+script = ExtResource("2_iac7g")
+item_id = &"hay"
+price_override = 20
+
+[sub_resource type="Resource" id="Resource_3nb23"]
+script = ExtResource("2_iac7g")
+item_id = &"chicken"
+price_override = 500
+
+[sub_resource type="Resource" id="Resource_nmlny"]
+script = ExtResource("2_iac7g")
+item_id = &"cow"
+price_override = 1200
+
 [resource]
 script = ExtResource("1_41vot")
 id = &"general_store"
 display_name_key = &"SHOP_GENERAL_STORE"
-stock = Array[ExtResource("2_iac7g")]([SubResource("Resource_t0k2w"), SubResource("Resource_x45wp"), SubResource("Resource_ujkte")])
+stock = Array[ExtResource("2_iac7g")]([SubResource("Resource_t0k2w"), SubResource("Resource_x45wp"), SubResource("Resource_ujkte"), SubResource("Resource_5itjm"), SubResource("Resource_3nb23"), SubResource("Resource_nmlny")])

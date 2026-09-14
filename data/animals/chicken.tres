@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AnimalData" format=3]
+
+[ext_resource type="Script" path="res://src/data/animal_data.gd" id="1_pug41"]
+[ext_resource type="Texture2D" path="res://assets/sprites/animals/chicken.png" id="2_x2wux"]
+
+[resource]
+script = ExtResource("1_pug41")
+id = &"chicken"
+display_name_key = &"ANIMAL_CHICKEN"
+species = &"chicken"
+product_item_id = &"egg"
+sprite_sheet = ExtResource("2_x2wux")

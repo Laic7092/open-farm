@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/cow.png" id="1_k6xa7"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_exr4j"]
+
+[resource]
+script = ExtResource("2_exr4j")
+id = &"cow"
+display_name_key = &"ITEM_COW"
+category = 6
+buy_price = 1200
+stack_limit = 1
+sellable = false
+icon = ExtResource("1_k6xa7")
+animal_id = &"cow"

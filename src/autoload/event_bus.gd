@@ -61,6 +61,21 @@ signal crop_died(cell: Vector2i)
 ## 使用了工具（含失败尝试，用于播放动画/音效反馈）。
 signal tool_used(tool_id: StringName, cell: Vector2i, success: bool)
 
+# ---------------------------------------------------------------- 畜牧
+
+## 一头牲畜被安置进畜舍。
+signal animal_placed(building_id: StringName, animal_id: StringName)
+## 畜舍被喂食，[param count] 为吃上饭的牲畜数。
+signal animal_fed(building_id: StringName, count: int)
+## 牲畜被抚摸，[param affection] 为抚摸后的好感度。
+signal animal_petted(building_id: StringName, animal_id: StringName, affection: int)
+## 收到畜产品。
+signal animal_product_collected(
+	building_id: StringName, animal_id: StringName, item_id: StringName, amount: int
+)
+## 牲畜长大成年。
+signal animal_matured(building_id: StringName, animal_id: StringName)
+
 # ---------------------------------------------------------------- 野生植被
 
 ## 世界各处自然冒出了一株新芽。

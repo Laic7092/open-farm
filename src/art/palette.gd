@@ -107,6 +107,15 @@ const NPC_SHIRT_DARK := Color8(136, 66, 82)
 const NPC_HAIR := Color8(196, 190, 182)
 const NPC_HAIR_DARK := Color8(150, 144, 138)
 
+# ---------------------------------------------------------------- 牲畜
+
+const ANIMAL_HIDE := Color8(240, 234, 224)   # 奶牛 / 鸡的浅色毛
+const ANIMAL_SPOT := Color8(62, 52, 58)      # 奶牛黑斑
+const ANIMAL_SNOUT := Color8(232, 166, 166)  # 粉色口鼻
+const ANIMAL_CHICK := Color8(246, 214, 118)  # 幼鸡黄
+const ANIMAL_HOOF := Color8(84, 66, 58)      # 蹄
+const HAY := Color8(214, 178, 96)            # 干草
+
 # ---------------------------------------------------------------- 果实
 
 const FRUIT_RED := Color8(226, 92, 76)

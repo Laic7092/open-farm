@@ -32,6 +32,8 @@ func _initialize() -> void:
 	Art.save_png(_lamp(), DIR.path_join("lamp.png"))
 	Art.save_png(_flower_pot(), DIR.path_join("flower_pot.png"))
 	Art.save_png(_chicken(), DIR.path_join("chicken.png"))
+	Art.save_png(_coop(), DIR.path_join("coop.png"))
+	Art.save_png(_trough(), DIR.path_join("trough.png"))
 	print("场景道具生成完成 → ", DIR)
 	quit()
 
@@ -312,6 +314,52 @@ func _flower_pot() -> Image:
 	Art.px(image, 9, 3, P.FLOWER_YELLOW)
 	Art.px(image, 10, 3, P.FLOWER_YELLOW)
 	Art.px(image, 9, 2, P.FLOWER_YELLOW)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 鸡舍：比谷仓小一号，配色更暖，门口挂一个下蛋的草窝。
+func _coop() -> Image:
+	var image := Art.new_image(48, 44)
+	Art.ground_shadow(image, 48, 44, 6)
+
+	var body := Rect2i(6, 18, 36, 24)
+	Art.rect(image, body, P.WALL)
+	Art.scatter(image, body, P.WALL_DARK, 0.10, 19)
+	Art.h_line(image, 6, 18, 36, P.WALL_LIGHT)
+	# 木筋
+	Art.rect(image, Rect2i(6, 18, 36, 2), P.WOOD_DARK)
+	Art.rect(image, Rect2i(6, 40, 36, 2), P.WOOD_DARK)
+	Art.v_line(image, 8, 20, 20, P.WOOD_DARK)
+	Art.v_line(image, 39, 20, 20, P.WOOD_DARK)
+
+	# 单坡屋顶
+	for row: int in 16:
+		var half := int(round(lerpf(16.0, 24.0, float(row) / 15.0)))
+		Art.h_line(image, 24 - half, 2 + row, half * 2, P.ROOF if row % 3 != 0 else P.ROOF_DARK)
+	Art.rect(image, Rect2i(0, 16, 48, 3), P.ROOF_DARK)
+	Art.h_line(image, 0, 16, 48, P.ROOF_LIGHT)
+
+	# 门与草窝
+	Art.rect(image, Rect2i(18, 28, 12, 14), P.WOOD)
+	Art.frame_rect(image, Rect2i(18, 28, 12, 14), P.WOOD_DARK)
+	Art.h_line(image, 19, 30, 10, P.WOOD_LIGHT)
+	Art.ellipse(image, Vector2i(9, 38), Vector2i(5, 3), P.HAY)
+	Art.ellipse(image, Vector2i(9, 37), Vector2i(3, 2), P.FRUIT_ORANGE)
+
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 饲料槽：木槽 + 干草。
+func _trough() -> Image:
+	var image := Art.new_image(16, 16)
+	Art.ground_shadow(image, 16, 16, 3)
+	Art.taper(image, Vector2i(8, 8), 5, 12, 10, P.WOOD)
+	Art.rect(image, Rect2i(3, 7, 11, 2), P.WOOD_DARK)
+	Art.h_line(image, 5, 7, 7, P.HAY)
+	Art.h_line(image, 6, 6, 5, P.HAY)
+	Art.px(image, 8, 5, P.PATH_LIGHT)
 	Art.outline(image, P.OUTLINE)
 	return image
 

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="BuildingData" format=3]
+
+[ext_resource type="Script" path="res://src/data/building_data.gd" id="1_bge64"]
+
+[resource]
+script = ExtResource("1_bge64")
+id = &"barn"
+display_name_key = &"BUILDING_BARN"
+allowed_species = Array[StringName]([&"cow"])

@@ -106,6 +106,15 @@ const NPC_SIZE := Vector2i(TILE * NPC_COLUMNS, TILE)
 ## [code]assets/sprites/items/<item_id>.png[/code]，一格 16×16。
 const ITEM_ICON_SIZE := Vector2i(16, 16)
 
+# ---------------------------------------------------------------- 牲畜
+
+## [code]assets/sprites/animals/<id>.png[/code] 固定 3 列。
+##
+## 列 0 = 幼崽、列 1 = 成年、列 2 = 成年且有产出可收。
+const ANIMAL_COLUMNS: int = 3
+## 单格边长。
+const ANIMAL_CELL: int = 16
+
 # ---------------------------------------------------------------- 野生植被
 
 ## [code]assets/sprites/flora/<id>.png[/code] 固定 4 列。

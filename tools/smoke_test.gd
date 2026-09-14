@@ -120,6 +120,7 @@ func _run_checks() -> void:
 	_check_clock()
 	_check_farming()
 	_check_flora()
+	_check_livestock()
 	_check_shop()
 	_check_save_load()
 	_check_ui()
@@ -310,6 +311,62 @@ func _clear_flora_at(cell: Vector2i) -> void:
 		field.clear(cell, data.tool_kind)
 
 
+# ---------------------------------------------------------------- 畜牧
+
+## 养殖系统的端到端检查：放养、物种限制、喂食成长、收产出、序列化。
+func _check_livestock() -> void:
+	var mgr := _livestock()
+	_check(mgr != null, "农场场景应当包含 LivestockManager")
+	if mgr == null:
+		return
+	_check(mgr.pen_for(&"coop") != null, "农场应当有鸡舍")
+	_check(mgr.pen_for(&"barn") != null, "农场应当有牛舍")
+
+	var player := _player()
+	if player == null:
+		return
+
+	# 放养：拿着鸡走到鸡舍，鸡被消耗、鸡舍多一只。
+	player.inventory.add(&"chicken", 1)
+	_check(mgr.introduce(&"coop", player), "拿着鸡应当能放进鸡舍")
+	_check_eq(mgr.animal_count(&"coop"), 1, "鸡舍里应当有 1 只鸡")
+	_check(not player.inventory.has(&"chicken"), "放养后背包里的鸡应当被消耗")
+
+	# 物种限制：牛不能住鸡舍、只能住牛舍。
+	player.inventory.add(&"cow", 1)
+	_check(not mgr.introduce(&"coop", player), "牛不应该能住进鸡舍")
+	_check(mgr.introduce(&"barn", player), "牛应当能住进牛舍")
+	_check_eq(mgr.animal_count(&"barn"), 1, "牛舍里应当有 1 头牛")
+
+	# 喂食 + 成长：每天喂一次，喂够 mature_days 天后成年。
+	var chicken := Database.get_animal(&"chicken")
+	player.inventory.add(&"hay", 20)
+	for _i: int in chicken.mature_days:
+		_check(mgr.feed(&"coop", player.inventory) > 0, "饿着的鸡应当能被喂到")
+		mgr.advance_day(GameClock.date)
+	var state := mgr.animal_state_at(&"coop", 0)
+	_check(
+		AnimalHusbandry.is_mature(chicken, state),
+		"喂够 %d 天后鸡应当成年" % chicken.mature_days
+	)
+
+	# 产出：成年后再过 produce_days 个喂养日，就有鸡蛋可收。
+	for _i: int in chicken.produce_days:
+		mgr.feed(&"coop", player.inventory)
+		mgr.advance_day(GameClock.date)
+	state = mgr.animal_state_at(&"coop", 0)
+	_check(AnimalHusbandry.can_collect(chicken, state), "过了一个产出周期后应当有鸡蛋可收")
+	var outcome := mgr.collect(&"coop", 0)
+	_check_eq(String(outcome.get("item_id", &"")), "egg", "产出的应当是鸡蛋")
+	_check(int(outcome.get("amount", 0)) >= 1, "鸡蛋数量应当至少为 1")
+
+	# 序列化往返：存档 / 读档不能把牲畜弄丢。
+	var snapshot := mgr.to_dict()
+	mgr.from_dict(snapshot)
+	_check_eq(mgr.animal_count(&"coop"), 1, "序列化往返后鸡舍里的鸡应当还在")
+	_check_eq(mgr.animal_count(&"barn"), 1, "序列化往返后牛舍里的牛应当还在")
+
+
 func _check_shop() -> void:
 	var shop_data := Database.get_shop(&"general_store")
 	_check(shop_data != null, "应当能找到杂货店数据")
@@ -468,6 +525,13 @@ func _check_farm_state_survived() -> void:
 
 	var grid := _farm_grid()
 	_check(grid != null, "返回后应当能找到 FarmGrid")
+
+	# 关键回归：畜舍进度也必须活过"农场 → 小镇 → 农场"。
+	var livestock := _livestock()
+	_check(livestock != null, "返回后应当能找到 LivestockManager")
+	if livestock != null:
+		_check(livestock.animal_count(&"coop") >= 1, "往返后鸡舍里的鸡应当还在")
+
 	if grid == null:
 		return
 
@@ -512,6 +576,10 @@ func _world() -> Node:
 
 func _farm_grid() -> FarmGrid:
 	return get_tree().get_first_node_in_group(FarmGrid.GROUP) as FarmGrid
+
+
+func _livestock() -> LivestockManager:
+	return get_tree().get_first_node_in_group(LivestockManager.GROUP) as LivestockManager
 
 
 func _flora_field() -> FloraField:

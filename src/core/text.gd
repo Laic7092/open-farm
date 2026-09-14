@@ -46,6 +46,22 @@ static func crop_name(crop_id: StringName) -> String:
 	return key(crop.display_name_key)
 
 
+## 动物显示名。
+static func animal_name(animal_id: StringName) -> String:
+	var data := Database.get_animal(animal_id)
+	if data == null:
+		return String(animal_id)
+	return key(data.display_name_key)
+
+
+## 畜舍显示名。
+static func building_name(building_id: StringName) -> String:
+	var data := Database.get_building(building_id)
+	if data == null:
+		return String(building_id)
+	return key(data.display_name_key)
+
+
 ## 季节显示名。
 static func season_name(season: Season.Type) -> String:
 	return key(Season.name_key(season))

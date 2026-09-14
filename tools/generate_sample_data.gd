@@ -16,6 +16,8 @@ extends SceneTree
 ## 用法：[code]godot --headless --path . -s res://tools/generate_sample_data.gd[/code]
 
 const CROP_DIR: String = "res://data/crops"
+const ANIMAL_DIR: String = "res://data/animals"
+const BUILDING_DIR: String = "res://data/buildings"
 const FLORA_DIR: String = "res://data/flora"
 const ITEM_DIR: String = "res://data/items"
 const TOOL_DIR: String = "res://data/tools"
@@ -25,6 +27,7 @@ const SHOP_DIR: String = "res://data/shops"
 
 ## 美术资源目录（由 tools/art/*.gd 生成，这里只负责"把图挂到数据上"）。
 const CROP_SHEET_DIR: String = "res://assets/sprites/crops"
+const ANIMAL_SHEET_DIR: String = "res://assets/sprites/animals"
 const FLORA_SHEET_DIR: String = "res://assets/sprites/flora"
 const ITEM_ICON_DIR: String = "res://assets/sprites/items"
 const NPC_FRAMES_DIR: String = "res://assets/sprites/actors"
@@ -32,12 +35,15 @@ const NPC_FRAMES_DIR: String = "res://assets/sprites/actors"
 
 func _initialize() -> void:
 	for directory: String in [
-		CROP_DIR, FLORA_DIR, ITEM_DIR, TOOL_DIR, DIALOGUE_DIR, NPC_DIR, SHOP_DIR
+		CROP_DIR, ANIMAL_DIR, BUILDING_DIR, FLORA_DIR,
+		ITEM_DIR, TOOL_DIR, DIALOGUE_DIR, NPC_DIR, SHOP_DIR
 	]:
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(directory))
 
 	_build_tools()
 	_build_crops()
+	_build_animals()
+	_build_buildings()
 	_build_flora()
 	_build_items()
 	_build_dialogues()
@@ -141,6 +147,60 @@ func _build_crops() -> void:
 	tomato.base_sell_price = 70
 	tomato.sprite_sheet = _crop_sheet(&"tomato")
 	_save(tomato, CROP_DIR.path_join("tomato.tres"))
+
+
+# ---------------------------------------------------------------- 牲畜
+
+## 可畜养的动物 + 畜舍。
+##
+## 数值调法：
+## [br]- [code]mature_days[/code] = 幼崽到成年需要喂几天
+## [br]- [code]produce_days[/code] = 成年后每隔几天产出一次
+## [br]- 不喂食不会死，只会掉好感度并停止产出
+func _build_animals() -> void:
+	# 鸡：3 天成年，之后每天一个鸡蛋，入门牲畜。
+	var chicken := AnimalData.new()
+	chicken.id = &"chicken"
+	chicken.display_name_key = &"ANIMAL_CHICKEN"
+	chicken.species = &"chicken"
+	chicken.mature_days = 3
+	chicken.produce_days = 1
+	chicken.product_item_id = &"egg"
+	chicken.product_amount = 1
+	chicken.feed_item_id = &"hay"
+	chicken.sprite_sheet = _animal_sheet(&"chicken")
+	_save(chicken, ANIMAL_DIR.path_join("chicken.tres"))
+
+	# 牛：更贵、更慢，但牛奶收益高，且高好感时更容易多产一瓶。
+	var cow := AnimalData.new()
+	cow.id = &"cow"
+	cow.display_name_key = &"ANIMAL_COW"
+	cow.species = &"cow"
+	cow.mature_days = 5
+	cow.produce_days = 2
+	cow.product_item_id = &"milk"
+	cow.product_amount = 1
+	cow.feed_item_id = &"hay"
+	cow.affection_per_pet = 3
+	cow.bonus_product_chance = 0.35
+	cow.sprite_sheet = _animal_sheet(&"cow")
+	_save(cow, ANIMAL_DIR.path_join("cow.tres"))
+
+
+func _build_buildings() -> void:
+	var coop := BuildingData.new()
+	coop.id = &"coop"
+	coop.display_name_key = &"BUILDING_COOP"
+	coop.capacity = 4
+	coop.allowed_species = [&"chicken"] as Array[StringName]
+	_save(coop, BUILDING_DIR.path_join("coop.tres"))
+
+	var barn := BuildingData.new()
+	barn.id = &"barn"
+	barn.display_name_key = &"BUILDING_BARN"
+	barn.capacity = 4
+	barn.allowed_species = [&"cow"] as Array[StringName]
+	_save(barn, BUILDING_DIR.path_join("barn.tres"))
 
 
 # ---------------------------------------------------------------- 野生植被
@@ -312,6 +372,14 @@ func _build_items() -> void:
 	_material_item(&"flower", &"ITEM_FLOWER", 12)
 	_material_item(&"mushroom", &"ITEM_MUSHROOM", 25)
 
+	# 畜产品与饲料。
+	_food_item(&"egg", &"ITEM_EGG", 80)
+	_food_item(&"milk", &"ITEM_MILK", 160)
+	_material_item(&"hay", &"ITEM_HAY", 4)
+	# 牲畜：杂货店买来后放进畜舍。
+	_animal_item(&"chicken", &"ITEM_CHICKEN", &"chicken", 500)
+	_animal_item(&"cow", &"ITEM_COW", &"cow", 1200)
+
 	_tool_item(&"hoe", &"ITEM_HOE", &"TOOL_HOE_DESC", &"hoe")
 	_tool_item(&"watering_can", &"ITEM_WATERING_CAN", &"TOOL_WATERING_CAN_DESC", &"watering_can")
 	_tool_item(&"sickle", &"ITEM_SICKLE", &"TOOL_SICKLE_DESC", &"sickle")
@@ -354,6 +422,39 @@ func _crop_item(item_id: StringName, name_key: StringName, sell_price: int) -> v
 	item.category = ItemData.Category.CROP
 	item.sell_price = sell_price
 	item.stack_limit = 99
+	item.icon = _item_icon(item_id)
+	_save(item, ITEM_DIR.path_join("%s.tres" % item_id))
+
+
+## 畜产品：能吃能卖。
+func _food_item(item_id: StringName, name_key: StringName, sell_price: int) -> void:
+	var item := ItemData.new()
+	item.id = item_id
+	item.display_name_key = name_key
+	item.category = ItemData.Category.FOOD
+	item.buy_price = 0
+	item.sell_price = sell_price
+	item.stack_limit = 99
+	item.icon = _item_icon(item_id)
+	_save(item, ITEM_DIR.path_join("%s.tres" % item_id))
+
+
+## 牲畜道具：购买后放进畜舍变成活体，不能当普通商品卖掉。
+func _animal_item(
+	item_id: StringName,
+	name_key: StringName,
+	animal_id: StringName,
+	buy_price: int
+) -> void:
+	var item := ItemData.new()
+	item.id = item_id
+	item.display_name_key = name_key
+	item.category = ItemData.Category.ANIMAL
+	item.animal_id = animal_id
+	item.buy_price = buy_price
+	item.sell_price = 0
+	item.sellable = false
+	item.stack_limit = 1
 	item.icon = _item_icon(item_id)
 	_save(item, ITEM_DIR.path_join("%s.tres" % item_id))
 
@@ -451,6 +552,9 @@ func _build_shops() -> void:
 		_stock(&"turnip_seed", 20),
 		_stock(&"potato_seed", 35),
 		_stock(&"tomato_seed", 50),
+		_stock(&"hay", 20),
+		_stock(&"chicken", 500),
+		_stock(&"cow", 1200),
 	] as Array[ShopStock]
 	_save(shop, SHOP_DIR.path_join("general_store.tres"))
 
@@ -473,6 +577,11 @@ func _crop_sheet(crop_id: StringName) -> Texture2D:
 ## 取野生植被的阶段表。
 func _flora_sheet(flora_id: StringName) -> Texture2D:
 	return _texture(FLORA_SHEET_DIR.path_join("%s.png" % flora_id))
+
+
+## 取牲畜状态表。
+func _animal_sheet(animal_id: StringName) -> Texture2D:
+	return _texture(ANIMAL_SHEET_DIR.path_join("%s.png" % animal_id))
 
 
 ## 取道具图标。

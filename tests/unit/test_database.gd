@@ -103,3 +103,49 @@ func test_reload_is_idempotent() -> void:
 	var before: int = Database.total_count()
 	Database.reload()
 	assert_int(Database.total_count()).is_equal(before)
+
+
+# ---------------------------------------------------------------- 畜牧
+
+func test_expected_animals_and_buildings_are_loaded() -> void:
+	for animal_id: StringName in [&"chicken", &"cow"]:
+		assert_object(Database.get_animal(animal_id)).override_failure_message(
+			"缺少动物 %s" % animal_id
+		).is_not_null()
+	for building_id: StringName in [&"coop", &"barn"]:
+		assert_object(Database.get_building(building_id)).override_failure_message(
+			"缺少畜舍 %s" % building_id
+		).is_not_null()
+
+
+func test_every_animal_product_and_feed_points_at_real_items() -> void:
+	for animal_id: StringName in Database.animals:
+		var animal := Database.get_animal(animal_id)
+		assert_object(Database.get_item(animal.product_item_id)).override_failure_message(
+			"动物 %s 的产出 %s 不存在" % [animal_id, animal.product_item_id]
+		).is_not_null()
+		assert_object(Database.get_item(animal.feed_item_id)).override_failure_message(
+			"动物 %s 的饲料 %s 不存在" % [animal_id, animal.feed_item_id]
+		).is_not_null()
+
+
+func test_every_animal_item_points_at_a_real_animal() -> void:
+	for item_id: StringName in Database.items:
+		var item := Database.get_item(item_id)
+		if item.category != ItemData.Category.ANIMAL:
+			continue
+		assert_object(Database.get_animal(item.animal_id)).override_failure_message(
+			"牲畜道具 %s 指向不存在的动物 %s" % [item_id, item.animal_id]
+		).is_not_null()
+
+
+func test_every_building_accepts_a_known_species() -> void:
+	var species: Dictionary[StringName, bool] = {}
+	for animal_id: StringName in Database.animals:
+		species[Database.get_animal(animal_id).species] = true
+	for building_id: StringName in Database.buildings:
+		var building := Database.get_building(building_id)
+		for value: StringName in building.allowed_species:
+			assert_bool(species.has(value)).override_failure_message(
+				"畜舍 %s 允许未知物种 %s" % [building_id, value]
+			).is_true()

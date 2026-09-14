@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3]
+[gd_scene load_steps=35 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -21,13 +21,18 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/signpost.png" id="25_sign"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/lamp.png" id="26_lamp"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/flower_pot.png" id="27_pot"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/chicken.png" id="28_chicken"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/rock.png" id="29_rock"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/rock_big.png" id="30_rock_big"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/stump.png" id="31_stump"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/mailbox.png" id="32_mailbox"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/bed.png" id="33_bed_tex"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/shipping_bin.png" id="34_bin_tex"]
+[ext_resource type="Script" path="res://src/farm/livestock_manager.gd" id="35_livestock"]
+[ext_resource type="Script" path="res://src/farm/animal_pen.gd" id="36_pen"]
+[ext_resource type="Script" path="res://src/farm/feed_trough.gd" id="37_trough"]
+[ext_resource type="PackedScene" path="res://scenes/farm/animal.tscn" id="38_animal"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/coop.png" id="39_coop"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/trough.png" id="40_trough_tex"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
 size = Vector2(16, 16)
@@ -119,15 +124,68 @@ position = Vector2(552, 106)
 texture = ExtResource("27_pot")
 script = ExtResource("12_prop")
 
-[node name="Chicken1" type="Sprite2D" parent="Props"]
-position = Vector2(636, 112)
-texture = ExtResource("28_chicken")
-script = ExtResource("12_prop")
+[node name="Livestock" type="Node2D" parent="." node_paths=PackedStringArray("animal_root")]
+script = ExtResource("35_livestock")
+animal_scene = ExtResource("38_animal")
+animal_root = NodePath("AnimalRoot")
+persistence_id = &"farm_livestock"
 
-[node name="Chicken2" type="Sprite2D" parent="Props"]
-position = Vector2(664, 118)
-texture = ExtResource("28_chicken")
-script = ExtResource("12_prop")
+[node name="AnimalRoot" type="Node2D" parent="Livestock"]
+y_sort_enabled = true
+
+[node name="Coop" type="Area2D" parent="Livestock"]
+position = Vector2(176, 96)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("36_pen")
+building_id = &"coop"
+wander_area = Rect2(-28, -18, 56, 30)
+prompt_key = &"PROMPT_ANIMAL_PEN"
+
+[node name="Building" type="Sprite2D" parent="Livestock/Coop"]
+position = Vector2(0, -25)
+texture = ExtResource("39_coop")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Livestock/Coop"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="Trough" type="Area2D" parent="Livestock/Coop"]
+position = Vector2(22, 6)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("37_trough")
+prompt_key = &"PROMPT_FEED_TROUGH"
+
+[node name="Sprite" type="Sprite2D" parent="Livestock/Coop/Trough"]
+texture = ExtResource("40_trough_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Livestock/Coop/Trough"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="BarnPen" type="Area2D" parent="Livestock"]
+position = Vector2(600, 108)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("36_pen")
+building_id = &"barn"
+wander_area = Rect2(-34, -22, 68, 34)
+prompt_key = &"PROMPT_ANIMAL_PEN"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Livestock/BarnPen"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="Trough" type="Area2D" parent="Livestock/BarnPen"]
+position = Vector2(-22, 6)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("37_trough")
+prompt_key = &"PROMPT_FEED_TROUGH"
+
+[node name="Sprite" type="Sprite2D" parent="Livestock/BarnPen/Trough"]
+texture = ExtResource("40_trough_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Livestock/BarnPen/Trough"]
+shape = SubResource("RectangleShape2D_tile")
 
 [node name="Well" type="Sprite2D" parent="Props"]
 position = Vector2(524, 296)
@@ -135,11 +193,6 @@ texture = ExtResource("24_well")
 script = ExtResource("12_prop")
 solid_size = Vector2(20, 10)
 solid_offset = Vector2(0, 12)
-
-[node name="Chicken3" type="Sprite2D" parent="Props"]
-position = Vector2(596, 452)
-texture = ExtResource("28_chicken")
-script = ExtResource("12_prop")
 
 [node name="Pot1" type="Sprite2D" parent="Props"]
 position = Vector2(212, 446)

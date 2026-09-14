@@ -35,6 +35,11 @@ func _initialize() -> void:
 	Art.save_png(_flower(), _path("flower"))
 	Art.save_png(_mushroom(), _path("mushroom"))
 	Art.save_png(_seed_bag(), _path("seed_bag"))
+	Art.save_png(_egg(), _path("egg"))
+	Art.save_png(_milk(), _path("milk"))
+	Art.save_png(_hay(), _path("hay"))
+	Art.save_png(_chicken_icon(), _path("chicken"))
+	Art.save_png(_cow_icon(), _path("cow"))
 	print("道具图标生成完成 → ", DIR)
 	quit()
 
@@ -276,6 +281,70 @@ func _flower() -> Image:
 	Art.circle(image, Vector2i(8, 6), 3, P.FLOWER_PINK)
 	Art.px(image, 8, 6, P.FLOWER_YELLOW)
 	Art.px(image, 7, 5, P.FLOWER_WHITE)
+	Art.outline(image)
+	return image
+
+
+# ---------------------------------------------------------------- 畜产品
+
+func _egg() -> Image:
+	var image := _blank()
+	Art.ellipse(image, Vector2i(8, 9), Vector2i(4, 5), P.WHITE)
+	Art.ellipse(image, Vector2i(7, 7), Vector2i(2, 2), P.WALL_LIGHT)
+	Art.px(image, 10, 12, P.WALL_DARK)
+	Art.outline(image)
+	return image
+
+
+func _milk() -> Image:
+	var image := _blank()
+	# 奶瓶：瓶身 + 瓶颈 + 盖子
+	Art.rect(image, Rect2i(5, 6, 6, 8), P.WHITE)
+	Art.rect(image, Rect2i(6, 3, 4, 3), P.STONE_LIGHT)
+	Art.rect(image, Rect2i(6, 2, 4, 1), P.STONE)
+	Art.rect(image, Rect2i(6, 9, 4, 4), P.WATER_FOAM)
+	Art.px(image, 6, 7, P.WALL_LIGHT)
+	Art.outline(image)
+	return image
+
+
+func _hay() -> Image:
+	var image := _blank()
+	for blade: int in 4:
+		var x: int = 4 + blade * 2
+		Art.v_line(image, x, 4 + blade, 8, P.HAY)
+	Art.h_line(image, 3, 9, 10, P.SEED_BROWN)
+	Art.h_line(image, 3, 11, 10, P.PATH_DARK)
+	Art.outline(image)
+	return image
+
+
+## 牲畜商品图标：与 [code]assets/sprites/animals[/code] 的成体保持同一配色。
+func _chicken_icon() -> Image:
+	var image := _blank()
+	Art.ellipse(image, Vector2i(7, 9), Vector2i(5, 4), P.WHITE)
+	Art.ellipse(image, Vector2i(10, 6), Vector2i(3, 3), P.WHITE)
+	Art.px(image, 9, 3, P.FRUIT_RED)
+	Art.px(image, 10, 3, P.FRUIT_RED)
+	Art.rect(image, Rect2i(12, 6, 2, 1), P.FRUIT_ORANGE)
+	Art.px(image, 11, 5, P.OUTLINE)
+	Art.rect(image, Rect2i(6, 13, 1, 2), P.FRUIT_ORANGE)
+	Art.rect(image, Rect2i(9, 13, 1, 2), P.FRUIT_ORANGE)
+	Art.outline(image)
+	return image
+
+
+func _cow_icon() -> Image:
+	var image := _blank()
+	Art.ellipse(image, Vector2i(6, 9), Vector2i(5, 4), P.ANIMAL_HIDE)
+	Art.ellipse(image, Vector2i(10, 6), Vector2i(3, 3), P.ANIMAL_HIDE)
+	Art.ellipse(image, Vector2i(4, 8), Vector2i(2, 2), P.ANIMAL_SPOT)
+	Art.ellipse(image, Vector2i(11, 6), Vector2i(1, 1), P.ANIMAL_SNOUT)
+	Art.px(image, 10, 5, P.OUTLINE)
+	Art.rect(image, Rect2i(4, 12, 1, 3), P.ANIMAL_HIDE)
+	Art.rect(image, Rect2i(8, 12, 1, 3), P.ANIMAL_HIDE)
+	Art.rect(image, Rect2i(4, 14, 1, 1), P.ANIMAL_HOOF)
+	Art.rect(image, Rect2i(8, 14, 1, 1), P.ANIMAL_HOOF)
 	Art.outline(image)
 	return image
 
