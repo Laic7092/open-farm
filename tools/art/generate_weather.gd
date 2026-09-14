@@ -18,10 +18,8 @@ const DIR: String = "res://assets/sprites/weather"
 
 func _initialize() -> void:
 	Art.save_png(_rain_drop(), DIR.path_join("rain_drop.png"))
-	Art.save_png(_rain_splash(), DIR.path_join("rain_splash.png"))
 	Art.save_png(_snow_flake(), DIR.path_join("snow_flake.png"))
 	Art.save_png(_leaf(), DIR.path_join("leaf.png"))
-	Art.save_png(_fog(48, 16), DIR.path_join("fog.png"))
 	Art.save_png(_sunburst(), DIR.path_join("sunburst.png"))
 	print("天气特效贴图生成完成 → ", DIR)
 	quit()
@@ -36,17 +34,6 @@ func _rain_drop() -> Image:
 		Art.px(image, 1, i, color)
 		if i > 3:
 			Art.px(image, 0, i - 1, Color(P.RAIN.r, P.RAIN.g, P.RAIN.b, alpha * 0.5))
-	return image
-
-
-## 溅起的水花：一圈小点。
-func _rain_splash() -> Image:
-	var image := Art.new_image(9, 5)
-	for at: Vector2i in [
-		Vector2i(0, 3), Vector2i(2, 1), Vector2i(4, 0), Vector2i(6, 1), Vector2i(8, 3)
-	]:
-		Art.px(image, at.x, at.y, P.WATER_LIGHT)
-		Art.px(image, at.x, at.y + 1, Color(P.RAIN.r, P.RAIN.g, P.RAIN.b, 0.6))
 	return image
 
 
@@ -67,20 +54,6 @@ func _leaf() -> Image:
 	Art.ellipse(image, Vector2i(3, 3), Vector2i(2, 1), P.LEAF_DARK)
 	Art.ellipse(image, Vector2i(2, 3), Vector2i(1, 1), P.LEAF_LIGHT)
 	Art.px(image, 5, 3, P.TRUNK_DARK)
-	return image
-
-
-## 雾：横向拉长的半透明白团（阴天 / 清晨的氛围层）。
-func _fog(width: int, height: int) -> Image:
-	var image := Art.new_image(width, height)
-	for x in width:
-		var t := float(x) / float(width - 1)
-		# 两端渐隐，避免平铺时出现硬边。
-		var fade: float = sin(t * PI)
-		var half: int = int(round(fade * float(height) * 0.4)) + 2
-		for y in range(height / 2 - half / 2, height / 2 + half / 2 + 1):
-			var edge: float = 1.0 - absf(float(y - height / 2)) / float(maxi(half, 1))
-			Art.px(image, x, y, Color(P.CLOUD.r, P.CLOUD.g, P.CLOUD.b, 0.18 * fade * edge))
 	return image
 
 

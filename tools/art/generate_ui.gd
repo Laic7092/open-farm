@@ -35,7 +35,6 @@ func _initialize() -> void:
 	Art.save_png(_bar(P.STAMINA_FILL), DIR.path_join("bar_fill.png"))
 	Art.save_png(_icon_coin(), DIR.path_join("icon_coin.png"))
 	Art.save_png(_icon_stamina(), DIR.path_join("icon_stamina.png"))
-	Art.save_png(_icon_heart(), DIR.path_join("icon_heart.png"))
 	Art.save_png(_icon_clock(), DIR.path_join("icon_clock.png"))
 
 	var weather := {
@@ -151,19 +150,6 @@ func _icon_stamina() -> Image:
 	Art.ellipse(image, Vector2i(6, 6), Vector2i(4, 2), P.LEAF)
 	Art.h_line(image, 3, 7, 6, P.LEAF_DARK)
 	Art.v_line(image, 6, 3, 8, P.LEAF_LIGHT)
-	Art.outline(image)
-	return image
-
-
-func _icon_heart() -> Image:
-	var image := _icon_blank()
-	Art.ellipse(image, Vector2i(4, 4), Vector2i(2, 2), P.HP_FILL)
-	Art.ellipse(image, Vector2i(8, 4), Vector2i(2, 2), P.HP_FILL)
-	Art.ellipse(image, Vector2i(6, 6), Vector2i(4, 3), P.HP_FILL)
-	Art.px(image, 3, 8, P.HP_FILL)
-	Art.px(image, 9, 8, P.HP_FILL)
-	Art.px(image, 6, 9, P.HP_FILL)
-	Art.px(image, 4, 3, P.FLOWER_PINK)
 	Art.outline(image)
 	return image
 

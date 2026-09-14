@@ -140,8 +140,6 @@ const UI_BUTTON_PRESSED := Color8(72, 54, 82)
 const UI_SLOT := Color8(62, 46, 72)
 const UI_SLOT_HOVER := Color8(104, 82, 118)
 
-const HP_FILL := Color8(226, 92, 96)
-const HP_BACK := Color8(58, 40, 52)
 const STAMINA_FILL := Color8(122, 200, 108)
 const STAMINA_BACK := Color8(46, 44, 62)
 const COIN := Color8(250, 206, 96)

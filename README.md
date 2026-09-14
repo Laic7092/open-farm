@@ -274,14 +274,14 @@ func from_dict(data: Dictionary) -> void: ...
 贴图挂在数据资源上、生成物提交但永不手改。
 
 ```bash
-# 重新生成全部美术与字体（12 步，约 20 秒）
+# 重新生成全部美术与字体（14 步，约 20 秒）
 ./tools/build_assets.sh
 
 # 只重跑某一个生成器（例如只调了树的形状）
 ./godot --headless --path . -s res://tools/art/generate_props.gd
 ./godot --headless --path . --import
 
-# 重置示例数据（作物 / 道具 / 商店 / NPC / 对话；会顺带挂上图标与生长图）
+# 重置示例数据（作物 / 牲畜 / 道具 / 商店 / NPC / 对话；会顺带挂上贴图）
 ./godot --headless --path . -s res://tools/generate_sample_data.gd
 
 # 截图（需要真实渲染后端，--headless 不可用）
