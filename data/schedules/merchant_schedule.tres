@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="NpcSchedule" format=3]
+
+[ext_resource type="Script" path="res://src/npc/npc_schedule.gd" id="1_sched"]
+[ext_resource type="Script" path="res://src/npc/schedule_entry.gd" id="2_entry"]
+
+[sub_resource type="Resource" id="Resource_open_store"]
+script = ExtResource("2_entry")
+start_minute = 360
+location_id = &"store"
+activity = &"shop"
+
+[sub_resource type="Resource" id="Resource_lunch"]
+script = ExtResource("2_entry")
+start_minute = 720
+location_id = &"plaza"
+activity = &"stroll"
+
+[sub_resource type="Resource" id="Resource_back_to_store"]
+script = ExtResource("2_entry")
+start_minute = 780
+location_id = &"store"
+activity = &"shop"
+
+[sub_resource type="Resource" id="Resource_evening"]
+script = ExtResource("2_entry")
+start_minute = 1080
+location_id = &"barn"
+activity = &"stroll"
+
+[sub_resource type="Resource" id="Resource_close_store"]
+script = ExtResource("2_entry")
+start_minute = 1320
+location_id = &"store"
+activity = &"rest"
+
+[resource]
+script = ExtResource("1_sched")
+entries = Array[ExtResource("2_entry")]([SubResource("Resource_open_store"), SubResource("Resource_lunch"), SubResource("Resource_back_to_store"), SubResource("Resource_evening"), SubResource("Resource_close_store")])

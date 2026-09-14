@@ -2,7 +2,8 @@ extends SceneTree
 ## 角色图集生成器 → [code]assets/sprites/actors/*.png[/code]
 ##
 ## 玩家：4 列（走 A / 走 B / 待机 / 挥工具）× 3 行（下 / 上 / 侧），坐标见 [AtlasLayout]。
-## NPC：每个 NPC 一张 2 帧图（站立 / 呼吸），文件名为 [code]npc_<id>.png[/code]。
+## NPC：与玩家同构的 4 列 × 3 行（走 A / 走 B / 待机 / 呼吸），
+## 文件名为 [code]npc_<id>.png[/code]。
 ##
 ## 所有角色共用同一套 [method _draw_actor]，
 ## 靠"外观字典"换衣服 / 头发 / 肤色——新增一个 NPC 只要加一行 [constant NPC_LOOKS]，
@@ -77,8 +78,13 @@ func _build_player() -> Image:
 
 func _build_npc(look: Dictionary) -> Image:
 	var image := Art.new_image(Layout.NPC_SIZE.x, Layout.NPC_SIZE.y)
-	_draw_actor(image, Vector2i(0, 0), 0, look)
-	_draw_actor(image, Vector2i(1, 0), 0, look, 0, 1)
+	for row: int in Layout.ACTOR_ROWS:
+		# 走 A / 走 B：迈步帧，第二帧整体上抬一像素做出起伏。
+		_draw_actor(image, Vector2i(Layout.NPC_WALK_COLUMNS[0], row), 1, look)
+		_draw_actor(image, Vector2i(Layout.NPC_WALK_COLUMNS[1], row), 1, look, 1)
+		# 待机 / 呼吸。
+		_draw_actor(image, Vector2i(Layout.NPC_IDLE_COLUMN, row), 0, look)
+		_draw_actor(image, Vector2i(Layout.NPC_IDLE_BOB_COLUMN, row), 0, look, 0, 1)
 	return image
 
 

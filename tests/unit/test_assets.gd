@@ -82,6 +82,20 @@ func test_actor_png_matches_atlas_layout() -> void:
 	assert_int(texture.get_height()).is_equal(Layout.ACTOR_SIZE.y)
 
 
+## NPC 图集必须和玩家同构，否则走路动画会取到空帧。
+func test_npc_png_matches_atlas_layout() -> void:
+	for npc_id: StringName in Database.npcs:
+		var path: String = "res://assets/sprites/actors/npc_%s.png" % npc_id
+		var texture := load(path) as Texture2D
+		assert_object(texture).override_failure_message(
+			"NPC %s 没有图集 %s" % [npc_id, path]
+		).is_not_null()
+		if texture == null:
+			continue
+		assert_int(texture.get_width()).is_equal(Layout.NPC_SIZE.x)
+		assert_int(texture.get_height()).is_equal(Layout.NPC_SIZE.y)
+
+
 func test_crop_png_matches_atlas_layout() -> void:
 	for crop_id: StringName in Database.crops:
 		var crop := Database.get_crop(crop_id)
@@ -227,6 +241,9 @@ func test_every_npc_has_animation_frames() -> void:
 		).is_not_null()
 		if npc.frames != null:
 			assert_bool(npc.frames.has_animation(&"idle_down")).is_true()
+			assert_bool(npc.frames.has_animation(&"walk_down")).override_failure_message(
+				"NPC %s 缺少走路动画（日程寻路会变成滑行）" % npc_id
+			).is_true()
 
 
 # ---------------------------------------------------------------- 调色板

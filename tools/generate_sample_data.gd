@@ -23,6 +23,7 @@ const ITEM_DIR: String = "res://data/items"
 const TOOL_DIR: String = "res://data/tools"
 const DIALOGUE_DIR: String = "res://data/dialogue"
 const NPC_DIR: String = "res://data/npcs"
+const SCHEDULE_DIR: String = "res://data/schedules"
 const SHOP_DIR: String = "res://data/shops"
 
 ## 美术资源目录（由 tools/art/*.gd 生成，这里只负责"把图挂到数据上"）。
@@ -36,7 +37,7 @@ const NPC_FRAMES_DIR: String = "res://assets/sprites/actors"
 func _initialize() -> void:
 	for directory: String in [
 		CROP_DIR, ANIMAL_DIR, BUILDING_DIR, FLORA_DIR,
-		ITEM_DIR, TOOL_DIR, DIALOGUE_DIR, NPC_DIR, SHOP_DIR
+		ITEM_DIR, TOOL_DIR, DIALOGUE_DIR, NPC_DIR, SCHEDULE_DIR, SHOP_DIR
 	]:
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(directory))
 
@@ -47,6 +48,7 @@ func _initialize() -> void:
 	_build_flora()
 	_build_items()
 	_build_dialogues()
+	_build_schedules()
 	_build_npcs()
 	_build_shops()
 
@@ -521,6 +523,40 @@ func _line(speaker_key: StringName, text_key: StringName) -> DialogueLine:
 	return line
 
 
+# ---------------------------------------------------------------- 日程
+
+func _build_schedules() -> void:
+	var merchant := NpcSchedule.new()
+	merchant.entries = [
+		_schedule_entry(360, &"store", &"shop"),
+		_schedule_entry(720, &"plaza", &"stroll"),
+		_schedule_entry(780, &"store", &"shop"),
+		_schedule_entry(1080, &"barn", &"stroll"),
+		_schedule_entry(1320, &"store", &"rest"),
+	] as Array[ScheduleEntry]
+	_save(merchant, SCHEDULE_DIR.path_join("merchant_schedule.tres"))
+
+	var mayor := NpcSchedule.new()
+	mayor.entries = [
+		_schedule_entry(360, &"town_hall", &"work"),
+		_schedule_entry(600, &"plaza", &"stroll"),
+		_schedule_entry(720, &"town_hall", &"work"),
+		_schedule_entry(1020, &"plaza", &"stroll"),
+		_schedule_entry(1200, &"town_hall", &"rest"),
+	] as Array[ScheduleEntry]
+	_save(mayor, SCHEDULE_DIR.path_join("mayor_schedule.tres"))
+
+
+func _schedule_entry(
+	minute: int, location_id: StringName, activity: StringName
+) -> ScheduleEntry:
+	var entry := ScheduleEntry.new()
+	entry.start_minute = minute
+	entry.location_id = location_id
+	entry.activity = activity
+	return entry
+
+
 # ---------------------------------------------------------------- NPC
 
 func _build_npcs() -> void:
@@ -530,6 +566,8 @@ func _build_npcs() -> void:
 	merchant.default_dialogue = _load(DIALOGUE_DIR.path_join("merchant_greeting.tres"))
 	merchant.shop_id = &"general_store"
 	merchant.frames = _npc_frames(&"merchant")
+	merchant.move_speed = 36.0
+	merchant.schedule = _load(SCHEDULE_DIR.path_join("merchant_schedule.tres"))
 	_save(merchant, NPC_DIR.path_join("merchant.tres"))
 
 	var mayor := NpcData.new()
@@ -537,6 +575,8 @@ func _build_npcs() -> void:
 	mayor.display_name_key = &"NPC_MAYOR"
 	mayor.default_dialogue = _load(DIALOGUE_DIR.path_join("mayor_greeting.tres"))
 	mayor.frames = _npc_frames(&"mayor")
+	mayor.move_speed = 30.0
+	mayor.schedule = _load(SCHEDULE_DIR.path_join("mayor_schedule.tres"))
 	_save(mayor, NPC_DIR.path_join("mayor.tres"))
 
 

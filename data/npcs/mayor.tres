@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="NpcData" format=3]
+[gd_resource type="Resource" script_class="NpcData" load_steps=5 format=3]
 
 [ext_resource type="Resource" path="res://data/dialogue/mayor_greeting.tres" id="1_r3ehu"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_mayor_frames.tres" id="2_dsksj"]
 [ext_resource type="Script" path="res://src/data/npc_data.gd" id="3_im64c"]
+[ext_resource type="Resource" path="res://data/schedules/mayor_schedule.tres" id="4_sched"]
 
 [resource]
 script = ExtResource("3_im64c")
@@ -10,3 +11,5 @@ id = &"mayor"
 display_name_key = &"NPC_MAYOR"
 frames = ExtResource("2_dsksj")
 default_dialogue = ExtResource("1_r3ehu")
+schedule = ExtResource("4_sched")
+move_speed = 30.0

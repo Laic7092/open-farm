@@ -33,6 +33,9 @@ var _anchor_tilled: int = 0
 var _anchor_flora_cell: Vector2i = Vector2i(-1, -1)
 var _anchor_flora_days: int = 0
 var _anchor_flora_total: int = 0
+## 日程寻路：记录 NPC 起始位置，等几帧后确认它们真的移动了。
+var _npc_positions: Dictionary = {}
+var _twon_wait: int = 0
 
 
 func _ready() -> void:
@@ -72,6 +75,17 @@ func _process(_delta: float) -> void:
 			if SceneRouter.is_transitioning():
 				return
 			_check_twon()
+			_record_npc_positions()
+			_twon_wait = 0
+			_phase = 5
+		# 等几帧，验证 NPC 真的按日程走起来了，再回农场。
+		5:
+			if SceneRouter.is_transitioning():
+				return
+			_twon_wait += 1
+			if _twon_wait < 30:
+				return
+			_check_npcs_moved()
 			_phase = 4
 			SceneRouter.change_scene_to(FARM_SCENE, &"from_twon")
 		4:
@@ -514,6 +528,82 @@ func _check_twon() -> void:
 		npc_ids[npc.get(&"npc_id")] = true
 	_check(npc_ids.has(&"merchant"), "twon 应当包含商人 NPC")
 	_check(npc_ids.has(&"mayor"), "twon 应当包含村长 NPC")
+
+	_check_npc_schedule()
+
+
+## 日程 + 寻路的端到端检查：导航网格可用、两个 NPC 有日程、路径能算出来。
+func _check_npc_schedule() -> void:
+	var navigator := get_tree().get_first_node_in_group(NpcNavigator.GROUP) as NpcNavigator
+	_check(navigator != null, "twon 应当自动挂载 NPC 导航网格")
+	_check(_find_schedule_point(&"store") != null, "twon 应当有 store 日程地点")
+
+	if navigator != null:
+		var from: Vector2i = navigator.cell_of(Vector2(768, 888))
+		var to: Vector2i = navigator.cell_of(Vector2(448, 392))
+		_check(navigator.is_walkable(from), "农场入口应当是可行走格")
+		_check(navigator.is_walkable(to), "商店门口应当是可行走格")
+		var path := navigator.find_path(from, to)
+		_check(not path.is_empty(), "从农场入口到商店应当能找到路径")
+		if not path.is_empty():
+			_check_eq(path[0], from, "路径应当从起点开始")
+			_check_eq(path[path.size() - 1], to, "路径应当以终点结束")
+
+	# 06:00：商人应当在商店、村长应当在镇公所。
+	_check_npc_at(&"merchant", &"store")
+	_check_npc_at(&"mayor", &"town_hall")
+
+
+func _check_npc_at(npc_id: StringName, location_id: StringName) -> void:
+	var npc := _find_npc(npc_id)
+	_check(npc != null, "twon 应当有 NPC %s" % npc_id)
+	if npc == null:
+		return
+	_check(npc.data != null and npc.data.schedule != null, "NPC %s 应当有日程" % npc_id)
+	_check_eq(
+		String(npc.target_location_id()),
+		String(location_id),
+		"NPC %s 在 06:00 的目标地点" % npc_id
+	)
+
+
+## 记下 NPC 当前坐标，等几帧后确认它们确实动过。
+func _record_npc_positions() -> void:
+	_npc_positions.clear()
+	for node: Node in get_tree().get_nodes_in_group(Npc.GROUP):
+		var npc := node as Npc
+		if npc != null:
+			_npc_positions[npc.npc_id] = npc.global_position
+
+
+func _check_npcs_moved() -> void:
+	for node: Node in get_tree().get_nodes_in_group(Npc.GROUP):
+		var npc := node as Npc
+		if npc == null:
+			continue
+		var start: Variant = _npc_positions.get(npc.npc_id, null)
+		if start is Vector2:
+			_check(
+				npc.global_position.distance_to(start) > 0.5,
+				"NPC %s 应当按日程走起来（起点 %s，现在 %s）"
+					% [npc.npc_id, start, npc.global_position]
+			)
+
+
+func _find_npc(npc_id: StringName) -> Npc:
+	for node: Node in get_tree().get_nodes_in_group(Npc.GROUP):
+		var npc := node as Npc
+		if npc != null and npc.npc_id == npc_id:
+			return npc
+	return null
+
+
+func _find_schedule_point(point_id: StringName) -> SchedulePoint:
+	for node: Node in get_tree().get_nodes_in_group(SchedulePoint.GROUP):
+		var point := node as SchedulePoint
+		if point != null and point.point_id == point_id:
+			return point
+	return null
 
 
 func _check_farm_state_survived() -> void:

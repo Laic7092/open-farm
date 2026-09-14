@@ -22,6 +22,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/flower_pot.png" id="28_pot"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/chicken.png" id="29_chicken"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/rock_big.png" id="30_rock_big"]
+[ext_resource type="Script" path="res://src/npc/schedule_point.gd" id="31_schedpoint"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
 size = Vector2(16, 16)
@@ -170,6 +171,28 @@ target_spawn_id = &"from_twon"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToFarm"]
 shape = SubResource("RectangleShape2D_tile")
+
+[node name="SchedulePoints" type="Node2D" parent="."]
+
+[node name="Store" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(448, 352)
+script = ExtResource("31_schedpoint")
+point_id = &"store"
+
+[node name="TownHall" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(912, 360)
+script = ExtResource("31_schedpoint")
+point_id = &"town_hall"
+
+[node name="Plaza" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(768, 480)
+script = ExtResource("31_schedpoint")
+point_id = &"plaza"
+
+[node name="Barn" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(1264, 368)
+script = ExtResource("31_schedpoint")
+point_id = &"barn"
 
 [node name="Npcs" type="Node2D" parent="."]
 

@@ -18,6 +18,8 @@ extends Resource
 @export var default_dialogue: DialogueData
 ## 按季节覆盖的对白（键为 [enum Season.Type] 的整数）。
 @export var seasonal_dialogue: Dictionary = {}
+## 每日日程；留空表示原地站桩（旧数据 / 特殊 NPC）。
+@export var schedule: NpcSchedule
 ## 该 NPC 经营的商店；留空表示不是商人。
 @export var shop_id: StringName = &""
 ## 好感度上限。
@@ -46,6 +48,9 @@ func validate() -> PackedStringArray:
 		problems.append("id 不能为空")
 	if display_name_key == &"":
 		problems.append("display_name_key 不能为空")
+	if schedule != null:
+		for problem: String in schedule.validate():
+			problems.append("schedule：%s" % problem)
 	return problems
 
 

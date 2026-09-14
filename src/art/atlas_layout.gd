@@ -96,9 +96,16 @@ const ACTOR_ROW_UP: int = 1
 const ACTOR_ROW_SIDE: int = 2
 const ACTOR_ROW_NAMES: Array[StringName] = [&"down", &"up", &"side"]
 
-## 每个 NPC 两帧（站立 / 呼吸）。
-const NPC_COLUMNS: int = 2
-const NPC_SIZE := Vector2i(TILE * NPC_COLUMNS, TILE)
+## 每个 NPC 与玩家同构：4 列 × 3 行。
+##
+## 列：0/1 = 走路两帧、2 = 待机、3 = 待机呼吸。
+## 行：0 = 朝下、1 = 朝上、2 = 朝侧面（左向由 flip_h 复用）。
+const NPC_COLUMNS: int = 4
+const NPC_ROWS: int = 3
+const NPC_SIZE := Vector2i(TILE * NPC_COLUMNS, TILE * NPC_ROWS)
+const NPC_IDLE_COLUMN: int = 2
+const NPC_IDLE_BOB_COLUMN: int = 3
+const NPC_WALK_COLUMNS: Array[int] = [0, 1]
 
 
 # ---------------------------------------------------------------- 道具图标

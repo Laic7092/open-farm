@@ -99,6 +99,31 @@ func test_npc_dialogue_is_resolvable_in_every_season() -> void:
 			assert_bool(dialogue.is_empty()).is_false()
 
 
+## 每个 NPC 都要有能覆盖全天 24 小时的日程（凌晨靠循环回退到最后一段）。
+func test_every_npc_has_a_full_day_schedule() -> void:
+	for npc_id: StringName in Database.npcs:
+		var npc := Database.get_npc(npc_id)
+		assert_object(npc.schedule).override_failure_message(
+			"NPC %s 没有日程" % npc_id
+		).is_not_null()
+		if npc.schedule == null:
+			continue
+		assert_bool(npc.schedule.is_empty()).is_false()
+		for hour: int in 24:
+			assert_object(npc.schedule.entry_at(hour * 60)).override_failure_message(
+				"NPC %s 在 %02d:00 没有生效的日程" % [npc_id, hour]
+			).is_not_null()
+
+
+## 商人得在白天待在店里，不然玩家永远打不开商店。
+func test_merchant_is_on_shift_during_the_day() -> void:
+	var merchant := Database.get_npc(&"merchant")
+	assert_object(merchant).is_not_null()
+	if merchant == null or merchant.schedule == null:
+		return
+	assert_str(String(merchant.schedule.entry_at(10 * 60).activity)).is_equal("shop")
+
+
 func test_reload_is_idempotent() -> void:
 	var before: int = Database.total_count()
 	Database.reload()

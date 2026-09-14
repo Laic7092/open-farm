@@ -107,11 +107,22 @@ func _build_npc_frames(npc_id: StringName) -> void:
 
 	var frames := SpriteFrames.new()
 	frames.remove_animation(&"default")
-	# 两帧循环播放，做出轻微的呼吸起伏。
-	_add_animation(
-		frames, texture, &"idle_down",
-		[Vector2i(0, 0), Vector2i(1, 0)], 1.6, true
-	)
+	for row: int in Layout.ACTOR_ROW_NAMES.size():
+		var suffix: StringName = Layout.ACTOR_ROW_NAMES[row]
+		# 待机两帧循环，做出轻微的呼吸起伏。
+		_add_animation(
+			frames, texture, StringName("idle_%s" % suffix),
+			[
+				Vector2i(Layout.NPC_IDLE_COLUMN, row),
+				Vector2i(Layout.NPC_IDLE_BOB_COLUMN, row),
+			], 1.6, true
+		)
+		var walk_cells: Array[Vector2i] = []
+		for column: int in Layout.NPC_WALK_COLUMNS:
+			walk_cells.append(Vector2i(column, row))
+		_add_animation(
+			frames, texture, StringName("walk_%s" % suffix), walk_cells, 6.0, true
+		)
 	_save(frames, ACTOR_DIR.path_join("npc_%s_frames.tres" % npc_id))
 
 

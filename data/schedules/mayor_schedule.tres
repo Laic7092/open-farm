@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="NpcSchedule" format=3]
+
+[ext_resource type="Script" path="res://src/npc/npc_schedule.gd" id="1_sched"]
+[ext_resource type="Script" path="res://src/npc/schedule_entry.gd" id="2_entry"]
+
+[sub_resource type="Resource" id="Resource_morning_hall"]
+script = ExtResource("2_entry")
+start_minute = 360
+location_id = &"town_hall"
+activity = &"work"
+
+[sub_resource type="Resource" id="Resource_morning_walk"]
+script = ExtResource("2_entry")
+start_minute = 600
+location_id = &"plaza"
+activity = &"stroll"
+
+[sub_resource type="Resource" id="Resource_noon_hall"]
+script = ExtResource("2_entry")
+start_minute = 720
+location_id = &"town_hall"
+activity = &"work"
+
+[sub_resource type="Resource" id="Resource_evening_walk"]
+script = ExtResource("2_entry")
+start_minute = 1020
+location_id = &"plaza"
+activity = &"stroll"
+
+[sub_resource type="Resource" id="Resource_night_hall"]
+script = ExtResource("2_entry")
+start_minute = 1200
+location_id = &"town_hall"
+activity = &"rest"
+
+[resource]
+script = ExtResource("1_sched")
+entries = Array[ExtResource("2_entry")]([SubResource("Resource_morning_hall"), SubResource("Resource_morning_walk"), SubResource("Resource_noon_hall"), SubResource("Resource_evening_walk"), SubResource("Resource_night_hall")])

@@ -13,12 +13,16 @@ extends Node2D
 @export var default_spawn_id: StringName = &"default"
 ## 是否自动挂载天气特效（雨雪与色调）。室内场景可以关掉。
 @export var weather_effects: bool = true
+## 是否自动挂载 NPC 行走网格。没有 NPC 的地图可以关掉省一点探测。
+@export var navigation_enabled: bool = true
 
 
 func _ready() -> void:
 	_apply_camera_limits()
 	if weather_effects:
 		_ensure_weather_fx()
+	if navigation_enabled:
+		_ensure_navigator()
 
 
 ## 天气特效由基类统一挂载，而不是每个世界场景各写一份：
@@ -29,6 +33,16 @@ func _ensure_weather_fx() -> void:
 	var fx := WeatherFx.new()
 	fx.name = "WeatherFx"
 	add_child(fx)
+
+
+## NPC 行走网格同样由基类挂载：新地图上的 NPC 自动会寻路。
+func _ensure_navigator() -> void:
+	if get_node_or_null(^"NpcNavigator") != null:
+		return
+	var navigator := NpcNavigator.new()
+	navigator.name = "NpcNavigator"
+	navigator.area = camera_limits
+	add_child(navigator)
 
 
 ## 每次本场景被切换到时调用（包括从 [SceneRouter] 的缓存里重新挂载）。
