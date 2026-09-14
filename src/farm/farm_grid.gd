@@ -249,27 +249,34 @@ func advance_day(date: GameDate, weather_waters: bool) -> void:
 ## 用代码铺地面。不用 TileMap 手绘数据而是脚本铺，是为了让"农场多大"
 ## 只由 [member ground_area] 一个数字决定（改大小不用重画地图）。
 ##
-## 布局：左下两条小路交汇，农舍门前一小段石板路，其余是带深浅变化的草地，
-## 边角点缀荒草与碎石。所有图案都由坐标算出，因此每次进游戏完全一致。
+## 布局：一条贯穿东西的乡道从东口（去村庄）进来，农舍门前的小径接上它；
+## 农田在乡道南侧、畜舍在北侧，东南角留一片荒地。
+## 所有图案都由坐标算出，因此每次进游戏完全一致。
 func paint_ground() -> void:
 	if ground_layer == null:
 		return
 	ground_layer.clear()
-	var path_row: int = ground_area.position.y + ground_area.size.y - 1
-	var path_column: int = ground_area.position.x
+	var center_row: int = ground_area.position.y + ground_area.size.y / 2
 
 	for cell: Vector2i in GridUtils.cells_in_area(ground_area.position, ground_area.size):
 		var atlas: Vector2i = _grass_variant(cell)
-		# 最下两行 + 最左两列是通路，正好把农舍与农田连起来。
-		if cell.y >= path_row - 1 or cell.x <= path_column + 1:
-			atlas = FarmAtlas.PATH
-		# 右下的荒地：视觉上把"可耕种区"和"地图边缘"区分开。
-		elif cell.x > farmable_area.end.x + 3 and cell.y > farmable_area.end.y + 3:
+		# 东南角的荒地：视觉上把"可耕种区"和"地图边缘"区分开。
+		if cell.x > farmable_area.end.x + 2 and cell.y > center_row + 2:
 			atlas = _wild_variant(cell)
 		ground_layer.set_cell(cell, FarmAtlas.SOURCE_ID, atlas)
 
-	# 农舍门前的石板路（房子在左上，路通向农场大门）。
-	for y: int in range(2, farmable_area.position.y - 1):
+	# 乡道：与村庄西口的那条路同宽同高，走到地图边缘就是下一条路。
+	GroundPainter.horizontal_road(
+		ground_layer,
+		ground_area.position.x + 1,
+		ground_area.end.x - 1,
+		center_row,
+		1,
+		GroundPainter.Style.DIRT
+	)
+
+	# 农舍门前的小径：从屋前一路通到乡道。
+	for y: int in range(7, center_row - 1):
 		ground_layer.set_cell(Vector2i(6, y), FarmAtlas.SOURCE_ID, FarmAtlas.PATH_STONE)
 		ground_layer.set_cell(Vector2i(7, y), FarmAtlas.SOURCE_ID, FarmAtlas.PATH_STONE)
 
@@ -309,31 +316,39 @@ func paint_decorations() -> void:
 	ground_layer.set_cell(Vector2i(gate_x - 1, fence_row), FarmAtlas.SOURCE_ID, FarmAtlas.FENCE_GATE)
 	ground_layer.set_cell(Vector2i(gate_x + 1, fence_row), FarmAtlas.SOURCE_ID, FarmAtlas.FENCE_GATE)
 
+	# 家具与作物以外的"农场的痕迹"：院子里的花圃、畜舍旁的草垛木箱、
+	# 荒地里的树桩蘑菇。坐标写死是为了每次进图都一样（见本文件顶部注释）。
 	var decorations := {
-		Vector2i(farmable_area.position.x - 2, fence_row): FarmAtlas.BUSH,
-		Vector2i(farmable_area.position.x + farmable_area.size.x + 1, fence_row): FarmAtlas.BUSH,
-		Vector2i(farmable_area.position.x - 2, farmable_area.position.y + 2): FarmAtlas.FLOWERS,
-		Vector2i(farmable_area.position.x + farmable_area.size.x + 1, farmable_area.position.y + 3):
-			FarmAtlas.FLOWERS,
-		Vector2i(farmable_area.position.x + 3, farmable_area.end.y + 2): FarmAtlas.SIGN,
-		Vector2i(farmable_area.position.x + 8, farmable_area.end.y + 2): FarmAtlas.FLOWERS,
-		Vector2i(farmable_area.position.x + 14, farmable_area.end.y + 3): FarmAtlas.BUSH,
-		# 新增：一边一片花圃，田边几个草垛与木箱，让农场看起来"在用"。
-		Vector2i(farmable_area.position.x + 2, fence_row - 1): FarmAtlas.FLOWER_BED,
-		Vector2i(farmable_area.position.x + 3, fence_row - 1): FarmAtlas.FLOWER_BED,
-		Vector2i(farmable_area.end.x - 2, fence_row - 1): FarmAtlas.FLOWER_BED,
-		Vector2i(farmable_area.end.x - 1, fence_row - 1): FarmAtlas.FLOWER_BED,
-		Vector2i(farmable_area.end.x + 2, farmable_area.position.y + 6): FarmAtlas.HAY,
-		Vector2i(farmable_area.end.x + 3, farmable_area.position.y + 7): FarmAtlas.HAY,
-		Vector2i(farmable_area.end.x + 2, farmable_area.position.y + 9): FarmAtlas.CRATE,
-		Vector2i(farmable_area.end.x + 2, farmable_area.end.y + 4): FarmAtlas.MUSHROOM,
-		Vector2i(farmable_area.position.x - 1, farmable_area.end.y + 3): FarmAtlas.FLOWER_BLUE,
-		Vector2i(farmable_area.position.x + 20, farmable_area.end.y + 4): FarmAtlas.FLOWER_RED,
-		Vector2i(farmable_area.position.x + 24, farmable_area.end.y + 2): FarmAtlas.STUMP_TILE,
-		Vector2i(farmable_area.position.x + 26, farmable_area.end.y + 5): FarmAtlas.WELL_TOP,
-		Vector2i(farmable_area.position.x + 31, farmable_area.position.y + 2): FarmAtlas.MUSHROOM,
-		Vector2i(farmable_area.position.x + 33, farmable_area.position.y + 8): FarmAtlas.PEBBLE,
-		Vector2i(farmable_area.position.x + 30, farmable_area.end.y + 6): FarmAtlas.TALL_GRASS,
+		# 农舍院子
+		Vector2i(3, 8): FarmAtlas.FLOWERS,
+		Vector2i(10, 9): FarmAtlas.FLOWER_BED,
+		Vector2i(11, 9): FarmAtlas.FLOWER_BED,
+		Vector2i(13, 7): FarmAtlas.BUSH,
+		Vector2i(13, 12): FarmAtlas.FLOWERS,
+		Vector2i(2, 12): FarmAtlas.FLOWER_RED,
+		# 畜舍与谷仓旁
+		Vector2i(35, 8): FarmAtlas.HAY,
+		Vector2i(36, 9): FarmAtlas.HAY,
+		Vector2i(35, 10): FarmAtlas.CRATE,
+		Vector2i(31, 6): FarmAtlas.CRATE,
+		Vector2i(38, 11): FarmAtlas.TALL_GRASS,
+		Vector2i(33, 5): FarmAtlas.BUSH,
+		# 水井与乡道边
+		Vector2i(31, 20): FarmAtlas.PEBBLE,
+		Vector2i(33, 22): FarmAtlas.BUSH,
+		Vector2i(29, 12): FarmAtlas.FLOWERS,
+		Vector2i(44, 12): FarmAtlas.TALL_GRASS,
+		# 东南荒地
+		Vector2i(36, 21): FarmAtlas.STUMP_TILE,
+		Vector2i(39, 24): FarmAtlas.MUSHROOM,
+		Vector2i(43, 20): FarmAtlas.TALL_GRASS,
+		Vector2i(41, 27): FarmAtlas.PEBBLE,
+		Vector2i(34, 25): FarmAtlas.WELL_TOP,
+		Vector2i(45, 22): FarmAtlas.BUSH,
+		Vector2i(46, 26): FarmAtlas.MUSHROOM,
+		# 田边
+		Vector2i(3, 28): FarmAtlas.FLOWERS,
+		Vector2i(26, 28): FarmAtlas.FLOWER_BLUE,
 	}
 	for cell: Vector2i in decorations:
 		if ground_area.has_point(cell):

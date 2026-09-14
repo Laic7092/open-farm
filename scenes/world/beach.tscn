@@ -60,6 +60,7 @@ script = ExtResource("3_bounds")
 bounds = Rect2(8, 8, 624, 400)
 
 [node name="Props" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="Hut" type="Sprite2D" parent="Props"]
 position = Vector2(96, 72)
@@ -81,7 +82,7 @@ texture = ExtResource("27_pot")
 script = ExtResource("9_prop")
 
 [node name="Dock" type="Sprite2D" parent="Props"]
-position = Vector2(320, 316)
+position = Vector2(320, 328)
 texture = ExtResource("21_dock")
 script = ExtResource("9_prop")
 
@@ -91,28 +92,42 @@ texture = ExtResource("22_boat")
 script = ExtResource("9_prop")
 
 [node name="Cave" type="Sprite2D" parent="Props"]
-position = Vector2(560, 64)
+position = Vector2(568, 56)
 texture = ExtResource("23_cave")
 script = ExtResource("9_prop")
 solid_size = Vector2(40, 16)
 solid_offset = Vector2(0, 16)
 
-[node name="Oak" type="Sprite2D" parent="Props"]
-position = Vector2(32, 112)
+[node name="Oak1" type="Sprite2D" parent="Props"]
+position = Vector2(32, 56)
 texture = ExtResource("24_tree")
 script = ExtResource("9_prop")
 solid_size = Vector2(18, 8)
 solid_offset = Vector2(0, 20)
 
-[node name="Pine" type="Sprite2D" parent="Props"]
-position = Vector2(192, 64)
+[node name="Oak2" type="Sprite2D" parent="Props"]
+position = Vector2(192, 56)
+texture = ExtResource("24_tree")
+script = ExtResource("9_prop")
+solid_size = Vector2(18, 8)
+solid_offset = Vector2(0, 20)
+
+[node name="Pine1" type="Sprite2D" parent="Props"]
+position = Vector2(368, 48)
+texture = ExtResource("25_pine")
+script = ExtResource("9_prop")
+solid_size = Vector2(18, 8)
+solid_offset = Vector2(0, 20)
+
+[node name="Pine2" type="Sprite2D" parent="Props"]
+position = Vector2(472, 48)
 texture = ExtResource("25_pine")
 script = ExtResource("9_prop")
 solid_size = Vector2(18, 8)
 solid_offset = Vector2(0, 20)
 
 [node name="CliffRock" type="Sprite2D" parent="Props"]
-position = Vector2(504, 112)
+position = Vector2(504, 120)
 texture = ExtResource("29_rock_big")
 script = ExtResource("9_prop")
 solid_size = Vector2(26, 10)
@@ -125,21 +140,35 @@ script = ExtResource("9_prop")
 solid_size = Vector2(14, 8)
 solid_offset = Vector2(0, 4)
 
+[node name="ShoreRock" type="Sprite2D" parent="Props"]
+position = Vector2(240, 264)
+texture = ExtResource("29_rock_big")
+script = ExtResource("9_prop")
+solid_size = Vector2(26, 10)
+solid_offset = Vector2(0, 6)
+
+[node name="ShoreRock2" type="Sprite2D" parent="Props"]
+position = Vector2(96, 296)
+texture = ExtResource("30_rock")
+script = ExtResource("9_prop")
+solid_size = Vector2(14, 8)
+solid_offset = Vector2(0, 4)
+
 [node name="Sign" type="Sprite2D" parent="Props"]
-position = Vector2(48, 224)
+position = Vector2(80, 248)
 texture = ExtResource("26_sign")
 script = ExtResource("9_prop")
 
 [node name="Spawns" type="Node2D" parent="."]
 
 [node name="FromTown" type="Marker2D" parent="Spawns"]
-position = Vector2(48, 200)
+position = Vector2(40, 216)
 script = ExtResource("5_spawn")
 spawn_id = &"from_town"
 facing = 3
 
 [node name="FromMine" type="Marker2D" parent="Spawns"]
-position = Vector2(560, 144)
+position = Vector2(568, 136)
 script = ExtResource("5_spawn")
 spawn_id = &"from_mine"
 
@@ -147,25 +176,28 @@ spawn_id = &"from_mine"
 y_sort_enabled = true
 
 [node name="ToTown" type="Area2D" parent="Interactables"]
-position = Vector2(16, 200)
+position = Vector2(8, 216)
 collision_layer = 8
 collision_mask = 0
 script = ExtResource("6_door")
 prompt_key = &"PROMPT_ENTER"
 target_scene = "res://scenes/world/town.tscn"
 target_spawn_id = &"from_beach"
+auto_enter = true
+road_exit = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToTown"]
 shape = SubResource("RectangleShape2D_tile")
 
 [node name="ToMine" type="Area2D" parent="Interactables"]
-position = Vector2(560, 104)
+position = Vector2(568, 104)
 collision_layer = 8
 collision_mask = 0
 script = ExtResource("6_door")
 prompt_key = &"PROMPT_ENTER"
 target_scene = "res://scenes/world/mine.tscn"
 target_spawn_id = &"from_beach"
+auto_enter = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToMine"]
 shape = SubResource("RectangleShape2D_tile")
@@ -178,7 +210,7 @@ script = ExtResource("12_schedpoint")
 point_id = &"pier"
 
 [node name="Shore" type="Marker2D" parent="SchedulePoints"]
-position = Vector2(128, 312)
+position = Vector2(128, 264)
 script = ExtResource("12_schedpoint")
 point_id = &"shore"
 
@@ -188,10 +220,11 @@ script = ExtResource("12_schedpoint")
 point_id = &"hut"
 
 [node name="Npcs" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="Fisher" parent="Npcs" instance=ExtResource("7_npc")]
-position = Vector2(320, 344)
+position = Vector2(320, 296)
 npc_id = &"fisher"
 
 [node name="Player" parent="." instance=ExtResource("4_player")]
-position = Vector2(48, 200)
+position = Vector2(40, 216)

@@ -56,43 +56,43 @@ script = ExtResource("3_bounds")
 bounds = Rect2(8, 8, 752, 464)
 
 [node name="Props" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="Camp" type="Sprite2D" parent="Props"]
-position = Vector2(640, 96)
+position = Vector2(656, 96)
 texture = ExtResource("20_house")
 script = ExtResource("9_prop")
 solid_size = Vector2(60, 14)
-solid_offset = Vector2(2, 24)
 solid_offset = Vector2(0, 24)
 
 [node name="CampLamp" type="Sprite2D" parent="Props"]
-position = Vector2(688, 112)
+position = Vector2(704, 112)
 texture = ExtResource("22_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
 light_offset = Vector2(0, -6)
 
 [node name="Sign" type="Sprite2D" parent="Props"]
-position = Vector2(80, 208)
+position = Vector2(80, 200)
 texture = ExtResource("21_sign")
 script = ExtResource("9_prop")
 
 [node name="Lamp1" type="Sprite2D" parent="Props"]
-position = Vector2(240, 208)
+position = Vector2(240, 200)
 texture = ExtResource("22_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
 light_offset = Vector2(0, -6)
 
 [node name="Lamp2" type="Sprite2D" parent="Props"]
-position = Vector2(400, 208)
+position = Vector2(400, 200)
 texture = ExtResource("22_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
 light_offset = Vector2(0, -6)
 
 [node name="Lamp3" type="Sprite2D" parent="Props"]
-position = Vector2(528, 336)
+position = Vector2(560, 336)
 texture = ExtResource("22_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
@@ -136,7 +136,7 @@ solid_offset = Vector2(0, 6)
 [node name="Spawns" type="Node2D" parent="."]
 
 [node name="FromBeach" type="Marker2D" parent="Spawns"]
-position = Vector2(64, 240)
+position = Vector2(64, 248)
 script = ExtResource("5_spawn")
 spawn_id = &"from_beach"
 facing = 3
@@ -145,13 +145,14 @@ facing = 3
 y_sort_enabled = true
 
 [node name="ToBeach" type="Area2D" parent="Interactables"]
-position = Vector2(32, 240)
+position = Vector2(8, 248)
 collision_layer = 8
 collision_mask = 0
 script = ExtResource("6_door")
 prompt_key = &"PROMPT_ENTER"
 target_scene = "res://scenes/world/beach.tscn"
 target_spawn_id = &"from_mine"
+auto_enter = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToBeach"]
 shape = SubResource("RectangleShape2D_tile")
@@ -159,7 +160,7 @@ shape = SubResource("RectangleShape2D_tile")
 [node name="SchedulePoints" type="Node2D" parent="."]
 
 [node name="MineEntrance" type="Marker2D" parent="SchedulePoints"]
-position = Vector2(160, 240)
+position = Vector2(160, 248)
 script = ExtResource("12_schedpoint")
 point_id = &"mine_entrance"
 
@@ -169,15 +170,16 @@ script = ExtResource("12_schedpoint")
 point_id = &"mine_deep"
 
 [node name="Camp" type="Marker2D" parent="SchedulePoints"]
-position = Vector2(640, 160)
+position = Vector2(656, 144)
 script = ExtResource("12_schedpoint")
 point_id = &"camp"
 
 [node name="Npcs" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="Miner" parent="Npcs" instance=ExtResource("7_npc")]
 position = Vector2(160, 288)
 npc_id = &"miner"
 
 [node name="Player" parent="." instance=ExtResource("4_player")]
-position = Vector2(64, 240)
+position = Vector2(64, 248)

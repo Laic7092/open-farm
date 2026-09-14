@@ -58,6 +58,15 @@ func _initialize() -> void:
 	_crate(image, Layout.CRATE)
 	_well_top(image, Layout.WELL_TOP)
 
+	# ---- 第 4 行（世界扩建时追加；前三行坐标永不改动）
+	_shallow_water(image, Layout.SHALLOW_WATER)
+	_path_stone_alt(image, Layout.PATH_STONE_ALT)
+	_cliff(image, Layout.CLIFF)
+
+	# ---- 第 5 行（自带正确底色的点缀：沙滩 / 砾石）
+	_sand_pebble(image, Layout.SAND_PEBBLE)
+	_gravel_ore(image, Layout.GRAVEL_ORE)
+
 	Art.save_png(image, Layout.TILESET_PATH)
 	print("地形图集生成完成（%d 格）" % (Layout.TILESET_COLUMNS * Layout.TILESET_ROWS))
 	quit()
@@ -183,6 +192,53 @@ func _water_edge(image: Image, cell: Vector2i) -> void:
 	Art.px(image, origin.x + 11, origin.y + 3, P.WATER_LIGHT)
 
 
+## 浅水：水与沙滩之间的过渡带，颜色比深水亮一档，浪线更密。
+func _shallow_water(image: Image, cell: Vector2i) -> void:
+	var area := _cell_rect(cell)
+	var origin := _origin(cell)
+	Art.rect(image, area, P.WATER.lerp(P.SAND, 0.28))
+	Art.scatter(image, area, P.WATER_LIGHT, 0.18, 191)
+	# 三道横向浪线：越靠下越密，读起来像退去的浪。
+	Art.h_line(image, origin.x + 1, origin.y + 4, 6, P.WATER_FOAM)
+	Art.h_line(image, origin.x + 9, origin.y + 7, 6, P.WATER_FOAM)
+	Art.h_line(image, origin.x + 3, origin.y + 11, 8, P.WATER_LIGHT)
+	Art.px(image, origin.x + 13, origin.y + 2, P.WATER_FOAM)
+	Art.px(image, origin.x + 2, origin.y + 14, P.WATER_FOAM)
+
+
+## 石板路的第二版：把石块错位并缩小，与大块石板交替铺出广场的质感。
+func _path_stone_alt(image: Image, cell: Vector2i) -> void:
+	var area := _cell_rect(cell)
+	var origin := _origin(cell)
+	Art.rect(image, area, P.PATH_DARK)
+	# 交错的两行小石块。
+	for row: int in 2:
+		var y: int = origin.y + 2 + row * 8
+		var offset: int = 0 if row % 2 == 0 else 3
+		var x: int = origin.x + 1 + offset
+		while x + 5 <= origin.x + Layout.TILE:
+			Art.rect(image, Rect2i(x, y, 5, 5), P.GRAVEL)
+			Art.h_line(image, x, y, 5, P.STONE_LIGHT)
+			Art.px(image, x + 4, y + 4, P.GRAVEL_DARK)
+			x += 7
+	Art.scatter(image, area, P.GRAVEL_DARK, 0.1, 199)
+
+
+## 岩壁：矿洞与海边崖壁的封边，比 STONE 更暗更粗，带裂纹。
+func _cliff(image: Image, cell: Vector2i) -> void:
+	var area := _cell_rect(cell)
+	var origin := _origin(cell)
+	Art.rect(image, area, P.STONE_DARK)
+	Art.scatter(image, area, P.STONE, 0.22, 211)
+	Art.h_line(image, origin.x, origin.y, Layout.TILE, P.STONE_LIGHT)
+	# 两条错开的裂纹 + 一段层理，避免大片岩石变成纯色块。
+	Art.v_line(image, origin.x + 4, origin.y + 2, 6, P.OUTLINE)
+	Art.v_line(image, origin.x + 11, origin.y + 7, 7, P.OUTLINE)
+	Art.h_line(image, origin.x + 2, origin.y + 12, 5, P.OUTLINE)
+	Art.px(image, origin.x + 7, origin.y + 3, P.STONE_LIGHT)
+	Art.px(image, origin.x + 13, origin.y + 13, P.STONE_LIGHT)
+
+
 func _stone(image: Image, cell: Vector2i) -> void:
 	var area := _cell_rect(cell)
 	var origin := _origin(cell)
@@ -305,6 +361,35 @@ func _mushroom(image: Image, cell: Vector2i) -> void:
 		Art.rect(image, Rect2i(p.x - 2, p.y - 5, 6, 3), P.MUSHROOM_CAP)
 		Art.px(image, p.x - 1, p.y - 4, P.WHITE)
 		Art.px(image, p.x + 2, p.y - 4, P.WHITE)
+
+
+## 沙地上的点缀：几颗卵石与一枚贝壳。底色是沙，不是草。
+func _sand_pebble(image: Image, cell: Vector2i) -> void:
+	var area := _cell_rect(cell)
+	var origin := _origin(cell)
+	Art.rect(image, area, P.SAND)
+	Art.scatter(image, area, P.SAND_DARK, 0.16, 223)
+	Art.ellipse(image, origin + Vector2i(5, 9), Vector2i(3, 2), P.STONE_DARK)
+	Art.ellipse(image, origin + Vector2i(5, 8), Vector2i(2, 1), P.STONE)
+	Art.ellipse(image, origin + Vector2i(11, 5), Vector2i(2, 1), P.SAND_DARK)
+	# 贝壳：三片扇形。
+	Art.px(image, origin.x + 11, origin.y + 11, P.FLOWER_WHITE)
+	Art.h_line(image, origin.x + 9, origin.y + 12, 4, P.FLOWER_WHITE)
+	Art.px(image, origin.x + 10, origin.y + 10, P.SAND_DARK)
+	Art.px(image, origin.x + 12, origin.y + 10, P.SAND_DARK)
+
+
+## 砾石上的点缀：矿脉碎屑，给矿洞一点"这里挖得出东西"的暗示。
+func _gravel_ore(image: Image, cell: Vector2i) -> void:
+	var area := _cell_rect(cell)
+	var origin := _origin(cell)
+	Art.rect(image, area, P.GRAVEL)
+	Art.scatter(image, area, P.GRAVEL_DARK, 0.26, 227)
+	for at: Vector2i in [Vector2i(4, 5), Vector2i(9, 11), Vector2i(12, 3)]:
+		Art.rect(image, Rect2i(origin.x + at.x, origin.y + at.y, 2, 2), P.COIN_DARK)
+		Art.px(image, origin.x + at.x, origin.y + at.y, P.COIN)
+	Art.px(image, origin.x + 6, origin.y + 12, P.STONE_LIGHT)
+	Art.px(image, origin.x + 13, origin.y + 8, P.STONE_LIGHT)
 
 
 func _pebbles(image: Image, cell: Vector2i) -> void:

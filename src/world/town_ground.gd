@@ -1,20 +1,16 @@
 @tool
 class_name TownGround
 extends TileMapLayer
-## 小镇地面：铺草地 + 十字街道 + 广场 + 池塘。
+## 村庄地面：一条贯通东西的石板主街 + 南侧的广场、水塘、花园与牧场。
 ##
-## 农场的地面由 [FarmGrid] 负责（它同时还要管土壤层），
-## 而小镇只需要一块静态地面，所以单独抽成这个小脚本，
-## 避免为了铺地而把一个空的 FarmGrid 塞进小镇场景。
-##
-## 与农场一样：地面由脚本按坐标画出，改布局只要改这个文件，
-## 不需要在编辑器里手绘 TileMap 数据（那种数据在 git 里根本看不懂）。
+## 主街刻意压在地图的纵向中线上，宽三格：西口接农场、东口接集市，
+## 从任意一端走进来，脚下的路与上一张地图的路在同一高度、同一宽度。
+## 铺地手法全部来自 [GroundPainter]。
 
 ## 铺设区域（格子坐标）。
-@export var ground_area: Rect2i = Rect2i(0, 0, 40, 26):
+@export var ground_area: Rect2i = Rect2i(0, 0, 96, 60):
 	set(value):
 		ground_area = value
-		# 编辑器中改数值即时刷新；场景实例化阶段还没进树，交给 _ready()。
 		if is_inside_tree():
 			paint()
 
@@ -23,75 +19,87 @@ func _ready() -> void:
 	paint()
 
 
-## 用代码铺地：横向主街 + 纵向支路 + 广场 + 右下角池塘。
+## 用代码铺地。
 func paint() -> void:
 	clear()
-	var center_row: int = ground_area.position.y + ground_area.size.y / 2
-	var center_column: int = ground_area.position.x + ground_area.size.x / 2
+	var origin := ground_area.position
+	var center_row: int = origin.y + ground_area.size.y / 2
 
-	for cell: Vector2i in GridUtils.cells_in_area(ground_area.position, ground_area.size):
-		var atlas: Vector2i = _grass_variant(cell)
-		# 主街（两格宽）与纵向支路
-		if cell.y == center_row or cell.y == center_row + 1:
-			atlas = FarmAtlas.PATH
-		if cell.x == center_column:
-			atlas = FarmAtlas.PATH
-		set_cell(cell, FarmAtlas.SOURCE_ID, atlas)
+	GroundPainter.fill_grass(self, ground_area)
 
-	# 广场：主街中央铺石板。
-	var plaza := Rect2i(center_column - 4, center_row - 4, 9, 5)
-	for cell: Vector2i in GridUtils.cells_in_area(plaza.position, plaza.size):
-		set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.PATH_STONE)
-	# 广场四角点木地板，两处摆花圃。
-	for cell: Vector2i in [
-		Vector2i(plaza.position.x, plaza.position.y),
-		Vector2i(plaza.end.x - 1, plaza.position.y),
-		Vector2i(plaza.position.x, plaza.end.y - 1),
-		Vector2i(plaza.end.x - 1, plaza.end.y - 1),
-	]:
-		set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.WOOD)
-	for cell: Vector2i in [
-		Vector2i(plaza.position.x + 1, plaza.position.y + 2),
-		Vector2i(plaza.end.x - 2, plaza.position.y + 2),
-	]:
-		set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.FLOWER_BED)
+	# 主街：村里的房子全排在街北，街南留给广场与田地。
+	GroundPainter.horizontal_road(
+		self, origin.x, ground_area.end.x - 1, center_row, 1, GroundPainter.Style.STONE
+	)
 
-	# 右下角的小池塘：给小镇一个视觉重心。
-	_pond(Vector2i(ground_area.end.x - 8, ground_area.end.y - 6))
+	# 南侧广场：石板铺开一片，水井与节日会场都在这里。
+	GroundPainter.plaza(self, Rect2i(origin.x + 34, center_row + 6, 16, 8))
+	# 南侧水塘。
+	GroundPainter.water(self, Rect2i(origin.x + 21, center_row + 12, 7, 4), 2)
 
-	# 街道两侧的零散点缀。
-	for cell: Vector2i in [
-		Vector2i(ground_area.position.x + 3, center_row - 6),
-		Vector2i(ground_area.position.x + 7, center_row + 6),
-		Vector2i(ground_area.end.x - 4, center_row - 6),
-		Vector2i(ground_area.end.x - 8, center_row + 6),
-		Vector2i(ground_area.end.x - 11, center_row - 4),
-		Vector2i(ground_area.position.x + 12, center_row - 5),
-	]:
-		if ground_area.has_point(cell):
-			set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.FLOWERS)
+	# 从主街下到广场、花园、牧场、水塘的四条支路。
+	GroundPainter.vertical_road(
+		self, center_row + 2, center_row + 6, origin.x + 42, 1, GroundPainter.Style.STONE
+	)
+	GroundPainter.vertical_road(
+		self, center_row + 2, center_row + 10, origin.x + 65, 1, GroundPainter.Style.STONE
+	)
+	GroundPainter.vertical_road(
+		self, center_row + 2, center_row + 10, origin.x + 79, 1, GroundPainter.Style.STONE
+	)
+	GroundPainter.vertical_road(
+		self, center_row + 2, center_row + 12, origin.x + 22, 0, GroundPainter.Style.STONE
+	)
 
+	# 花园：四垄花圃，垄间留草道，边上一片野花——花店门口的那片地。
+	for row: int in 4:
+		for column: int in 10:
+			# 中间那条支路要从花园里穿过去，留给它一格宽的位置。
+			if column >= 3 and column <= 5:
+				continue
+			if row % 2 == 1:
+				# 垄间是草地，只在两头点缀野花。
+				if column == 1 or column == 8:
+					set_cell(
+						Vector2i(origin.x + 61 + column, center_row + 7 + row * 2),
+						FarmAtlas.SOURCE_ID,
+						FarmAtlas.FLOWERS
+					)
+				continue
+			var cell := Vector2i(origin.x + 61 + column, center_row + 7 + row * 2)
+			var atlas: Vector2i = FarmAtlas.FLOWER_BED
+			if (column * 3 + row) % 7 == 0:
+				atlas = FarmAtlas.FLOWERS
+			elif (column + row) % 5 == 0:
+				atlas = FarmAtlas.FLOWER_RED
+			set_cell(cell, FarmAtlas.SOURCE_ID, atlas)
 
-## 草地明暗交错，避免整片纯色。
-func _grass_variant(cell: Vector2i) -> Vector2i:
-	if (cell.x * 5 + cell.y * 3) % 9 < 4:
-		return FarmAtlas.GRASS_ALT
-	return FarmAtlas.GRASS
+	# 牧场：谷仓前踩秃的土场，只在边上掺一点碎石路。
+	for cell: Vector2i in GridUtils.cells_in_area(
+		Vector2i(origin.x + 76, center_row + 11), Vector2i(10, 7)
+	):
+		set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.DIRT)
 
-
-## 池塘：4×3 的水面，外围一圈沙岸。
-func _pond(origin: Vector2i) -> void:
-	var water := Rect2i(origin.x, origin.y, 4, 3)
-	for cell: Vector2i in GridUtils.cells_in_area(water.position, water.size):
-		if ground_area.has_point(cell):
-			set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.WATER)
-	for cell: Vector2i in [
-		Vector2i(water.position.x - 1, water.position.y),
-		Vector2i(water.end.x, water.position.y),
-		Vector2i(water.position.x - 1, water.end.y - 1),
-		Vector2i(water.end.x, water.end.y - 1),
-		Vector2i(water.position.x, water.end.y),
-		Vector2i(water.position.x + 2, water.end.y),
-	]:
-		if ground_area.has_point(cell):
-			set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.WATER_EDGE)
+	# 零散点缀：灌木、卵石与踩秃的草。
+	GroundPainter.decorate(
+		self,
+		{
+			Vector2i(origin.x + 6, center_row - 3): FarmAtlas.FLOWER_BED,
+			Vector2i(origin.x + 7, center_row - 3): FarmAtlas.FLOWER_BED,
+			Vector2i(origin.x + 88, center_row - 3): FarmAtlas.FLOWER_BED,
+			Vector2i(origin.x + 89, center_row - 3): FarmAtlas.FLOWER_BED,
+			Vector2i(origin.x + 20, center_row + 2): FarmAtlas.BUSH,
+			Vector2i(origin.x + 52, center_row + 2): FarmAtlas.BUSH,
+			Vector2i(origin.x + 92, center_row + 4): FarmAtlas.BUSH,
+			Vector2i(origin.x + 30, center_row + 10): FarmAtlas.TALL_GRASS,
+			Vector2i(origin.x + 18, center_row + 18): FarmAtlas.TALL_GRASS,
+			Vector2i(origin.x + 56, center_row + 18): FarmAtlas.PEBBLE,
+			Vector2i(origin.x + 70, center_row + 20): FarmAtlas.MUSHROOM,
+			Vector2i(origin.x + 88, center_row + 20): FarmAtlas.PEBBLE,
+			Vector2i(origin.x + 32, center_row + 16): FarmAtlas.FLOWERS,
+			Vector2i(origin.x + 48, center_row + 14): FarmAtlas.FLOWER_RED,
+			Vector2i(origin.x + 12, center_row + 22): FarmAtlas.STUMP_TILE,
+			Vector2i(origin.x + 84, center_row + 22): FarmAtlas.BUSH,
+		},
+		ground_area
+	)

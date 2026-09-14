@@ -36,9 +36,9 @@ const MAX_FRAMES: int = 2400
 @export var capture_delays: Array[float] = [0.0]
 ## 是否先截标题页（关掉可以只测游戏内画面）。
 @export var capture_title: bool = true
-## 是否顺带截一张小镇。
+## 是否顺带截一张集市（村庄与海滩之间的那一站）。
 @export var capture_town: bool = true
-## 是否顺带截一张新的大场景 twon。
+## 是否顺带截一张村庄（大场景 twon）。
 @export var capture_twon: bool = true
 ## 是否顺带截新增地图：海滩 / 矿洞 / 图书馆。
 @export var capture_extras: bool = true
@@ -79,7 +79,7 @@ func _run() -> void:
 		await _capture("shot_%02d" % index)
 
 	if capture_town:
-		SceneRouter.change_scene_to(TOWN_SCENE, &"from_farm")
+		SceneRouter.change_scene_to(TOWN_SCENE, &"from_twon")
 		if not await _wait_world():
 			return
 		await _capture("town")

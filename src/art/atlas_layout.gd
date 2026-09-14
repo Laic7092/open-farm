@@ -22,7 +22,7 @@ const TILE: int = 16
 ## [code]assets/sprites/tileset_farm.png[/code]
 const TILESET_PATH: String = "res://assets/sprites/tileset_farm.png"
 const TILESET_COLUMNS: int = 8
-const TILESET_ROWS: int = 4
+const TILESET_ROWS: int = 6
 const TILESET_SIZE := Vector2i(TILE * TILESET_COLUMNS, TILE * TILESET_ROWS)
 
 # 第 0 行：骨架阶段就存在的 8 格。坐标永不改变，旧场景 / 存档不受影响。
@@ -64,6 +64,20 @@ const STUMP_TILE := Vector2i(4, 3)
 const HAY := Vector2i(5, 3)
 const CRATE := Vector2i(6, 3)
 const WELL_TOP := Vector2i(7, 3)
+
+# 第 4 行：世界扩建时追加的地表。
+# 追加而不是改动前三行：旧场景与旧存档引用的坐标必须永远有效。
+const SHALLOW_WATER := Vector2i(0, 4)
+const PATH_STONE_ALT := Vector2i(1, 4)
+const CLIFF := Vector2i(2, 4)
+
+# 第 5 行：非草地的点缀。
+#
+# 第 1~3 行的装饰瓦片（花 / 蘑菇 / 碎石）都带一层草地底，
+# 铺在沙滩或砾石上会露出一个方方正正的绿块。所以给沙地与砾石各补一格
+# "自带正确底色"的点缀，而不是让地图作者去记"哪种地面不能用哪些瓦片"。
+const SAND_PEBBLE := Vector2i(0, 5)
+const GRAVEL_ORE := Vector2i(1, 5)
 
 # ---------------------------------------------------------------- 作物图集
 

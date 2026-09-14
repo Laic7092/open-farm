@@ -17,7 +17,7 @@
 ## 1. 先跑这几条（都带超时，原因见「坑 1」）
 
 ```bash
-timeout 800 ./tools/check.sh        # import + 单元测试(338) + 冒烟测试(212)，提交前必跑
+timeout 800 ./tools/check.sh        # import + 单元测试(343) + 冒烟测试(286)，提交前必跑
 timeout 800 ./tools/check.sh unit   # 只跑 gdUnit4 单元测试
 timeout 800 ./tools/check.sh smoke  # 只跑端到端冒烟测试
 timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
@@ -52,13 +52,14 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 | 加 NPC / 日程 | `tools/art/generate_actors.gd` 的 `NPC_LOOKS` + `data/npcs/` `data/dialogue/` `data/schedules/` + 场景里的 `SchedulePoint` |
 | 加节日 / 事件 | 节日：`data/festivals/`（`FestivalData`）+ 地图里的 `FestivalGround`（`festival_ids`）；事件：`data/events/`（`EventData`）。判定规则 `src/event/*_rules.gd`，状态 / 存档在 `src/autoload/calendar.gd`；新文案记得重跑 `build_assets.sh` |
 | 加恋爱对象 | `NpcData` 的 `romanceable` / `*_dialogue` / 礼物偏好 + `data/dialogue/` 五段对白 + `AffectionRules`（规则）与 `Relationships`（状态/存档） |
-| 加地图 | 复制 `scenes/world/twon.tscn`（户外）或 `library.tscn`（室内），根用 `WorldScene`，地面用 `src/world/*_ground.gd`，放 `SpawnPoint`，用 `SceneDoor` 互连 |
+| 加地图 | 复制 `scenes/world/twon.tscn`（户外）或 `library.tscn`（室内），根用 `WorldScene`，地面用 `src/world/*_ground.gd`（铺地走 `GroundPainter`，主路压在地图纵向中线），放 `SpawnPoint`，用 `SceneDoor` 互连：地图边缘的乡道出口标 `auto_enter` + `road_exit`，建筑门口只按 E。改完补进 `tests/unit/test_world_map.gd` 的 `MAPS` |
 | 加音效 / BGM | `src/audio/audio_catalog.gd` 加 id → `tools/audio/generate_*.gd` 写配方 → 需要触发就在 `src/autoload/audio_manager.gd` 订阅 `EventBus` → 重跑 `build_assets.sh` |
 | 改 UI | `src/ui/*.gd` + `scenes/ui/*.tscn` + `src/ui/ui_root.gd`（模态栈 / 暂停） |
 | 改玩法数值 | 只改 `data/**/*.tres`，不用动代码 |
 | 加全局信号 | `src/autoload/event_bus.gd`（只声明） |
 | 参与日结转 | `GameClock.register_day_hook(callable)`，并在 `_exit_tree` 注销 |
 | 参与存档 | 节点实现 `to_dict/from_dict` + `Persistence.register(self, &"id")`（JSON 往返把 StringName 变 String，`from_dict` 要转回） |
+| 连地图 / 改出口 | 场景里的 `SceneDoor`（`target_scene` + `target_spawn_id`；边缘出口再加 `auto_enter` + `road_exit`）+ `SpawnPoint`；新增 / 删除地图后同步 `tests/unit/test_world_map.gd` 的 `MAPS` |
 | 改地图瓦片 / 外观 | `src/art/atlas_layout.gd`（坐标真相）+ `tools/art/generate_terrain.gd`；已发布格子**只能往后追加** |
 | 改昼夜光照 | `src/world/day_night.gd`（时间 → 环境光曲线）+ `src/world/world_lighting.gd`（染色 / 路灯 / 雷暴闪光）+ 调色板 `AMBIENT_*` / `WEATHER_*`；路灯在场景里填 `WorldProp.light_radius` |
 

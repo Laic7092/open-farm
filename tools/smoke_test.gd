@@ -39,6 +39,8 @@ var _anchor_flora_total: int = 0
 ## 日程寻路：记录 NPC 起始位置，等几帧后确认它们真的移动了。
 var _npc_positions: Dictionary = {}
 var _twon_wait: int = 0
+## 无缝出口：等传送真的发生（走出边缘 → 淡出 → 换图 → 落地）。
+var _edge_wait: int = 0
 
 
 func _ready() -> void:
@@ -59,6 +61,9 @@ func _process(_delta: float) -> void:
 		_report()
 		return
 
+	# 巡游顺序 = 世界拓扑顺序：农场 → 村庄 → 集市 → 海滩 → 矿洞 → 图书馆 → 农场。
+	# 每一站都用"上一站走过来的那个出生点"落地，于是这条路径同时验证了
+	# 世界是真的连成一条能走通的路，而不是互不相干的几张地图。
 	match _phase:
 		0:
 			if not SceneRouter.is_transitioning() and _world() != null:
@@ -67,21 +72,15 @@ func _process(_delta: float) -> void:
 			_run_checks()
 			_prepare_persistence_anchor()
 			_phase = 2
-			SceneRouter.change_scene_to(TOWN_SCENE, &"from_farm")
-		2:
-			if SceneRouter.is_transitioning():
-				return
-			_check_town()
-			_phase = 3
 			SceneRouter.change_scene_to(TWON_SCENE, &"from_farm")
-		3:
+		2:
 			if SceneRouter.is_transitioning():
 				return
 			_check_twon()
 			_record_npc_positions()
 			_twon_wait = 0
 			_phase = 5
-		# 等几帧，验证 NPC 真的按日程走起来了，再依次巡游新增地图。
+		# 等几帧，验证 NPC 真的按日程走起来了，再依次巡游其余地图。
 		5:
 			if SceneRouter.is_transitioning():
 				return
@@ -90,20 +89,26 @@ func _process(_delta: float) -> void:
 				return
 			_check_npcs_moved()
 			_phase = 6
-			SceneRouter.change_scene_to(BEACH_SCENE, &"from_town")
+			SceneRouter.change_scene_to(TOWN_SCENE, &"from_twon")
 		6:
 			if SceneRouter.is_transitioning():
 				return
-			_check_beach()
+			_check_town()
 			_phase = 7
-			SceneRouter.change_scene_to(MINE_SCENE, &"from_beach")
+			SceneRouter.change_scene_to(BEACH_SCENE, &"from_town")
 		7:
 			if SceneRouter.is_transitioning():
 				return
-			_check_mine()
+			_check_beach()
 			_phase = 8
-			SceneRouter.change_scene_to(LIBRARY_SCENE, &"from_twon")
+			SceneRouter.change_scene_to(MINE_SCENE, &"from_beach")
 		8:
+			if SceneRouter.is_transitioning():
+				return
+			_check_mine()
+			_phase = 9
+			SceneRouter.change_scene_to(LIBRARY_SCENE, &"from_twon")
+		9:
 			if SceneRouter.is_transitioning():
 				return
 			_check_library()
@@ -113,6 +118,19 @@ func _process(_delta: float) -> void:
 			if SceneRouter.is_transitioning():
 				return
 			_check_farm_state_survived()
+			# 最后一步：不按键，直接站进农场东口，验证"走到地图边缘就换图"。
+			_phase = 10
+			_edge_wait = 0
+			_walk_into_exit()
+		10:
+			if SceneRouter.is_transitioning():
+				_edge_wait = 0
+				return
+			# 切换结束再多等几帧，避免"传送还没开始就下结论"。
+			_edge_wait += 1
+			if _edge_wait < 20:
+				return
+			_check_edge_travel()
 			_report()
 
 
@@ -217,6 +235,8 @@ func _check_world() -> void:
 	_check_eq(String(world.get(&"world_id")), "farm", "开局世界应当是农场")
 	_check(_farm_grid() != null, "农场场景应当包含 FarmGrid")
 	_check(_player() != null, "农场场景应当包含玩家")
+	# 农场的东口通向村庄——世界的起点就是这条路。
+	_check_door_target(world, "ToTwon", "res://scenes/world/twon.tscn", &"from_farm")
 
 	var ground := world.find_child("Ground", true, false) as TileMapLayer
 	_check(ground != null, "应当存在 Ground 图层")
@@ -564,36 +584,37 @@ func _prepare_persistence_anchor() -> void:
 			_anchor_flora_days = field.flora[_anchor_flora_cell].days_grown
 
 
+## 集市：村庄与海滩之间的一站，石板广场 + 水塘，没有常驻 NPC。
 func _check_town() -> void:
 	var world := _world()
-	_check(world != null, "小镇场景应当已加载")
+	_check(world != null, "集市场景应当已加载")
 	if world == null:
 		return
-	_check_eq(String(world.get(&"world_id")), "town", "切换后应当在小镇")
-	_check_eq(String(Audio.current_bgm()), "town", "白天进小镇应当换成小镇 BGM")
-	_check(_player() != null, "小镇里应当有玩家")
-	_check(_farm_grid() == null, "小镇里不应该有农场网格")
-	_check(_flora_field() != null, "小镇也应当有自己的野生植被")
+	_check_eq(String(world.get(&"world_id")), "town", "切换后应当在集市")
+	_check_eq(String(Audio.current_bgm()), "town", "白天进集市应当换成小镇 BGM")
+	_check(_player() != null, "集市里应当有玩家")
+	_check(_farm_grid() == null, "集市里不应该有农场网格")
+	_check(_flora_field() != null, "集市也应当有自己的野生植被")
 
-	var spawn := _find_spawn(&"from_farm")
-	_check(spawn != null, "小镇应当有 from_farm 出生点")
+	var spawn := _find_spawn(&"from_twon")
+	_check(spawn != null, "集市应当有 from_twon 出生点")
 	var player := _player()
 	if spawn != null and player != null:
 		_check(
 			player.global_position.distance_to(spawn.global_position) < 1.0,
-			"玩家应当落在小镇的 from_farm 出生点（实际 %s）" % player.global_position
+			"玩家应当落在集市的 from_twon 出生点（实际 %s）" % player.global_position
 		)
-	_check(
-		get_tree().get_nodes_in_group(Npc.GROUP).is_empty(),
-		"NPC 应当已从小镇移入 twon"
-	)
+	_check(get_tree().get_nodes_in_group(Npc.GROUP).is_empty(), "集市不该常驻 NPC")
 	_check_buildings(world, {
-		"GeneralStore": "res://assets/sprites/props/house_merchant.png",
-		"TownHall": "res://assets/sprites/props/house_mayor.png",
+		"Granary": "res://assets/sprites/props/barn.png",
+		"Cottage": "res://assets/sprites/props/house.png",
 	})
+	# 集市是"村庄 ↔ 海滩"的中间站，两头都必须是能走出去的出口。
+	_check_door_target(world, "ToTwon", "res://scenes/world/twon.tscn", &"from_town")
+	_check_door_target(world, "ToBeach", "res://scenes/world/beach.tscn", &"from_town")
 
 	# 在别的地图上过一天：农场不在场景树里，它的日结转钩子是注销的，
-	# 所以农场的植被只能靠"重新进图时补算"追上——这正是下面要验证的。
+	# 所以农场的植被只能靠"重新进图时补算"追上——这正是最后一步要验证的。
 	GameClock.sleep_until_morning()
 
 
@@ -649,6 +670,13 @@ func _check_twon() -> void:
 		_check(not plaza.can_interact(), "非节日当天会场不应该能交互")
 	_check(world.find_child("FestivalGarden", true, false) != null, "twon 花园应当有节日会场")
 
+	# 村庄是世界的枢纽：西接农场、东接集市，另有一条岔路进图书馆。
+	_check_door_target(world, "ToFarm", "res://scenes/world/farm.tscn", &"from_twon")
+	_check_door_target(world, "ToTown", "res://scenes/world/town.tscn", &"from_twon")
+	_check_door_target(
+		world, "ToLibrary", "res://scenes/world/library.tscn", &"from_twon", false
+	)
+
 	# 每栋建筑按住的人换造型：杂货铺 / 铁匠铺 / 花店 / 图书馆 / 小女孩家各一张图。
 	_check_buildings(world, {
 		"GeneralStore": "res://assets/sprites/props/house_merchant.png",
@@ -686,6 +714,9 @@ func _check_beach() -> void:
 			"玩家应当落在海滩的 from_town 出生点（实际 %s）" % player.global_position
 		)
 
+	_check_door_target(world, "ToTown", "res://scenes/world/town.tscn", &"from_beach")
+	_check_door_target(world, "ToMine", "res://scenes/world/mine.tscn", &"from_beach")
+
 	_check(_find_npc(&"fisher") != null, "海滩应当有渔夫 NPC")
 	_check_buildings(world, {"Hut": "res://assets/sprites/props/house_fisher.png"})
 	_check(_find_schedule_point(&"pier") != null, "海滩应当有 pier 日程地点")
@@ -713,6 +744,8 @@ func _check_mine() -> void:
 
 	var spawn := _find_spawn(&"from_beach")
 	_check(spawn != null, "矿洞应当有 from_beach 出生点")
+
+	_check_door_target(world, "ToBeach", "res://scenes/world/beach.tscn", &"from_mine")
 
 	_check(_find_npc(&"miner") != null, "矿洞应当有矿工 NPC")
 	_check_buildings(world, {"Camp": "res://assets/sprites/props/house_miner.png"})
@@ -742,6 +775,9 @@ func _check_library() -> void:
 	_check(_find_npc(&"librarian") != null, "图书馆应当有管理员 NPC")
 	_check(_find_schedule_point(&"desk") != null, "图书馆应当有 desk 日程地点")
 	_check(_find_schedule_point(&"shelves") != null, "图书馆应当有 shelves 日程地点")
+	_check_door_target(
+		world, "ToTwon", "res://scenes/world/twon.tscn", &"from_library", false
+	)
 	_check_npc_can_reach(&"librarian", &"desk")
 	_check_relationships()
 
@@ -790,6 +826,22 @@ func _check_buildings(world: Node, expected: Dictionary) -> void:
 		used[path] = node_name
 
 
+## 出口检查：节点名、目标场景、目标出生点、是否"走进即传送"都要对得上。
+##
+## 世界的连通性完全写在场景文件的 [SceneDoor] 上，所以这条断言就是
+## "各张地图真的连在一起"这个承诺的可执行版本：改名、改路径、改出生点都会红。
+func _check_door_target(
+	world: Node, node_name: String, scene_path: String, spawn_id: StringName, auto: bool = true
+) -> void:
+	var door := world.find_child(node_name, true, false) as SceneDoor
+	_check(door != null, "应当有出口 %s" % node_name)
+	if door == null:
+		return
+	_check_eq(door.target_scene, scene_path, "%s 的目标场景" % node_name)
+	_check_eq(String(door.target_spawn_id), String(spawn_id), "%s 的目标出生点" % node_name)
+	_check_eq(door.auto_enter, auto, "%s 的进入方式" % node_name)
+
+
 ## 日程 + 寻路的端到端检查：导航网格可用、两个 NPC 有日程、路径能算出来。
 func _check_npc_schedule() -> void:
 	var navigator := get_tree().get_first_node_in_group(NpcNavigator.GROUP) as NpcNavigator
@@ -797,9 +849,9 @@ func _check_npc_schedule() -> void:
 	_check(_find_schedule_point(&"store") != null, "twon 应当有 store 日程地点")
 
 	if navigator != null:
-		var from: Vector2i = navigator.cell_of(Vector2(768, 888))
-		var to: Vector2i = navigator.cell_of(Vector2(448, 392))
-		_check(navigator.is_walkable(from), "农场入口应当是可行走格")
+		var from: Vector2i = navigator.cell_of(Vector2(40, 488))
+		var to: Vector2i = navigator.cell_of(Vector2(432, 496))
+		_check(navigator.is_walkable(from), "村庄西口应当是可行走格")
 		_check(navigator.is_walkable(to), "商店门口应当是可行走格")
 		var path := navigator.find_path(from, to)
 		_check(not path.is_empty(), "从农场入口到商店应当能找到路径")
@@ -900,6 +952,36 @@ func _check_audio() -> void:
 
 	# 触发一次真实音效；headless 下听不见，但不应当报错或崩溃。
 	Audio.play_sfx(&"ui_confirm")
+
+
+## 把玩家直接放进农场东口的传送区：这里靠 [code]SceneDoor.auto_enter[/code] 换图，
+## 不需要按 E，也不该被"必须先按一下交互键"的实现悄悄破坏。
+func _walk_into_exit() -> void:
+	var world := _world()
+	var player := _player()
+	var door: SceneDoor = null
+	if world != null:
+		door = world.find_child("ToTwon", true, false) as SceneDoor
+	_check(door != null and player != null, "农场应当有 ToTwon 出口与玩家")
+	if door == null or player == null:
+		return
+	player.global_position = door.global_position
+
+
+## 无缝出口的结果：人已经在村庄的 from_farm 出生点上。
+func _check_edge_travel() -> void:
+	var world := _world()
+	_check(world != null, "走过农场东口后应当换到新地图")
+	if world == null:
+		return
+	_check_eq(String(world.get(&"world_id")), "twon", "走进农场东口应当直接到村庄")
+	var spawn := _find_spawn(&"from_farm")
+	var player := _player()
+	if spawn != null and player != null:
+		_check(
+			player.global_position.distance_to(spawn.global_position) < 1.0,
+			"从农场东口走进村庄应当落在 from_farm 出生点（实际 %s）" % player.global_position
+		)
 
 
 func _check_farm_state_survived() -> void:
