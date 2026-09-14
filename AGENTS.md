@@ -17,7 +17,7 @@
 ## 1. 先跑这几条（都带超时，原因见「坑 1」）
 
 ```bash
-timeout 800 ./tools/check.sh        # import + 单元测试(269) + 冒烟测试(122)，提交前必跑
+timeout 800 ./tools/check.sh        # import + 单元测试(280) + 冒烟测试(128)，提交前必跑
 timeout 800 ./tools/check.sh unit   # 只跑 gdUnit4 单元测试
 timeout 800 ./tools/check.sh smoke  # 只跑端到端冒烟测试
 timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
@@ -58,6 +58,7 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 | 参与日结转 | `GameClock.register_day_hook(callable)`，并在 `_exit_tree` 注销 |
 | 参与存档 | 节点实现 `to_dict/from_dict` + `Persistence.register(self, &"id")`（JSON 往返把 StringName 变 String，`from_dict` 要转回） |
 | 改地图瓦片 / 外观 | `src/art/atlas_layout.gd`（坐标真相）+ `tools/art/generate_terrain.gd`；已发布格子**只能往后追加** |
+| 改昼夜光照 | `src/world/day_night.gd`（时间 → 环境光曲线）+ `src/world/world_lighting.gd`（染色 / 路灯 / 雷暴闪光）+ 调色板 `AMBIENT_*` / `WEATHER_*`；路灯在场景里填 `WorldProp.light_radius` |
 
 更细的"如何扩展"见 `README.md` 的「如何扩展」一节。
 

@@ -192,12 +192,11 @@ func _track_for(world_id: StringName) -> StringName:
 	return Catalog.BGM_FARM
 
 
-## 夜晚：18:00 ~ 次日 06:00。时钟还没跑起来时按白天算。
+## 夜晚：18:00 ~ 次日 06:00（与 [DayNight] 共用同一份定义）。时钟还没跑起来时按白天算。
 func _is_night() -> bool:
 	if GameClock == null:
 		return false
-	var h := GameClock.hour()
-	return h >= 18 or h < 6
+	return DayNight.is_night(GameClock.minute_of_day)
 
 
 func _stream(kind: StringName, id: StringName) -> AudioStream:

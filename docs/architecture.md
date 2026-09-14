@@ -484,4 +484,47 @@ NPC 是 `Area2D`（`Interactable` 的子类），不参与物理碰撞。
 场景里放标记（`point_id`）。重排地图只挪标记，不碰任何日程数据；
 找不到地点时 NPC 只 `push_warning` 然后原地不动，而不是传送到一个坏坐标。
 
+---
+
+## 12. 昼夜光照
+
+一条从"一天中的分钟"到"画面多亮"的曲线，加上会随时间亮的点光源。
+
+```
+GameClock.minute_of_day
+        │
+        ▼
+  DayNight.ambient_color ──┐
+                           ├─ 相乘 ─► WorldLighting 的 CanvasModulate
+  WeatherSystem.current ───┘                 │
+                                             ▼
+                             DayNight.lamp_energy ──► WorldProp 的 PointLight2D
+```
+
+### 12.1 为什么天气与昼夜必须共用一个 CanvasModulate
+
+Godot 每张画布只认一个 `CanvasModulate`（官方文档："Only one can be used to tint a canvas"）。
+改造前天气自己挂了一个，如果再给昼夜加一个，结果是其中一个**完全失效**——不是叠加，是后者胜出。
+于是把"染色"的唯一所有权收归 `WorldLighting`：天气只提供染色系数（`WEATHER_TINTS`），
+`WeatherFx` 退回到只负责粒子与阳光。这样"雨天的夜晚更暗"由乘法自动成立，两个系统也不必互相知道。
+
+### 12.2 为什么曲线是纯静态的 DayNight
+
+`ambient_color` / `lamp_energy` 不碰场景树、不注册 autoload，于是可以在
+`tests/unit/test_day_night.gd` 里逐分钟采样、检查连续性与边界。
+颜色全部来自 `ArtPalette`（`AMBIENT_*` / `WEATHER_*`），
+要调"几点钟看起来像几点"只改关键帧，不碰任何玩法代码。
+
+### 12.3 为什么路灯是 WorldProp 的属性
+
+和静态碰撞体同一个理由：场景里只填 `light_radius`，光的形状（径向渐变）与亮度曲线由代码统一给，
+复制摆件就能发光。`WorldLighting` 按 `DayNight.lamp_energy` 统一调 `night_lights` 组里所有灯的
+能量，因此"现在几点"只在这一个地方被翻译成亮度。
+
+### 12.4 生命周期
+
+`WeatherFx` / `WorldLighting` 都挂在会被缓存复用的世界场景上，所以信号在
+`_enter_tree` 连接、`_exit_tree` 断开，并在重新进图时补一次刷新，`_ready()` 只负责建节点。
+这条规则的原因见 §3.2.2。
+
 

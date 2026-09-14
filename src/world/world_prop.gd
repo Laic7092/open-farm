@@ -3,23 +3,42 @@ extends Sprite2D
 ## 场景摆件：房子、树、水井这类"站在地图上的东西"。
 ##
 ## 贴图直接在 [code].tscn[/code] 里指定（[code]assets/sprites/props/*.png[/code]），
-## 本脚本只负责一件事：按需生成一个[b]静态碰撞体[/b]，
-## 让房子和树能真的挡住玩家，而不是"看起来像房子、走上去像空气"。
+## 本脚本负责两件按需生成的东西：
+## [br]- [b]静态碰撞体[/b]：让房子和树能真的挡住玩家；
+## [br]- [b]夜晚点光源[/b]：给了 [member light_radius] 的路灯 / 窗灯自动发光。
 ##
-## 之所以用脚本生成碰撞体而不是在场景里手写 [StaticBody2D]：
+## 之所以用脚本生成而不是在场景里手写：
 ## 一张 64×64 的房子图，只有底部一小条该挡人；
 ## 把"可通行区域"当成参数写清楚，比在每个场景里试坐标可靠得多。
+## 灯光同理——场景里只填半径，亮度曲线由 [WorldLighting] 统一给。
 
 ## 碰撞盒尺寸；[code]Vector2.ZERO[/code] 表示这个摆件可以穿过去（花、草、小鸡）。
 @export var solid_size: Vector2 = Vector2.ZERO
 ## 碰撞盒相对精灵中心的偏移。房子这类"下实上虚"的图形通常填一个正数（往下）。
 @export var solid_offset: Vector2 = Vector2.ZERO
 
+## 夜晚点光源半径（世界像素）；0 表示这个摆件不发光。
+@export var light_radius: float = 0.0
+## 点光源颜色。
+@export var light_color: Color = ArtPalette.LAMP_GLOW
+## 点光源相对精灵中心的偏移（灯头通常在上方，填一个负数）。
+@export var light_offset: Vector2 = Vector2.ZERO
+## 深夜时的亮度倍率。加色光很容易过曝，默认留一点余量。
+@export var light_energy: float = 0.65
+
+## 所有发光摆件都在这个组里，由 [WorldLighting] 统一调节亮度。
+const NIGHT_LIGHT_GROUP: StringName = &"night_lights"
+
+## 所有灯共用同一张径向渐变，避免每个摆件各建一份。
+static var _light_texture: GradientTexture2D
+
+var _light: PointLight2D
+
 
 func _ready() -> void:
-	if solid_size == Vector2.ZERO:
-		return
-	add_child(_build_body())
+	if solid_size != Vector2.ZERO:
+		add_child(_build_body())
+	_build_light()
 
 
 func _build_body() -> StaticBody2D:
@@ -36,3 +55,46 @@ func _build_body() -> StaticBody2D:
 	shape.shape = rectangle
 	body.add_child(shape)
 	return body
+
+
+## 按 [param factor]（0~1）调节灯光亮度；由 [WorldLighting] 在时间推进时调用。
+func apply_night_energy(factor: float) -> void:
+	if _light != null:
+		_light.energy = light_energy * factor
+
+
+# ---------------------------------------------------------------- 灯光
+
+func _build_light() -> void:
+	if light_radius <= 0.0:
+		return
+	var texture := _radial_texture()
+	_light = PointLight2D.new()
+	_light.name = "Light"
+	_light.texture = texture
+	_light.color = light_color
+	_light.energy = 0.0
+	# 纹理是 128×128 的径向渐变：半径 = 半宽 × texture_scale。
+	_light.texture_scale = light_radius / (float(texture.get_width()) * 0.5)
+	_light.position = light_offset
+	add_child(_light)
+	add_to_group(NIGHT_LIGHT_GROUP)
+
+
+## 中心不透明、边缘透明的径向渐变，决定灯光的形状。
+static func _radial_texture() -> GradientTexture2D:
+	if _light_texture != null:
+		return _light_texture
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(1.0, 1.0, 1.0, 1.0))
+	gradient.set_color(1, Color(1.0, 1.0, 1.0, 0.0))
+	gradient.add_point(0.35, Color(1.0, 1.0, 1.0, 0.5))
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	texture.width = 128
+	texture.height = 128
+	_light_texture = texture
+	return _light_texture

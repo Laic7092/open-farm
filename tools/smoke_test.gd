@@ -132,6 +132,7 @@ func _run_checks() -> void:
 	_check_world()
 	_check_spawn()
 	_check_clock()
+	_check_day_night()
 	_check_farming()
 	_check_flora()
 	_check_livestock()
@@ -196,6 +197,47 @@ func _check_clock() -> void:
 	GameClock.sleep_until_morning()
 	_check_eq(GameClock.hour(), GameClock.DAY_START_HOUR, "睡醒后应当回到 06:00")
 	_check_eq(GameClock.date.day, day_before + 2, "睡觉应当再推进一天")
+
+
+func _check_day_night() -> void:
+	var world := _world()
+	if world == null:
+		return
+	var lighting := world.find_child("WorldLighting", true, false) as WorldLighting
+	_check(lighting != null, "农场场景应当自动挂载 WorldLighting")
+	if lighting == null:
+		return
+
+	var lights := world.find_children("*", "PointLight2D", true, false)
+	_check(not lights.is_empty(), "带 light_radius 的路灯应当生成 PointLight2D")
+
+	GameClock.set_time(12, 0)
+	var noon_tint := lighting.tint_color()
+	var noon_energy := _max_light_energy(world)
+	_check(noon_energy <= 0.01, "正午路灯应当熄灭（实际 %.2f）" % noon_energy)
+
+	GameClock.set_time(23, 0)
+	var night_tint := lighting.tint_color()
+	var night_energy := _max_light_energy(world)
+	_check(
+		night_tint.get_luminance() < noon_tint.get_luminance(),
+		"夜里环境光应当比正午暗（%.2f vs %.2f）"
+			% [night_tint.get_luminance(), noon_tint.get_luminance()]
+	)
+	_check(night_tint.b > night_tint.r, "夜里环境光应当偏冷")
+	_check(night_energy > 0.5, "深夜路灯应当点亮（实际 %.2f）" % night_energy)
+
+	# 后面的检查依赖"早上 06:00"这个起点，把时间还回去。
+	GameClock.set_time(GameClock.DAY_START_HOUR, 0)
+
+
+func _max_light_energy(world: Node) -> float:
+	var value := 0.0
+	for node: Node in world.find_children("*", "PointLight2D", true, false):
+		var light := node as PointLight2D
+		if light != null:
+			value = maxf(value, light.energy)
+	return value
 
 
 func _check_farming() -> void:

@@ -161,6 +161,28 @@ const SNOW := Color8(244, 248, 252)
 const HILL_FAR := Color8(122, 156, 118)
 const HILL_NEAR := Color8(96, 138, 92)
 
+# ---------------------------------------------------------------- 昼夜环境光
+
+## [CanvasModulate] 的全局环境光：白天纯白（不改变原色），越晚越冷、越暗。
+## 关键帧与插值规则见 [code]src/world/day_night.gd[/code]；
+## 这里只定义"颜色本身"，是调夜景色调的唯一入口。
+const AMBIENT_DAY := Color(1.0, 1.0, 1.0)
+const AMBIENT_DAWN := Color(0.62, 0.68, 0.92)
+const AMBIENT_MORNING := Color(1.0, 0.94, 0.84)
+const AMBIENT_EVENING := Color(1.0, 0.84, 0.66)
+const AMBIENT_DUSK := Color(0.70, 0.58, 0.74)
+const AMBIENT_NIGHT := Color(0.45, 0.50, 0.76)
+
+## 点光源（路灯 / 窗灯）的颜色；半径由场景里的 [code]WorldProp.light_radius[/code] 指定。
+const LAMP_GLOW := Color8(255, 214, 150)
+
+## 天气对画面的染色，由 [code]WorldLighting[/code] 与昼夜环境光相乘。
+const WEATHER_SUNNY := Color(1.0, 1.0, 1.0)
+const WEATHER_CLOUDY := Color(0.88, 0.9, 0.95)
+const WEATHER_RAINY := Color(0.7, 0.76, 0.88)
+const WEATHER_STORMY := Color(0.54, 0.6, 0.76)
+const WEATHER_SNOWY := Color(0.93, 0.95, 1.0)
+
 
 ## 按 [param amount]（-1..1）把颜色压暗或提亮，用于快速生成明暗档。
 static func shade(color: Color, amount: float) -> Color:

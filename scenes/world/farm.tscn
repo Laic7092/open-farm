@@ -96,6 +96,8 @@ solid_offset = Vector2(0, 24)
 position = Vector2(150, 84)
 texture = ExtResource("26_lamp")
 script = ExtResource("12_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
 
 [node name="HousePot" type="Sprite2D" parent="Props"]
 position = Vector2(146, 108)

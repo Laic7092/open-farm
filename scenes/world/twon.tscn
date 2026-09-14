@@ -112,26 +112,36 @@ solid_offset = Vector2(0, 12)
 position = Vector2(528, 536)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
 
 [node name="Lamp2" type="Sprite2D" parent="Props"]
 position = Vector2(1008, 536)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
 
 [node name="Lamp3" type="Sprite2D" parent="Props"]
 position = Vector2(528, 440)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
 
 [node name="Lamp4" type="Sprite2D" parent="Props"]
 position = Vector2(1008, 440)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
 
 [node name="Lamp5" type="Sprite2D" parent="Props"]
 position = Vector2(336, 536)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
 
 [node name="EntranceSign" type="Sprite2D" parent="Props"]
 position = Vector2(128, 536)

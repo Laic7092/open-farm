@@ -159,6 +159,7 @@ open-farm/
 | NPC 日程与寻路 | `NpcSchedule` + `NpcNavigator` | 日程返回"当前生效段"；通行性来自物理查询，A* 惰性查格、按格缓存 | [§11](docs/architecture.md#11-npc-日程与寻路) |
 | 场景切换 | `SceneRouter._world_cache` | 换 `WorldHost` 子节点而非 `change_scene_to_file`；地图实例缓存复用 | [§3.2](docs/architecture.md#32-世界场景换子节点不用-change_scene_to_file) |
 | 畜舍养殖 | `LivestockManager` | 与 `FarmGrid` 同构：状态在字典、视图可重建、规则纯静态、牲畜不会死 | [§3.3.1](docs/architecture.md#331-畜舍为什么是-farmgrid-的翻版) |
+| 昼夜光照 | `DayNight` + `WorldLighting` | 一条"分钟 → 环境光"曲线；天气染色与昼夜染色必须在同一个 `CanvasModulate` 相乘，路灯由 `WorldProp.light_radius` 生成 | [§12](docs/architecture.md#12-昼夜光照) |
 
 > **生命周期铁律**：世界场景会缓存复用，`_ready()` 一生只跑一次。
 > "每次进图都要做一遍"的事情放 `_enter_tree()` / `WorldScene.on_world_enter()`；
@@ -236,8 +237,8 @@ func from_dict(data: Dictionary) -> void: ...
 
 | 层次 | 工具 | 覆盖 |
 | --- | --- | --- |
-| 单元测试 | gdUnit4（`tests/unit/`，269 例） | 日期进位、季节/天气、网格换算、背包堆叠、体力、工具带、作物生长（含枯死/多次收获）、牲畜养殖（成年/产出/喂食/好感度）、NPC 日程表与网格 A*、商店经济、状态机、时钟与日结转钩子、数据完整性、存档往返与容错 |
-| 冒烟测试 | `tools/smoke_test.tscn`（122 项） | 真的把游戏跑起来：场景加载、玩家落点、翻地→播种→生长→收获全链路、放养→喂食→成长→收产出、买/卖、存读档、HUD 内容、**NPC 日程与寻路（导航网格、路径、真的走起来）**、**农场 ↔ 小镇 / 农场 ↔ twon 往返后农田与畜舍进度、日结转钩子仍然有效** |
+| 单元测试 | gdUnit4（`tests/unit/`，280 例） | 日期进位、季节/天气、网格换算、背包堆叠、体力、工具带、作物生长（含枯死/多次收获）、牲畜养殖（成年/产出/喂食/好感度）、NPC 日程表与网格 A*、商店经济、状态机、时钟与日结转钩子、数据完整性、存档往返与容错 |
+| 冒烟测试 | `tools/smoke_test.tscn`（128 项） | 真的把游戏跑起来：场景加载、玩家落点、翻地→播种→生长→收获全链路、放养→喂食→成长→收产出、买/卖、存读档、HUD 内容、**NPC 日程与寻路（导航网格、路径、真的走起来）**、**昼夜光照（环境光随时刻变化、路灯白天灭夜里亮）**、**农场 ↔ 小镇 / 农场 ↔ twon 往返后农田与畜舍进度、日结转钩子仍然有效** |
 | 美术规范 | `tests/unit/test_assets.gd` | 生成物存在、尺寸与 `AtlasLayout` 一致、瓦片齐全、字体覆盖翻译表全部字符、数据都挂上了贴图 |
 | 音频规范 | `tests/unit/test_audio.gd` | WAV 真的是 22050 Hz / 16 bit / 单声道；BGM 带 `smpl` 循环点、音效不带；运行时总线就位、音量可调 |
 | 视觉回归 | `tools/screenshot.tscn` / `tools/ui_preview.tscn` | 标题页 + 农场 + 小镇 + twon 截图、各界面布局截图 |
@@ -303,6 +304,9 @@ timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/generate_sa
   精简容器里没有系统 CJK 字体时仍会显示方块。加了新文案请重跑 `build_assets.sh`。
 - **农场渲染层级**：作物统一在玩家之下绘制（`Crops` 容器整体参与 Y 排序）。
   要做到"玩家能走到高杆作物后面"，需要把作物挂到与玩家同一层再逐株 Y 排序。
+- **昼夜光照是"整体染色 + 加色点光"**：环境光是整张画布一个 `CanvasModulate`，
+  没有逐格明暗、没有影子；夜里只有摆了灯的地方亮（`WorldProp.light_radius`），
+  室内外共用同一条时间曲线，也没有"不同区域不同光照"这类分区光照。
 - **世界场景常驻内存**：切过的地图实例会一直保留（这是为了让农田进度跨场景不丢）。
   地图数量上来之后需要改成"按需卸载 + 状态外置到存档层"。
 - **NPC 日程是固定时刻表**：只按时辰切换地点，没有工作日 / 天气 / 节日差异，
@@ -324,7 +328,7 @@ timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/generate_sa
 ## 后续里程碑建议
 
 1. **内容**：更多作物 / 季节作物、更多牲畜（鸭 / 羊）与畜舍升级、钓鱼、采矿。
-2. **表现**：更丰富的生成器画法（光影 / 更多逐帧动画）、Tilemap 地形自动过渡、昼夜光照。
+2. **表现**：更丰富的生成器画法（光影 / 更多逐帧动画）、Tilemap 地形自动过渡。
 3. **系统**：好感度与恋爱、节日与事件、NPC 之间的避让与排队、工具升级与体力上限成长。
 4. **流程**：多存档槽选择界面、新手引导、结局与结算。
 5. **工程**：导出预设（Windows / Linux / macOS）、GitHub Actions 跑 `tools/check.sh`、帧率与内存基线。
