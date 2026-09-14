@@ -106,6 +106,13 @@ const NPC_SHIRT := Color8(178, 92, 108)
 const NPC_SHIRT_DARK := Color8(136, 66, 82)
 const NPC_HAIR := Color8(196, 190, 182)
 const NPC_HAIR_DARK := Color8(150, 144, 138)
+## 角色外观补充色：金发 / 皮革围裙 / 头巾 / 安全帽 / 眼镜。
+const NPC_HAIR_BLONDE := Color8(212, 176, 96)
+const APRON_LEATHER := Color8(150, 104, 62)
+const BANDANA_NAVY := Color8(52, 74, 120)
+const HELMET_YELLOW := Color8(240, 200, 72)
+const HELMET_DARK := Color8(186, 146, 44)
+const GLASSES := Color8(58, 60, 78)
 
 # ---------------------------------------------------------------- 牲畜
 

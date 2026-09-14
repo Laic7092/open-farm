@@ -10,14 +10,14 @@
 
 - **是什么**：Godot **4.7.2** 的 2D 俯视角像素农场模拟（牧场物语风格）。仓库根自带 `./godot`（已 gitignore）。
 - **入口**：`scenes/title/title_screen.tscn` → `scenes/main/main.tscn`（`WorldHost` 换地图 + 常驻 `UiRoot`）。
-- **现状**：核心循环 / 玩家 / 农场 / 畜牧 / NPC / UI / 存档 / 本地化全部打通；**美术、字体、BGM、音效全部由脚本生成**，等待填充内容。
+- **现状**：核心循环 / 玩家 / 农场 / 畜牧 / 8 位 NPC / 6 张地图 / UI / 存档 / 本地化全部打通；**美术、字体、BGM、音效全部由脚本生成**，内容仍在扩充。
 - **没有**：package.json / npm / 构建系统；一切走 Godot CLI。
 - **语言与风格**：注释、文档、提交信息统一**中文**；GDScript 用 **Tab 缩进 + 类型标注 + `##` 文档注释**，`StringName` 用 `&"..."`。
 
 ## 1. 先跑这几条（都带超时，原因见「坑 1」）
 
 ```bash
-timeout 800 ./tools/check.sh        # import + 单元测试(280) + 冒烟测试(128)，提交前必跑
+timeout 800 ./tools/check.sh        # import + 单元测试(283) + 冒烟测试(189)，提交前必跑
 timeout 800 ./tools/check.sh unit   # 只跑 gdUnit4 单元测试
 timeout 800 ./tools/check.sh smoke  # 只跑端到端冒烟测试
 timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
@@ -48,9 +48,9 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 | --- | --- |
 | 加作物 | `data/crops/` + `data/items/`（种子/收获）+ `strings.csv` + `tools/art/generate_crops.gd` + 商店 stock |
 | 加牲畜 | `data/animals/` + `data/buildings/` + `data/items/` + `tools/art/generate_animals.gd` |
-| 加野生植被 | `data/flora/` + `tools/art/generate_flora.gd` + `src/world/flora_field.gd` |
-| 加 NPC / 日程 | `data/npcs/` `data/dialogue/` `data/schedules/` + `src/npc/` + 场景里的 `SchedulePoint` |
-| 加地图 | 复制 `scenes/world/twon.tscn`，根用 `WorldScene`，放 `SpawnPoint`，用 `SceneDoor` 互连 |
+| 加野生植被 | `data/flora/` + `tools/art/generate_flora.gd` + `src/world/flora_field.gd`（`allowed_species` 可限定单张地图长哪些） |
+| 加 NPC / 日程 | `tools/art/generate_actors.gd` 的 `NPC_LOOKS` + `data/npcs/` `data/dialogue/` `data/schedules/` + 场景里的 `SchedulePoint` |
+| 加地图 | 复制 `scenes/world/twon.tscn`（户外）或 `library.tscn`（室内），根用 `WorldScene`，地面用 `src/world/*_ground.gd`，放 `SpawnPoint`，用 `SceneDoor` 互连 |
 | 加音效 / BGM | `src/audio/audio_catalog.gd` 加 id → `tools/audio/generate_*.gd` 写配方 → 需要触发就在 `src/autoload/audio_manager.gd` 订阅 `EventBus` → 重跑 `build_assets.sh` |
 | 改 UI | `src/ui/*.gd` + `scenes/ui/*.tscn` + `src/ui/ui_root.gd`（模态栈 / 暂停） |
 | 改玩法数值 | 只改 `data/**/*.tres`，不用动代码 |

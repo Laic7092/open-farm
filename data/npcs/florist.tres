@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="NpcData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/florist_greeting.tres" id="1_o82ln"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_florist_frames.tres" id="2_jdfea"]
+[ext_resource type="Resource" path="res://data/schedules/florist_schedule.tres" id="3_n7hts"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_h27k0"]
+
+[resource]
+script = ExtResource("4_h27k0")
+id = &"florist"
+display_name_key = &"NPC_FLORIST"
+frames = ExtResource("2_jdfea")
+default_dialogue = ExtResource("1_o82ln")
+schedule = ExtResource("3_n7hts")
+shop_id = &"flower_shop"
+move_speed = 26.0

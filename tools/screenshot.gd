@@ -21,6 +21,9 @@ const TITLE_SCENE: String = "res://scenes/title/title_screen.tscn"
 const GAME_SCENE: String = "res://scenes/main/main.tscn"
 const TOWN_SCENE: String = "res://scenes/world/town.tscn"
 const TWON_SCENE: String = "res://scenes/world/twon.tscn"
+const BEACH_SCENE: String = "res://scenes/world/beach.tscn"
+const MINE_SCENE: String = "res://scenes/world/mine.tscn"
+const LIBRARY_SCENE: String = "res://scenes/world/library.tscn"
 
 ## 标题页稳定后再等多少帧截图（等云飘一点、布局完成）。
 const TITLE_SETTLE_FRAMES: int = 20
@@ -37,6 +40,8 @@ const MAX_FRAMES: int = 2400
 @export var capture_town: bool = true
 ## 是否顺带截一张新的大场景 twon。
 @export var capture_twon: bool = true
+## 是否顺带截新增地图：海滩 / 矿洞 / 图书馆。
+@export var capture_extras: bool = true
 
 var _frames: int = 0
 var _current: Node
@@ -85,8 +90,25 @@ func _run() -> void:
 			return
 		await _capture("twon")
 
+	if capture_extras:
+		if not await _capture_world(BEACH_SCENE, &"from_town", "beach"):
+			return
+		if not await _capture_world(MINE_SCENE, &"from_beach", "mine"):
+			return
+		if not await _capture_world(LIBRARY_SCENE, &"from_twon", "library"):
+			return
+
 	print("截图完成 → ", OUTPUT_DIR)
 	get_tree().quit(0)
+
+
+## 切到某张地图并截一张图；等待超时时返回 false。
+func _capture_world(path: String, spawn_id: StringName, name: String) -> bool:
+	SceneRouter.change_scene_to(path, spawn_id)
+	if not await _wait_world():
+		return false
+	await _capture(name)
+	return true
 
 
 ## 等世界加载完成（含淡入淡出）；超时返回 false 并让流程结束。

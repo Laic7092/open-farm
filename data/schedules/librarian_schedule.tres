@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="NpcSchedule" format=3]
+
+[ext_resource type="Script" path="res://src/npc/schedule_entry.gd" id="1_02hy5"]
+[ext_resource type="Script" path="res://src/npc/npc_schedule.gd" id="2_htno3"]
+
+[sub_resource type="Resource" id="Resource_a3h3a"]
+script = ExtResource("1_02hy5")
+start_minute = 360
+location_id = &"desk"
+activity = &"work"
+
+[sub_resource type="Resource" id="Resource_1jqt7"]
+script = ExtResource("1_02hy5")
+start_minute = 720
+location_id = &"shelves"
+activity = &"work"
+
+[sub_resource type="Resource" id="Resource_svotc"]
+script = ExtResource("1_02hy5")
+start_minute = 1020
+location_id = &"desk"
+activity = &"rest"
+
+[resource]
+script = ExtResource("2_htno3")
+entries = Array[ExtResource("1_02hy5")]([SubResource("Resource_a3h3a"), SubResource("Resource_1jqt7"), SubResource("Resource_svotc")])

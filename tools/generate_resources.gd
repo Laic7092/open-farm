@@ -23,9 +23,6 @@ const THEME_PATH: String = "res://assets/themes/game_theme.tres"
 const PIXEL_FONT: String = "res://assets/fonts/pixel_cjk.fnt"
 const SYSTEM_FONT: String = "res://assets/fonts/ui_font.tres"
 
-## 场景里需要 SpriteFrames 的 NPC：与 [code]tools/art/generate_actors.gd[/code] 的外观表一致。
-const NPC_IDS: Array[StringName] = [&"merchant", &"mayor"]
-
 var _problems := PackedStringArray()
 
 
@@ -38,7 +35,7 @@ func _initialize() -> void:
 	)
 	_build_tileset()
 	_build_player_frames()
-	for npc_id: StringName in NPC_IDS:
+	for npc_id: StringName in _npc_ids():
 		_build_npc_frames(npc_id)
 	_build_theme()
 
@@ -71,6 +68,21 @@ func _build_tileset() -> void:
 
 
 # ---------------------------------------------------------------- SpriteFrames
+
+## 扫描 [code]assets/sprites/actors/npc_*.png[/code] 得到需要组装动画的 NPC id。
+##
+## 不再维护硬编码名单：只要 [code]generate_actors.gd[/code] 画出了图集，
+## 这里就自动为它生成 [code]npc_<id>_frames.tres[/code]，
+## 从结构上消灭"加了 NPC 却忘了登记"的问题。
+func _npc_ids() -> Array[StringName]:
+	var ids: Array[StringName] = []
+	for file_name: String in DirAccess.get_files_at(ACTOR_DIR):
+		if not file_name.begins_with("npc_") or not file_name.ends_with(".png"):
+			continue
+		ids.append(StringName(file_name.trim_prefix("npc_").trim_suffix(".png")))
+	ids.sort()
+	return ids
+
 
 func _build_player_frames() -> void:
 	var texture := _load_texture(ACTOR_DIR.path_join("player.png"))

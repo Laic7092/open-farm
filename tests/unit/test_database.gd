@@ -25,9 +25,41 @@ func test_all_expected_tools_are_loaded() -> void:
 
 
 func test_shops_and_npcs_are_loaded() -> void:
-	assert_object(Database.get_shop(&"general_store")).is_not_null()
-	assert_object(Database.get_npc(&"merchant")).is_not_null()
-	assert_object(Database.get_npc(&"mayor")).is_not_null()
+	for shop_id: StringName in [&"general_store", &"flower_shop"]:
+		assert_object(Database.get_shop(shop_id)).override_failure_message(
+			"缺少商店 %s" % shop_id
+		).is_not_null()
+	for npc_id: StringName in [
+		&"merchant", &"mayor", &"blacksmith", &"florist", &"fisher", &"miner",
+		&"child", &"librarian",
+	]:
+		assert_object(Database.get_npc(npc_id)).override_failure_message(
+			"缺少 NPC %s" % npc_id
+		).is_not_null()
+
+
+## 新增内容后，每一个 NPC 都要有可解析的名字、对白与动画。
+func test_every_npc_has_name_dialogue_and_frames() -> void:
+	for npc_id: StringName in Database.npcs:
+		var npc := Database.get_npc(npc_id)
+		assert_str(String(npc.display_name_key)).override_failure_message(
+			"NPC %s 缺少名字键" % npc_id
+		).is_not_empty()
+		assert_object(npc.default_dialogue).override_failure_message(
+			"NPC %s 缺少默认对白" % npc_id
+		).is_not_null()
+		assert_object(npc.frames).override_failure_message(
+			"NPC %s 缺少动画" % npc_id
+		).is_not_null()
+
+
+## 花店必须有真实在售道具，否则打开界面会是空的。
+func test_flower_shop_sells_real_items() -> void:
+	var shop := Database.get_shop(&"flower_shop")
+	assert_object(shop).is_not_null()
+	if shop == null:
+		return
+	assert_array(shop.stock).is_not_empty()
 
 
 func test_lookup_by_missing_id_returns_null() -> void:

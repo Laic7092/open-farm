@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="NpcSchedule" format=3]
+
+[ext_resource type="Script" path="res://src/npc/schedule_entry.gd" id="1_b84by"]
+[ext_resource type="Script" path="res://src/npc/npc_schedule.gd" id="2_sbtqj"]
+
+[sub_resource type="Resource" id="Resource_pn6ja"]
+script = ExtResource("1_b84by")
+start_minute = 360
+location_id = &"flower_shop"
+activity = &"shop"
+
+[sub_resource type="Resource" id="Resource_rsjmu"]
+script = ExtResource("1_b84by")
+start_minute = 720
+location_id = &"garden"
+activity = &"work"
+
+[sub_resource type="Resource" id="Resource_gobib"]
+script = ExtResource("1_b84by")
+start_minute = 900
+location_id = &"flower_shop"
+activity = &"shop"
+
+[sub_resource type="Resource" id="Resource_rtjeq"]
+script = ExtResource("1_b84by")
+start_minute = 1140
+location_id = &"plaza"
+activity = &"stroll"
+
+[sub_resource type="Resource" id="Resource_eivpq"]
+script = ExtResource("1_b84by")
+start_minute = 1260
+location_id = &"flower_shop"
+activity = &"rest"
+
+[resource]
+script = ExtResource("2_sbtqj")
+entries = Array[ExtResource("1_b84by")]([SubResource("Resource_pn6ja"), SubResource("Resource_rsjmu"), SubResource("Resource_gobib"), SubResource("Resource_rtjeq"), SubResource("Resource_eivpq")])

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="NpcData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/blacksmith_greeting.tres" id="1_mfssl"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_blacksmith_frames.tres" id="2_ldb5w"]
+[ext_resource type="Resource" path="res://data/schedules/blacksmith_schedule.tres" id="3_80sgd"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_dlpcc"]
+
+[resource]
+script = ExtResource("4_dlpcc")
+id = &"blacksmith"
+display_name_key = &"NPC_BLACKSMITH"
+frames = ExtResource("2_ldb5w")
+default_dialogue = ExtResource("1_mfssl")
+schedule = ExtResource("3_80sgd")
+move_speed = 28.0

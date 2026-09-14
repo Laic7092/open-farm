@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_nry7e"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_q6fko"]
+
+[sub_resource type="Resource" id="Resource_kkiwh"]
+script = ExtResource("1_nry7e")
+speaker_key = &"NPC_CHILD"
+text_key = &"DIALOGUE_CHILD_GREETING"
+
+[sub_resource type="Resource" id="Resource_85gsm"]
+script = ExtResource("1_nry7e")
+speaker_key = &"NPC_CHILD"
+text_key = &"DIALOGUE_CHILD_PLAY"
+
+[sub_resource type="Resource" id="Resource_n44nb"]
+script = ExtResource("1_nry7e")
+speaker_key = &"NPC_CHILD"
+text_key = &"DIALOGUE_CHILD_TIP"
+
+[resource]
+script = ExtResource("2_q6fko")
+id = &"child_greeting"
+speaker_key = &"NPC_CHILD"
+lines = Array[ExtResource("1_nry7e")]([SubResource("Resource_kkiwh"), SubResource("Resource_85gsm"), SubResource("Resource_n44nb")])

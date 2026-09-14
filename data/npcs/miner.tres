@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="NpcData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/miner_greeting.tres" id="1_aooxd"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_miner_frames.tres" id="2_ws3eg"]
+[ext_resource type="Resource" path="res://data/schedules/miner_schedule.tres" id="3_5kwjn"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_gecsv"]
+
+[resource]
+script = ExtResource("4_gecsv")
+id = &"miner"
+display_name_key = &"NPC_MINER"
+frames = ExtResource("2_ws3eg")
+default_dialogue = ExtResource("1_aooxd")
+schedule = ExtResource("3_5kwjn")

@@ -1,0 +1,162 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
+[ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
+[ext_resource type="Script" path="res://src/world/world_bounds.gd" id="3_bounds"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="4_player"]
+[ext_resource type="Script" path="res://src/core/spawn_point.gd" id="5_spawn"]
+[ext_resource type="Script" path="res://src/world/scene_door.gd" id="6_door"]
+[ext_resource type="PackedScene" path="res://scenes/npc/npc.tscn" id="7_npc"]
+[ext_resource type="Script" path="res://src/world/interior_ground.gd" id="8_ground"]
+[ext_resource type="Script" path="res://src/world/world_prop.gd" id="9_prop"]
+[ext_resource type="Script" path="res://src/npc/schedule_point.gd" id="10_schedpoint"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/bookshelf.png" id="20_bookshelf"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/counter.png" id="21_counter"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/lamp.png" id="22_lamp"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
+size = Vector2(16, 16)
+
+[node name="Library" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_world")
+world_id = &"library"
+camera_limits = Rect2(0, 0, 384, 256)
+default_spawn_id = &"from_twon"
+weather_effects = false
+
+[node name="Ground" type="TileMapLayer" parent="."]
+z_index = -20
+tile_set = ExtResource("2_tileset")
+script = ExtResource("8_ground")
+ground_area = Rect2i(0, 0, 24, 16)
+wall_rows = 3
+
+[node name="Bounds" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("3_bounds")
+bounds = Rect2(8, 8, 368, 240)
+
+[node name="Props" type="Node2D" parent="."]
+
+[node name="Shelf1" type="Sprite2D" parent="Props"]
+position = Vector2(48, 80)
+texture = ExtResource("20_bookshelf")
+script = ExtResource("9_prop")
+solid_size = Vector2(28, 10)
+solid_offset = Vector2(0, 8)
+
+[node name="Shelf2" type="Sprite2D" parent="Props"]
+position = Vector2(96, 80)
+texture = ExtResource("20_bookshelf")
+script = ExtResource("9_prop")
+solid_size = Vector2(28, 10)
+solid_offset = Vector2(0, 8)
+
+[node name="Shelf3" type="Sprite2D" parent="Props"]
+position = Vector2(144, 80)
+texture = ExtResource("20_bookshelf")
+script = ExtResource("9_prop")
+solid_size = Vector2(28, 10)
+solid_offset = Vector2(0, 8)
+
+[node name="Shelf4" type="Sprite2D" parent="Props"]
+position = Vector2(240, 80)
+texture = ExtResource("20_bookshelf")
+script = ExtResource("9_prop")
+solid_size = Vector2(28, 10)
+solid_offset = Vector2(0, 8)
+
+[node name="Shelf5" type="Sprite2D" parent="Props"]
+position = Vector2(288, 80)
+texture = ExtResource("20_bookshelf")
+script = ExtResource("9_prop")
+solid_size = Vector2(28, 10)
+solid_offset = Vector2(0, 8)
+
+[node name="Shelf6" type="Sprite2D" parent="Props"]
+position = Vector2(336, 80)
+texture = ExtResource("20_bookshelf")
+script = ExtResource("9_prop")
+solid_size = Vector2(28, 10)
+solid_offset = Vector2(0, 8)
+
+[node name="ShelfLeft" type="Sprite2D" parent="Props"]
+position = Vector2(48, 144)
+texture = ExtResource("20_bookshelf")
+script = ExtResource("9_prop")
+solid_size = Vector2(28, 10)
+solid_offset = Vector2(0, 8)
+
+[node name="ShelfRight" type="Sprite2D" parent="Props"]
+position = Vector2(336, 144)
+texture = ExtResource("20_bookshelf")
+script = ExtResource("9_prop")
+solid_size = Vector2(28, 10)
+solid_offset = Vector2(0, 8)
+
+[node name="Counter" type="Sprite2D" parent="Props"]
+position = Vector2(192, 112)
+texture = ExtResource("21_counter")
+script = ExtResource("9_prop")
+solid_size = Vector2(44, 10)
+solid_offset = Vector2(0, 6)
+
+[node name="Lamp1" type="Sprite2D" parent="Props"]
+position = Vector2(96, 176)
+texture = ExtResource("22_lamp")
+script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
+
+[node name="Lamp2" type="Sprite2D" parent="Props"]
+position = Vector2(288, 176)
+texture = ExtResource("22_lamp")
+script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="FromTwon" type="Marker2D" parent="Spawns"]
+position = Vector2(192, 224)
+script = ExtResource("5_spawn")
+spawn_id = &"from_twon"
+facing = 1
+
+[node name="Interactables" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="ToTwon" type="Area2D" parent="Interactables"]
+position = Vector2(192, 240)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("6_door")
+prompt_key = &"PROMPT_ENTER"
+target_scene = "res://scenes/world/twon.tscn"
+target_spawn_id = &"from_library"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToTwon"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="SchedulePoints" type="Node2D" parent="."]
+
+[node name="Desk" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(192, 144)
+script = ExtResource("10_schedpoint")
+point_id = &"desk"
+
+[node name="Shelves" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(144, 104)
+script = ExtResource("10_schedpoint")
+point_id = &"shelves"
+
+[node name="Npcs" type="Node2D" parent="."]
+
+[node name="Librarian" parent="Npcs" instance=ExtResource("7_npc")]
+position = Vector2(192, 192)
+npc_id = &"librarian"
+
+[node name="Player" parent="." instance=ExtResource("4_player")]
+position = Vector2(192, 224)

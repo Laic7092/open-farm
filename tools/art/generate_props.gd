@@ -34,6 +34,15 @@ func _initialize() -> void:
 	Art.save_png(_chicken(), DIR.path_join("chicken.png"))
 	Art.save_png(_coop(), DIR.path_join("coop.png"))
 	Art.save_png(_trough(), DIR.path_join("trough.png"))
+	# 新场景专用：海滩（栈桥 / 小船）、矿洞（洞口）、室内（书架 / 柜台）、
+	# 小镇（铁匠炉 / 花摊）。
+	Art.save_png(_dock(), DIR.path_join("dock.png"))
+	Art.save_png(_boat(), DIR.path_join("boat.png"))
+	Art.save_png(_cave(), DIR.path_join("cave.png"))
+	Art.save_png(_bookshelf(), DIR.path_join("bookshelf.png"))
+	Art.save_png(_counter(), DIR.path_join("counter.png"))
+	Art.save_png(_forge(), DIR.path_join("forge.png"))
+	Art.save_png(_flower_stand(), DIR.path_join("flower_stand.png"))
 	print("场景道具生成完成 → ", DIR)
 	quit()
 
@@ -376,5 +385,130 @@ func _chicken() -> Image:
 	Art.rect(image, Rect2i(7, 13, 1, 2), P.FRUIT_ORANGE)
 	Art.rect(image, Rect2i(9, 13, 1, 2), P.FRUIT_ORANGE)
 	Art.rect(image, Rect2i(11, 5, 2, 3), P.FRUIT_RED)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+# ---------------------------------------------------------------- 新场景道具
+
+## 木栈桥：横向桥面 + 四根木桩，铺在沙滩与水面之间。
+func _dock() -> Image:
+	var image := Art.new_image(48, 24)
+	# 木桩先画，让桥面盖住它们的上端。
+	for x: int in [2, 14, 26, 38]:
+		Art.rect(image, Rect2i(x, 8, 3, 16), P.WOOD_DARK)
+		Art.h_line(image, x, 8, 3, P.WOOD_LIGHT)
+	# 桥面木板。
+	Art.rect(image, Rect2i(0, 4, 48, 8), P.PLANK)
+	for y: int in [5, 8, 11]:
+		Art.h_line(image, 0, y, 48, P.WOOD_DARK)
+	Art.h_line(image, 0, 4, 48, P.WOOD_LIGHT)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 小木船：倒梯形船身 + 一支横桨。
+func _boat() -> Image:
+	var image := Art.new_image(32, 24)
+	Art.taper(image, Vector2i(16, 7), 11, 16, 7, P.WOOD)
+	Art.h_line(image, 8, 7, 16, P.WOOD_LIGHT)
+	Art.h_line(image, 8, 8, 16, P.WOOD_DARK)
+	Art.rect(image, Rect2i(6, 9, 2, 5), P.WOOD_DARK)
+	Art.rect(image, Rect2i(24, 9, 2, 5), P.WOOD_DARK)
+	Art.h_line(image, 4, 5, 24, P.WOOD_DARK)
+	Art.rect(image, Rect2i(2, 3, 3, 4), P.WOOD_LIGHT)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 矿洞入口：一堆岩石里挖出的黑洞，远处一眼能认出来。
+func _cave() -> Image:
+	var image := Art.new_image(48, 40)
+	Art.ground_shadow(image, 48, 40, 6)
+	Art.ellipse(image, Vector2i(24, 24), Vector2i(22, 16), P.STONE)
+	Art.ellipse(image, Vector2i(16, 18), Vector2i(12, 9), P.STONE_LIGHT)
+	Art.scatter(image, Rect2i(2, 8, 44, 28), P.STONE_DARK, 0.16, 29)
+	# 洞口：黑色椭圆 + 一圈深色内壁。
+	Art.ellipse(image, Vector2i(24, 28), Vector2i(10, 11), P.STONE_DARK)
+	Art.ellipse(image, Vector2i(24, 29), Vector2i(8, 9), P.BLACK)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 书架：木框 + 三层彩色书脊。
+func _bookshelf() -> Image:
+	var image := Art.new_image(32, 32)
+	Art.ground_shadow(image, 32, 32, 4)
+	Art.rect(image, Rect2i(2, 2, 28, 28), P.WOOD)
+	Art.rect(image, Rect2i(4, 4, 24, 24), P.WOOD_DARK)
+	var colors: Array[Color] = [
+		P.FRUIT_RED, P.FRUIT_GREEN, P.FRUIT_YELLOW, P.FLOWER_BLUE, P.FRUIT_PURPLE,
+	]
+	for row: int in 3:
+		var base: int = 4 + row * 8
+		var x: int = 5
+		var i: int = 0
+		while x < 27:
+			var w: int = 2 + (i + row) % 2
+			var h: int = 5 + (i * 3 + row) % 3
+			Art.rect(image, Rect2i(x, base + 7 - h, w, h), colors[(i + row) % colors.size()])
+			x += w + 1
+			i += 1
+		Art.h_line(image, 4, base + 7, 24, P.PLANK)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 商店柜台：木台面 + 台面上的钱币与玻璃瓶。
+func _counter() -> Image:
+	var image := Art.new_image(48, 24)
+	Art.ground_shadow(image, 48, 24, 6)
+	Art.rect(image, Rect2i(2, 6, 44, 16), P.WOOD_DARK)
+	Art.rect(image, Rect2i(2, 6, 44, 5), P.PLANK)
+	Art.h_line(image, 2, 6, 44, P.WOOD_LIGHT)
+	for x: int in [12, 24, 36]:
+		Art.v_line(image, x, 11, 11, P.WOOD)
+	Art.rect(image, Rect2i(6, 2, 5, 4), P.COIN)
+	Art.rect(image, Rect2i(37, 1, 6, 5), P.GLASS)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 铁匠炉：石炉 + 炉火 + 铁砧。
+func _forge() -> Image:
+	var image := Art.new_image(32, 32)
+	Art.ground_shadow(image, 32, 32, 4)
+	Art.rect(image, Rect2i(3, 8, 14, 20), P.STONE)
+	Art.scatter(image, Rect2i(3, 8, 14, 20), P.STONE_DARK, 0.2, 37)
+	Art.h_line(image, 3, 8, 14, P.STONE_LIGHT)
+	Art.rect(image, Rect2i(7, 15, 6, 7), P.BLACK)
+	Art.rect(image, Rect2i(8, 17, 4, 5), P.FRUIT_ORANGE)
+	Art.rect(image, Rect2i(9, 18, 2, 4), P.FRUIT_YELLOW)
+	Art.rect(image, Rect2i(19, 18, 11, 3), P.STONE_DARK)
+	Art.rect(image, Rect2i(22, 21, 5, 5), P.STONE)
+	Art.rect(image, Rect2i(19, 26, 11, 2), P.STONE_DARK)
+	Art.rect(image, Rect2i(5, 2, 6, 8), P.STONE_DARK)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 花摊：双层木架，每层摆一排花盆。
+func _flower_stand() -> Image:
+	var image := Art.new_image(32, 32)
+	Art.ground_shadow(image, 32, 32, 4)
+	Art.rect(image, Rect2i(3, 14, 26, 14), P.WOOD)
+	Art.rect(image, Rect2i(3, 14, 26, 2), P.WOOD_LIGHT)
+	Art.rect(image, Rect2i(3, 26, 26, 2), P.WOOD_DARK)
+	var bloom: Array[Color] = [P.FLOWER_PINK, P.FLOWER_YELLOW, P.FLOWER_BLUE]
+	for row: int in 2:
+		var y: int = 3 + row * 8
+		for col: int in 3:
+			var x: int = 5 + col * 8
+			Art.ellipse(image, Vector2i(x + 3, y + 6), Vector2i(4, 3), P.LEAF_DARK)
+			Art.px(image, x + 3, y + 1, bloom[col])
+			Art.px(image, x + 2, y + 2, bloom[col])
+			Art.px(image, x + 4, y + 3, bloom[col])
+			Art.rect(image, Rect2i(x, y + 7, 7, 4), P.FRUIT_ORANGE)
+			Art.h_line(image, x, y + 7, 7, P.ROOF_LIGHT)
 	Art.outline(image, P.OUTLINE)
 	return image

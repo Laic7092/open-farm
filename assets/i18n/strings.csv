@@ -70,6 +70,7 @@ FLORA_MUSHROOM,蘑菇,Mushroom
 NOTIFY_FLORA_CLEARED,采到了 {item} ×{count},Gathered {item} x{count}
 NOTIFY_FLORA_BLOCKED,这里长着东西，得先清理,Something is growing here
 SHOP_GENERAL_STORE,杂货店,General Store
+SHOP_FLOWER_SHOP,花店,Flower Shop
 SHOP_UI_TITLE,商店,Shop
 SHOP_UI_BUY,购买,Buy
 SHOP_UI_SELL,卖出,Sell
@@ -85,13 +86,37 @@ INVENTORY_EMPTY,（空）,（empty）
 DIALOGUE_ADVANCE_HINT,按 E 继续,Press E to continue
 NPC_MERCHANT,杂货店老板,Store Owner
 NPC_MAYOR,村长,Mayor
+NPC_BLACKSMITH,铁匠,Blacksmith
+NPC_FLORIST,花婆婆,Florist
+NPC_FISHER,渔夫,Fisher
+NPC_MINER,矿工,Miner
+NPC_CHILD,小满,May
+NPC_LIBRARIAN,书雅,Librarian
 DIALOGUE_MERCHANT_GREETING,欢迎光临，今天要买点什么吗？,Welcome! Buying anything today?
 DIALOGUE_MERCHANT_WEATHER,今天天气不错，地里的活儿会顺利的。,Nice weather today. Good for the fields.
 DIALOGUE_MERCHANT_RAIN,下雨天不用浇水，可以省点力气。,Rain saves you the watering.
-DIALOGUE_MERCHANT_CLOSING,谢谢惠顾，慢走！,Thanks, come again!
+DIALOGUE_MERCHANT_CLOSING,谢谢惠顾，慢走！,Thanks for coming!
 DIALOGUE_MAYOR_GREETING,早啊，年轻人。农场就交给你了。,Morning. The farm is in your hands now.
-DIALOGUE_MAYOR_TIP,别忘了给作物浇水，不然它们会枯掉的。,Don't forget to water your crops, or they wilt.
-DIALOGUE_MAYOR_SEASON,换季的时候，能种的东西就变了。,When the season turns, so do your crops.
+DIALOGUE_MAYOR_TIP,别忘了给作物浇水，不然它们会枯掉的。,Don't forget to water your crops or they wilt.
+DIALOGUE_MAYOR_SEASON,换季的时候，能种的东西就变了。,When the season turns so do your crops.
+DIALOGUE_BLACKSMITH_GREETING,炉子正旺，要打把新家伙吗？,The forge is hot. Need a new tool?
+DIALOGUE_BLACKSMITH_TIP,斧头和镐子要常磨，砍树砸石头才不费劲。,Keep your axe and pickaxe sharp.
+DIALOGUE_BLACKSMITH_SEASON,天冷了，铁也硬得快，干活得趁热。,Cold mornings make the iron bite faster.
+DIALOGUE_FLORIST_GREETING,来挑几朵花吧，刚剪下来的。,Freshly cut flowers for you.
+DIALOGUE_FLORIST_TIP,野花也能卖钱，采下来别浪费。,Wildflowers sell too. Don't waste them.
+DIALOGUE_FLORIST_CLOSING,花儿谢了就不好看了，常来啊。,Come back before they wilt.
+DIALOGUE_FISHER_GREETING,海风不小，今天浪有点大。,Brisk sea wind. The waves are high today.
+DIALOGUE_FISHER_TIP,退潮的时候，沙滩上能捡到不少好东西。,At low tide the beach gives up its treasures.
+DIALOGUE_FISHER_SEASON,冬天鱼都往深水里躲喽。,In winter the fish hide in deep water.
+DIALOGUE_MINER_GREETING,洞里黑，跟紧点别乱跑。,It's dark in there. Stay close.
+DIALOGUE_MINER_TIP,带够镐子再来，石头可不客气。,Bring a pickaxe. The rocks won't be kind.
+DIALOGUE_MINER_SEASON,洞里头不分四季，倒省心。,Down here it's the same all year round.
+DIALOGUE_CHILD_GREETING,你就是新来的农场主吗？,Are you the new farmer?
+DIALOGUE_CHILD_PLAY,等会儿一起去广场玩吧！,Let's play at the plaza later!
+DIALOGUE_CHILD_TIP,我妈妈说，浇水的时候要轻轻的。,My mom says water the crops gently.
+DIALOGUE_LIBRARIAN_GREETING,欢迎来到图书馆，请保持安静。,Welcome to the library. Please be quiet.
+DIALOGUE_LIBRARIAN_TIP,想了解季节和作物，来这儿翻翻书准没错。,Books here explain seasons and crops.
+DIALOGUE_LIBRARIAN_SEASON,无论外面什么季节，书里都是安静的。,Books stay calm whatever the season.
 CROP_TURNIP,萝卜,Turnip
 CROP_POTATO,土豆,Potato
 CROP_TOMATO,番茄,Tomato

@@ -21,11 +21,24 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://assets/sprites/actors/player.png",
 	"res://assets/sprites/actors/npc_merchant.png",
 	"res://assets/sprites/actors/npc_mayor.png",
+	"res://assets/sprites/actors/npc_blacksmith.png",
+	"res://assets/sprites/actors/npc_florist.png",
+	"res://assets/sprites/actors/npc_fisher.png",
+	"res://assets/sprites/actors/npc_miner.png",
+	"res://assets/sprites/actors/npc_child.png",
+	"res://assets/sprites/actors/npc_librarian.png",
 	"res://assets/sprites/props/house.png",
 	"res://assets/sprites/props/barn.png",
 	"res://assets/sprites/props/tree.png",
 	"res://assets/sprites/props/bed.png",
 	"res://assets/sprites/props/shipping_bin.png",
+	"res://assets/sprites/props/dock.png",
+	"res://assets/sprites/props/boat.png",
+	"res://assets/sprites/props/cave.png",
+	"res://assets/sprites/props/bookshelf.png",
+	"res://assets/sprites/props/counter.png",
+	"res://assets/sprites/props/forge.png",
+	"res://assets/sprites/props/flower_stand.png",
 	"res://assets/sprites/flora/tree_oak.png",
 	"res://assets/sprites/flora/tree_pine.png",
 	"res://assets/sprites/flora/weed.png",
@@ -59,6 +72,21 @@ func test_all_generated_assets_exist() -> void:
 	for path: String in REQUIRED_ASSETS:
 		assert_bool(ResourceLoader.exists(path)).override_failure_message(
 			"缺少生成物 %s（跑一次 ./tools/build_assets.sh）" % path
+		).is_true()
+
+
+## 六张世界地图都要在，否则 [SceneDoor] 的 target_scene 会指向空气。
+func test_world_scenes_exist() -> void:
+	for path: String in [
+		"res://scenes/world/farm.tscn",
+		"res://scenes/world/town.tscn",
+		"res://scenes/world/twon.tscn",
+		"res://scenes/world/beach.tscn",
+		"res://scenes/world/mine.tscn",
+		"res://scenes/world/library.tscn",
+	]:
+		assert_bool(ResourceLoader.exists(path)).override_failure_message(
+			"缺少世界场景 %s" % path
 		).is_true()
 
 

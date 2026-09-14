@@ -378,7 +378,9 @@ SCRIPT ERROR: Compile Error: Identifier not found: GameClock
 
 `FloraField` 是"世界自然生长"的唯一权威状态，和 `FarmGrid` 完全同构：
 每天先让已长出的植被**长大**，再按季节 / 天气权重**撒新芽**；
-每张地图用 `initial_budget` / `daily_budget` / `max_total` 控制密度。
+每张地图用 `initial_budget` / `daily_budget` / `max_total` 控制密度；
+`allowed_species` 留空时所有物种都能长，填了就只保留列出的物种——
+矿洞因此只长石头与蘑菇，而不会冒出一片树林。
 不在场的地图不跑日结转（钩子在 `_exit_tree` 注销），
 而是下次进图时把离开的天数一次性补算（单次上限 60 天）——
 这就是"去小镇待三天，回来树苗长高了"。

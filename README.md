@@ -71,10 +71,12 @@ timeout 800 ./tools/check.sh smoke
 回农场对着畜舍按 `E` 把牲畜放养进去；对着**饲料槽**按 `E` 一次性喂饱全舍。
 喂够天数会成年，成年后每隔几天产出**鸡蛋** / **牛奶**，对着牲畜按 `E` 收走；
 每天第一次按 `E` 还会抚摸它、提升好感度（好感高时产出更多）。
-现有 NPC（商人会开店、村长会聊天）都住在**大场景 `twon`**，而且有自己的作息：
-到点走去商店 / 镇公所 / 广场，商人上班时才开店。
-农场有两条出口：右侧传送点通往**小镇 `town`**，上方传送门通往 `twon`，
-两张图由 `SceneRouter` 独立进入；NPC 与日程标记目前只布置在 `twon`。
+现有 8 位 NPC 都有自己的作息：**大场景 `twon`** 里住着杂货店老板、村长、铁匠、
+花婆婆和小满，到点各自走去商店 / 镇公所 / 铁匠铺 / 花摊 / 广场；
+商人上班时才开店，花婆婆还经营一家**花店**。
+地图网络：农场 → 小镇 `town` → 海滩 `beach` → 矿洞 `mine`，
+农场 → `twon` → 图书馆 `library`；每张图由 `SceneRouter` 独立进入，
+渔夫、矿工、图书管理员分别住在海滩 / 矿洞 / 图书馆。
 按 `Esc` 打开菜单可以存读档、也可以回到标题页。
 
 ---
@@ -198,23 +200,32 @@ open-farm/
    `solid_from_stage`（从第几阶段开始挡人）、`tool_kind`（用什么工具清）。
 2. 在 `tools/art/generate_flora.gd` 里加一行外观 → 跑一次 `./tools/build_assets.sh`。
 3. 在 `assets/i18n/strings.csv` 加名字翻译键（重跑 `build_assets.sh` 会把新汉字打进像素字体）。
-4. 想让某张地图多长/少长：改那张地图 `FloraField` 的 `initial_budget` / `daily_budget` / `max_total`。
+4. 想让某张地图多长/少长：改那张地图 `FloraField` 的 `initial_budget` / `daily_budget` / `max_total`；
+   只想长指定几种就填 `allowed_species`（矿洞就是这么只长石头与蘑菇的）。
 
 ### 加一个 NPC
 
-1. `data/dialogue/` 加 `DialogueData`（`lines` 里每句一个 `DialogueLine`）。
-2. `data/schedules/` 加 `NpcSchedule`（可先看 `tools/generate_sample_data.gd` 的示例），
+1. 在 `tools/art/generate_actors.gd` 的 `NPC_LOOKS` 里加一条外观（换衣服 / 头发 / 帽子），
+   跑 `./tools/build_assets.sh`：`generate_resources.gd` 会自动扫描 `npc_*.png`
+   并生成 `npc_<id>_frames.tres`，不需要再登记名单。
+2. `data/dialogue/` 加 `DialogueData`（`lines` 里每句一个 `DialogueLine`），
+   并在 `assets/i18n/strings.csv` 补名字 / 对白翻译键。
+3. `data/schedules/` 加 `NpcSchedule`（可先看 `tools/generate_sample_data.gd` 的示例），
    每条 `ScheduleEntry` 填 `start_minute` / `location_id` / `activity`。
-3. `data/npcs/` 加 `NpcData`，`default_dialogue` 指向对白、`schedule` 指向日程；
+4. `data/npcs/` 加 `NpcData`，`default_dialogue` 指向对白、`schedule` 指向日程；
    如果是商人再填 `shop_id`，并用 `activity = "shop"` 表示上班时段。
-4. 在 `scenes/world/*.tscn` 里放好 `SchedulePoint`（`point_id` 对应日程的 `location_id`），
+5. 在 `scenes/world/*.tscn` 里放好 `SchedulePoint`（`point_id` 对应日程的 `location_id`），
    再实例化 `scenes/npc/npc.tscn`，改 `npc_id`。找不到地点时 NPC 会 `push_warning` 并原地不动。
 
 ### 加一个世界场景
 
-1. 复制 `scenes/world/twon.tscn`，根节点脚本用 `WorldScene`，填 `world_id` / `camera_limits`。
-2. 放至少一个 `SpawnPoint` 标记（`spawn_id` 要有意义，例如 `from_farm`）。
-3. 在两边用 `SceneDoor` 互相连接（`target_scene` + `target_spawn_id`）。
+1. 复制 `scenes/world/twon.tscn`（户外）或 `scenes/world/library.tscn`（室内），
+   根节点脚本用 `WorldScene`，填 `world_id` / `camera_limits`。
+2. 地面用脚本铺：户外参考 `src/world/beach_ground.gd` / `mine_ground.gd`，
+   室内用 `src/world/interior_ground.gd`；改 `ground_area` 就换了地图大小。
+3. 放至少一个 `SpawnPoint` 标记（`spawn_id` 要有意义，例如 `from_farm`）。
+4. 在两边用 `SceneDoor` 互相连接（`target_scene` + `target_spawn_id`）。
+5. 想让地图只长某些植被，填对应 `FloraField` 的 `allowed_species`。
 
 ### 让新系统参与存档
 
@@ -237,11 +248,11 @@ func from_dict(data: Dictionary) -> void: ...
 
 | 层次 | 工具 | 覆盖 |
 | --- | --- | --- |
-| 单元测试 | gdUnit4（`tests/unit/`，280 例） | 日期进位、季节/天气、网格换算、背包堆叠、体力、工具带、作物生长（含枯死/多次收获）、牲畜养殖（成年/产出/喂食/好感度）、NPC 日程表与网格 A*、商店经济、状态机、时钟与日结转钩子、数据完整性、存档往返与容错 |
-| 冒烟测试 | `tools/smoke_test.tscn`（128 项） | 真的把游戏跑起来：场景加载、玩家落点、翻地→播种→生长→收获全链路、放养→喂食→成长→收产出、买/卖、存读档、HUD 内容、**NPC 日程与寻路（导航网格、路径、真的走起来）**、**昼夜光照（环境光随时刻变化、路灯白天灭夜里亮）**、**农场 ↔ 小镇 / 农场 ↔ twon 往返后农田与畜舍进度、日结转钩子仍然有效** |
+| 单元测试 | gdUnit4（`tests/unit/`，283 例） | 日期进位、季节/天气、网格换算、背包堆叠、体力、工具带、作物生长（含枯死/多次收获）、牲畜养殖（成年/产出/喂食/好感度）、NPC 日程表与网格 A*、商店经济、状态机、时钟与日结转钩子、数据完整性、存档往返与容错 |
+| 冒烟测试 | `tools/smoke_test.tscn`（189 项） | 真的把游戏跑起来：场景加载、玩家落点、翻地→播种→生长→收获全链路、放养→喂食→成长→收产出、买/卖、存读档、HUD 内容、**NPC 日程与寻路（导航网格、路径、真的走起来）**、**昼夜光照（环境光随时刻变化、路灯白天灭夜里亮）**、**农场 ↔ 小镇 / 农场 ↔ twon 往返后农田与畜舍进度、日结转钩子仍然有效**、**六张地图加载与 NPC 导航可达性** |
 | 美术规范 | `tests/unit/test_assets.gd` | 生成物存在、尺寸与 `AtlasLayout` 一致、瓦片齐全、字体覆盖翻译表全部字符、数据都挂上了贴图 |
 | 音频规范 | `tests/unit/test_audio.gd` | WAV 真的是 22050 Hz / 16 bit / 单声道；BGM 带 `smpl` 循环点、音效不带；运行时总线就位、音量可调 |
-| 视觉回归 | `tools/screenshot.tscn` / `tools/ui_preview.tscn` | 标题页 + 农场 + 小镇 + twon 截图、各界面布局截图 |
+| 视觉回归 | `tools/screenshot.tscn` / `tools/ui_preview.tscn` | 标题页 + 农场 + 小镇 + twon + 海滩 + 矿洞 + 图书馆截图、各界面布局截图 |
 
 各层"做什么 / 不做什么"的策略见 [architecture §7](docs/architecture.md#7-测试策略)。
 
@@ -308,7 +319,9 @@ timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/generate_sa
   没有逐格明暗、没有影子；夜里只有摆了灯的地方亮（`WorldProp.light_radius`），
   室内外共用同一条时间曲线，也没有"不同区域不同光照"这类分区光照。
 - **世界场景常驻内存**：切过的地图实例会一直保留（这是为了让农田进度跨场景不丢）。
-  地图数量上来之后需要改成"按需卸载 + 状态外置到存档层"。
+  目前 6 张地图都会常驻；地图数量继续增长后需要改成"按需卸载 + 状态外置到存档层"。
+- **水域没有碰撞**：`WATER` 只是地表瓦片，海滩的海水与小镇的池塘都能直接走进去
+  （农田靠范围判定，不受影响）。
 - **NPC 日程是固定时刻表**：只按时辰切换地点，没有工作日 / 天气 / 节日差异，
   也不会互相避让或绕开玩家；路上被新长出来的障碍挡住会重算一次，但不排队。
 - **野生植被是"进图补算"而不是后台模拟**：不在场的地图不跑日结转，

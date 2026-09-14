@@ -515,6 +515,51 @@ func _build_dialogues() -> void:
 	] as Array[DialogueLine]
 	_save(mayor, DIALOGUE_DIR.path_join("mayor_greeting.tres"))
 
+	_add_dialogue(&"blacksmith_greeting", &"NPC_BLACKSMITH", [
+		&"DIALOGUE_BLACKSMITH_GREETING",
+		&"DIALOGUE_BLACKSMITH_TIP",
+		&"DIALOGUE_BLACKSMITH_SEASON",
+	])
+	_add_dialogue(&"florist_greeting", &"NPC_FLORIST", [
+		&"DIALOGUE_FLORIST_GREETING",
+		&"DIALOGUE_FLORIST_TIP",
+		&"DIALOGUE_FLORIST_CLOSING",
+	])
+	_add_dialogue(&"fisher_greeting", &"NPC_FISHER", [
+		&"DIALOGUE_FISHER_GREETING",
+		&"DIALOGUE_FISHER_TIP",
+		&"DIALOGUE_FISHER_SEASON",
+	])
+	_add_dialogue(&"miner_greeting", &"NPC_MINER", [
+		&"DIALOGUE_MINER_GREETING",
+		&"DIALOGUE_MINER_TIP",
+		&"DIALOGUE_MINER_SEASON",
+	])
+	_add_dialogue(&"child_greeting", &"NPC_CHILD", [
+		&"DIALOGUE_CHILD_GREETING",
+		&"DIALOGUE_CHILD_PLAY",
+		&"DIALOGUE_CHILD_TIP",
+	])
+	_add_dialogue(&"librarian_greeting", &"NPC_LIBRARIAN", [
+		&"DIALOGUE_LIBRARIAN_GREETING",
+		&"DIALOGUE_LIBRARIAN_TIP",
+		&"DIALOGUE_LIBRARIAN_SEASON",
+	])
+
+
+## 批量建一段"每句一个翻译键"的对白并保存。
+func _add_dialogue(
+	dialogue_id: StringName, speaker_key: StringName, text_keys: Array
+) -> void:
+	var dialogue := DialogueData.new()
+	dialogue.id = dialogue_id
+	dialogue.speaker_key = speaker_key
+	var lines: Array[DialogueLine] = []
+	for text_key: StringName in text_keys:
+		lines.append(_line(speaker_key, text_key))
+	dialogue.lines = lines
+	_save(dialogue, DIALOGUE_DIR.path_join("%s.tres" % dialogue_id))
+
 
 func _line(speaker_key: StringName, text_key: StringName) -> DialogueLine:
 	var line := DialogueLine.new()
@@ -545,6 +590,59 @@ func _build_schedules() -> void:
 		_schedule_entry(1200, &"town_hall", &"rest"),
 	] as Array[ScheduleEntry]
 	_save(mayor, SCHEDULE_DIR.path_join("mayor_schedule.tres"))
+
+	# 小镇常驻：铁匠白天在炉边，花婆婆守花摊，小满在广场和家之间跑。
+	_add_schedule(&"blacksmith_schedule", [
+		[360, &"forge", &"work"],
+		[600, &"plaza", &"stroll"],
+		[720, &"forge", &"work"],
+		[1080, &"store", &"stroll"],
+		[1260, &"forge", &"rest"],
+	])
+	_add_schedule(&"florist_schedule", [
+		[360, &"flower_shop", &"shop"],
+		[720, &"garden", &"work"],
+		[900, &"flower_shop", &"shop"],
+		[1140, &"plaza", &"stroll"],
+		[1260, &"flower_shop", &"rest"],
+	])
+	_add_schedule(&"child_schedule", [
+		[360, &"home", &"rest"],
+		[540, &"plaza", &"play"],
+		[720, &"store", &"stroll"],
+		[900, &"plaza", &"play"],
+		[1140, &"home", &"rest"],
+	])
+	# 海滩渔夫：涨潮钓鱼，落潮赶海，其余时间回小屋。
+	_add_schedule(&"fisher_schedule", [
+		[360, &"pier", &"work"],
+		[720, &"hut", &"rest"],
+		[900, &"shore", &"work"],
+		[1140, &"hut", &"rest"],
+	])
+	# 矿工：清早下井，午后回洞口歇脚。
+	_add_schedule(&"miner_schedule", [
+		[360, &"mine_entrance", &"work"],
+		[660, &"mine_deep", &"work"],
+		[1020, &"mine_entrance", &"rest"],
+		[1260, &"camp", &"rest"],
+	])
+	# 图书管理员：柜台上半天，书架前下半天。
+	_add_schedule(&"librarian_schedule", [
+		[360, &"desk", &"work"],
+		[720, &"shelves", &"work"],
+		[1020, &"desk", &"rest"],
+	])
+
+
+## 用 [minute, location_id, activity] 三元组批量建一段日程并保存。
+func _add_schedule(schedule_id: StringName, entries: Array) -> void:
+	var schedule := NpcSchedule.new()
+	var built: Array[ScheduleEntry] = []
+	for entry: Array in entries:
+		built.append(_schedule_entry(entry[0], entry[1], entry[2]))
+	schedule.entries = built
+	_save(schedule, SCHEDULE_DIR.path_join("%s.tres" % schedule_id))
 
 
 func _schedule_entry(
@@ -579,6 +677,48 @@ func _build_npcs() -> void:
 	mayor.schedule = _load(SCHEDULE_DIR.path_join("mayor_schedule.tres"))
 	_save(mayor, NPC_DIR.path_join("mayor.tres"))
 
+	_add_npc(&"blacksmith", &"NPC_BLACKSMITH", "blacksmith_greeting.tres", "blacksmith_schedule.tres", {
+		"move_speed": 28.0,
+	})
+	_add_npc(&"florist", &"NPC_FLORIST", "florist_greeting.tres", "florist_schedule.tres", {
+		"move_speed": 26.0,
+		"shop_id": &"flower_shop",
+	})
+	_add_npc(&"fisher", &"NPC_FISHER", "fisher_greeting.tres", "fisher_schedule.tres", {
+		"move_speed": 30.0,
+	})
+	_add_npc(&"miner", &"NPC_MINER", "miner_greeting.tres", "miner_schedule.tres", {
+		"move_speed": 24.0,
+	})
+	_add_npc(&"child", &"NPC_CHILD", "child_greeting.tres", "child_schedule.tres", {
+		"move_speed": 34.0,
+	})
+	_add_npc(&"librarian", &"NPC_LIBRARIAN", "librarian_greeting.tres", "librarian_schedule.tres", {
+		"move_speed": 26.0,
+	})
+
+
+## 批量建一个 NPC 并保存；[param overrides] 用于覆盖字段（速度 / 商店 id …）。
+func _add_npc(
+	npc_id: StringName,
+	name_key: StringName,
+	dialogue_file: String,
+	schedule_file: String,
+	overrides: Dictionary = {}
+) -> void:
+	var npc := NpcData.new()
+	npc.id = npc_id
+	npc.display_name_key = name_key
+	npc.default_dialogue = _load(DIALOGUE_DIR.path_join(dialogue_file))
+	npc.schedule = _load(SCHEDULE_DIR.path_join(schedule_file))
+	npc.frames = _npc_frames(npc_id)
+	npc.move_speed = overrides.get("move_speed", 28.0)
+	for key: String in overrides:
+		if key == "move_speed":
+			continue
+		npc.set(key, overrides[key])
+	_save(npc, NPC_DIR.path_join("%s.tres" % npc_id))
+
 
 # ---------------------------------------------------------------- 商店
 
@@ -597,6 +737,19 @@ func _build_shops() -> void:
 		_stock(&"cow", 1200),
 	] as Array[ShopStock]
 	_save(shop, SHOP_DIR.path_join("general_store.tres"))
+
+	# 花店：卖种子与野花，收购价略高，给「种花 / 采花」留出经济出口。
+	var flower_shop := ShopData.new()
+	flower_shop.id = &"flower_shop"
+	flower_shop.display_name_key = &"SHOP_FLOWER_SHOP"
+	flower_shop.buys_from_player = true
+	flower_shop.sell_multiplier = 1.15
+	flower_shop.stock = [
+		_stock(&"flower", 30),
+		_stock(&"turnip_seed", 25),
+		_stock(&"tomato_seed", 55),
+	] as Array[ShopStock]
+	_save(flower_shop, SHOP_DIR.path_join("flower_shop.tres"))
 
 
 func _stock(item_id: StringName, price: int) -> ShopStock:

@@ -20,6 +20,9 @@ const MAX_FRAMES: int = 6000
 const FARM_SCENE: String = "res://scenes/world/farm.tscn"
 const TOWN_SCENE: String = "res://scenes/world/town.tscn"
 const TWON_SCENE: String = "res://scenes/world/twon.tscn"
+const BEACH_SCENE: String = "res://scenes/world/beach.tscn"
+const MINE_SCENE: String = "res://scenes/world/mine.tscn"
+const LIBRARY_SCENE: String = "res://scenes/world/library.tscn"
 
 var _failures := PackedStringArray()
 var _checks: int = 0
@@ -78,7 +81,7 @@ func _process(_delta: float) -> void:
 			_record_npc_positions()
 			_twon_wait = 0
 			_phase = 5
-		# 等几帧，验证 NPC 真的按日程走起来了，再回农场。
+		# 等几帧，验证 NPC 真的按日程走起来了，再依次巡游新增地图。
 		5:
 			if SceneRouter.is_transitioning():
 				return
@@ -86,6 +89,24 @@ func _process(_delta: float) -> void:
 			if _twon_wait < 30:
 				return
 			_check_npcs_moved()
+			_phase = 6
+			SceneRouter.change_scene_to(BEACH_SCENE, &"from_town")
+		6:
+			if SceneRouter.is_transitioning():
+				return
+			_check_beach()
+			_phase = 7
+			SceneRouter.change_scene_to(MINE_SCENE, &"from_beach")
+		7:
+			if SceneRouter.is_transitioning():
+				return
+			_check_mine()
+			_phase = 8
+			SceneRouter.change_scene_to(LIBRARY_SCENE, &"from_twon")
+		8:
+			if SceneRouter.is_transitioning():
+				return
+			_check_library()
 			_phase = 4
 			SceneRouter.change_scene_to(FARM_SCENE, &"from_twon")
 		4:
@@ -572,8 +593,97 @@ func _check_twon() -> void:
 		npc_ids[npc.get(&"npc_id")] = true
 	_check(npc_ids.has(&"merchant"), "twon 应当包含商人 NPC")
 	_check(npc_ids.has(&"mayor"), "twon 应当包含村长 NPC")
+	_check(npc_ids.has(&"blacksmith"), "twon 应当包含铁匠 NPC")
+	_check(npc_ids.has(&"florist"), "twon 应当包含花匠 NPC")
+	_check(npc_ids.has(&"child"), "twon 应当包含小女孩 NPC")
+
+	_check(_find_schedule_point(&"forge") != null, "twon 应当有 forge 日程地点")
+	_check(_find_schedule_point(&"flower_shop") != null, "twon 应当有 flower_shop 日程地点")
+	_check(_find_schedule_point(&"garden") != null, "twon 应当有 garden 日程地点")
+	_check(_find_schedule_point(&"home") != null, "twon 应当有 home 日程地点")
 
 	_check_npc_schedule()
+
+
+## 海滩：出生点、渔夫、栈桥 / 赶海日程点与野生植被。
+func _check_beach() -> void:
+	var world := _world()
+	_check(world != null, "海滩场景应当已加载")
+	if world == null:
+		return
+	_check_eq(String(world.get(&"world_id")), "beach", "切换后应当在海滩")
+	_check_eq(String(Audio.current_bgm()), "town", "白天进海滩应当换成小镇 BGM")
+	_check(_player() != null, "海滩里应当有玩家")
+	_check(_farm_grid() == null, "海滩里不应该有农场网格")
+	_check(_flora_field() != null, "海滩也应当有自己的野生植被")
+
+	var ground := world.find_child("Ground", true, false) as TileMapLayer
+	_check(ground != null and ground.get_used_cells().size() > 0, "海滩地面应当已绘制瓦片")
+
+	var spawn := _find_spawn(&"from_town")
+	_check(spawn != null, "海滩应当有 from_town 出生点")
+	var player := _player()
+	if spawn != null and player != null:
+		_check(
+			player.global_position.distance_to(spawn.global_position) < 1.0,
+			"玩家应当落在海滩的 from_town 出生点（实际 %s）" % player.global_position
+		)
+
+	_check(_find_npc(&"fisher") != null, "海滩应当有渔夫 NPC")
+	_check(_find_schedule_point(&"pier") != null, "海滩应当有 pier 日程地点")
+	_check(_find_schedule_point(&"shore") != null, "海滩应当有 shore 日程地点")
+	_check_npc_can_reach(&"fisher", &"pier")
+
+
+## 矿洞：无天气、矿工、矿道 / 营地日程点。
+func _check_mine() -> void:
+	var world := _world()
+	_check(world != null, "矿洞场景应当已加载")
+	if world == null:
+		return
+	_check_eq(String(world.get(&"world_id")), "mine", "切换后应当在矿洞")
+	_check(_player() != null, "矿洞里应当有玩家")
+	_check(_farm_grid() == null, "矿洞里不应该有农场网格")
+	var mine_field := _flora_field()
+	_check(mine_field != null, "矿洞也应当有自己的野生植被")
+	_check(mine_field == null or mine_field.count_of(&"tree_oak") == 0, "矿洞不应该长出阔叶树")
+	_check(mine_field == null or mine_field.count_of(&"tree_pine") == 0, "矿洞不应该长出松树")
+	_check(world.get(&"weather_effects") == false, "矿洞不应下雨下雪")
+
+	var ground := world.find_child("Ground", true, false) as TileMapLayer
+	_check(ground != null and ground.get_used_cells().size() > 0, "矿洞地面应当已绘制瓦片")
+
+	var spawn := _find_spawn(&"from_beach")
+	_check(spawn != null, "矿洞应当有 from_beach 出生点")
+
+	_check(_find_npc(&"miner") != null, "矿洞应当有矿工 NPC")
+	_check(_find_schedule_point(&"mine_deep") != null, "矿洞应当有 mine_deep 日程地点")
+	_check(_find_schedule_point(&"camp") != null, "矿洞应当有 camp 日程地点")
+	_check_npc_can_reach(&"miner", &"mine_entrance")
+
+
+## 图书馆：室内木地板、没有野生植被、管理员在岗。
+func _check_library() -> void:
+	var world := _world()
+	_check(world != null, "图书馆场景应当已加载")
+	if world == null:
+		return
+	_check_eq(String(world.get(&"world_id")), "library", "切换后应当在图书馆")
+	_check_eq(String(Audio.current_bgm()), "town", "进图书馆应当播放小镇 BGM")
+	_check(_player() != null, "图书馆里应当有玩家")
+	_check(_flora_field() == null, "室内图书馆不应该有野生植被")
+	_check(world.get(&"weather_effects") == false, "室内不应下雨下雪")
+
+	var ground := world.find_child("Ground", true, false) as TileMapLayer
+	_check(ground != null and ground.get_used_cells().size() > 0, "图书馆地面应当已绘制瓦片")
+
+	var spawn := _find_spawn(&"from_twon")
+	_check(spawn != null, "图书馆应当有 from_twon 出生点")
+
+	_check(_find_npc(&"librarian") != null, "图书馆应当有管理员 NPC")
+	_check(_find_schedule_point(&"desk") != null, "图书馆应当有 desk 日程地点")
+	_check(_find_schedule_point(&"shelves") != null, "图书馆应当有 shelves 日程地点")
+	_check_npc_can_reach(&"librarian", &"desk")
 
 
 ## 日程 + 寻路的端到端检查：导航网格可用、两个 NPC 有日程、路径能算出来。
@@ -632,6 +742,29 @@ func _check_npcs_moved() -> void:
 				"NPC %s 应当按日程走起来（起点 %s，现在 %s）"
 					% [npc.npc_id, start, npc.global_position]
 			)
+
+
+## 导航可达性：NPC 附近有可走格，并且能算出到目标日程点的路径。
+func _check_npc_can_reach(npc_id: StringName, location_id: StringName) -> void:
+	var navigator := get_tree().get_first_node_in_group(NpcNavigator.GROUP) as NpcNavigator
+	_check(navigator != null, "NPC %s 所在场景应当自动挂载导航网格" % npc_id)
+	if navigator == null:
+		return
+	var npc := _find_npc(npc_id)
+	var point := _find_schedule_point(location_id)
+	_check(npc != null and point != null, "NPC %s 与地点 %s 应当存在" % [npc_id, location_id])
+	if npc == null or point == null:
+		return
+	var start := navigator.nearest_walkable(navigator.cell_of(npc.global_position))
+	var goal := navigator.nearest_walkable(navigator.cell_of(point.global_position))
+	_check(start != NpcNavigator.NO_CELL, "NPC %s 附近应当有可走格" % npc_id)
+	_check(goal != NpcNavigator.NO_CELL, "日程地点 %s 应当可走" % location_id)
+	if start == NpcNavigator.NO_CELL or goal == NpcNavigator.NO_CELL:
+		return
+	_check(
+		not navigator.find_path(start, goal).is_empty(),
+		"NPC %s 应当能走到 %s" % [npc_id, location_id]
+	)
 
 
 func _find_npc(npc_id: StringName) -> Npc:

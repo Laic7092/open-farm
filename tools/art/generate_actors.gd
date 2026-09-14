@@ -50,6 +50,69 @@ const NPC_LOOKS := {
 		"boot": P.BOOT,
 		"apron": true,
 	},
+	&"blacksmith": {
+		"hair": P.HAIR,
+		"hair_light": P.HAIR_LIGHT,
+		"shirt": P.STONE_DARK,
+		"shirt_dark": P.OUTLINE,
+		"pants": P.PANTS_DARK,
+		"boot": P.BOOT,
+		"apron": true,
+		"apron_color": P.APRON_LEATHER,
+		"beard": true,
+	},
+	&"florist": {
+		"hair": P.NPC_HAIR,
+		"hair_light": P.WHITE,
+		"shirt": P.FLOWER_PINK,
+		"shirt_dark": P.FLOWER_RED,
+		"pants": P.PANTS,
+		"boot": P.BOOT,
+		"hat": true,
+		"hat_color": P.HAY,
+		"hat_dark": P.WOOD_DARK,
+		"hat_light": P.FRUIT_YELLOW,
+		"apron": true,
+	},
+	&"fisher": {
+		"hair": P.NPC_HAIR_DARK,
+		"hair_light": P.NPC_HAIR,
+		"shirt": P.SHIRT,
+		"shirt_dark": P.SHIRT_DARK,
+		"pants": P.PANTS_DARK,
+		"boot": P.BOOT,
+		"bandana": true,
+		"bandana_color": P.BANDANA_NAVY,
+		"beard": true,
+	},
+	&"miner": {
+		"hair": P.HAIR,
+		"hair_light": P.HAIR_LIGHT,
+		"shirt": P.DIRT,
+		"shirt_dark": P.DIRT_DARK,
+		"pants": P.PANTS_DARK,
+		"boot": P.BOOT,
+		"helmet": true,
+		"beard": true,
+	},
+	&"child": {
+		"hair": P.NPC_HAIR_BLONDE,
+		"hair_light": P.FRUIT_YELLOW,
+		"shirt": P.FLOWER_YELLOW,
+		"shirt_dark": P.FRUIT_ORANGE,
+		"pants": P.SHIRT_DARK,
+		"boot": P.BOOT,
+	},
+	&"librarian": {
+		"hair": P.HAIR,
+		"hair_light": P.HAIR_LIGHT,
+		"shirt": P.FRUIT_PURPLE,
+		"shirt_dark": P.UI_PANEL_DARK,
+		"pants": P.PANTS,
+		"boot": P.BOOT,
+		"glasses": true,
+		"hair_long": true,
+	},
 }
 
 
@@ -116,6 +179,13 @@ func _draw_actor(
 	var boot: Color = look.get("boot", P.BOOT)
 	var has_hat: bool = bool(look.get("hat", false))
 	var has_apron: bool = bool(look.get("apron", false))
+	var apron: Color = look.get("apron_color", P.APRON)
+	var has_helmet: bool = bool(look.get("helmet", false))
+	var has_bandana: bool = bool(look.get("bandana", false))
+	var bandana: Color = look.get("bandana_color", P.BANDANA_NAVY)
+	var has_glasses: bool = bool(look.get("glasses", false))
+	var has_beard: bool = bool(look.get("beard", false))
+	var long_hair: bool = bool(look.get("hair_long", false))
 
 	# 落地阴影始终画在格子底部，不跟着 bob 移动，否则人会像在飘。
 	Art.ellipse(image, Vector2i(ox + 8, oy + 15), Vector2i(5, 2), P.SHADOW)
@@ -135,7 +205,7 @@ func _draw_actor(
 	Art.rect(image, Rect2i(ox + 4, oy + 6, 8, 6), shirt)
 	Art.h_line(image, ox + 4, oy + 6, 8, shirt_dark)
 	if has_apron:
-		Art.rect(image, Rect2i(ox + 6, oy + 7, 4, 5), P.APRON)
+		Art.rect(image, Rect2i(ox + 6, oy + 7, 4, 5), apron)
 	else:
 		Art.h_line(image, ox + 6, oy + 7, 4, shirt_dark)
 
@@ -144,6 +214,10 @@ func _draw_actor(
 	Art.rect(image, Rect2i(ox + 5, oy + 1, 6, 2), hair)
 	Art.rect(image, Rect2i(ox + 4, oy + 2, 1, 3), hair)
 	Art.rect(image, Rect2i(ox + 11, oy + 2, 1, 3), hair)
+	if long_hair:
+		# 披肩长发：头两侧各多垂两像素。
+		Art.rect(image, Rect2i(ox + 4, oy + 4, 1, 3), hair)
+		Art.rect(image, Rect2i(ox + 11, oy + 4, 1, 3), hair)
 
 	match row:
 		0:  # 朝下：两粒眼睛 + 一点腮红
@@ -159,11 +233,38 @@ func _draw_actor(
 			Art.rect(image, Rect2i(ox + 4, oy + 3, 2, 4), hair)
 			Art.px(image, ox + 11, oy + 5, skin_dark)
 
-	if has_hat:
-		# 商人：一顶宽檐帽，远远就能认出来。
-		Art.rect(image, Rect2i(ox + 3, oy + 1, 10, 2), P.WOOD)
-		Art.rect(image, Rect2i(ox + 5, oy - 1, 6, 2), P.WOOD_DARK)
-		Art.h_line(image, ox + 4, oy + 1, 8, P.WOOD_LIGHT)
+	# 胡子：只画在下巴，朝上时看不到。
+	if has_beard and row != 1:
+		Art.h_line(image, ox + 5, oy + 5, 6, hair_light)
+		Art.px(image, ox + 4, oy + 5, hair_light)
+
+	# 眼镜：横跨双眼的一片深色。
+	if has_glasses and row == 0:
+		Art.rect(image, Rect2i(ox + 5, oy + 4, 2, 1), P.GLASSES)
+		Art.rect(image, Rect2i(ox + 9, oy + 4, 2, 1), P.GLASSES)
+		Art.px(image, ox + 7, oy + 4, P.GLASSES)
+	elif has_glasses and row == 2:
+		Art.rect(image, Rect2i(ox + 8, oy + 4, 3, 1), P.GLASSES)
+
+	if has_helmet:
+		# 矿工：圆顶安全帽 + 帽檐 + 头灯。
+		Art.rect(image, Rect2i(ox + 4, oy + 0, 8, 3), P.HELMET_YELLOW)
+		Art.h_line(image, ox + 5, oy, 6, P.HELMET_DARK)
+		Art.h_line(image, ox + 3, oy + 2, 10, P.HELMET_DARK)
+		Art.px(image, ox + 8, oy + 3, P.LAMP_GLOW)
+	elif has_hat:
+		# 宽檐帽：商人 / 花匠，远远就能认出来。
+		var hat: Color = look.get("hat_color", P.WOOD)
+		var hat_dark: Color = look.get("hat_dark", P.WOOD_DARK)
+		var hat_light: Color = look.get("hat_light", P.WOOD_LIGHT)
+		Art.rect(image, Rect2i(ox + 3, oy + 1, 10, 2), hat)
+		Art.rect(image, Rect2i(ox + 5, oy - 1, 6, 2), hat_dark)
+		Art.h_line(image, ox + 4, oy + 1, 8, hat_light)
+
+	if has_bandana:
+		# 头巾：绕头一圈。
+		Art.h_line(image, ox + 4, oy + 2, 8, bandana)
+		Art.rect(image, Rect2i(ox + 11, oy + 2, 1, 2), bandana)
 
 	# 手臂 / 手持工具
 	if pose == 2:

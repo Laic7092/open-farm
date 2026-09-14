@@ -138,6 +138,12 @@ script = ExtResource("5_spawn")
 spawn_id = &"from_farm"
 facing = 3
 
+[node name="FromBeach" type="Marker2D" parent="Spawns"]
+position = Vector2(568, 360)
+script = ExtResource("5_spawn")
+spawn_id = &"from_beach"
+facing = 2
+
 [node name="Interactables" type="Node2D" parent="."]
 y_sort_enabled = true
 
@@ -151,6 +157,18 @@ target_scene = "res://scenes/world/farm.tscn"
 target_spawn_id = &"from_town"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToFarm"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="ToBeach" type="Area2D" parent="Interactables"]
+position = Vector2(600, 360)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("6_door")
+prompt_key = &"PROMPT_ENTER"
+target_scene = "res://scenes/world/beach.tscn"
+target_spawn_id = &"from_town"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToBeach"]
 shape = SubResource("RectangleShape2D_tile")
 
 [node name="Player" parent="." instance=ExtResource("4_player")]

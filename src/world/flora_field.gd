@@ -59,6 +59,10 @@ const NEIGHBORS: Array[Vector2i] = [
 @export var world_seed: int = 1
 ## 出生点 / 门附近的禁生半径（格），避免一夜之间把门口堵死。
 @export_range(0, 8) var protect_radius: int = 2
+## 允许在这张地图上生长的物种 id；留空表示全部。
+##
+## 用来给不同地图定调：矿洞只该长石头与蘑菇，而不是一片树林。
+@export var allowed_species: Array[StringName] = []
 
 ## 格子状态表：只保存"长着东西"的格子，空字典代表一片干净的地。
 var flora: Dictionary[Vector2i, FloraState] = {}
@@ -94,6 +98,8 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	for flora_id: StringName in Database.floras:
+		if not allowed_species.is_empty() and not allowed_species.has(flora_id):
+			continue
 		_species.append(Database.get_flora(flora_id))
 	_rng.seed = maxi(world_seed, 1) * 7919 + 104729
 	_last_day = GameClock.date.absolute_day()

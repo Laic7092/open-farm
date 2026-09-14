@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="NpcData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/fisher_greeting.tres" id="1_fjpk6"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_fisher_frames.tres" id="2_jghcy"]
+[ext_resource type="Resource" path="res://data/schedules/fisher_schedule.tres" id="3_kr3h5"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_7mr3e"]
+
+[resource]
+script = ExtResource("4_7mr3e")
+id = &"fisher"
+display_name_key = &"NPC_FISHER"
+frames = ExtResource("2_jghcy")
+default_dialogue = ExtResource("1_fjpk6")
+schedule = ExtResource("3_kr3h5")
+move_speed = 30.0

@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene load_steps=26 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -23,6 +23,8 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/chicken.png" id="29_chicken"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/rock_big.png" id="30_rock_big"]
 [ext_resource type="Script" path="res://src/npc/schedule_point.gd" id="31_schedpoint"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/forge.png" id="32_forge"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/flower_stand.png" id="33_flower_stand"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
 size = Vector2(16, 16)
@@ -51,6 +53,7 @@ initial_budget = 120
 daily_budget = 5
 max_total = 240
 world_seed = 2
+protect_radius = 3
 
 [node name="Bounds" type="StaticBody2D" parent="."]
 collision_layer = 1
@@ -159,12 +162,92 @@ texture = ExtResource("29_chicken")
 script = ExtResource("9_prop")
 
 
+[node name="Forge" type="Sprite2D" parent="Props"]
+position = Vector2(272, 640)
+texture = ExtResource("20_house")
+script = ExtResource("9_prop")
+solid_size = Vector2(58, 14)
+solid_offset = Vector2(0, 24)
+
+[node name="ForgeAnvil" type="Sprite2D" parent="Props"]
+position = Vector2(328, 676)
+texture = ExtResource("32_forge")
+script = ExtResource("9_prop")
+solid_size = Vector2(26, 8)
+solid_offset = Vector2(0, 6)
+
+[node name="ForgeLamp" type="Sprite2D" parent="Props"]
+position = Vector2(232, 656)
+texture = ExtResource("25_lamp")
+script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
+
+[node name="FlowerShop" type="Sprite2D" parent="Props"]
+position = Vector2(528, 640)
+texture = ExtResource("20_house")
+script = ExtResource("9_prop")
+solid_size = Vector2(58, 14)
+solid_offset = Vector2(0, 24)
+
+[node name="FlowerStand" type="Sprite2D" parent="Props"]
+position = Vector2(480, 676)
+texture = ExtResource("33_flower_stand")
+script = ExtResource("9_prop")
+solid_size = Vector2(28, 8)
+solid_offset = Vector2(0, 6)
+
+[node name="FlowerShopPot" type="Sprite2D" parent="Props"]
+position = Vector2(576, 700)
+texture = ExtResource("28_pot")
+script = ExtResource("9_prop")
+
+[node name="Library" type="Sprite2D" parent="Props"]
+position = Vector2(1024, 640)
+texture = ExtResource("20_house")
+script = ExtResource("9_prop")
+solid_size = Vector2(58, 14)
+solid_offset = Vector2(0, 24)
+
+[node name="LibraryLamp" type="Sprite2D" parent="Props"]
+position = Vector2(976, 656)
+texture = ExtResource("25_lamp")
+script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
+
+[node name="LibrarySign" type="Sprite2D" parent="Props"]
+position = Vector2(1072, 700)
+texture = ExtResource("27_sign")
+script = ExtResource("9_prop")
+
+[node name="ChildHome" type="Sprite2D" parent="Props"]
+position = Vector2(1280, 640)
+texture = ExtResource("20_house")
+script = ExtResource("9_prop")
+solid_size = Vector2(58, 14)
+solid_offset = Vector2(0, 24)
+
+[node name="ChildHomeLamp" type="Sprite2D" parent="Props"]
+position = Vector2(1232, 656)
+texture = ExtResource("25_lamp")
+script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
+
+
 [node name="Spawns" type="Node2D" parent="."]
 
 [node name="FromFarm" type="Marker2D" parent="Spawns"]
 position = Vector2(768, 888)
 script = ExtResource("5_spawn")
 spawn_id = &"from_farm"
+facing = 1
+
+[node name="FromLibrary" type="Marker2D" parent="Spawns"]
+position = Vector2(1024, 744)
+script = ExtResource("5_spawn")
+spawn_id = &"from_library"
 facing = 1
 
 [node name="Interactables" type="Node2D" parent="."]
@@ -180,6 +263,18 @@ target_scene = "res://scenes/world/farm.tscn"
 target_spawn_id = &"from_twon"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToFarm"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="ToLibrary" type="Area2D" parent="Interactables"]
+position = Vector2(1024, 704)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("6_door")
+prompt_key = &"PROMPT_ENTER"
+target_scene = "res://scenes/world/library.tscn"
+target_spawn_id = &"from_twon"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToLibrary"]
 shape = SubResource("RectangleShape2D_tile")
 
 [node name="SchedulePoints" type="Node2D" parent="."]
@@ -204,6 +299,26 @@ position = Vector2(1264, 368)
 script = ExtResource("31_schedpoint")
 point_id = &"barn"
 
+[node name="Forge" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(272, 700)
+script = ExtResource("31_schedpoint")
+point_id = &"forge"
+
+[node name="FlowerShop" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(528, 700)
+script = ExtResource("31_schedpoint")
+point_id = &"flower_shop"
+
+[node name="Garden" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(640, 820)
+script = ExtResource("31_schedpoint")
+point_id = &"garden"
+
+[node name="Home" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(1280, 700)
+script = ExtResource("31_schedpoint")
+point_id = &"home"
+
 [node name="Npcs" type="Node2D" parent="."]
 
 [node name="Merchant" parent="Npcs" instance=ExtResource("7_npc")]
@@ -212,6 +327,18 @@ position = Vector2(448, 392)
 [node name="Mayor" parent="Npcs" instance=ExtResource("7_npc")]
 position = Vector2(912, 416)
 npc_id = &"mayor"
+
+[node name="Blacksmith" parent="Npcs" instance=ExtResource("7_npc")]
+position = Vector2(272, 732)
+npc_id = &"blacksmith"
+
+[node name="Florist" parent="Npcs" instance=ExtResource("7_npc")]
+position = Vector2(528, 732)
+npc_id = &"florist"
+
+[node name="Child" parent="Npcs" instance=ExtResource("7_npc")]
+position = Vector2(1280, 732)
+npc_id = &"child"
 
 [node name="Player" parent="." instance=ExtResource("4_player")]
 position = Vector2(768, 888)

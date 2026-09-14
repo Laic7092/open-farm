@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="NpcData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/librarian_greeting.tres" id="1_d2bek"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_librarian_frames.tres" id="2_i350x"]
+[ext_resource type="Resource" path="res://data/schedules/librarian_schedule.tres" id="3_gumg7"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_7yll6"]
+
+[resource]
+script = ExtResource("4_7yll6")
+id = &"librarian"
+display_name_key = &"NPC_LIBRARIAN"
+frames = ExtResource("2_i350x")
+default_dialogue = ExtResource("1_d2bek")
+schedule = ExtResource("3_gumg7")
+move_speed = 26.0

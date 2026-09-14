@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="NpcSchedule" format=3]
+
+[ext_resource type="Script" path="res://src/npc/schedule_entry.gd" id="1_5sfb5"]
+[ext_resource type="Script" path="res://src/npc/npc_schedule.gd" id="2_e25ph"]
+
+[sub_resource type="Resource" id="Resource_telxr"]
+script = ExtResource("1_5sfb5")
+start_minute = 360
+location_id = &"home"
+activity = &"rest"
+
+[sub_resource type="Resource" id="Resource_uuxg8"]
+script = ExtResource("1_5sfb5")
+start_minute = 540
+location_id = &"plaza"
+activity = &"play"
+
+[sub_resource type="Resource" id="Resource_472hj"]
+script = ExtResource("1_5sfb5")
+start_minute = 720
+location_id = &"store"
+activity = &"stroll"
+
+[sub_resource type="Resource" id="Resource_qnyj5"]
+script = ExtResource("1_5sfb5")
+start_minute = 900
+location_id = &"plaza"
+activity = &"play"
+
+[sub_resource type="Resource" id="Resource_nhuga"]
+script = ExtResource("1_5sfb5")
+start_minute = 1140
+location_id = &"home"
+activity = &"rest"
+
+[resource]
+script = ExtResource("2_e25ph")
+entries = Array[ExtResource("1_5sfb5")]([SubResource("Resource_telxr"), SubResource("Resource_uuxg8"), SubResource("Resource_472hj"), SubResource("Resource_qnyj5"), SubResource("Resource_nhuga")])

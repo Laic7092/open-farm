@@ -1,0 +1,182 @@
+[gd_scene load_steps=19 format=3]
+
+[ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
+[ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
+[ext_resource type="Script" path="res://src/world/world_bounds.gd" id="3_bounds"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="4_player"]
+[ext_resource type="Script" path="res://src/core/spawn_point.gd" id="5_spawn"]
+[ext_resource type="Script" path="res://src/world/scene_door.gd" id="6_door"]
+[ext_resource type="PackedScene" path="res://scenes/npc/npc.tscn" id="7_npc"]
+[ext_resource type="Script" path="res://src/world/mine_ground.gd" id="8_ground"]
+[ext_resource type="Script" path="res://src/world/world_prop.gd" id="9_prop"]
+[ext_resource type="Script" path="res://src/world/flora_field.gd" id="10_flora_field"]
+[ext_resource type="PackedScene" path="res://scenes/world/flora.tscn" id="11_flora"]
+[ext_resource type="Script" path="res://src/npc/schedule_point.gd" id="12_schedpoint"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/house.png" id="20_house"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/signpost.png" id="21_sign"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/lamp.png" id="22_lamp"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/rock_big.png" id="23_rock_big"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/rock.png" id="24_rock"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
+size = Vector2(16, 16)
+
+[node name="Mine" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_world")
+world_id = &"mine"
+camera_limits = Rect2(0, 0, 768, 480)
+default_spawn_id = &"from_beach"
+weather_effects = false
+
+[node name="Ground" type="TileMapLayer" parent="."]
+z_index = -20
+tile_set = ExtResource("2_tileset")
+script = ExtResource("8_ground")
+ground_area = Rect2i(0, 0, 48, 30)
+
+[node name="FloraField" type="Node2D" parent="." node_paths=PackedStringArray("ground_layer", "flora_root")]
+script = ExtResource("10_flora_field")
+ground_layer = NodePath("../Ground")
+flora_root = NodePath("..")
+flora_scene = ExtResource("11_flora")
+growth_area = Rect2i(1, 1, 46, 28)
+persistence_id = &"flora_mine"
+initial_budget = 45
+daily_budget = 4
+max_total = 120
+world_seed = 5
+protect_radius = 3
+allowed_species = Array[StringName]([&"rock", &"boulder", &"mushroom"])
+
+[node name="Bounds" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("3_bounds")
+bounds = Rect2(8, 8, 752, 464)
+
+[node name="Props" type="Node2D" parent="."]
+
+[node name="Camp" type="Sprite2D" parent="Props"]
+position = Vector2(640, 96)
+texture = ExtResource("20_house")
+script = ExtResource("9_prop")
+solid_size = Vector2(58, 14)
+solid_offset = Vector2(0, 24)
+
+[node name="CampLamp" type="Sprite2D" parent="Props"]
+position = Vector2(688, 112)
+texture = ExtResource("22_lamp")
+script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
+
+[node name="Sign" type="Sprite2D" parent="Props"]
+position = Vector2(80, 208)
+texture = ExtResource("21_sign")
+script = ExtResource("9_prop")
+
+[node name="Lamp1" type="Sprite2D" parent="Props"]
+position = Vector2(240, 208)
+texture = ExtResource("22_lamp")
+script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
+
+[node name="Lamp2" type="Sprite2D" parent="Props"]
+position = Vector2(400, 208)
+texture = ExtResource("22_lamp")
+script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
+
+[node name="Lamp3" type="Sprite2D" parent="Props"]
+position = Vector2(528, 336)
+texture = ExtResource("22_lamp")
+script = ExtResource("9_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
+
+[node name="Rock1" type="Sprite2D" parent="Props"]
+position = Vector2(240, 320)
+texture = ExtResource("23_rock_big")
+script = ExtResource("9_prop")
+solid_size = Vector2(26, 10)
+solid_offset = Vector2(0, 6)
+
+[node name="Rock2" type="Sprite2D" parent="Props"]
+position = Vector2(384, 160)
+texture = ExtResource("23_rock_big")
+script = ExtResource("9_prop")
+solid_size = Vector2(26, 10)
+solid_offset = Vector2(0, 6)
+
+[node name="Rock3" type="Sprite2D" parent="Props"]
+position = Vector2(288, 144)
+texture = ExtResource("24_rock")
+script = ExtResource("9_prop")
+solid_size = Vector2(14, 8)
+solid_offset = Vector2(0, 4)
+
+[node name="Rock4" type="Sprite2D" parent="Props"]
+position = Vector2(464, 336)
+texture = ExtResource("24_rock")
+script = ExtResource("9_prop")
+solid_size = Vector2(14, 8)
+solid_offset = Vector2(0, 4)
+
+[node name="Rock5" type="Sprite2D" parent="Props"]
+position = Vector2(208, 400)
+texture = ExtResource("23_rock_big")
+script = ExtResource("9_prop")
+solid_size = Vector2(26, 10)
+solid_offset = Vector2(0, 6)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="FromBeach" type="Marker2D" parent="Spawns"]
+position = Vector2(64, 240)
+script = ExtResource("5_spawn")
+spawn_id = &"from_beach"
+facing = 3
+
+[node name="Interactables" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="ToBeach" type="Area2D" parent="Interactables"]
+position = Vector2(32, 240)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("6_door")
+prompt_key = &"PROMPT_ENTER"
+target_scene = "res://scenes/world/beach.tscn"
+target_spawn_id = &"from_mine"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToBeach"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="SchedulePoints" type="Node2D" parent="."]
+
+[node name="MineEntrance" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(160, 240)
+script = ExtResource("12_schedpoint")
+point_id = &"mine_entrance"
+
+[node name="MineDeep" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(528, 400)
+script = ExtResource("12_schedpoint")
+point_id = &"mine_deep"
+
+[node name="Camp" type="Marker2D" parent="SchedulePoints"]
+position = Vector2(640, 160)
+script = ExtResource("12_schedpoint")
+point_id = &"camp"
+
+[node name="Npcs" type="Node2D" parent="."]
+
+[node name="Miner" parent="Npcs" instance=ExtResource("7_npc")]
+position = Vector2(160, 288)
+npc_id = &"miner"
+
+[node name="Player" parent="." instance=ExtResource("4_player")]
+position = Vector2(64, 240)

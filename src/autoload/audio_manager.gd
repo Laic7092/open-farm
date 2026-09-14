@@ -187,7 +187,7 @@ func _refresh_bgm(world_id: StringName = &"") -> void:
 func _track_for(world_id: StringName) -> StringName:
 	if _is_night():
 		return Catalog.BGM_NIGHT
-	if world_id == &"town" or world_id == &"twon":
+	if world_id in [&"town", &"twon", &"beach", &"library"]:
 		return Catalog.BGM_TOWN
 	return Catalog.BGM_FARM
 
@@ -391,7 +391,7 @@ func _footstep_on_path() -> bool:
 	if world == null:
 		return false
 	var world_id: StringName = world.get("world_id") if world.get("world_id") != null else &""
-	return world_id == &"town" or world_id == &"twon"
+	return world_id in [&"town", &"twon", &"beach", &"mine", &"library"]
 
 
 # ---------------------------------------------------------------- 内部：设置

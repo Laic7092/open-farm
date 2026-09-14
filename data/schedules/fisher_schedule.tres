@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="NpcSchedule" format=3]
+
+[ext_resource type="Script" path="res://src/npc/schedule_entry.gd" id="1_5v6bu"]
+[ext_resource type="Script" path="res://src/npc/npc_schedule.gd" id="2_1pwbn"]
+
+[sub_resource type="Resource" id="Resource_7pnsf"]
+script = ExtResource("1_5v6bu")
+start_minute = 360
+location_id = &"pier"
+activity = &"work"
+
+[sub_resource type="Resource" id="Resource_ifsyh"]
+script = ExtResource("1_5v6bu")
+start_minute = 720
+location_id = &"hut"
+activity = &"rest"
+
+[sub_resource type="Resource" id="Resource_fn3ij"]
+script = ExtResource("1_5v6bu")
+start_minute = 900
+location_id = &"shore"
+activity = &"work"
+
+[sub_resource type="Resource" id="Resource_kj3b7"]
+script = ExtResource("1_5v6bu")
+start_minute = 1140
+location_id = &"hut"
+activity = &"rest"
+
+[resource]
+script = ExtResource("2_1pwbn")
+entries = Array[ExtResource("1_5v6bu")]([SubResource("Resource_7pnsf"), SubResource("Resource_ifsyh"), SubResource("Resource_fn3ij"), SubResource("Resource_kj3b7")])
