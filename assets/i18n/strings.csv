@@ -79,7 +79,7 @@ SHOP_UI_STOCK,库存 {value},Stock {value}
 SHOP_UI_UNLIMITED,充足,Plenty
 SHOP_UI_CLOSE,离开,Leave
 SHOP_UI_OWNED,持有 {value},Owned {value}
-SHOP_UI_HINT,方向键选择，E 确认，Esc 离开,Arrows to select / E to confirm / Esc to leave
+SHOP_UI_HINT,WASD 或方向键选择 · A / D 换列表 · E 确认 · Esc 离开,WASD or arrows to select · A / D switch list · E to confirm · Esc to leave
 INVENTORY_TITLE,背包,Inventory
 INVENTORY_HINT,按 Tab 或 Esc 关闭,Press Tab or Esc to close
 INVENTORY_EMPTY,（空）,（empty）

@@ -9,7 +9,11 @@ extends Control
 ## 画面全部来自 [code]tools/art/generate_title.gd[/code] 生成的像素素材：
 ## 背景是 1:1 的 640×360 像素画，云朵单独出图以便在代码里飘。
 ##
-## 操作：方向键 / W S 选择，Enter / 空格 确认，鼠标同样可用。
+## 操作：WASD / 方向键选择，Enter / 空格 确认；鼠标已关闭（见 [PointerInput]）。
+##
+## W / A / S / D 已经并进内置的 ui_* 动作（见 [code]project.godot[/code] 的 InputMap），
+## 所以这里直接用 Godot 的焦点导航；被禁用的"继续游戏"把 focus_mode 设为 NONE，
+## 导航会自动跳过它。
 
 ## 语言选择按钮上显示的本地化名称。
 const LOCALE_NAMES := {
@@ -45,12 +49,15 @@ var _continue_slot: int = -1
 
 
 func _ready() -> void:
+	PointerInput.hide_cursor()
 	_clouds = [_cloud_1, _cloud_2, _cloud_3]
 
 	_continue_button.pressed.connect(_on_continue_pressed)
 	_new_game_button.pressed.connect(_on_new_game_pressed)
 	_language_button.pressed.connect(_on_language_pressed)
 	_quit_button.pressed.connect(_on_quit_pressed)
+	for button: Button in [_continue_button, _new_game_button, _language_button, _quit_button]:
+		button.focus_entered.connect(_on_menu_focus)
 	# 对话 / 商店等模态界面可能在切换场景时留下暂停状态。
 	get_tree().paused = false
 
@@ -72,14 +79,10 @@ func _process(delta: float) -> void:
 	_title_block.position.y = _title_base_y + sin(_elapsed * 1.6) * 2.0
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	# W / S 不在 Godot 内置的 ui_up / ui_down 里，这里补上。
-	if event.is_action_pressed(&"move_down"):
+func _input(event: InputEvent) -> void:
+	# 纯键盘操作：指针事件一律吞掉，避免隐藏的光标误触按钮。
+	if PointerInput.is_pointer(event):
 		get_viewport().set_input_as_handled()
-		_move_focus(1)
-	elif event.is_action_pressed(&"move_up"):
-		get_viewport().set_input_as_handled()
-		_move_focus(-1)
 
 
 # ---------------------------------------------------------------- 文本
@@ -103,11 +106,11 @@ func _refresh_save_info() -> void:
 	_continue_slot = _newest_slot()
 	if _continue_slot < 0:
 		_continue_button.text = Text.key(&"TITLE_CONTINUE")
-		_continue_button.disabled = true
+		_set_continue_enabled(false)
 		_save_info_label.text = Text.key(&"TITLE_SAVE_EMPTY")
 		return
 
-	_continue_button.disabled = false
+	_set_continue_enabled(true)
 	_continue_button.text = Text.key(&"TITLE_CONTINUE")
 	var meta := SaveManager.read_meta(_continue_slot)
 	var date: GameDate = meta.get("date", GameDate.new())
@@ -140,17 +143,16 @@ func _focus_default() -> void:
 	target.grab_focus()
 
 
-## 在可选按钮之间移动焦点（跳过被禁用的）。
-func _move_focus(step: int) -> void:
-	var buttons: Array[Button] = []
-	for button: Button in [_continue_button, _new_game_button, _language_button, _quit_button]:
-		if not button.disabled:
-			buttons.append(button)
-	if buttons.is_empty():
-		return
-	var current: int = buttons.find(get_viewport().gui_get_focus_owner() as Button)
-	var next: int = posmod(current + step, buttons.size()) if current >= 0 else 0
-	buttons[next].grab_focus()
+## 启用 / 禁用"继续游戏"。
+##
+## 禁用的按钮要同时退出焦点链，否则方向键会在它上面停住。
+func _set_continue_enabled(enabled: bool) -> void:
+	_continue_button.disabled = not enabled
+	_continue_button.focus_mode = Control.FOCUS_ALL if enabled else Control.FOCUS_NONE
+
+
+## 焦点落到某个按钮上时的移动音效。
+func _on_menu_focus() -> void:
 	Audio.play_sfx(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
 
 

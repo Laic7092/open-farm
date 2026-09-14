@@ -93,20 +93,6 @@ custom_minimum_size = Vector2(210, 140)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Actions" type="HBoxContainer" parent="Panel/Margin/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="BuyButton" type="Button" parent="Panel/Margin/VBox/Actions"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "购买"
-
-[node name="SellButton" type="Button" parent="Panel/Margin/VBox/Actions"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "卖出"
-
 [node name="InfoLabel" type="Label" parent="Panel/Margin/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
