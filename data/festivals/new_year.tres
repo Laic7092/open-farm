@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="FestivalData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/festival_new_year.tres" id="1_5028t"]
+[ext_resource type="Script" path="res://src/data/festival_data.gd" id="2_s7g2s"]
+
+[resource]
+script = ExtResource("2_s7g2s")
+id = &"new_year"
+display_name_key = &"FESTIVAL_NEW_YEAR"
+start_hour = 8
+world_path = "res://scenes/world/twon.tscn"
+gather_point = &"plaza"
+npc_ids = Array[StringName]([&"mayor", &"merchant", &"blacksmith", &"florist", &"child"])
+intro_dialogue = ExtResource("1_5028t")

@@ -22,6 +22,7 @@ const ITEM_BAR_SIZE: int = 12
 const HUD_SLOT_SCENE: PackedScene = preload("res://scenes/ui/hud_slot.tscn")
 
 @onready var date_label: Label = %DateLabel
+@onready var festival_label: Label = %FestivalLabel
 @onready var time_label: Label = %TimeLabel
 @onready var weather_label: Label = %WeatherLabel
 @onready var weather_icon: TextureRect = %WeatherIcon
@@ -48,6 +49,7 @@ func _ready() -> void:
 	EventBus.season_changed.connect(func(_season: Season.Type) -> void: _refresh_date())
 	EventBus.year_changed.connect(func(_year: int) -> void: _refresh_date())
 	EventBus.weather_changed.connect(_on_weather_changed)
+	EventBus.festival_day_started.connect(_on_festival_day_started)
 	EventBus.money_changed.connect(_on_money_changed)
 	EventBus.stamina_changed.connect(_on_stamina_changed)
 	EventBus.tool_changed.connect(_on_tool_changed)
@@ -65,6 +67,7 @@ func _ready() -> void:
 
 func _refresh_all() -> void:
 	_refresh_date()
+	_refresh_festival()
 	_refresh_time()
 	_refresh_weather()
 	_on_money_changed(GameState.money, 0)
@@ -74,6 +77,13 @@ func _refresh_all() -> void:
 
 func _refresh_date() -> void:
 	date_label.text = Text.date_text(GameClock.date)
+
+
+## 今日节日横幅：没有节日时整行隐藏，不占屏幕。
+func _refresh_festival() -> void:
+	var text := Calendar.today_text()
+	festival_label.text = text
+	festival_label.visible = not text.is_empty()
 
 
 func _refresh_time() -> void:
@@ -185,6 +195,10 @@ func _on_day_changed(_date: GameDate) -> void:
 
 func _on_weather_changed(_weather: Weather.Type) -> void:
 	_refresh_weather()
+
+
+func _on_festival_day_started(_festival_id: StringName) -> void:
+	_refresh_festival()
 
 
 func _on_money_changed(money: int, _delta: int) -> void:

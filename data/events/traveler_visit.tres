@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="EventData" format=3]
+
+[ext_resource type="Script" path="res://src/data/event_data.gd" id="1_l3shx"]
+
+[resource]
+script = ExtResource("1_l3shx")
+id = &"traveler_visit"
+title_key = &"EVENT_TRAVELER_VISIT"
+message_key = &"EVENT_TRAVELER_VISIT"
+day = 8
+grant_money = 150

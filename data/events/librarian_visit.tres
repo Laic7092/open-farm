@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EventData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/librarian_visit.tres" id="1_o60si"]
+[ext_resource type="Script" path="res://src/data/event_data.gd" id="2_6hi5x"]
+
+[resource]
+script = ExtResource("2_6hi5x")
+id = &"librarian_visit"
+title_key = &"EVENT_LIBRARIAN_VISIT"
+message_key = &"EVENT_LIBRARIAN_VISIT"
+required_affection = 120
+required_npc = &"librarian"
+dialogue = ExtResource("1_o60si")

@@ -70,6 +70,8 @@ GameClock     ← EventBus
 GameState     ← EventBus, GameClock
 WeatherSystem ← GameClock（把自己注册成第一个日结转钩子）
 Relationships ← EventBus, GameClock, Database, GameState（排在 WeatherSystem 之后注册日结转钩子）
+Calendar      ← EventBus, GameClock, Database, GameState, WeatherSystem, Relationships
+                （节日与事件：同样把自己的日结转钩子排在 Relationships 之后）
 SaveManager   ← EventBus, Persistence（鸭子类型找节点，不静态依赖任何游戏系统）
 SceneRouter   ← EventBus, GameClock
 Audio         ← EventBus, GameClock, SceneRouter（按场景 / 时间换曲，订阅信号播音效）
@@ -578,5 +580,71 @@ Godot 每张画布只认一个 `CanvasModulate`（官方文档："Only one can b
 `Relationships` 是常驻 autoload，日结转钩子在 `_ready()` 注册一次即可，
 不存在世界场景那种"进图 / 出图"的注册时机问题；
 它注册在 `WeatherSystem` 之后的钩子顺序里，先让天气就位，再推进婚育倒计时。
+
+---
+
+## 14. 节日与事件
+
+### 14.1 为什么是"节日 + 事件"两类数据
+
+两者都是"某个时刻发生的事"，但**触发方式与状态**完全不同：
+
+| | 节日 `FestivalData` | 事件 `EventData` |
+| --- | --- | --- |
+| 触发 | 固定季节 + 日期，到点自动开幕 | 条件组合（季节 / 日期 / 天气 / 旗标 / 好感） |
+| 表现 | 地图上有会场、村民聚集、玩家按 E 参加 | 日结转时结算一次，弹提示、打旗标、给钱 |
+| 状态 | "今年参加过没有"（每年一次） | "发生过没有"（`once` 为 false 时每年一次） |
+| 时长 | 有开门 / 关门时间窗口 | 结算即结束 |
+
+硬塞进一张表就得用一堆互斥字段（`window` 对事件无意义、`conditions` 对节日多余），
+所以分成两个 `Resource`，共享同一个 `Calendar` 单例与同一套日结转钩子。
+
+### 14.2 为什么规则在 FestivalRules / EventRules（纯静态）
+
+"哪天办、现在开不开门、条件命中没有"全是纯函数：不碰场景树、不读 autoload
+（`EventRules.matches()` 收的是"已经查好的事实"，不是 `GameState` 本体）。
+于是 `tests/unit/test_festival_rules.gd` / `test_event_rules.gd` 可以穷举边界，
+和 `CropGrowth` / `AffectionRules` 是同一种拆分。
+
+### 14.3 为什么会场是场景节点，而"办不办"是单例
+
+会场 `FestivalGround` 是地图上的 `Area2D`：它属于某张地图，只负责"玩家按 E 时找谁结账"。
+而"今天是不是花祭""现在几点了""今年参加过没有"是跨场景的日历状态，放在 `Calendar`。
+
+节点只暴露 `festival_ids`（这个地点轮办哪些节日），`can_interact()` 每次现问 `Calendar`。
+好处：同一张地图可以摆多个会场（广场 / 花园），加节日不用改脚本；
+不在地图上的会场自然不参与判定，也不需要"进入地图时启用"这类同步逻辑。
+
+### 14.4 为什么节日能盖掉 NPC 日程
+
+牧场物语里节日最直观的表现是"全村人都聚在广场"。实现上没有给每个 NPC 写一份节日日程，
+而是在 `Npc._refresh_schedule()` 里加了一层**覆盖**：
+
+```text
+日程表给出当前时段的地点
+  → Calendar.gather_point_for(npc_id)   # 节日进行中且这位 NPC 参加？
+      → 有：改去会场集合点（复用一条临时 ScheduleEntry）
+      → 无：用日程表的地点
+```
+
+节日只写"哪些 NPC 参加"（`npc_ids`）与集合点（`gather_point`），
+"谁在什么时辰放下手里的活儿"由规则推导；节日结束后下一帧自然回到原日程。
+商人的 `activity == "shop"` 判定随之失效，于是节日期间店铺自动关门——这是想要的效果。
+
+### 14.5 为什么事件只在日结转判定
+
+"条件 + 一次性结算"的最小实现是挂在日结转钩子上：顺序在 `WeatherSystem` 之后，
+所以事件可以拿天气当条件；在 `Relationships` 之后，所以还能拿当天刷新过的好感当条件。
+
+代价是**没有区域事件**：不存在"走进矿洞触发剧情"这类按玩家位置判定的触发点。
+要做那种事件，需要一个"进图时判定"的钩子（`WorldScene.on_world_enter`），
+但"事件是否已发生"的状态仍然应该留在 `Calendar`。
+
+### 14.6 生命周期
+
+`Calendar` 是常驻 autoload：日结转钩子在 `_ready()` 注册一次，
+"已参加 / 已触发"随 `SaveManager` 的核心单例流程存档。
+`today_festivals()` 的结果按**绝对天数**缓存，读档 / 开新档 / 跨天时置脏重算，
+所以"读档后 HUD 上的今日节日"不需要任何额外同步。
 
 

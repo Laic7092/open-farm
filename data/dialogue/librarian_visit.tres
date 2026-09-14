@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_geuhn"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_itjug"]
+
+[sub_resource type="Resource" id="Resource_8e5lc"]
+script = ExtResource("1_geuhn")
+speaker_key = &"NPC_LIBRARIAN"
+text_key = &"EVENT_LIBRARIAN_VISIT"
+
+[resource]
+script = ExtResource("2_itjug")
+id = &"librarian_visit"
+speaker_key = &"NPC_LIBRARIAN"
+lines = Array[ExtResource("1_geuhn")]([SubResource("Resource_8e5lc")])

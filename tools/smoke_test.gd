@@ -149,6 +149,7 @@ func _report() -> void:
 # ---------------------------------------------------------------- 检查项
 
 func _run_checks() -> void:
+	_check_calendar()
 	_check_database()
 	_check_world()
 	_check_spawn()
@@ -161,6 +162,40 @@ func _run_checks() -> void:
 	_check_save_load()
 	_check_ui()
 	_check_audio()
+
+
+## 节日与事件：数据装载、今日播报、会场开放时间、参加奖励与存档往返。
+func _check_calendar() -> void:
+	_check(Database.get_festival(&"new_year") != null, "应当有新年祭数据")
+	_check(Database.get_event(&"traveler_visit") != null, "应当有旅人事件数据")
+	_check(Calendar.has_festival_today(), "春 1 日应当是新年祭")
+	_check_eq(Calendar.today_text(), Text.key(&"FESTIVAL_NEW_YEAR"), "今日节日文本应当是新年祭")
+
+	var hud := get_tree().root.find_child("Hud", true, false)
+	if hud != null:
+		var label := hud.find_child("FestivalLabel", true, false) as Label
+		_check(label != null and label.visible, "HUD 应当显示今日节日横幅")
+
+	# 会场 08:00 才开门。
+	_check(not Calendar.is_active(&"new_year"), "06:00 新年祭还没开门")
+	GameClock.set_time(9, 0)
+	_check(Calendar.is_active(&"new_year"), "09:00 新年祭应当开放")
+
+	var before := Relationships.affection(&"mayor")
+	_check(Calendar.attend(&"new_year"), "应当能参加新年祭")
+	_check_eq(Relationships.affection(&"mayor"), before + 4, "参加节日应当给在场 NPC 加好感")
+	_check(not Calendar.attend(&"new_year"), "同一年不能重复参加")
+
+	# 参加记录要能跟着存档走。
+	var snapshot := Calendar.to_dict()
+	Calendar.reset()
+	Calendar.from_dict(snapshot)
+	_check(Calendar.has_attended(&"new_year"), "读档后应当记得参加过新年祭")
+
+	# 还原到开局状态：后面的时钟检查依赖"春 1 日 06:00"。
+	Calendar.reset()
+	Relationships.set_affection(&"mayor", before)
+	GameClock.set_time(GameClock.DAY_START_HOUR, 0)
 
 
 func _check_database() -> void:
@@ -601,6 +636,14 @@ func _check_twon() -> void:
 	_check(_find_schedule_point(&"flower_shop") != null, "twon 应当有 flower_shop 日程地点")
 	_check(_find_schedule_point(&"garden") != null, "twon 应当有 garden 日程地点")
 	_check(_find_schedule_point(&"home") != null, "twon 应当有 home 日程地点")
+
+	# 节日会场：非节日当天应当收摊（不能交互）。
+	var plaza := world.find_child("FestivalPlaza", true, false) as FestivalGround
+	_check(plaza != null, "twon 广场应当有节日会场")
+	if plaza != null:
+		_check(plaza.festival_ids.has(&"new_year"), "广场会场应当包含新年祭")
+		_check(not plaza.can_interact(), "非节日当天会场不应该能交互")
+	_check(world.find_child("FestivalGarden", true, false) != null, "twon 花园应当有节日会场")
 
 	_check_npc_schedule()
 

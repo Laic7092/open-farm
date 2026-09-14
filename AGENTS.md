@@ -10,14 +10,14 @@
 
 - **是什么**：Godot **4.7.2** 的 2D 俯视角像素农场模拟（牧场物语风格）。仓库根自带 `./godot`（已 gitignore）。
 - **入口**：`scenes/title/title_screen.tscn` → `scenes/main/main.tscn`（`WorldHost` 换地图 + 常驻 `UiRoot`）。
-- **现状**：核心循环 / 玩家 / 农场 / 畜牧 / 8 位 NPC / 好感度与恋爱（结婚生子）/ 6 张地图 / UI / 存档 / 本地化全部打通；**美术、字体、BGM、音效全部由脚本生成**，内容仍在扩充。
+- **现状**：核心循环 / 玩家 / 农场 / 畜牧 / 8 位 NPC / 好感度与恋爱（结婚生子）/ 节日与事件 / 6 张地图 / UI / 存档 / 本地化全部打通；**美术、字体、BGM、音效全部由脚本生成**，内容仍在扩充。
 - **没有**：package.json / npm / 构建系统；一切走 Godot CLI。
 - **语言与风格**：注释、文档、提交信息统一**中文**；GDScript 用 **Tab 缩进 + 类型标注 + `##` 文档注释**，`StringName` 用 `&"..."`。
 
 ## 1. 先跑这几条（都带超时，原因见「坑 1」）
 
 ```bash
-timeout 800 ./tools/check.sh        # import + 单元测试(308) + 冒烟测试(197)，提交前必跑
+timeout 800 ./tools/check.sh        # import + 单元测试(338) + 冒烟测试(212)，提交前必跑
 timeout 800 ./tools/check.sh unit   # 只跑 gdUnit4 单元测试
 timeout 800 ./tools/check.sh smoke  # 只跑端到端冒烟测试
 timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
@@ -50,6 +50,7 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 | 加牲畜 | `data/animals/` + `data/buildings/` + `data/items/` + `tools/art/generate_animals.gd` |
 | 加野生植被 | `data/flora/` + `tools/art/generate_flora.gd` + `src/world/flora_field.gd`（`allowed_species` 可限定单张地图长哪些） |
 | 加 NPC / 日程 | `tools/art/generate_actors.gd` 的 `NPC_LOOKS` + `data/npcs/` `data/dialogue/` `data/schedules/` + 场景里的 `SchedulePoint` |
+| 加节日 / 事件 | 节日：`data/festivals/`（`FestivalData`）+ 地图里的 `FestivalGround`（`festival_ids`）；事件：`data/events/`（`EventData`）。判定规则 `src/event/*_rules.gd`，状态 / 存档在 `src/autoload/calendar.gd`；新文案记得重跑 `build_assets.sh` |
 | 加恋爱对象 | `NpcData` 的 `romanceable` / `*_dialogue` / 礼物偏好 + `data/dialogue/` 五段对白 + `AffectionRules`（规则）与 `Relationships`（状态/存档） |
 | 加地图 | 复制 `scenes/world/twon.tscn`（户外）或 `library.tscn`（室内），根用 `WorldScene`，地面用 `src/world/*_ground.gd`，放 `SpawnPoint`，用 `SceneDoor` 互连 |
 | 加音效 / BGM | `src/audio/audio_catalog.gd` 加 id → `tools/audio/generate_*.gd` 写配方 → 需要触发就在 `src/autoload/audio_manager.gd` 订阅 `EventBus` → 重跑 `build_assets.sh` |
@@ -65,11 +66,11 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 
 ## 4. 代码地图
 
-- **十个单例（顺序 = `project.godot` 声明顺序）**：
-  `EventBus` `AppTheme` `Database` `GameClock` `GameState` `WeatherSystem` `Relationships` `SaveManager` `SceneRouter` `Audio`。
+- **十一个单例（顺序 = `project.godot` 声明顺序）**：
+  `EventBus` `AppTheme` `Database` `GameClock` `GameState` `WeatherSystem` `Relationships` `Calendar` `SaveManager` `SceneRouter` `Audio`。
   依赖图与约束见 `docs/architecture.md` §2。
 - `src/art/` 调色板 + 图集排版表；`src/audio/` 音频 id/路径目录；`src/core/` 日期/季节/状态机/网格 A*；
-  `src/data/` 资源类定义；`src/player/`；`src/farm/`；`src/npc/`；`src/shop/`；`src/world/`；`src/ui/`；`src/main/`。
+  `src/data/` 资源类定义；`src/player/`；`src/farm/`；`src/npc/`；`src/event/`（节日与事件规则 + 会场节点）；`src/shop/`；`src/world/`；`src/ui/`；`src/main/`。
 - `tools/art/`、`tools/audio/` 生成器；`tools/build_assets.sh`（唯一编排入口）；`tools/check.sh`；
   `tools/smoke_test.gd` + `smoke_test.tscn`；`tools/generate_sample_data.gd`（重置示例数据）。
 - `tests/unit/` gdUnit4（断言风格：`assert_int(x).override_failure_message("...").is_equal(y)`）。

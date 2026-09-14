@@ -206,4 +206,29 @@ DIALOGUE_BLACKSMITH_CONFESSION_2,可这句我练了很久——我喜欢你。,B
 DIALOGUE_BLACKSMITH_PROPOSAL_1,这……你拿蓝羽毛来做什么？,This... why the blue feather?
 DIALOGUE_BLACKSMITH_PROPOSAL_2,好。往后我打的每样东西，都有你一半。,Then so be it. Everything I forge is half yours.
 DIALOGUE_OUR_CHILD_GREETING,你回来啦！抱抱！,You are back! Hug!
+PROMPT_FESTIVAL,按 E 参加祭典,Press E to join the festival
+NOTIFY_FESTIVAL_TODAY,今天是{festival}！,Today is the {festival}!
+NOTIFY_FESTIVAL_ATTENDED,参加了{festival}，大家的好感 +{amount},Joined the {festival}! Everyone +{amount} affection
+NOTIFY_FESTIVAL_ALREADY,今年已经参加过{festival}了,Already joined the {festival} this year
+FESTIVAL_NEW_YEAR,新年祭,New Year Festival
+FESTIVAL_FLOWER,花祭,Flower Festival
+FESTIVAL_FIREWORKS,烟花大会,Fireworks Night
+FESTIVAL_HARVEST,收获祭,Harvest Festival
+FESTIVAL_STARRY_NIGHT,星夜祭,Starry Night Festival
+DIALOGUE_FESTIVAL_NEW_YEAR_1,新年好！今年也请多关照。,Happy new year! Please look after us again.
+DIALOGUE_FESTIVAL_NEW_YEAR_2,广场上摆好了酒，大家就等你来了。,The drinks are out on the plaza. Everyone is waiting.
+DIALOGUE_FESTIVAL_FLOWER_1,今年的花祭，来看看婆婆新剪的花吧。,Come see my freshly cut flowers for the flower festival.
+DIALOGUE_FESTIVAL_FLOWER_2,花开得这么好，都是托你的福。,The flowers bloom like this thanks to you.
+DIALOGUE_FESTIVAL_FIREWORKS_1,快看快看，烟花要开始了！,Look, the fireworks are about to start!
+DIALOGUE_FESTIVAL_FIREWORKS_2,夏天的晚上，就该和大家一起看烟花。,Summer nights are for fireworks with friends.
+DIALOGUE_FESTIVAL_HARVEST_1,今年的收成不错，大家都能过个好年。,A fine harvest this year. We will all be warm.
+DIALOGUE_FESTIVAL_HARVEST_2,这些饭菜都是用你的作物做的，多吃点。,Everything here is made from your crops. Eat up.
+DIALOGUE_FESTIVAL_STARRY_1,今晚的星星特别亮，许个愿吧。,The stars are bright tonight. Make a wish.
+DIALOGUE_FESTIVAL_STARRY_2,听说在星夜祭许的愿，一定会实现。,They say wishes made at the starry night come true.
+EVENT_TRAVELER_VISIT,一位旅人路过农场，留下 {money}G 谢礼,A traveler passed the farm and left {money}G
+EVENT_MAYOR_SUBSIDY,村长送来了夏季补助 {money}G,The mayor sent a {money}G summer grant
+EVENT_HARVEST_BLESSING,镇公所送来了丰收的谢礼 {money}G,The town hall sent {money}G for the good harvest
+EVENT_FIRST_SNOW,初雪落下了，冬天到了。农场也安静下来。,The first snow fell. Winter has come.
+EVENT_LIBRARIAN_VISIT,书雅带了几本书来，想和你聊聊。,Shuyai brought some books and wants to talk.
+
 

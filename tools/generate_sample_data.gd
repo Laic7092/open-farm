@@ -25,6 +25,8 @@ const DIALOGUE_DIR: String = "res://data/dialogue"
 const NPC_DIR: String = "res://data/npcs"
 const SCHEDULE_DIR: String = "res://data/schedules"
 const SHOP_DIR: String = "res://data/shops"
+const FESTIVAL_DIR: String = "res://data/festivals"
+const EVENT_DIR: String = "res://data/events"
 
 ## 美术资源目录（由 tools/art/*.gd 生成，这里只负责"把图挂到数据上"）。
 const CROP_SHEET_DIR: String = "res://assets/sprites/crops"
@@ -33,11 +35,15 @@ const FLORA_SHEET_DIR: String = "res://assets/sprites/flora"
 const ITEM_ICON_DIR: String = "res://assets/sprites/items"
 const NPC_FRAMES_DIR: String = "res://assets/sprites/actors"
 
+## 节日都在小镇广场办，这里只写一次，免得每份节日数据各写一遍路径。
+const TWON_SCENE: String = "res://scenes/world/twon.tscn"
+
 
 func _initialize() -> void:
 	for directory: String in [
 		CROP_DIR, ANIMAL_DIR, BUILDING_DIR, FLORA_DIR,
-		ITEM_DIR, TOOL_DIR, DIALOGUE_DIR, NPC_DIR, SCHEDULE_DIR, SHOP_DIR
+		ITEM_DIR, TOOL_DIR, DIALOGUE_DIR, NPC_DIR, SCHEDULE_DIR, SHOP_DIR,
+		FESTIVAL_DIR, EVENT_DIR
 	]:
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(directory))
 
@@ -51,6 +57,9 @@ func _initialize() -> void:
 	_build_schedules()
 	_build_npcs()
 	_build_shops()
+	# 节日与事件引用对白资源，必须排在 _build_dialogues() 之后。
+	_build_festivals()
+	_build_events()
 
 	print("示例数据生成完成")
 	quit()
@@ -599,6 +608,24 @@ func _build_dialogues() -> void:
 	# 孩子出生后才出现，跟随父母住在家门口。
 	_add_dialogue(&"our_child_greeting", &"NPC_OUR_CHILD", [&"DIALOGUE_OUR_CHILD_GREETING"])
 
+	# 节日开场对白：第一次进会场时播放。
+	_add_dialogue(&"festival_new_year", &"NPC_MAYOR", [
+		&"DIALOGUE_FESTIVAL_NEW_YEAR_1", &"DIALOGUE_FESTIVAL_NEW_YEAR_2",
+	])
+	_add_dialogue(&"festival_flower", &"NPC_FLORIST", [
+		&"DIALOGUE_FESTIVAL_FLOWER_1", &"DIALOGUE_FESTIVAL_FLOWER_2",
+	])
+	_add_dialogue(&"festival_fireworks", &"NPC_CHILD", [
+		&"DIALOGUE_FESTIVAL_FIREWORKS_1", &"DIALOGUE_FESTIVAL_FIREWORKS_2",
+	])
+	_add_dialogue(&"festival_harvest", &"NPC_MERCHANT", [
+		&"DIALOGUE_FESTIVAL_HARVEST_1", &"DIALOGUE_FESTIVAL_HARVEST_2",
+	])
+	_add_dialogue(&"festival_starry_night", &"NPC_LIBRARIAN", [
+		&"DIALOGUE_FESTIVAL_STARRY_1", &"DIALOGUE_FESTIVAL_STARRY_2",
+	])
+	_add_dialogue(&"librarian_visit", &"NPC_LIBRARIAN", [&"EVENT_LIBRARIAN_VISIT"])
+
 
 ## 批量建一段"每句一个翻译键"的对白并保存。
 func _add_dialogue(
@@ -860,6 +887,108 @@ func _stock(item_id: StringName, price: int) -> ShopStock:
 	entry.price_override = price
 	entry.unlimited = true
 	return entry
+
+
+# ---------------------------------------------------------------- 节日 / 事件
+
+## 五个节日：每个季节一场，村民按 [member FestivalData.npc_ids] 到会场集合。
+func _build_festivals() -> void:
+	_festival(
+		&"new_year", &"FESTIVAL_NEW_YEAR", Season.Type.SPRING, 1, 8, 17,
+		&"plaza", [&"mayor", &"merchant", &"blacksmith", &"florist", &"child"],
+		4, "festival_new_year"
+	)
+	_festival(
+		&"flower_festival", &"FESTIVAL_FLOWER", Season.Type.SPRING, 14, 9, 16,
+		&"garden", [&"florist", &"child", &"mayor"],
+		4, "festival_flower", &"flower_festival_joined"
+	)
+	_festival(
+		&"fireworks", &"FESTIVAL_FIREWORKS", Season.Type.SUMMER, 24, 18, 23,
+		&"plaza", [&"mayor", &"merchant", &"blacksmith", &"florist", &"child", &"librarian"],
+		5, "festival_fireworks"
+	)
+	_festival(
+		&"harvest_festival", &"FESTIVAL_HARVEST", Season.Type.FALL, 15, 9, 17,
+		&"plaza", [&"mayor", &"merchant", &"blacksmith", &"florist", &"child"],
+		5, "festival_harvest", &"harvest_festival_joined"
+	)
+	_festival(
+		&"starry_night", &"FESTIVAL_STARRY_NIGHT", Season.Type.WINTER, 25, 18, 22,
+		&"plaza", [&"mayor", &"florist", &"child", &"librarian"],
+		6, "festival_starry_night"
+	)
+
+
+func _festival(
+	festival_id: StringName, name_key: StringName, season: Season.Type, day: int,
+	start_hour: int, end_hour: int, gather_point: StringName, npc_ids: Array,
+	affection: int, dialogue_id: String, attendance_flag: StringName = &""
+) -> void:
+	var festival := FestivalData.new()
+	festival.id = festival_id
+	festival.display_name_key = name_key
+	festival.season = season
+	festival.day = day
+	festival.start_hour = start_hour
+	festival.end_hour = end_hour
+	festival.world_path = TWON_SCENE
+	festival.gather_point = gather_point
+	festival.npc_ids = _str_array(npc_ids)
+	festival.attendance_affection = affection
+	festival.attendance_flag = attendance_flag
+	festival.intro_dialogue = (
+		_load(DIALOGUE_DIR.path_join("%s.tres" % dialogue_id)) as DialogueData
+	)
+	_save(festival, FESTIVAL_DIR.path_join("%s.tres" % festival_id))
+
+
+## 五个一次性事件：日结转时按条件判定，触发后打旗标 / 给钱 / 播对白。
+func _build_events() -> void:
+	_event(
+		&"traveler_visit", &"EVENT_TRAVELER_VISIT", &"EVENT_TRAVELER_VISIT",
+		-1, 8, -1, 150
+	)
+	_event(
+		&"mayor_subsidy", &"EVENT_MAYOR_SUBSIDY", &"EVENT_MAYOR_SUBSIDY",
+		int(Season.Type.SUMMER), 1, -1, 300
+	)
+	_event(
+		&"harvest_blessing", &"EVENT_HARVEST_BLESSING", &"EVENT_HARVEST_BLESSING",
+		int(Season.Type.FALL), 28, -1, 200, &"", 0, &"harvest_blessed"
+	)
+	_event(
+		&"first_snow", &"EVENT_FIRST_SNOW", &"EVENT_FIRST_SNOW",
+		int(Season.Type.WINTER), 1, -1, 0, &"", 0, &"winter_seen"
+	)
+	# 好感事件：任意一天都行，但要先和书雅混熟。
+	_event(
+		&"librarian_visit", &"EVENT_LIBRARIAN_VISIT", &"EVENT_LIBRARIAN_VISIT",
+		-1, -1, -1, 0, &"librarian", 120, &"", "librarian_visit"
+	)
+
+
+func _event(
+	event_id: StringName, title_key: StringName, message_key: StringName,
+	season: int, day: int, weather: int, grant_money: int,
+	required_npc: StringName = &"", required_affection: int = 0,
+	set_flag: StringName = &"", dialogue_id: String = "", once: bool = true
+) -> void:
+	var event := EventData.new()
+	event.id = event_id
+	event.title_key = title_key
+	event.message_key = message_key
+	event.season = season
+	event.day = day
+	event.weather = weather
+	event.required_npc = required_npc
+	event.required_affection = required_affection
+	event.grant_money = grant_money
+	event.set_flag = set_flag
+	event.once = once
+	if not dialogue_id.is_empty():
+		event.dialogue = _load(DIALOGUE_DIR.path_join("%s.tres" % dialogue_id)) as DialogueData
+	_save(event, EVENT_DIR.path_join("%s.tres" % event_id))
 
 
 # ---------------------------------------------------------------- 工具方法

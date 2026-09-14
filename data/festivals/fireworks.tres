@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="FestivalData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/festival_fireworks.tres" id="1_60olv"]
+[ext_resource type="Script" path="res://src/data/festival_data.gd" id="2_fuvyi"]
+
+[resource]
+script = ExtResource("2_fuvyi")
+id = &"fireworks"
+display_name_key = &"FESTIVAL_FIREWORKS"
+season = 1
+day = 24
+start_hour = 18
+end_hour = 23
+world_path = "res://scenes/world/twon.tscn"
+gather_point = &"plaza"
+npc_ids = Array[StringName]([&"mayor", &"merchant", &"blacksmith", &"florist", &"child", &"librarian"])
+attendance_affection = 5
+intro_dialogue = ExtResource("1_60olv")

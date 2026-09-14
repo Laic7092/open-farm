@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FestivalData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/festival_flower.tres" id="1_mynft"]
+[ext_resource type="Script" path="res://src/data/festival_data.gd" id="2_b7xhg"]
+
+[resource]
+script = ExtResource("2_b7xhg")
+id = &"flower_festival"
+display_name_key = &"FESTIVAL_FLOWER"
+day = 14
+end_hour = 16
+world_path = "res://scenes/world/twon.tscn"
+gather_point = &"garden"
+npc_ids = Array[StringName]([&"florist", &"child", &"mayor"])
+attendance_flag = &"flower_festival_joined"
+intro_dialogue = ExtResource("1_mynft")

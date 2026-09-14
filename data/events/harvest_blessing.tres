@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EventData" format=3]
+
+[ext_resource type="Script" path="res://src/data/event_data.gd" id="1_c32q1"]
+
+[resource]
+script = ExtResource("1_c32q1")
+id = &"harvest_blessing"
+title_key = &"EVENT_HARVEST_BLESSING"
+message_key = &"EVENT_HARVEST_BLESSING"
+season = 2
+day = 28
+grant_money = 200
+set_flag = &"harvest_blessed"

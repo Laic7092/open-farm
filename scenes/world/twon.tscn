@@ -25,6 +25,7 @@
 [ext_resource type="Script" path="res://src/npc/schedule_point.gd" id="31_schedpoint"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/forge.png" id="32_forge"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/flower_stand.png" id="33_flower_stand"]
+[ext_resource type="Script" path="res://src/event/festival_ground.gd" id="34_festival"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
 size = Vector2(16, 16)
@@ -275,6 +276,36 @@ target_scene = "res://scenes/world/library.tscn"
 target_spawn_id = &"from_twon"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToLibrary"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="FestivalPlaza" type="Area2D" parent="Interactables"]
+position = Vector2(768, 480)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("34_festival")
+festival_ids = Array[StringName]([&"new_year", &"fireworks", &"harvest_festival", &"starry_night"])
+
+[node name="Stall" type="Sprite2D" parent="Interactables/FestivalPlaza"]
+visible = false
+position = Vector2(0, 10)
+texture = ExtResource("33_flower_stand")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/FestivalPlaza"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="FestivalGarden" type="Area2D" parent="Interactables"]
+position = Vector2(640, 820)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("34_festival")
+festival_ids = Array[StringName]([&"flower_festival"])
+
+[node name="Stall" type="Sprite2D" parent="Interactables/FestivalGarden"]
+visible = false
+position = Vector2(0, 10)
+texture = ExtResource("33_flower_stand")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/FestivalGarden"]
 shape = SubResource("RectangleShape2D_tile")
 
 [node name="SchedulePoints" type="Node2D" parent="."]

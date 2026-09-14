@@ -16,6 +16,8 @@ const TOOL_DIR: String = "res://data/tools"
 const NPC_DIR: String = "res://data/npcs"
 const SHOP_DIR: String = "res://data/shops"
 const DIALOGUE_DIR: String = "res://data/dialogue"
+const FESTIVAL_DIR: String = "res://data/festivals"
+const EVENT_DIR: String = "res://data/events"
 
 ## 数据装载完成后发出。
 signal reloaded()
@@ -29,6 +31,8 @@ var tools: Dictionary[StringName, ToolData] = {}
 var npcs: Dictionary[StringName, NpcData] = {}
 var shops: Dictionary[StringName, ShopData] = {}
 var dialogues: Dictionary[StringName, DialogueData] = {}
+var festivals: Dictionary[StringName, FestivalData] = {}
+var events: Dictionary[StringName, EventData] = {}
 
 
 func _ready() -> void:
@@ -46,6 +50,8 @@ func reload() -> void:
 	npcs.clear()
 	shops.clear()
 	dialogues.clear()
+	festivals.clear()
+	events.clear()
 
 	_index(CROP_DIR, crops, "CropData")
 	_index(ANIMAL_DIR, animals, "AnimalData")
@@ -56,6 +62,8 @@ func reload() -> void:
 	_index(NPC_DIR, npcs, "NpcData")
 	_index(SHOP_DIR, shops, "ShopData")
 	_index(DIALOGUE_DIR, dialogues, "DialogueData")
+	_index(FESTIVAL_DIR, festivals, "FestivalData")
+	_index(EVENT_DIR, events, "EventData")
 
 	reloaded.emit()
 
@@ -96,6 +104,36 @@ func get_shop(id: StringName) -> ShopData:
 
 func get_dialogue(id: StringName) -> DialogueData:
 	return dialogues.get(id) as DialogueData
+
+
+func get_festival(id: StringName) -> FestivalData:
+	return festivals.get(id) as FestivalData
+
+
+func get_event(id: StringName) -> EventData:
+	return events.get(id) as EventData
+
+
+## 全部节日，按 id 排序（节日日历要求输出稳定，不依赖字典的迭代顺序）。
+func festival_list() -> Array[FestivalData]:
+	var result: Array[FestivalData] = []
+	for id: StringName in festivals:
+		result.append(festivals[id])
+	result.sort_custom(func(a: FestivalData, b: FestivalData) -> bool:
+		return String(a.id) < String(b.id)
+	)
+	return result
+
+
+## 全部事件，按 id 排序。
+func event_list() -> Array[EventData]:
+	var result: Array[EventData] = []
+	for id: StringName in events:
+		result.append(events[id])
+	result.sort_custom(func(a: EventData, b: EventData) -> bool:
+		return String(a.id) < String(b.id)
+	)
+	return result
 
 
 ## 取道具；缺失时打印错误并返回 null（用于"这里必须有数据"的场景）。
@@ -146,6 +184,7 @@ func total_count() -> int:
 	return (
 		crops.size() + animals.size() + buildings.size() + floras.size()
 		+ items.size() + tools.size() + npcs.size() + shops.size() + dialogues.size()
+		+ festivals.size() + events.size()
 	)
 
 
@@ -153,7 +192,8 @@ func total_count() -> int:
 func validate_all() -> PackedStringArray:
 	var problems := PackedStringArray()
 	for bucket: Dictionary in [
-		crops, animals, buildings, floras, items, tools, npcs, shops, dialogues
+		crops, animals, buildings, floras, items, tools, npcs, shops, dialogues,
+		festivals, events
 	]:
 		for key: StringName in bucket:
 			var resource: Resource = bucket[key]

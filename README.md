@@ -2,7 +2,7 @@
 
 用 **Godot 4.7.2** 搭建的 2D 俯视角像素风农场生活模拟游戏（牧场物语 / 矿石镇风格）。
 当前进度：**整体骨架已完成并可运行** —— 核心循环、玩家、农场、畜牧、NPC/经济、好感度与恋爱
-（聊天 / 送礼 / 表白 / 结婚 / 生子）、UI、存档、本地化、测试全部打通；
+（聊天 / 送礼 / 表白 / 结婚 / 生子）、节日与事件、UI、存档、本地化、测试全部打通；
 **美术、字体、BGM、音效全部由脚本生成**，内容可以继续扩展。
 
 ---
@@ -83,6 +83,10 @@ timeout 800 ./tools/check.sh smoke
 铁匠 / 花婆婆 / 渔夫 / 书雅可以攻略：好感 4 心触发表白，5 心并带上一束
 **蓝色羽毛**（杂货店有售）再交谈即可求婚；婚后满 10 天会迎来孩子，
 孩子会出现在农舍旁（未出生时不存在）。
+**节日与事件**：日历上有五个节日（春 1 新年祭、春 14 花祭、夏 24 烟花大会、
+秋 15 收获祭、冬 25 星夜祭）。节日当天村民会放下日程去会场集合，HUD 顶部出现"今日节日"，
+到场按 `E` 参加即可给每位到场 NPC 加好感（每年一次，首次还有一段开场对白）。
+此外还有一次性事件（旅人来访、夏季补助、初雪……）：条件在日结转时判定，命中就结算并弹提示。
 按 `Esc` 打开菜单可以存读档、也可以回到标题页。
 
 ---
@@ -103,13 +107,15 @@ open-farm/
 │   │                          #   以及畜舍系统（AnimalData/State/Husbandry/Manager）
 │   ├── npc/                   # NPC 实体、日程表（NpcSchedule）、行走网格（NpcNavigator）
 │   │                          #   以及好感度 / 恋爱规则（AffectionRules、RelationshipState）
+│   ├── event/                 # 节日与事件：纯静态规则（FestivalRules / EventRules）
+│   │                          #   与地图上的会场节点（FestivalGround）
 │   ├── shop/                  # 商店交易规则（纯逻辑，可单测）
 │   ├── world/                 # 世界场景基类、天气、边界墙、传送门、床、出货箱
 │   │                          #   以及野生植被系统（FloraData/State/Growth/Field）
 │   ├── ui/                    # HUD、对话框、背包、商店、系统菜单、UI 总入口
 │   └── main/                  # 游戏主入口
 ├── scenes/                    # 场景文件，目录结构与 src/ 一一对应
-├── data/                      # 实际的数据资源（.tres）：作物/牲畜/道具/NPC/对话/商店/日程，策划直接在编辑器里改
+├── data/                      # 实际的数据资源（.tres）：作物/牲畜/道具/NPC/对话/商店/日程/节日/事件，策划直接在编辑器里改
 ├── assets/                    # 全部由 tools/*.gd 生成（见 docs/art_pipeline.md、audio_pipeline.md）
 │   ├── audio/                 # BGM 与音效（标题 / 农场 / 小镇 / 夜晚 + 26 个音效）
 │   ├── i18n/strings.csv       # 翻译表（zh_CN / en）
@@ -129,9 +135,9 @@ open-farm/
 ## 架构概览
 
 本节只回答"是什么、在哪"；每个设计**为什么**这么写，见
-[docs/architecture.md](docs/architecture.md)（关键决策见 §3，子系统见 §10 / §11）。
+[docs/architecture.md](docs/architecture.md)（关键决策见 §3，子系统见 §10 起）。
 
-### 十大单例（Autoload）
+### 十一大单例（Autoload）
 
 启动顺序 = `project.godot` 的声明顺序；依赖图与约束见
 [architecture §2](docs/architecture.md#2-autoload-依赖图)。
@@ -145,6 +151,7 @@ open-farm/
 | `GameState` | 跨场景状态 | 金钱、剧情旗标、统计。玩家体力/背包属于 `Player`，不放这里 |
 | `WeatherSystem` | 天气 | 作为**第一个**日结转钩子，保证其它系统读到的天气已是当天的 |
 | `Relationships` | 好感度与恋爱 | 跨场景持有每 NPC 的好感 / 关系阶段、配偶与孩子；日结转清每日标记并推进婚育 |
+| `Calendar` | 节日与事件 | 从 `data/festivals` / `data/events` 读表；日结转播报今日节日并判定一次性事件；参加奖励与"已发生"状态跟着存档走 |
 | `SaveManager` | 存档 | JSON + 版本号；鸭子类型收集 `persistent` 组节点；支持跨地图读档 |
 | `SceneRouter` | 场景路由 | 淡入淡出 + 出生点定位；世界场景**缓存复用**，UI 常驻不销毁 |
 | `Audio` | 音频总管 | 合成 BGM / 音效的唯一播放出口；按场景与时间换曲，订阅 `EventBus` 播音效 |
@@ -170,6 +177,7 @@ open-farm/
 | 场景切换 | `SceneRouter._world_cache` | 换 `WorldHost` 子节点而非 `change_scene_to_file`；地图实例缓存复用 | [§3.2](docs/architecture.md#32-世界场景换子节点不用-change_scene_to_file) |
 | 畜舍养殖 | `LivestockManager` | 与 `FarmGrid` 同构：状态在字典、视图可重建、规则纯静态、牲畜不会死 | [§3.3.1](docs/architecture.md#331-畜舍为什么是-farmgrid-的翻版) |
 | 昼夜光照 | `DayNight` + `WorldLighting` | 一条"分钟 → 环境光"曲线；天气染色与昼夜染色必须在同一个 `CanvasModulate` 相乘，路灯由 `WorldProp.light_radius` 生成 | [§12](docs/architecture.md#12-昼夜光照) |
+| 节日与事件 | `Calendar` + `FestivalData` / `EventData` | 节日是"日历 + 会场 + 村民聚集"：参加给好感、每年一次；事件在日结转按条件触发一次。规则纯静态可单测 | [§14](docs/architecture.md#14-节日与事件) |
 | 好感度与恋爱 | `Relationships` + `AffectionRules` | 规则纯静态可单测；状态按 `npc_id` 集中存放，换地图、读档都不丢；表白 / 求婚由交谈触发，孩子用 `required_flag` 门控出场 | [§13](docs/architecture.md#13-好感度与恋爱结婚生子) |
 
 > **生命周期铁律**：世界场景会缓存复用，`_ready()` 一生只跑一次。
@@ -237,6 +245,21 @@ open-farm/
 4. 结婚信物默认是 `blue_feather`（`AffectionRules.PROPOSAL_ITEM`），
    已上架杂货店；想换信物就改这个常量并补对应道具。
 
+### 加一个节日 / 事件
+
+1. 节日：在 `data/festivals/` 新建 `FestivalData`（或看 `tools/generate_sample_data.gd` 的
+   `_build_festivals()`）：`season` / `day` 定日子，`start_hour`–`end_hour` 定开门时间
+   （`end_hour <= start_hour` 表示全天），`world_path` / `gather_point` 定会场，
+   `npc_ids` 是"放下日程来集合"的村民，`intro_dialogue` 是首次参加的对白。
+2. 事件：在 `data/events/` 新建 `EventData`：季节 / 日期 / 天气 / 旗标 / 好感门槛任选，
+   命中后打 `set_flag`、给 `grant_money`、弹 `message_key`、可选播 `dialogue`；
+   `once` 为 false 表示每年都能再发生一次。
+3. 会场：在对应地图的 `Interactables` 下放一个 `FestivalGround`（Area2D，
+   `collision_layer = 8`），把要在这里办的节日填进 `festival_ids`；
+   可选子节点 `Stall`（`Sprite2D`）会在节日期间自动出现。
+4. 文案：在 `assets/i18n/strings.csv` 加节日名 / 提示 / 对白键，重跑 `./tools/build_assets.sh`
+   把新汉字打进像素字体。
+
 ### 加一个世界场景
 
 1. 复制 `scenes/world/twon.tscn`（户外）或 `scenes/world/library.tscn`（室内），
@@ -268,8 +291,8 @@ func from_dict(data: Dictionary) -> void: ...
 
 | 层次 | 工具 | 覆盖 |
 | --- | --- | --- |
-| 单元测试 | gdUnit4（`tests/unit/`，308 例） | 日期进位、季节/天气、网格换算、背包堆叠、体力、工具带、作物生长（含枯死/多次收获）、牲畜养殖（成年/产出/喂食/好感度）、NPC 日程表与网格 A*、商店经济、状态机、时钟与日结转钩子、好感度与恋爱（聊天/送礼/表白/结婚/生子）、数据完整性、存档往返与容错 |
-| 冒烟测试 | `tools/smoke_test.tscn`（197 项） | 真的把游戏跑起来：场景加载、玩家落点、翻地→播种→生长→收获全链路、放养→喂食→成长→收产出、买/卖、存读档、HUD 内容、**NPC 日程与寻路（导航网格、路径、真的走起来）**、**好感度 / 恋爱 / 婚姻链路**、**昼夜光照（环境光随时刻变化、路灯白天灭夜里亮）**、**农场 ↔ 小镇 / 农场 ↔ twon 往返后农田与畜舍进度、日结转钩子仍然有效**、**六张地图加载与 NPC 导航可达性** |
+| 单元测试 | gdUnit4（`tests/unit/`，338 例） | 日期进位、季节/天气、网格换算、背包堆叠、体力、工具带、作物生长（含枯死/多次收获）、牲畜养殖（成年/产出/喂食/好感度）、NPC 日程表与网格 A*、商店经济、状态机、时钟与日结转钩子、好感度与恋爱（聊天/送礼/表白/结婚/生子）、节日规则（日期/开放时间/倒数）与事件条件、节日与事件的运行时状态（参加奖励每年一次、事件一次性触发、存档往返）、数据完整性、存档往返与容错 |
+| 冒烟测试 | `tools/smoke_test.tscn`（212 项） | 真的把游戏跑起来：场景加载、玩家落点、翻地→播种→生长→收获全链路、放养→喂食→成长→收产出、买/卖、存读档、HUD 内容、**NPC 日程与寻路（导航网格、路径、真的走起来）**、**好感度 / 恋爱 / 婚姻链路**、**昼夜光照（环境光随时刻变化、路灯白天灭夜里亮）**、**农场 ↔ 小镇 / 农场 ↔ twon 往返后农田与畜舍进度、日结转钩子仍然有效**、**六张地图加载与 NPC 导航可达性**、**节日与事件（今日节日播报、HUD 横幅、会场按时间开放、参加奖励与存档往返、非节日当天会场收摊）** |
 | 美术规范 | `tests/unit/test_assets.gd` | 生成物存在、尺寸与 `AtlasLayout` 一致、瓦片齐全、字体覆盖翻译表全部字符、数据都挂上了贴图 |
 | 音频规范 | `tests/unit/test_audio.gd` | WAV 真的是 22050 Hz / 16 bit / 单声道；BGM 带 `smpl` 循环点、音效不带；运行时总线就位、音量可调 |
 | 视觉回归 | `tools/screenshot.tscn` / `tools/ui_preview.tscn` | 标题页 + 农场 + 小镇 + twon + 海滩 + 矿洞 + 图书馆截图、各界面布局截图 |
@@ -342,8 +365,11 @@ timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/generate_sa
   目前 6 张地图都会常驻；地图数量继续增长后需要改成"按需卸载 + 状态外置到存档层"。
 - **水域没有碰撞**：`WATER` 只是地表瓦片，海滩的海水与小镇的池塘都能直接走进去
   （农田靠范围判定，不受影响）。
-- **NPC 日程是固定时刻表**：只按时辰切换地点，没有工作日 / 天气 / 节日差异，
-  也不会互相避让或绕开玩家；路上被新长出来的障碍挡住会重算一次，但不排队。
+- **NPC 日程是固定时刻表**：只按时辰切换地点，没有工作日 / 天气差异；
+  节日期间会统一改去会场集合点（所有人挤在同一个 `SchedulePoint` 附近）。
+  不会互相避让或绕开玩家；路上被新长出来的障碍挡住会重算一次，但不排队。
+- **事件只在日结转判定**：一次性事件在每天开始时按"季节 / 日期 / 天气 / 旗标 / 好感"判定，
+  没有"走进某地图触发"或按玩家位置触发的区域事件；触发时的对白会在起床瞬间播放。
 - **恋爱是"自动里程碑"**：交谈时若满足条件就直接播放表白 / 求婚对白，
   没有多分支选项界面，也没有分手 / 离婚；目前只有铁匠 / 花婆婆 / 渔夫 / 书雅可以攻略，
   孩子出生后固定待在家门口，不会长大。
@@ -365,7 +391,7 @@ timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/generate_sa
 
 1. **内容**：更多作物 / 季节作物、更多牲畜（鸭 / 羊）与畜舍升级、钓鱼、采矿。
 2. **表现**：更丰富的生成器画法（光影 / 更多逐帧动画）、Tilemap 地形自动过渡。
-3. **系统**：节日与事件、NPC 之间的避让与排队、工具升级与体力上限成长。
+3. **系统**：NPC 之间的避让与排队、工具升级与体力上限成长、节日小游戏（赛跑 / 钓鱼比赛）。
 4. **流程**：多存档槽选择界面、新手引导、结局与结算。
 5. **工程**：导出预设（Windows / Linux / macOS）、GitHub Actions 跑 `tools/check.sh`、帧率与内存基线。
 

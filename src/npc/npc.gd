@@ -55,6 +55,8 @@ var _pending_milestone: Milestone = Milestone.NONE
 var _available: bool = true
 var _schedule: NpcSchedule
 var _current_entry: ScheduleEntry
+## 节日聚集用的临时日程段；复用同一个实例，避免每次刷新都新建资源。
+var _festival_entry: ScheduleEntry
 var _target_cell: Vector2i = NpcNavigator.NO_CELL
 var _path: Array[Vector2i] = []
 var _path_index: int = 0
@@ -168,11 +170,26 @@ func _refresh_schedule() -> void:
 	if not _available or _schedule == null or _schedule.is_empty():
 		return
 	var entry := _schedule.entry_at(GameClock.minute_of_day)
+	# 节日优先于日常日程：全村到点放下手里的活儿去会场。
+	var festival_point := Calendar.gather_point_for(npc_id)
+	if festival_point != &"":
+		entry = _festival_entry_for(festival_point)
 	if entry == null or entry == _current_entry:
 		return
 	_current_entry = entry
 	schedule_location_changed.emit(entry.location_id)
 	_navigate_to(entry.location_id)
+
+
+## 节日聚集用的日程段：复用同一个 [ScheduleEntry]，只改地点。
+func _festival_entry_for(location_id: StringName) -> ScheduleEntry:
+	if _festival_entry == null:
+		_festival_entry = ScheduleEntry.new()
+		_festival_entry.start_minute = 0
+		_festival_entry.activity = &"festival"
+		_festival_entry.facing = Facing.Direction.DOWN
+	_festival_entry.location_id = location_id
+	return _festival_entry
 
 
 func _navigate_to(location_id: StringName) -> void:

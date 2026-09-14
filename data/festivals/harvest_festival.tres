@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="FestivalData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/festival_harvest.tres" id="1_71raj"]
+[ext_resource type="Script" path="res://src/data/festival_data.gd" id="2_xrd7o"]
+
+[resource]
+script = ExtResource("2_xrd7o")
+id = &"harvest_festival"
+display_name_key = &"FESTIVAL_HARVEST"
+season = 2
+day = 15
+world_path = "res://scenes/world/twon.tscn"
+gather_point = &"plaza"
+npc_ids = Array[StringName]([&"mayor", &"merchant", &"blacksmith", &"florist", &"child"])
+attendance_affection = 5
+attendance_flag = &"harvest_festival_joined"
+intro_dialogue = ExtResource("1_71raj")

@@ -89,6 +89,15 @@ signal player_married(spouse_id: StringName)
 ## 孩子出生。
 signal child_born(child_id: StringName)
 
+# ---------------------------------------------------------------- 节日 / 事件
+
+## 今天要办某个节日（日结转播报，HUD 据此挂"今日节日"横幅）。
+signal festival_day_started(festival_id: StringName)
+## 玩家参加了某节日；[param affection] 为每位到场 NPC 得到的好感度。
+signal festival_attended(festival_id: StringName, affection: int)
+## 一次性事件被触发（[code]Calendar[/code] 判定命中并结算完效果后发出）。
+signal calendar_event_triggered(event_id: StringName)
+
 # ---------------------------------------------------------------- 野生植被
 
 ## 世界各处自然冒出了一株新芽。

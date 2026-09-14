@@ -32,6 +32,13 @@ theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
 theme_override_constants/outline_size = 4
 text = "第 1 年 春 1 日"
 
+[node name="FestivalLabel" type="Label" parent="TopLeft"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.94, 0.6, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
+theme_override_constants/outline_size = 4
+
 [node name="TimeRow" type="HBoxContainer" parent="TopLeft" unique_id=2100906547]
 layout_mode = 2
 mouse_filter = 2
