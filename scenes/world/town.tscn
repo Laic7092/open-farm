@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -10,7 +10,8 @@
 [ext_resource type="Script" path="res://src/world/world_prop.gd" id="9_prop"]
 [ext_resource type="Script" path="res://src/world/flora_field.gd" id="10_flora_field"]
 [ext_resource type="PackedScene" path="res://scenes/world/flora.tscn" id="11_flora"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/house.png" id="20_house"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/house_merchant.png" id="20_house"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/house_mayor.png" id="30_house_mayor"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/tree.png" id="21_tree"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/tree_pine.png" id="22_pine"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/well.png" id="23_well"]
@@ -61,14 +62,14 @@ bounds = Rect2(8, 8, 624, 400)
 position = Vector2(296, 106)
 texture = ExtResource("20_house")
 script = ExtResource("9_prop")
-solid_size = Vector2(58, 14)
+solid_size = Vector2(62, 14)
 solid_offset = Vector2(0, 24)
 
 [node name="TownHall" type="Sprite2D" parent="Props"]
 position = Vector2(474, 112)
-texture = ExtResource("20_house")
+texture = ExtResource("30_house_mayor")
 script = ExtResource("9_prop")
-solid_size = Vector2(58, 14)
+solid_size = Vector2(60, 14)
 solid_offset = Vector2(0, 24)
 
 [node name="StoreMailbox" type="Sprite2D" parent="Props"]

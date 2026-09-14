@@ -34,6 +34,7 @@ GENERATORS=(
 	"tools/art/generate_font.gd"      # 像素中文字体（.fnt + PNG 子集）
 	"tools/art/generate_terrain.gd"   # 地形图集
 	"tools/art/generate_props.gd"     # 建筑 / 家具 / 树木
+	"tools/art/generate_houses.gd"    # NPC 住宅：按角色换造型（杂货铺 / 铁匠铺 / 图书馆……）
 	"tools/art/generate_actors.gd"    # 玩家与 NPC
 	"tools/art/generate_crops.gd"     # 每种作物一张生长图
 	"tools/art/generate_animals.gd"   # 每种牲畜一张状态表

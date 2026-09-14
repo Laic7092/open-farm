@@ -15,6 +15,10 @@ const PIXEL_FONT: String = "res://assets/fonts/pixel_cjk.fnt"
 const THEME_PATH: String = "res://assets/themes/game_theme.tres"
 const TILESET_PATH: String = "res://assets/tilesets/farm_tileset.tres"
 
+## 两栋住宅的剪影至少要有多少行不同，才算"两栋不同的房子"（半幅以上）。
+## 阈值定得松：要挡的是"换个配色就算新建筑"，不是禁止两栋房子有相似的坡顶。
+const SILHOUETTE_MIN_DIFFERENT_ROWS: int = 32
+
 ## 所有生成器都必须产出的文件。
 const REQUIRED_ASSETS: Array[String] = [
 	"res://assets/sprites/tileset_farm.png",
@@ -30,6 +34,14 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://assets/sprites/actors/npc_our_child.png",
 	"res://assets/sprites/items/blue_feather.png",
 	"res://assets/sprites/props/house.png",
+	"res://assets/sprites/props/house_merchant.png",
+	"res://assets/sprites/props/house_mayor.png",
+	"res://assets/sprites/props/house_blacksmith.png",
+	"res://assets/sprites/props/house_florist.png",
+	"res://assets/sprites/props/house_librarian.png",
+	"res://assets/sprites/props/house_child.png",
+	"res://assets/sprites/props/house_fisher.png",
+	"res://assets/sprites/props/house_miner.png",
 	"res://assets/sprites/props/barn.png",
 	"res://assets/sprites/props/tree.png",
 	"res://assets/sprites/props/bed.png",
@@ -124,6 +136,72 @@ func test_npc_png_matches_atlas_layout() -> void:
 			continue
 		assert_int(texture.get_width()).is_equal(Layout.NPC_SIZE.x)
 		assert_int(texture.get_height()).is_equal(Layout.NPC_SIZE.y)
+
+
+## 每栋住宅都必须是 64×64（场景里的落地碰撞盒按这个尺寸标定），
+## 而且**剪影**必须各成一栋——只换配色不算换了房子。
+func test_npc_houses_are_distinct() -> void:
+	var dir := DirAccess.open("res://assets/sprites/props")
+	assert_object(dir).override_failure_message("打不开道具目录").is_not_null()
+	if dir == null:
+		return
+	var names: Array[String] = []
+	for name: String in dir.get_files():
+		if name == "house.png" or (name.begins_with("house_") and name.ends_with(".png")):
+			names.append(name)
+	names.sort()
+	# 农舍 + 8 位有房子的 NPC；少一张说明生成器没跑或场景指向了不存在的贴图。
+	assert_int(names.size()).override_failure_message(
+		"住宅贴图数量不对（只找到 %s）" % str(names)
+	).is_greater_equal(9)
+	var pixels: Dictionary = {}
+	var profiles: Dictionary = {}
+	for name: String in names:
+		var texture := load("res://assets/sprites/props/%s" % name) as Texture2D
+		assert_object(texture).override_failure_message("缺少 %s" % name).is_not_null()
+		if texture == null:
+			continue
+		assert_int(texture.get_width()).override_failure_message(
+			"%s 必须与农舍同宽，否则场景里的碰撞盒会错位" % name
+		).is_equal(Layout.HOUSE_SIZE.x)
+		assert_int(texture.get_height()).is_equal(Layout.HOUSE_SIZE.y)
+		var image := texture.get_image()
+		pixels[name] = image.get_data()
+		profiles[name] = _silhouette_rows(image)
+	var keys: Array = pixels.keys()
+	keys.sort()
+	for i in keys.size():
+		for j in range(i + 1, keys.size()):
+			assert_bool(pixels[keys[i]] == pixels[keys[j]]).override_failure_message(
+				"%s 与 %s 是同一张图：房子要跟角色走" % [keys[i], keys[j]]
+			).is_false()
+			var different: int = 0
+			var left: Array = profiles[keys[i]]
+			var right: Array = profiles[keys[j]]
+			for row: int in left.size():
+				if left[row] != right[row]:
+					different += 1
+			assert_int(different).override_failure_message(
+				"%s 与 %s 的剪影雷同（只有 %d/%d 行不同）：房子要换体量，不只是换配色"
+				% [keys[i], keys[j], different, left.size()]
+			).is_greater_equal(SILHOUETTE_MIN_DIFFERENT_ROWS)
+
+
+## 剪影指纹：每行的 (最左, 最右, 不透明像素数)。
+## 外形相同、只是换了颜色时，两栋房子的指纹会逐行相同。
+func _silhouette_rows(image: Image) -> Array:
+	var rows: Array = []
+	for y: int in image.get_height():
+		var farthest_left := image.get_width()
+		var farthest_right := -1
+		var count := 0
+		for x: int in image.get_width():
+			if image.get_pixel(x, y).a > 0.5:
+				farthest_left = mini(farthest_left, x)
+				farthest_right = maxi(farthest_right, x)
+				count += 1
+		rows.append(Vector3i(farthest_left, farthest_right, count))
+	return rows
 
 
 func test_crop_png_matches_atlas_layout() -> void:

@@ -587,6 +587,10 @@ func _check_town() -> void:
 		get_tree().get_nodes_in_group(Npc.GROUP).is_empty(),
 		"NPC 应当已从小镇移入 twon"
 	)
+	_check_buildings(world, {
+		"GeneralStore": "res://assets/sprites/props/house_merchant.png",
+		"TownHall": "res://assets/sprites/props/house_mayor.png",
+	})
 
 	# 在别的地图上过一天：农场不在场景树里，它的日结转钩子是注销的，
 	# 所以农场的植被只能靠"重新进图时补算"追上——这正是下面要验证的。
@@ -645,6 +649,16 @@ func _check_twon() -> void:
 		_check(not plaza.can_interact(), "非节日当天会场不应该能交互")
 	_check(world.find_child("FestivalGarden", true, false) != null, "twon 花园应当有节日会场")
 
+	# 每栋建筑按住的人换造型：杂货铺 / 铁匠铺 / 花店 / 图书馆 / 小女孩家各一张图。
+	_check_buildings(world, {
+		"GeneralStore": "res://assets/sprites/props/house_merchant.png",
+		"TownHall": "res://assets/sprites/props/house_mayor.png",
+		"Forge": "res://assets/sprites/props/house_blacksmith.png",
+		"FlowerShop": "res://assets/sprites/props/house_florist.png",
+		"Library": "res://assets/sprites/props/house_librarian.png",
+		"ChildHome": "res://assets/sprites/props/house_child.png",
+	})
+
 	_check_npc_schedule()
 
 
@@ -673,6 +687,7 @@ func _check_beach() -> void:
 		)
 
 	_check(_find_npc(&"fisher") != null, "海滩应当有渔夫 NPC")
+	_check_buildings(world, {"Hut": "res://assets/sprites/props/house_fisher.png"})
 	_check(_find_schedule_point(&"pier") != null, "海滩应当有 pier 日程地点")
 	_check(_find_schedule_point(&"shore") != null, "海滩应当有 shore 日程地点")
 	_check_npc_can_reach(&"fisher", &"pier")
@@ -700,6 +715,7 @@ func _check_mine() -> void:
 	_check(spawn != null, "矿洞应当有 from_beach 出生点")
 
 	_check(_find_npc(&"miner") != null, "矿洞应当有矿工 NPC")
+	_check_buildings(world, {"Camp": "res://assets/sprites/props/house_miner.png"})
 	_check(_find_schedule_point(&"mine_deep") != null, "矿洞应当有 mine_deep 日程地点")
 	_check(_find_schedule_point(&"camp") != null, "矿洞应当有 camp 日程地点")
 	_check_npc_can_reach(&"miner", &"mine_entrance")
@@ -753,6 +769,25 @@ func _check_relationships() -> void:
 	_check_eq(npc.current_dialogue().id, &"librarian_married", "婚后应当使用婚后对白")
 	# 复位，避免影响后续检查。
 	Relationships.reset()
+
+
+## 建筑外观：每栋房子都要挂上角色专属贴图，且不能两栋共用一张。
+##
+## [param expected] 是"节点名 → 贴图路径"；路径写全，免得"换了图但换错人"。
+func _check_buildings(world: Node, expected: Dictionary) -> void:
+	var used: Dictionary = {}
+	for node_name: String in expected.keys():
+		var prop := world.find_child(node_name, true, false) as Sprite2D
+		_check(prop != null, "应当有建筑 %s" % node_name)
+		if prop == null or prop.texture == null:
+			continue
+		var path: String = prop.texture.resource_path
+		_check_eq(path, expected[node_name], "%s 应当用角色专属住宅贴图" % node_name)
+		_check(
+			not used.has(path),
+			"建筑 %s 与 %s 共用贴图 %s（每栋房子都该有自己的外观）" % [node_name, used.get(path, ""), path]
+		)
+		used[path] = node_name
 
 
 ## 日程 + 寻路的端到端检查：导航网格可用、两个 NPC 有日程、路径能算出来。

@@ -237,6 +237,10 @@ open-farm/
    如果是商人再填 `shop_id`，并用 `activity = "shop"` 表示上班时段。
 5. 在 `scenes/world/*.tscn` 里放好 `SchedulePoint`（`point_id` 对应日程的 `location_id`），
    再实例化 `scenes/npc/npc.tscn`，改 `npc_id`。找不到地点时 NPC 会 `push_warning` 并原地不动。
+6. 房子：在 `tools/art/generate_houses.gd` 里加一个 `_house_<id>()`（或改现有的一栋），
+   跑 `./tools/build_assets.sh`，再把场景里那栋房子换成 `house_<npc_id>.png`，
+   并按该函数注释里的「占地」填 `WorldProp` 的 `solid_size` / `solid_offset`。
+   住宅统一 64×64，但体量各画各的：`test_npc_houses_are_distinct` 会拦住"只换配色"。
 
 ### 让一个 NPC 可以攻略
 

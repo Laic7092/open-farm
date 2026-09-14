@@ -35,6 +35,7 @@ tools/art/                      ← 生成器（每个都能单独跑）
 ├── generate_font.gd            ← 像素中文字体（.fnt + PNG 子集）
 ├── generate_terrain.gd         ← 地形图集 tileset_farm.png
 ├── generate_props.gd           ← 建筑 / 家具 / 树木（一物一图）
+├── generate_houses.gd          ← NPC 住宅：每个职业一栋，体量与屋顶各画各的
 ├── generate_actors.gd          ← 玩家与 NPC（共用一套角色画法）
 ├── generate_crops.gd           ← 每种作物一张生长图
 ├── generate_animals.gd         ← 每种牲畜一张状态表（幼崽 / 成年 / 可收）
@@ -119,7 +120,7 @@ CI 与玩家不需要跑生成器，也不需要本机装有中文字体。
 ## 4. 怎么跑
 
 ```bash
-./tools/build_assets.sh          # 全部重跑（16 步，约 15 秒）
+./tools/build_assets.sh          # 全部重跑（17 步，约 15 秒）
 ```
 
 顺序不能变，原因是 Godot 的导入管线：

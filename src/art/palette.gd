@@ -89,6 +89,31 @@ const WALL_LIGHT := Color8(248, 238, 214)
 const GLASS := Color8(122, 178, 208)
 const GLASS_DARK := Color8(84, 132, 166)
 
+## 各角色住宅的屋顶材质。每栋房子按"角色职业"换一种瓦色，
+## 于是"谁住在哪"在画面上就能认出来，而不用读牌子。
+## 三档明暗的用法见 [code]tools/art/generate_houses.gd[/code]。
+const ROOF_SLATE := Color8(104, 112, 146)       # 村公所：青石板
+const ROOF_SLATE_DARK := Color8(72, 78, 110)
+const ROOF_SLATE_LIGHT := Color8(146, 156, 190)
+const ROOF_IRON := Color8(92, 88, 100)          # 铁匠铺：铁皮顶
+const ROOF_IRON_DARK := Color8(62, 58, 72)
+const ROOF_IRON_LIGHT := Color8(132, 128, 142)
+const ROOF_ROSE := Color8(216, 132, 152)        # 花店：玫瑰色瓦
+const ROOF_ROSE_DARK := Color8(168, 92, 116)
+const ROOF_ROSE_LIGHT := Color8(242, 178, 194)
+const ROOF_INDIGO := Color8(96, 100, 172)       # 图书馆：靛蓝瓦
+const ROOF_INDIGO_DARK := Color8(64, 68, 132)
+const ROOF_INDIGO_LIGHT := Color8(136, 142, 212)
+const ROOF_THATCH := Color8(202, 164, 92)       # 小女孩家：茅草顶
+const ROOF_THATCH_DARK := Color8(156, 122, 62)
+const ROOF_THATCH_LIGHT := Color8(232, 200, 130)
+const ROOF_TEAL := Color8(78, 134, 130)         # 渔夫小屋：海风绿
+const ROOF_TEAL_DARK := Color8(52, 98, 96)
+const ROOF_TEAL_LIGHT := Color8(112, 174, 166)
+const ROOF_MOSS := Color8(98, 138, 84)          # 矿工木屋：长苔的木顶
+const ROOF_MOSS_DARK := Color8(68, 102, 60)
+const ROOF_MOSS_LIGHT := Color8(132, 174, 108)
+
 # ---------------------------------------------------------------- 角色
 
 const SKIN := Color8(242, 202, 164)

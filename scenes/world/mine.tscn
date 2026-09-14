@@ -12,7 +12,7 @@
 [ext_resource type="Script" path="res://src/world/flora_field.gd" id="10_flora_field"]
 [ext_resource type="PackedScene" path="res://scenes/world/flora.tscn" id="11_flora"]
 [ext_resource type="Script" path="res://src/npc/schedule_point.gd" id="12_schedpoint"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/house.png" id="20_house"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/house_miner.png" id="20_house"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/signpost.png" id="21_sign"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/lamp.png" id="22_lamp"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/rock_big.png" id="23_rock_big"]
@@ -61,7 +61,8 @@ bounds = Rect2(8, 8, 752, 464)
 position = Vector2(640, 96)
 texture = ExtResource("20_house")
 script = ExtResource("9_prop")
-solid_size = Vector2(58, 14)
+solid_size = Vector2(60, 14)
+solid_offset = Vector2(2, 24)
 solid_offset = Vector2(0, 24)
 
 [node name="CampLamp" type="Sprite2D" parent="Props"]

@@ -158,3 +158,12 @@ const UI_ICON_SIZE := Vector2i(12, 12)
 const TITLE_VIEWPORT := Vector2i(640, 360)
 const TITLE_BACKDROP_PATH: String = "res://assets/title/backdrop.png"
 const TITLE_BANNER_SIZE := Vector2i(24, 24)
+
+# ---------------------------------------------------------------- 场景建筑
+
+## 房子 / 谷仓这类摆件是"一物一图"，尺寸只由生成器决定，不占图集坐标。
+## 但房子是[code].tscn[/code] 里靠坐标直接摆的：
+## [code]WorldProp[/code] 的碰撞盒（[code]solid_offset[/code]）按 64×64 的落地线标定，
+## 所以所有 NPC 住宅都必须生成这个尺寸，换贴图才不会同时挪碰撞。
+## 生成器见 [code]tools/art/generate_houses.gd[/code]。
+const HOUSE_SIZE := Vector2i(64, 64)
