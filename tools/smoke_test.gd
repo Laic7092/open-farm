@@ -19,6 +19,7 @@ const MAX_FRAMES: int = 6000
 
 const FARM_SCENE: String = "res://scenes/world/farm.tscn"
 const TOWN_SCENE: String = "res://scenes/world/town.tscn"
+const TWON_SCENE: String = "res://scenes/world/twon.tscn"
 
 var _failures := PackedStringArray()
 var _checks: int = 0
@@ -62,8 +63,14 @@ func _process(_delta: float) -> void:
 				return
 			_check_town()
 			_phase = 3
-			SceneRouter.change_scene_to(FARM_SCENE, &"from_town")
+			SceneRouter.change_scene_to(TWON_SCENE, &"from_farm")
 		3:
+			if SceneRouter.is_transitioning():
+				return
+			_check_twon()
+			_phase = 4
+			SceneRouter.change_scene_to(FARM_SCENE, &"from_twon")
+		4:
 			if SceneRouter.is_transitioning():
 				return
 			_check_farm_state_survived()
@@ -131,7 +138,6 @@ func _check_world() -> void:
 	_check_eq(String(world.get(&"world_id")), "farm", "开局世界应当是农场")
 	_check(_farm_grid() != null, "农场场景应当包含 FarmGrid")
 	_check(_player() != null, "农场场景应当包含玩家")
-	_check(not get_tree().get_nodes_in_group(Npc.GROUP).is_empty(), "农场场景应当有 NPC")
 
 	var ground := world.find_child("Ground", true, false) as TileMapLayer
 	_check(ground != null, "应当存在 Ground 图层")
@@ -293,6 +299,46 @@ func _check_town() -> void:
 			player.global_position.distance_to(spawn.global_position) < 1.0,
 			"玩家应当落在小镇的 from_farm 出生点（实际 %s）" % player.global_position
 		)
+	_check(
+		get_tree().get_nodes_in_group(Npc.GROUP).is_empty(),
+		"NPC 应当已从小镇移入 twon"
+	)
+
+
+func _check_twon() -> void:
+	var world := _world()
+	_check(world != null, "twon 场景应当已加载")
+	if world == null:
+		return
+	_check_eq(String(world.get(&"world_id")), "twon", "切换后应当在大场景 twon")
+	_check(_player() != null, "twon 里应当有玩家")
+	_check(_farm_grid() == null, "twon 里不应该有农场网格")
+
+	var limits: Rect2 = world.get(&"camera_limits")
+	_check(
+		limits.size.x >= 1280.0 and limits.size.y >= 720.0,
+		"twon 应当是一个大地图（实际 %s）" % limits.size
+	)
+	var ground := world.find_child("Ground", true, false) as TileMapLayer
+	_check(
+		ground != null and ground.get_used_cells().size() > 0,
+		"twon 地面应当已绘制瓦片"
+	)
+
+	var spawn := _find_spawn(&"from_farm")
+	_check(spawn != null, "twon 应当有 from_farm 出生点")
+	var player := _player()
+	if spawn != null and player != null:
+		_check(
+			player.global_position.distance_to(spawn.global_position) < 1.0,
+			"玩家应当落在 twon 的 from_farm 出生点（实际 %s）" % player.global_position
+		)
+
+	var npc_ids: Dictionary = {}
+	for npc: Node in get_tree().get_nodes_in_group(Npc.GROUP):
+		npc_ids[npc.get(&"npc_id")] = true
+	_check(npc_ids.has(&"merchant"), "twon 应当包含商人 NPC")
+	_check(npc_ids.has(&"mayor"), "twon 应当包含村长 NPC")
 
 
 func _check_farm_state_survived() -> void:

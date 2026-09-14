@@ -141,7 +141,7 @@ CI 与玩家不需要跑生成器，也不需要本机装有中文字体。
 
 ```bash
 ./godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn
-# → res://.tmp/screenshots/{title,shot_00,town}.png
+# → res://.tmp/screenshots/{title,shot_00,town,twon}.png
 ```
 
 ---

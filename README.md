@@ -48,7 +48,8 @@
 
 出生在自家农场（左下角）。往右走有出货箱，往上是农田区（带栅栏的那片）。
 用锄头翻地 → 浇水 → 用 `seed_bag`（工具带第 4 格）播种 → 等作物成熟后按 `E` 徒手收获。
-农场右上角和小镇里有 NPC（商人会开店、村长会聊天），农场右侧边缘的传送点通往小镇。
+现有 NPC（商人会开店、村长会聊天）已经搬进新的大场景 **twon**。
+农场右侧边缘的传送点通往小镇，农场上方的传送门通往 twon；两张图都通过场景切换独立进入，两个 NPC 都在 twon 里。
 按 `Esc` 打开菜单可以存读档、也可以回到标题页。
 
 ---
@@ -172,7 +173,7 @@ Main
 
 ### 加一个世界场景
 
-1. 复制 `scenes/world/town.tscn`，根节点脚本用 `WorldScene`，填 `world_id` / `camera_limits`。
+1. 复制 `scenes/world/twon.tscn`，根节点脚本用 `WorldScene`，填 `world_id` / `camera_limits`。
 2. 放至少一个 `SpawnPoint` 标记（`spawn_id` 要有意义，例如 `from_farm`）。
 3. 在两边用 `SceneDoor` 互相连接（`target_scene` + `target_spawn_id`）。
 
@@ -198,9 +199,9 @@ func from_dict(data: Dictionary) -> void: ...
 | 层次 | 工具 | 覆盖 |
 | --- | --- | --- |
 | 单元测试 | gdUnit4（`tests/unit/`，188 例） | 日期进位、季节/天气、网格换算、背包堆叠、体力、工具带、作物生长（含枯死/多次收获）、商店经济、状态机、时钟与日结转钩子、数据完整性、存档往返与容错 |
-| 冒烟测试 | `tools/smoke_test.tscn`（61 项） | 真的把游戏跑起来：场景加载、玩家落点、翻地→播种→生长→收获全链路、买/卖、存读档、HUD 内容、**农场 ↔ 小镇往返后农田进度与日结转钩子仍然有效** |
+| 冒烟测试 | `tools/smoke_test.tscn`（60+ 项） | 真的把游戏跑起来：场景加载、玩家落点、翻地→播种→生长→收获全链路、买/卖、存读档、HUD 内容、**农场 ↔ 小镇 / 农场 ↔ twon 往返后农田进度与日结转钩子仍然有效** |
 | 美术规范 | `tests/unit/test_assets.gd` | 生成物存在、尺寸与 `AtlasLayout` 一致、瓦片齐全、字体覆盖翻译表全部字符、数据都挂上了贴图 |
-| 视觉回归 | `tools/screenshot.tscn` / `tools/ui_preview.tscn` | 标题页 + 农场 + 小镇截图、各界面布局截图 |
+| 视觉回归 | `tools/screenshot.tscn` / `tools/ui_preview.tscn` | 标题页 + 农场 + 小镇 + twon 截图、各界面布局截图 |
 
 ```bash
 ./tools/check.sh          # 全部
@@ -231,7 +232,7 @@ func from_dict(data: Dictionary) -> void: ...
 ./godot --headless --path . -s res://tools/generate_sample_data.gd
 
 # 截图（需要真实渲染后端，--headless 不可用）
-./godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn   # 标题页 + 农场 + 小镇
+./godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn   # 标题页 + 农场 + 小镇 + twon
 ./godot --path . --rendering-driver opengl3 res://tools/ui_preview.tscn   # 各界面布局
 ```
 

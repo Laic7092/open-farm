@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=27 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -10,7 +10,6 @@
 [ext_resource type="Script" path="res://src/world/bed.gd" id="8_bed"]
 [ext_resource type="Script" path="res://src/world/shipping_bin.gd" id="9_bin"]
 [ext_resource type="Script" path="res://src/world/scene_door.gd" id="10_door"]
-[ext_resource type="PackedScene" path="res://scenes/npc/npc.tscn" id="11_npc"]
 [ext_resource type="Script" path="res://src/world/world_prop.gd" id="12_prop"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/house.png" id="20_house"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/barn.png" id="21_barn"]
@@ -217,6 +216,11 @@ script = ExtResource("7_spawn")
 spawn_id = &"from_town"
 facing = 2
 
+[node name="FromTwon" type="Marker2D" parent="Spawns"]
+position = Vector2(384, 56)
+script = ExtResource("7_spawn")
+spawn_id = &"from_twon"
+
 [node name="Interactables" type="Node2D" parent="."]
 y_sort_enabled = true
 
@@ -260,14 +264,17 @@ target_spawn_id = &"from_farm"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToTown"]
 shape = SubResource("RectangleShape2D_tile")
 
-[node name="Npcs" type="Node2D" parent="."]
+[node name="ToTwon" type="Area2D" parent="Interactables"]
+position = Vector2(384, 24)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("10_door")
+prompt_key = &"PROMPT_ENTER"
+target_scene = "res://scenes/world/twon.tscn"
+target_spawn_id = &"from_farm"
 
-[node name="Merchant" parent="Npcs" instance=ExtResource("11_npc")]
-position = Vector2(488, 168)
-
-[node name="Mayor" parent="Npcs" instance=ExtResource("11_npc")]
-position = Vector2(584, 232)
-npc_id = &"mayor"
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToTwon"]
+shape = SubResource("RectangleShape2D_tile")
 
 [node name="Player" parent="." instance=ExtResource("6_player")]
 position = Vector2(104, 328)

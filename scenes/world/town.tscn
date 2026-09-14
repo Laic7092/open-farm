@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="4_player"]
 [ext_resource type="Script" path="res://src/core/spawn_point.gd" id="5_spawn"]
 [ext_resource type="Script" path="res://src/world/scene_door.gd" id="6_door"]
-[ext_resource type="PackedScene" path="res://scenes/npc/npc.tscn" id="7_npc"]
 [ext_resource type="Script" path="res://src/world/town_ground.gd" id="8_ground"]
 [ext_resource type="Script" path="res://src/world/world_prop.gd" id="9_prop"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/house.png" id="20_house"]
@@ -188,15 +187,6 @@ target_spawn_id = &"from_town"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToFarm"]
 shape = SubResource("RectangleShape2D_tile")
-
-[node name="Npcs" type="Node2D" parent="."]
-
-[node name="Merchant" parent="Npcs" instance=ExtResource("7_npc")]
-position = Vector2(328, 168)
-
-[node name="Mayor" parent="Npcs" instance=ExtResource("7_npc")]
-position = Vector2(408, 232)
-npc_id = &"mayor"
 
 [node name="Player" parent="." instance=ExtResource("4_player")]
 position = Vector2(72, 360)

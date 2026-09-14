@@ -13,13 +13,14 @@ extends Node
 ## godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn
 ## [/codeblock]
 ## 输出到 [code]res://.tmp/screenshots/[/code]：
-## [code]title.png[/code]、[code]shot_00.png[/code]…、[code]town.png[/code]。
+## [code]title.png[/code]、[code]shot_00.png[/code]…、[code]town.png[/code]、[code]twon.png[/code]。
 
 ## 输出目录。
 const OUTPUT_DIR: String = "res://.tmp/screenshots"
 const TITLE_SCENE: String = "res://scenes/title/title_screen.tscn"
 const GAME_SCENE: String = "res://scenes/main/main.tscn"
 const TOWN_SCENE: String = "res://scenes/world/town.tscn"
+const TWON_SCENE: String = "res://scenes/world/twon.tscn"
 
 ## 标题页稳定后再等多少帧截图（等云飘一点、布局完成）。
 const TITLE_SETTLE_FRAMES: int = 20
@@ -34,6 +35,8 @@ const MAX_FRAMES: int = 2400
 @export var capture_title: bool = true
 ## 是否顺带截一张小镇。
 @export var capture_town: bool = true
+## 是否顺带截一张新的大场景 twon。
+@export var capture_twon: bool = true
 
 var _frames: int = 0
 var _current: Node
@@ -75,6 +78,12 @@ func _run() -> void:
 		if not await _wait_world():
 			return
 		await _capture("town")
+
+	if capture_twon:
+		SceneRouter.change_scene_to(TWON_SCENE, &"from_farm")
+		if not await _wait_world():
+			return
+		await _capture("twon")
 
 	print("截图完成 → ", OUTPUT_DIR)
 	get_tree().quit(0)
