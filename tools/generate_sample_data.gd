@@ -382,6 +382,19 @@ func _build_items() -> void:
 	_animal_item(&"chicken", &"ITEM_CHICKEN", &"chicken", 500)
 	_animal_item(&"cow", &"ITEM_COW", &"cow", 1200)
 
+	# 求婚信物：杂货店有售，结婚时消耗一件，不能卖出。
+	var blue_feather := ItemData.new()
+	blue_feather.id = &"blue_feather"
+	blue_feather.display_name_key = &"ITEM_BLUE_FEATHER"
+	blue_feather.description_key = &"ITEM_BLUE_FEATHER_DESC"
+	blue_feather.category = ItemData.Category.GIFT
+	blue_feather.buy_price = 1000
+	blue_feather.sell_price = 100
+	blue_feather.sellable = false
+	blue_feather.stack_limit = 1
+	blue_feather.icon = _item_icon(&"blue_feather")
+	_save(blue_feather, ITEM_DIR.path_join("blue_feather.tres"))
+
 	_tool_item(&"hoe", &"ITEM_HOE", &"TOOL_HOE_DESC", &"hoe")
 	_tool_item(&"watering_can", &"ITEM_WATERING_CAN", &"TOOL_WATERING_CAN_DESC", &"watering_can")
 	_tool_item(&"sickle", &"ITEM_SICKLE", &"TOOL_SICKLE_DESC", &"sickle")
@@ -546,6 +559,46 @@ func _build_dialogues() -> void:
 		&"DIALOGUE_LIBRARIAN_SEASON",
 	])
 
+	# 恋爱 / 婚姻对白：每位可攻略 NPC 五段（朋友 / 恋人 / 婚后 / 表白 / 求婚）。
+	for entry: Array in [
+		[&"librarian", &"NPC_LIBRARIAN"],
+		[&"florist", &"NPC_FLORIST"],
+		[&"fisher", &"NPC_FISHER"],
+		[&"blacksmith", &"NPC_BLACKSMITH"],
+	]:
+		var prefix: StringName = entry[0]
+		var speaker: StringName = entry[1]
+		var upper := String(prefix).to_upper()
+		_add_dialogue(
+			StringName("%s_friend" % prefix), speaker,
+			[StringName("DIALOGUE_%s_FRIEND" % upper)]
+		)
+		_add_dialogue(
+			StringName("%s_lover" % prefix), speaker,
+			[StringName("DIALOGUE_%s_LOVER" % upper)]
+		)
+		_add_dialogue(
+			StringName("%s_married" % prefix), speaker,
+			[StringName("DIALOGUE_%s_MARRIED" % upper)]
+		)
+		_add_dialogue(
+			StringName("%s_confession" % prefix), speaker,
+			[
+				StringName("DIALOGUE_%s_CONFESSION_1" % upper),
+				StringName("DIALOGUE_%s_CONFESSION_2" % upper),
+			]
+		)
+		_add_dialogue(
+			StringName("%s_proposal" % prefix), speaker,
+			[
+				StringName("DIALOGUE_%s_PROPOSAL_1" % upper),
+				StringName("DIALOGUE_%s_PROPOSAL_2" % upper),
+			]
+		)
+
+	# 孩子出生后才出现，跟随父母住在家门口。
+	_add_dialogue(&"our_child_greeting", &"NPC_OUR_CHILD", [&"DIALOGUE_OUR_CHILD_GREETING"])
+
 
 ## 批量建一段"每句一个翻译键"的对白并保存。
 func _add_dialogue(
@@ -633,6 +686,10 @@ func _build_schedules() -> void:
 		[720, &"shelves", &"work"],
 		[1020, &"desk", &"rest"],
 	])
+	# 孩子：婚后出生就守在家里，不去别处。
+	_add_schedule(&"our_child_schedule", [
+		[0, &"home", &"rest"],
+	])
 
 
 ## 用 [minute, location_id, activity] 三元组批量建一段日程并保存。
@@ -677,24 +734,39 @@ func _build_npcs() -> void:
 	mayor.schedule = _load(SCHEDULE_DIR.path_join("mayor_schedule.tres"))
 	_save(mayor, NPC_DIR.path_join("mayor.tres"))
 
-	_add_npc(&"blacksmith", &"NPC_BLACKSMITH", "blacksmith_greeting.tres", "blacksmith_schedule.tres", {
-		"move_speed": 28.0,
-	})
-	_add_npc(&"florist", &"NPC_FLORIST", "florist_greeting.tres", "florist_schedule.tres", {
-		"move_speed": 26.0,
-		"shop_id": &"flower_shop",
-	})
-	_add_npc(&"fisher", &"NPC_FISHER", "fisher_greeting.tres", "fisher_schedule.tres", {
-		"move_speed": 30.0,
-	})
+	var blacksmith := {"move_speed": 28.0}
+	blacksmith.merge(_romance_overrides(
+		&"blacksmith", [&"stone"], [&"wood"], [&"flower"]
+	))
+	_add_npc(&"blacksmith", &"NPC_BLACKSMITH", "blacksmith_greeting.tres", "blacksmith_schedule.tres", blacksmith)
+
+	var florist := {"move_speed": 26.0, "shop_id": &"flower_shop"}
+	florist.merge(_romance_overrides(
+		&"florist", [&"flower"], [&"mushroom"], [&"wood"]
+	))
+	_add_npc(&"florist", &"NPC_FLORIST", "florist_greeting.tres", "florist_schedule.tres", florist)
+
+	var fisher := {"move_speed": 30.0}
+	fisher.merge(_romance_overrides(
+		&"fisher", [&"mushroom"], [&"egg"], [&"fiber"]
+	))
+	_add_npc(&"fisher", &"NPC_FISHER", "fisher_greeting.tres", "fisher_schedule.tres", fisher)
+
+	var librarian := {"move_speed": 26.0}
+	librarian.merge(_romance_overrides(
+		&"librarian", [&"flower"], [&"egg"], [&"stone"]
+	))
+	_add_npc(&"librarian", &"NPC_LIBRARIAN", "librarian_greeting.tres", "librarian_schedule.tres", librarian)
+
 	_add_npc(&"miner", &"NPC_MINER", "miner_greeting.tres", "miner_schedule.tres", {
 		"move_speed": 24.0,
 	})
 	_add_npc(&"child", &"NPC_CHILD", "child_greeting.tres", "child_schedule.tres", {
 		"move_speed": 34.0,
 	})
-	_add_npc(&"librarian", &"NPC_LIBRARIAN", "librarian_greeting.tres", "librarian_schedule.tres", {
-		"move_speed": 26.0,
+	# 玩家自己的孩子：出生后才出现在农场（由 Npc.required_flag 控制）。
+	_add_npc(&"our_child", &"NPC_OUR_CHILD", "our_child_greeting.tres", "our_child_schedule.tres", {
+		"move_speed": 30.0,
 	})
 
 
@@ -720,6 +792,35 @@ func _add_npc(
 	_save(npc, NPC_DIR.path_join("%s.tres" % npc_id))
 
 
+## 可攻略 NPC 的恋爱字段；[param prefix] 对应 [code]<prefix>_friend.tres[/code] 等对白。
+func _romance_overrides(
+	prefix: StringName,
+	loved: Array,
+	liked: Array,
+	disliked: Array
+) -> Dictionary:
+	return {
+		"romanceable": true,
+		"confession_affection": 200,
+		"marriage_affection": 250,
+		"loved_gifts": _str_array(loved),
+		"liked_gifts": _str_array(liked),
+		"disliked_gifts": _str_array(disliked),
+		"friend_dialogue": _load(DIALOGUE_DIR.path_join("%s_friend.tres" % prefix)),
+		"lover_dialogue": _load(DIALOGUE_DIR.path_join("%s_lover.tres" % prefix)),
+		"married_dialogue": _load(DIALOGUE_DIR.path_join("%s_married.tres" % prefix)),
+		"confession_dialogue": _load(DIALOGUE_DIR.path_join("%s_confession.tres" % prefix)),
+		"proposal_dialogue": _load(DIALOGUE_DIR.path_join("%s_proposal.tres" % prefix)),
+	}
+
+
+func _str_array(values: Array) -> Array[StringName]:
+	var result: Array[StringName] = []
+	for value: Variant in values:
+		result.append(StringName(str(value)))
+	return result
+
+
 # ---------------------------------------------------------------- 商店
 
 func _build_shops() -> void:
@@ -735,6 +836,7 @@ func _build_shops() -> void:
 		_stock(&"hay", 20),
 		_stock(&"chicken", 500),
 		_stock(&"cow", 1200),
+		_stock(&"blue_feather", 1000),
 	] as Array[ShopStock]
 	_save(shop, SHOP_DIR.path_join("general_store.tres"))
 

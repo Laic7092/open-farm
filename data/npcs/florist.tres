@@ -1,16 +1,30 @@
 [gd_resource type="Resource" script_class="NpcData" format=3]
 
-[ext_resource type="Resource" path="res://data/dialogue/florist_greeting.tres" id="1_o82ln"]
-[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_florist_frames.tres" id="2_jdfea"]
-[ext_resource type="Resource" path="res://data/schedules/florist_schedule.tres" id="3_n7hts"]
-[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_h27k0"]
+[ext_resource type="Resource" path="res://data/dialogue/florist_confession.tres" id="1_7xd23"]
+[ext_resource type="Resource" path="res://data/dialogue/florist_greeting.tres" id="2_rcrd6"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_florist_frames.tres" id="3_17gf4"]
+[ext_resource type="Resource" path="res://data/dialogue/florist_friend.tres" id="4_dbxxe"]
+[ext_resource type="Resource" path="res://data/dialogue/florist_lover.tres" id="5_qb8ok"]
+[ext_resource type="Resource" path="res://data/dialogue/florist_married.tres" id="6_08bcs"]
+[ext_resource type="Resource" path="res://data/dialogue/florist_proposal.tres" id="7_3c3h2"]
+[ext_resource type="Resource" path="res://data/schedules/florist_schedule.tres" id="8_65ryh"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="9_xahrf"]
 
 [resource]
-script = ExtResource("4_h27k0")
+script = ExtResource("9_xahrf")
 id = &"florist"
 display_name_key = &"NPC_FLORIST"
-frames = ExtResource("2_jdfea")
-default_dialogue = ExtResource("1_o82ln")
-schedule = ExtResource("3_n7hts")
+frames = ExtResource("3_17gf4")
+default_dialogue = ExtResource("2_rcrd6")
+schedule = ExtResource("8_65ryh")
 shop_id = &"flower_shop"
 move_speed = 26.0
+romanceable = true
+loved_gifts = Array[StringName]([&"flower"])
+liked_gifts = Array[StringName]([&"mushroom"])
+disliked_gifts = Array[StringName]([&"wood"])
+friend_dialogue = ExtResource("4_dbxxe")
+lover_dialogue = ExtResource("5_qb8ok")
+married_dialogue = ExtResource("6_08bcs")
+confession_dialogue = ExtResource("1_7xd23")
+proposal_dialogue = ExtResource("7_3c3h2")

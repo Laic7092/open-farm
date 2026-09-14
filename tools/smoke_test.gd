@@ -684,6 +684,32 @@ func _check_library() -> void:
 	_check(_find_schedule_point(&"desk") != null, "图书馆应当有 desk 日程地点")
 	_check(_find_schedule_point(&"shelves") != null, "图书馆应当有 shelves 日程地点")
 	_check_npc_can_reach(&"librarian", &"desk")
+	_check_relationships()
+
+
+## 关系系统的端到端检查：聊天 / 送礼 / 表白 / 结婚能真实串起来。
+##
+## 这里直接驱动 [code]Relationships[/code]，不调用 [method Npc.interact]——
+## 后者会弹出对话框并暂停场景树，把冒烟测试的主循环一起冻住。
+func _check_relationships() -> void:
+	var npc := _find_npc(&"librarian")
+	_check(npc != null, "图书馆应当有可攻略 NPC 书雅")
+	if npc == null:
+		return
+	var before := Relationships.affection(&"librarian")
+	_check(Relationships.talk(&"librarian") > 0, "首次聊天应当获得好感")
+	_check(Relationships.affection(&"librarian") > before, "聊天后好感应当上升")
+	_check(
+		Relationships.give_gift(&"librarian", &"flower") > 0,
+		"野花应当是书雅喜欢的礼物"
+	)
+	Relationships.set_affection(&"librarian", 250)
+	_check(Relationships.confess(&"librarian"), "好感达标后应当可以表白")
+	_check(Relationships.marry(&"librarian"), "交往后应当可以结婚")
+	_check(Relationships.is_married(), "结婚后应当记录配偶")
+	_check_eq(npc.current_dialogue().id, &"librarian_married", "婚后应当使用婚后对白")
+	# 复位，避免影响后续检查。
+	Relationships.reset()
 
 
 ## 日程 + 寻路的端到端检查：导航网格可用、两个 NPC 有日程、路径能算出来。

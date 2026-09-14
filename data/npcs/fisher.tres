@@ -1,15 +1,29 @@
 [gd_resource type="Resource" script_class="NpcData" format=3]
 
-[ext_resource type="Resource" path="res://data/dialogue/fisher_greeting.tres" id="1_fjpk6"]
-[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_fisher_frames.tres" id="2_jghcy"]
-[ext_resource type="Resource" path="res://data/schedules/fisher_schedule.tres" id="3_kr3h5"]
-[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_7mr3e"]
+[ext_resource type="Resource" path="res://data/dialogue/fisher_confession.tres" id="1_u81s1"]
+[ext_resource type="Resource" path="res://data/dialogue/fisher_greeting.tres" id="2_0fwqx"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_fisher_frames.tres" id="3_h3haq"]
+[ext_resource type="Resource" path="res://data/dialogue/fisher_friend.tres" id="4_y1mgd"]
+[ext_resource type="Resource" path="res://data/dialogue/fisher_lover.tres" id="5_j2hso"]
+[ext_resource type="Resource" path="res://data/dialogue/fisher_married.tres" id="6_cf3d4"]
+[ext_resource type="Resource" path="res://data/dialogue/fisher_proposal.tres" id="7_ajvqy"]
+[ext_resource type="Resource" path="res://data/schedules/fisher_schedule.tres" id="8_utca7"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="9_lqfar"]
 
 [resource]
-script = ExtResource("4_7mr3e")
+script = ExtResource("9_lqfar")
 id = &"fisher"
 display_name_key = &"NPC_FISHER"
-frames = ExtResource("2_jghcy")
-default_dialogue = ExtResource("1_fjpk6")
-schedule = ExtResource("3_kr3h5")
+frames = ExtResource("3_h3haq")
+default_dialogue = ExtResource("2_0fwqx")
+schedule = ExtResource("8_utca7")
 move_speed = 30.0
+romanceable = true
+loved_gifts = Array[StringName]([&"mushroom"])
+liked_gifts = Array[StringName]([&"egg"])
+disliked_gifts = Array[StringName]([&"fiber"])
+friend_dialogue = ExtResource("4_y1mgd")
+lover_dialogue = ExtResource("5_j2hso")
+married_dialogue = ExtResource("6_cf3d4")
+confession_dialogue = ExtResource("1_u81s1")
+proposal_dialogue = ExtResource("7_ajvqy")

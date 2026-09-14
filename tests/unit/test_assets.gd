@@ -27,6 +27,8 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://assets/sprites/actors/npc_miner.png",
 	"res://assets/sprites/actors/npc_child.png",
 	"res://assets/sprites/actors/npc_librarian.png",
+	"res://assets/sprites/actors/npc_our_child.png",
+	"res://assets/sprites/items/blue_feather.png",
 	"res://assets/sprites/props/house.png",
 	"res://assets/sprites/props/barn.png",
 	"res://assets/sprites/props/tree.png",

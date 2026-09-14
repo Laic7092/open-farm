@@ -21,6 +21,8 @@
 - [9. 美术资源为什么也走"脚本生成"](#9-美术资源为什么也走脚本生成)
 - [10. 世界自然生长（野生植被）](#10-世界自然生长野生植被)
 - [11. NPC 日程与寻路](#11-npc-日程与寻路)
+- [12. 昼夜光照](#12-昼夜光照)
+- [13. 好感度与恋爱（结婚生子）](#13-好感度与恋爱结婚生子)
 
 > 改章节标题时请同步本节链接（GitHub 锚点由标题自动生成）。
 
@@ -67,6 +69,7 @@ Database      ← 无依赖（只读 res://data）
 GameClock     ← EventBus
 GameState     ← EventBus, GameClock
 WeatherSystem ← GameClock（把自己注册成第一个日结转钩子）
+Relationships ← EventBus, GameClock, Database, GameState（排在 WeatherSystem 之后注册日结转钩子）
 SaveManager   ← EventBus, Persistence（鸭子类型找节点，不静态依赖任何游戏系统）
 SceneRouter   ← EventBus, GameClock
 Audio         ← EventBus, GameClock, SceneRouter（按场景 / 时间换曲，订阅信号播音效）
@@ -90,7 +93,7 @@ Audio         ← EventBus, GameClock, SceneRouter（按场景 / 时间换曲，
 Main/PauseMenu
   └─ await SaveManager.load_game_and_restore_world(slot)
        1. load_game(slot)
-          ├─ 恢复核心单例：GameClock / GameState / WeatherSystem / SceneRouter
+          ├─ 恢复核心单例：GameClock / GameState / WeatherSystem / Relationships / SceneRouter
           └─ 暂存 payload["nodes"]，并对当前树上的节点 apply_node_state()
        2. await SceneRouter.restore_saved_world()
           ├─ 存档地图 == 当前地图 → 复用缓存实例，只重新放置玩家
@@ -528,5 +531,52 @@ Godot 每张画布只认一个 `CanvasModulate`（官方文档："Only one can b
 `WeatherFx` / `WorldLighting` 都挂在会被缓存复用的世界场景上，所以信号在
 `_enter_tree` 连接、`_exit_tree` 断开，并在重新进图时补一次刷新，`_ready()` 只负责建节点。
 这条规则的原因见 §3.2.2。
+---
+
+## 13. 好感度与恋爱（结婚生子）
+
+### 13.1 为什么单独一个 Relationships 单例
+
+好感度、恋爱阶段、配偶与孩子都是**跨场景**状态：玩家在小镇和书雅聊天，换到矿洞时书雅并不在场上，
+但关系必须还在，存档也要一次拿全。最初的雏形把 `affection` 挂在 `Npc` 节点上，
+一旦 NPC 不在场（或孩子还没出生）状态就无从谈起。
+
+所以关系不再属于"某个节点"，而是按 `npc_id` 集中放在 `Relationships` 里：
+`Npc` 只是它的一个视图，`_ready()` 时读取、变化时通过 `EventBus` 同步。
+它作为核心单例参与 `SaveManager` 的读档流程，因此换地图 / 读档都不会丢。
+
+### 13.2 为什么规则在 AffectionRules（纯静态）
+
+心数换算、礼物收益、表白 / 求婚门槛这些"数值怎么算"全在 `AffectionRules` 的静态函数里：
+不碰场景树、不注册 autoload、不读写存档。于是 `tests/unit/test_affection_rules.gd`
+可以穷举边界，和 `CropGrowth` / `AnimalHusbandry` 是同一种拆分。
+运行时状态在 `RelationshipState`（RefCounted），持久化在 `Relationships`。
+
+礼物偏好（最爱 / 喜欢 / 讨厌）写在 `NpcData` 里，是数据而不是代码：
+加一位可攻略 NPC 只需改 `.tres`，`AffectionRules.gift_gain()` 对谁都一样。
+
+### 13.3 表白 / 求婚为什么做成"自动里程碑"
+
+`DialogueLine` 预留了 `choices` 字段，但真正做一套多分支选项 UI 成本不小，
+而"恋爱"的核心体验是**关系随好感成长**，不是菜单操作。于是把里程碑交给
+`Npc.interact()` 判断：好感达到 4 心就播表白对白、5 心且带着蓝色羽毛就播求婚对白，
+对白播完由 `_on_dialogue_finished()` 落地状态。这样：
+[br]- 触发条件、对白、副作用各自只有一处；
+[br]- 单元测试可以直接驱动 `Relationships`，不需要构造 UI；
+[br]- 将来接入选项界面时，只需替换"谁来选"，规则层不变。
+
+### 13.4 孩子为什么用 required_flag 门控
+
+孩子出生前不应该参与日程与寻路。`Npc` 新增 `required_flag`
+（这里是 `child_born`）：不满足时节点隐藏、退出 `npc` 组并停掉 `_physics_process`，
+于是未出生的孩子不会出现在日程、寻路与"该怎么走"的逻辑里；
+出生后由 `child_born` 信号触发一次刷新即可出场。
+`SchedulePoint` 的 `home` 与孩子的 `our_child_schedule` 都在 `farm.tscn` 里，无需特殊分支。
+
+### 13.5 生命周期
+
+`Relationships` 是常驻 autoload，日结转钩子在 `_ready()` 注册一次即可，
+不存在世界场景那种"进图 / 出图"的注册时机问题；
+它注册在 `WeatherSystem` 之后的钩子顺序里，先让天气就位，再推进婚育倒计时。
 
 

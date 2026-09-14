@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/blue_feather.png" id="1_eykot"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_defya"]
+
+[resource]
+script = ExtResource("2_defya")
+id = &"blue_feather"
+display_name_key = &"ITEM_BLUE_FEATHER"
+description_key = &"ITEM_BLUE_FEATHER_DESC"
+category = 5
+buy_price = 1000
+sell_price = 100
+stack_limit = 1
+sellable = false
+icon = ExtResource("1_eykot")

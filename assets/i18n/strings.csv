@@ -158,3 +158,52 @@ NOTIFY_ANIMALS_CONTENT,牲畜们今天都吃饱了,Everyone has eaten today
 NOTIFY_ANIMAL_PRODUCT,收到了 {item} ×{count},Collected {item} x{count}
 NOTIFY_ANIMAL_PETTED,摸了摸{animal} 好感 +{amount},Petted {animal} +{amount} affection
 NOTIFY_ANIMAL_ALREADY_PETTED,{animal}今天很开心,{animal} is happy today
+ITEM_BLUE_FEATHER,蓝色羽毛,Blue Feather
+ITEM_BLUE_FEATHER_DESC,传说中用来求婚的信物，送给心爱的人。,A legendary token used to propose to your beloved.
+NPC_OUR_CHILD,宝宝,Little One
+REL_TIER_STRANGER,陌生,Stranger
+REL_TIER_ACQUAINTANCE,认识,Acquaintance
+REL_TIER_FRIEND,朋友,Friend
+REL_TIER_CLOSE,亲近,Close
+REL_TIER_LOVER,恋人,Beloved
+NOTIFY_AFFECTION_GAIN,{npc} 好感 +{amount},{npc} affection +{amount}
+NOTIFY_GIFT_LOVED,{npc} 特别喜欢{item}！好感 +{amount},{npc} loves the {item}! +{amount} affection
+NOTIFY_GIFT_LIKED,{npc} 收下了{item}，好感 +{amount},{npc} likes the {item}. +{amount} affection
+NOTIFY_GIFT_NEUTRAL,{npc} 收下了{item}，好感 +{amount},{npc} accepts the {item}. +{amount} affection
+NOTIFY_GIFT_DISLIKED,{npc} 好像不太喜欢{item}……好感 {amount},{npc} does not like the {item}... {amount} affection
+NOTIFY_ALREADY_GIFTED,今天已经给{npc}送过礼物了,Already gave {npc} a gift today
+NOTIFY_NO_GIFT,背包里没有可送的东西,Nothing to give
+NOTIFY_NO_GIFT_TARGET,面前没有人可以送礼物,No one nearby to gift
+NOTIFY_CONFESSED,你和{npc}开始交往了！,You are now dating {npc}!
+NOTIFY_MARRIED,你和{npc}结婚了！,You married {npc}!
+NOTIFY_CHILD_BORN,你们有了一个孩子！,A child is born to your family!
+DIALOGUE_LIBRARIAN_FRIEND,你来了。书我帮你留着呢，慢慢看。,You came. I saved these books for you.
+DIALOGUE_LIBRARIAN_LOVER,和你一起整理书架的时间，比看书还让我安心。,Shelving books with you calms me more than reading.
+DIALOGUE_LIBRARIAN_MARRIED,回家啦？我炖了汤，就等你呢。,Welcome home. The soup is ready for you.
+DIALOGUE_LIBRARIAN_CONFESSION_1,我一直在等一个会认真听我说话的人。,I have been waiting for someone who truly listens.
+DIALOGUE_LIBRARIAN_CONFESSION_2,如果那个人是你……我愿意。,And if that someone is you... I would be glad.
+DIALOGUE_LIBRARIAN_PROPOSAL_1,这……这是给我的吗？,Is this... for me?
+DIALOGUE_LIBRARIAN_PROPOSAL_2,我愿意。以后每个故事里，都有你。,Yes. Every story from now on will have you in it.
+DIALOGUE_FLORIST_FRIEND,来，这朵最好看的，算婆婆送你的。,Here. The prettiest one is my gift to you.
+DIALOGUE_FLORIST_LOVER,花开得好，是因为有人在等它开呢。,Flowers bloom because someone waits for them.
+DIALOGUE_FLORIST_MARRIED,家里有你在，比满园的花都热闹。,With you at home the whole garden feels warmer.
+DIALOGUE_FLORIST_CONFESSION_1,老太婆我看人很准，你是个好孩子。,I read people well and you are a good soul.
+DIALOGUE_FLORIST_CONFESSION_2,要是你不嫌弃……那就一起过日子吧。,If you do not mind... let us share our days.
+DIALOGUE_FLORIST_PROPOSAL_1,哎呀，这羽毛……你当真？,Oh my. This feather... are you sure?
+DIALOGUE_FLORIST_PROPOSAL_2,好，好。往后花园里，多你一个。,Wonderful. One more pair of hands in the garden.
+DIALOGUE_FISHER_FRIEND,今天的浪不大，要不要跟我出海？,Calm water today. Want to sail with me?
+DIALOGUE_FISHER_LOVER,再大的风浪，想到岸上有人等，就不怕了。,No matter the storm I am calm knowing you wait ashore.
+DIALOGUE_FISHER_MARRIED,回来啦，鱼我收拾好了，你歇着。,You are back. The fish is cleaned. Take a rest.
+DIALOGUE_FISHER_CONFESSION_1,我在海上漂了半辈子，头回这么想靠岸。,I have sailed half my life and never wanted to dock like this.
+DIALOGUE_FISHER_CONFESSION_2,你要是不嫌弃，我想把船停在你心里。,If you will have me I would anchor my boat in your heart.
+DIALOGUE_FISHER_PROPOSAL_1,这蓝羽毛……你从哪儿弄来的？,This blue feather... where did you get it?
+DIALOGUE_FISHER_PROPOSAL_2,我收下了。往后风里雨里，都有我。,I accept. Through wind and rain you have me.
+DIALOGUE_BLACKSMITH_FRIEND,你这家伙结实，来，给你打的东西刚出炉。,You are a sturdy sort. Your order is fresh from the forge.
+DIALOGUE_BLACKSMITH_LOVER,敲了一整天铁，最想见的还是你。,After a day at the anvil you are still who I want to see.
+DIALOGUE_BLACKSMITH_MARRIED,回来啦？炉火我留着，暖手。,Back already? I kept the forge warm for you.
+DIALOGUE_BLACKSMITH_CONFESSION_1,我嘴笨，敲铁比说话利索。,I am clumsy with words but handy with a hammer.
+DIALOGUE_BLACKSMITH_CONFESSION_2,可这句我练了很久——我喜欢你。,But I practiced this one. I like you.
+DIALOGUE_BLACKSMITH_PROPOSAL_1,这……你拿蓝羽毛来做什么？,This... why the blue feather?
+DIALOGUE_BLACKSMITH_PROPOSAL_2,好。往后我打的每样东西，都有你一半。,Then so be it. Everything I forge is half yours.
+DIALOGUE_OUR_CHILD_GREETING,你回来啦！抱抱！,You are back! Hug!
+

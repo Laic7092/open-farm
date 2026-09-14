@@ -22,6 +22,7 @@ const CORE_PARTICIPANTS: Array[StringName] = [
 	&"GameClock",
 	&"GameState",
 	&"WeatherSystem",
+	&"Relationships",
 	&"SceneRouter",
 ]
 

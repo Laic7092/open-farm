@@ -40,6 +40,7 @@ func _initialize() -> void:
 	Art.save_png(_hay(), _path("hay"))
 	Art.save_png(_chicken_icon(), _path("chicken"))
 	Art.save_png(_cow_icon(), _path("cow"))
+	Art.save_png(_blue_feather(), _path("blue_feather"))
 	print("道具图标生成完成 → ", DIR)
 	quit()
 
@@ -345,6 +346,20 @@ func _cow_icon() -> Image:
 	Art.rect(image, Rect2i(8, 12, 1, 3), P.ANIMAL_HIDE)
 	Art.rect(image, Rect2i(4, 14, 1, 1), P.ANIMAL_HOOF)
 	Art.rect(image, Rect2i(8, 14, 1, 1), P.ANIMAL_HOOF)
+	Art.outline(image)
+	return image
+
+
+## 求婚信物「蓝色羽毛」：斜置的蓝色羽片 + 羽轴。
+func _blue_feather() -> Image:
+	var image := _blank()
+	Art.ellipse(image, Vector2i(8, 8), Vector2i(4, 5), P.FLOWER_BLUE)
+	Art.ellipse(image, Vector2i(7, 7), Vector2i(2, 3), P.WATER_LIGHT)
+	Art.px(image, 6, 6, P.WHITE)
+	# 羽轴：左下 → 右上。
+	for i: int in 8:
+		Art.px(image, 4 + i, 12 - i, P.WATER_DARK)
+	Art.px(image, 3, 13, P.WATER_DARK)
 	Art.outline(image)
 	return image
 

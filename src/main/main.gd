@@ -90,6 +90,7 @@ func _boot_from_save() -> bool:
 
 func _boot_new_game() -> void:
 	GameState.reset()
+	Relationships.reset()
 	GameClock.reset()
 	SceneRouter.clear_world_cache()
 	await SceneRouter.change_scene_to(FIRST_WORLD, FIRST_SPAWN)

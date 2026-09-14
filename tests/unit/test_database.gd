@@ -131,6 +131,71 @@ func test_npc_dialogue_is_resolvable_in_every_season() -> void:
 			assert_bool(dialogue.is_empty()).is_false()
 
 
+## 可攻略 NPC 必须配齐表白 / 求婚 / 恋人 / 婚后 / 朋友对白。
+func test_romance_candidates_are_fully_configured() -> void:
+	var found := 0
+	for npc_id: StringName in Database.npcs:
+		var npc := Database.get_npc(npc_id)
+		if not npc.romanceable:
+			continue
+		found += 1
+		assert_object(npc.friend_dialogue).override_failure_message(
+			"可攻略 NPC %s 缺少朋友对白" % npc_id
+		).is_not_null()
+		assert_object(npc.lover_dialogue).override_failure_message(
+			"可攻略 NPC %s 缺少恋人好感对白" % npc_id
+		).is_not_null()
+		assert_object(npc.married_dialogue).override_failure_message(
+			"可攻略 NPC %s 缺少婚后对白" % npc_id
+		).is_not_null()
+		assert_object(npc.confession_dialogue).override_failure_message(
+			"可攻略 NPC %s 缺少表白对白" % npc_id
+		).is_not_null()
+		assert_object(npc.proposal_dialogue).override_failure_message(
+			"可攻略 NPC %s 缺少求婚对白" % npc_id
+		).is_not_null()
+		assert_bool(npc.confession_affection <= npc.marriage_affection).is_true()
+		assert_bool(npc.marriage_affection <= npc.max_affection).is_true()
+	assert_int(found).override_failure_message("至少要有 1 位可攻略 NPC").is_greater(0)
+
+
+## 小孩不能成为恋爱对象。
+func test_child_npcs_are_not_romanceable() -> void:
+	for npc_id: StringName in [&"child", &"our_child"]:
+		var npc := Database.get_npc(npc_id)
+		assert_object(npc).is_not_null()
+		if npc != null:
+			assert_bool(npc.romanceable).override_failure_message(
+				"NPC %s 不应可攻略" % npc_id
+			).is_false()
+
+
+## 礼物偏好表里出现的道具必须真实存在。
+func test_romance_gift_preferences_reference_real_items() -> void:
+	for npc_id: StringName in Database.npcs:
+		var npc := Database.get_npc(npc_id)
+		_assert_items_exist(npc_id, npc.loved_gifts)
+		_assert_items_exist(npc_id, npc.liked_gifts)
+		_assert_items_exist(npc_id, npc.disliked_gifts)
+
+
+func _assert_items_exist(npc_id: StringName, item_ids: Array[StringName]) -> void:
+	for item_id: StringName in item_ids:
+		assert_object(Database.get_item(item_id)).override_failure_message(
+			"NPC %s 的礼物 %s 不存在" % [npc_id, item_id]
+		).is_not_null()
+
+
+## 求婚信物必须是 GIFT 分类，且不能被卖掉。
+func test_blue_feather_is_the_proposal_gift() -> void:
+	var item := Database.get_item(AffectionRules.PROPOSAL_ITEM)
+	assert_object(item).is_not_null()
+	if item == null:
+		return
+	assert_int(item.category).is_equal(ItemData.Category.GIFT)
+	assert_bool(item.sellable).is_false()
+
+
 ## 每个 NPC 都要有能覆盖全天 24 小时的日程（凌晨靠循环回退到最后一段）。
 func test_every_npc_has_a_full_day_schedule() -> void:
 	for npc_id: StringName in Database.npcs:

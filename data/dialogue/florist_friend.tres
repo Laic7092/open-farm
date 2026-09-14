@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_xjcas"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_6pamk"]
+
+[sub_resource type="Resource" id="Resource_2hp6b"]
+script = ExtResource("1_xjcas")
+speaker_key = &"NPC_FLORIST"
+text_key = &"DIALOGUE_FLORIST_FRIEND"
+
+[resource]
+script = ExtResource("2_6pamk")
+id = &"florist_friend"
+speaker_key = &"NPC_FLORIST"
+lines = Array[ExtResource("1_xjcas")]([SubResource("Resource_2hp6b")])

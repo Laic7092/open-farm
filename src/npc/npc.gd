@@ -5,7 +5,9 @@ extends Interactable
 ## 行为数据来自 [NpcData] 与 [NpcSchedule]：
 ## [br]- 到点后走 [NpcNavigator] 算出的格子路径前往 [SchedulePoint]；
 ## [br]- 路上播放行走动画，到达后按 [member ScheduleEntry.facing] 站定；
-## [br]- 商人只在日程的 [code]activity == "shop"[/code] 时才开店。
+## [br]- 商人只在日程的 [code]activity == "shop"[/code] 时才开店；
+## [br]- 交谈 / 送礼的好感度与表白 / 求婚由 [code]Relationships[/code] 结算，
+##   本节点只是它的视图（见 [AffectionRules]）。
 ##
 ## 本脚本只负责"把数据变成移动与一次交互"，寻路算法本身在 [GridPathfinder] 里。
 
@@ -28,15 +30,29 @@ signal schedule_location_changed(location_id: StringName)
 @export var idle_bob: bool = true
 ## 关闭后不按日程走动（调试或特殊 NPC 用）。
 @export var schedule_enabled: bool = true
+## 只有玩家拥有该剧情旗标时 NPC 才存在（例如孩子出生后才出现在农场）。
+##
+## 留空表示始终存在。不可用时节点会隐藏、退出 [constant GROUP] 并停掉物理处理，
+## 于是"未出生的孩子"不会参与日程与寻路。
+@export var required_flag: StringName = &""
+
+## 关系里程碑：普通对话 / 表白 / 求婚。
+enum Milestone {
+	NONE,     ## 普通对白
+	CONFESS,  ## 表白（播放结束后进入交往）
+	PROPOSE,  ## 求婚（播放结束后结婚并消耗信物）
+}
 
 ## 静态数据。
 var data: NpcData
-## 好感度。
+## 好感度（[code]Relationships[/code] 的镜像，方便场景内查询）。
 var affection: int = 0
 ## 当前朝向。
 var facing: Facing.Direction = Facing.Direction.DOWN
 
 var _pending_shop_id: StringName = &""
+var _pending_milestone: Milestone = Milestone.NONE
+var _available: bool = true
 var _schedule: NpcSchedule
 var _current_entry: ScheduleEntry
 var _target_cell: Vector2i = NpcNavigator.NO_CELL
@@ -56,6 +72,13 @@ func _enter_tree() -> void:
 		EventBus.minute_changed.connect(_on_minute_changed)
 	if not EventBus.dialogue_finished.is_connected(_on_dialogue_finished):
 		EventBus.dialogue_finished.connect(_on_dialogue_finished)
+	if not EventBus.npc_affection_changed.is_connected(_on_npc_affection_changed):
+		EventBus.npc_affection_changed.connect(_on_npc_affection_changed)
+	if not EventBus.day_changed.is_connected(_on_day_changed):
+		EventBus.day_changed.connect(_on_day_changed)
+	if not EventBus.child_born.is_connected(_on_child_born):
+		EventBus.child_born.connect(_on_child_born)
+	_refresh_availability()
 
 
 func _exit_tree() -> void:
@@ -63,6 +86,12 @@ func _exit_tree() -> void:
 		EventBus.minute_changed.disconnect(_on_minute_changed)
 	if EventBus.dialogue_finished.is_connected(_on_dialogue_finished):
 		EventBus.dialogue_finished.disconnect(_on_dialogue_finished)
+	if EventBus.npc_affection_changed.is_connected(_on_npc_affection_changed):
+		EventBus.npc_affection_changed.disconnect(_on_npc_affection_changed)
+	if EventBus.day_changed.is_connected(_on_day_changed):
+		EventBus.day_changed.disconnect(_on_day_changed)
+	if EventBus.child_born.is_connected(_on_child_born):
+		EventBus.child_born.disconnect(_on_child_born)
 
 
 func _ready() -> void:
@@ -84,10 +113,12 @@ func _ready() -> void:
 		_schedule = data.schedule
 		if data.frames != null:
 			sprite.sprite_frames = data.frames
+		affection = Relationships.affection(npc_id)
 
 	if idle_bob:
 		_play(&"idle")
 
+	_refresh_availability()
 	_refresh_schedule()
 
 
@@ -134,7 +165,7 @@ func _on_minute_changed(_hour: int, _minute: int) -> void:
 
 
 func _refresh_schedule() -> void:
-	if _schedule == null or _schedule.is_empty():
+	if not _available or _schedule == null or _schedule.is_empty():
 		return
 	var entry := _schedule.entry_at(GameClock.minute_of_day)
 	if entry == null or entry == _current_entry:
@@ -306,10 +337,21 @@ func _find_schedule_point(location_id: StringName) -> SchedulePoint:
 
 # ---------------------------------------------------------------- 对白 / 交互
 
-## 当前季节应该说的话。
+## 当前应该说的话：关系阶段优先于季节。
 func current_dialogue() -> DialogueData:
 	if data == null:
 		return null
+	if data.romanceable:
+		var relationship := Relationships.status(npc_id)
+		if relationship == AffectionRules.Status.MARRIED and data.married_dialogue != null:
+			return data.married_dialogue
+		if relationship == AffectionRules.Status.DATING and data.lover_dialogue != null:
+			return data.lover_dialogue
+		if (
+			AffectionRules.hearts(affection) >= AffectionRules.FRIEND_HEARTS
+			and data.friend_dialogue != null
+		):
+			return data.friend_dialogue
 	return data.dialogue_for_season(GameClock.date.season)
 
 
@@ -318,25 +360,108 @@ func interact(actor: Node2D) -> void:
 		return
 	super.interact(actor)
 
+	# 1) 聊天好感每天只结算一次；先结算，里程碑判定用得到最新值。
+	var gained := Relationships.talk(npc_id)
+	if gained > 0:
+		EventBus.notification_requested.emit(
+			&"NOTIFY_AFFECTION_GAIN", {"npc": display_name(), "amount": gained}
+		)
+
+	# 2) 表白 / 求婚里程碑优先于日常对白。
+	var milestone := _milestone_for(actor)
+	if milestone != Milestone.NONE:
+		_pending_milestone = milestone
+		_pending_shop_id = &""
+		_face_actor(actor)
+		EventBus.dialogue_requested.emit(_milestone_dialogue(milestone))
+		return
+
 	var dialogue := current_dialogue()
 	if dialogue == null or dialogue.is_empty():
 		EventBus.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
 		return
 
-	# 停下来面向说话的人，观感更像"被叫住"。
-	if actor != null:
-		face(Facing.from_vector(actor.global_position - global_position, facing))
+	_face_actor(actor)
 	# 商人：先把招呼打完，再打开商店（由 dialogue_finished 触发）。
+	_pending_milestone = Milestone.NONE
 	_pending_shop_id = data.shop_id if data.is_merchant() and is_working() else &""
 	EventBus.dialogue_requested.emit(dialogue)
 
 
-## 增加好感度。
+## 增加好感度（转发到全局关系系统 [code]Relationships[/code]）。
 func add_affection(amount: int) -> void:
 	if data == null or amount == 0:
 		return
-	affection = clampi(affection + amount, 0, data.max_affection)
-	affection_changed.emit(affection)
+	Relationships.add_affection(npc_id, amount)
+
+
+## 收到玩家送出的礼物；返回好感度收益（0 表示今天已经送过或数据缺失）。
+func receive_gift(item_id: StringName) -> int:
+	if data == null or item_id == &"":
+		return 0
+	if not Relationships.can_gift(npc_id):
+		EventBus.notification_requested.emit(
+			&"NOTIFY_ALREADY_GIFTED", {"npc": display_name()}
+		)
+		return 0
+	var gain := Relationships.give_gift(npc_id, item_id)
+	var key: StringName = &"NOTIFY_GIFT_NEUTRAL"
+	if gain >= AffectionRules.GIFT_LOVED:
+		key = &"NOTIFY_GIFT_LOVED"
+	elif gain > 0:
+		key = &"NOTIFY_GIFT_LIKED"
+	elif gain < 0:
+		key = &"NOTIFY_GIFT_DISLIKED"
+	EventBus.notification_requested.emit(key, {
+		"npc": display_name(),
+		"item": Text.item_name(item_id),
+		"amount": gain,
+	})
+	return gain
+
+
+## NPC 显示名（找不到数据时退回 id）。
+func display_name() -> String:
+	return Text.key(data.display_name_key) if data != null else String(npc_id)
+
+
+# ---------------------------------------------------------------- 关系里程碑
+
+## 本次交互是否应触发表白 / 求婚。
+func _milestone_for(actor: Node2D) -> Milestone:
+	if data == null or not data.romanceable:
+		return Milestone.NONE
+	if Relationships.can_confess(npc_id) and data.confession_dialogue != null:
+		return Milestone.CONFESS
+	if Relationships.can_marry(npc_id) and data.proposal_dialogue != null:
+		var player := actor as Player
+		if player != null and player.inventory.has(AffectionRules.PROPOSAL_ITEM):
+			return Milestone.PROPOSE
+	return Milestone.NONE
+
+
+func _milestone_dialogue(milestone: Milestone) -> DialogueData:
+	return data.proposal_dialogue if milestone == Milestone.PROPOSE else data.confession_dialogue
+
+
+func _face_actor(actor: Node2D) -> void:
+	if actor != null:
+		face(Facing.from_vector(actor.global_position - global_position, facing))
+
+
+## 扣除求婚信物；没有则返回 false。
+func _consume_proposal_item() -> bool:
+	var player := _find_player()
+	if player == null or not player.inventory.has(AffectionRules.PROPOSAL_ITEM):
+		return false
+	return player.inventory.remove(AffectionRules.PROPOSAL_ITEM, 1)
+
+
+func _find_player() -> Player:
+	var tree := get_tree()
+	if tree == null:
+		return null
+	return tree.get_first_node_in_group(Player.GROUP) as Player
 
 
 # ---------------------------------------------------------------- 序列化
@@ -349,7 +474,11 @@ func to_dict() -> Dictionary:
 
 
 func from_dict(data_dict: Dictionary) -> void:
-	affection = maxi(int(data_dict.get("affection", 0)), 0)
+	# 关系状态现在由 Relationships 统一持有；这里的 affection 字段仅用于兼容旧档。
+	var legacy_affection := maxi(int(data_dict.get("affection", 0)), 0)
+	if legacy_affection > 0 and Relationships.affection(npc_id) == 0:
+		Relationships.set_affection(npc_id, legacy_affection)
+	affection = Relationships.affection(npc_id)
 	var raw_position: Variant = data_dict.get("position", null)
 	if raw_position is Array and (raw_position as Array).size() >= 2:
 		global_position = Vector2(
@@ -363,8 +492,57 @@ func from_dict(data_dict: Dictionary) -> void:
 
 
 func _on_dialogue_finished(_dialogue: DialogueData) -> void:
+	var milestone := _pending_milestone
+	_pending_milestone = Milestone.NONE
+	if milestone == Milestone.CONFESS:
+		Relationships.confess(npc_id)
+	elif milestone == Milestone.PROPOSE:
+		# 只有真的扣掉了信物才结婚，避免对白被跳过时"白嫖"。
+		if _consume_proposal_item():
+			Relationships.marry(npc_id)
 	if _pending_shop_id == &"":
 		return
 	var shop_id: StringName = _pending_shop_id
 	_pending_shop_id = &""
 	EventBus.shop_requested.emit(shop_id)
+
+
+# ---------------------------------------------------------------- 关系 / 可用性
+
+## 好感度被外部改写时同步镜像并发本地信号。
+func _on_npc_affection_changed(changed_id: StringName, value: int, _delta: int) -> void:
+	if changed_id != npc_id:
+		return
+	affection = value
+	affection_changed.emit(value)
+
+
+func _on_day_changed(_date: GameDate) -> void:
+	_refresh_availability()
+
+
+func _on_child_born(_child_id: StringName) -> void:
+	_refresh_availability()
+
+
+## 按 [member required_flag] 决定这个 NPC 当前是否存在。
+##
+## 不存在时隐藏、退出 [constant GROUP] 并停掉物理处理，
+## 这样"未出生的孩子"不会出现在日程 / 寻路 / 存档遍历里。
+func _refresh_availability() -> void:
+	if required_flag == &"":
+		return
+	var available := GameState.has_flag(required_flag)
+	if available == _available:
+		return
+	_available = available
+	visible = available
+	enabled = available
+	set_physics_process(available)
+	if available:
+		if not is_in_group(GROUP):
+			add_to_group(GROUP)
+	else:
+		if is_in_group(GROUP):
+			remove_from_group(GROUP)
+		_clear_path()

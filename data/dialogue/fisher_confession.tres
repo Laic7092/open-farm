@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_boofg"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_yneae"]
+
+[sub_resource type="Resource" id="Resource_vhp2y"]
+script = ExtResource("1_boofg")
+speaker_key = &"NPC_FISHER"
+text_key = &"DIALOGUE_FISHER_CONFESSION_1"
+
+[sub_resource type="Resource" id="Resource_ejgha"]
+script = ExtResource("1_boofg")
+speaker_key = &"NPC_FISHER"
+text_key = &"DIALOGUE_FISHER_CONFESSION_2"
+
+[resource]
+script = ExtResource("2_yneae")
+id = &"fisher_confession"
+speaker_key = &"NPC_FISHER"
+lines = Array[ExtResource("1_boofg")]([SubResource("Resource_vhp2y"), SubResource("Resource_ejgha")])

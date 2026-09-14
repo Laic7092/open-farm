@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_hkdax"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_odeq3"]
+
+[sub_resource type="Resource" id="Resource_6blti"]
+script = ExtResource("1_hkdax")
+speaker_key = &"NPC_OUR_CHILD"
+text_key = &"DIALOGUE_OUR_CHILD_GREETING"
+
+[resource]
+script = ExtResource("2_odeq3")
+id = &"our_child_greeting"
+speaker_key = &"NPC_OUR_CHILD"
+lines = Array[ExtResource("1_hkdax")]([SubResource("Resource_6blti")])

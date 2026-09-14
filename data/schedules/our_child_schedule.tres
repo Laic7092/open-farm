@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="NpcSchedule" format=3]
+
+[ext_resource type="Script" path="res://src/npc/schedule_entry.gd" id="1_boydw"]
+[ext_resource type="Script" path="res://src/npc/npc_schedule.gd" id="2_c5byc"]
+
+[sub_resource type="Resource" id="Resource_4l23d"]
+script = ExtResource("1_boydw")
+location_id = &"home"
+activity = &"rest"
+
+[resource]
+script = ExtResource("2_c5byc")
+entries = Array[ExtResource("1_boydw")]([SubResource("Resource_4l23d")])

@@ -76,6 +76,19 @@ signal animal_product_collected(
 ## 牲畜长大成年。
 signal animal_matured(building_id: StringName, animal_id: StringName)
 
+# ---------------------------------------------------------------- 好感度 / 恋爱
+
+## NPC 好感度变化；[param delta] 为本次增量。
+signal npc_affection_changed(npc_id: StringName, affection: int, delta: int)
+## NPC 关系阶段变化（单身的 [enum AffectionRules.Status] 数值）。
+signal npc_relationship_changed(npc_id: StringName, status: int)
+## 向 NPC 送出礼物（[param gain] 为好感度收益，可能为负）。
+signal npc_gift_given(npc_id: StringName, item_id: StringName, gain: int)
+## 玩家结婚。
+signal player_married(spouse_id: StringName)
+## 孩子出生。
+signal child_born(child_id: StringName)
+
 # ---------------------------------------------------------------- 野生植被
 
 ## 世界各处自然冒出了一株新芽。

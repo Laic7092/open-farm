@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="NpcData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/our_child_greeting.tres" id="1_dg16s"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_our_child_frames.tres" id="2_kxhqp"]
+[ext_resource type="Resource" path="res://data/schedules/our_child_schedule.tres" id="3_2ho1x"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_ff8h1"]
+
+[resource]
+script = ExtResource("4_ff8h1")
+id = &"our_child"
+display_name_key = &"NPC_OUR_CHILD"
+frames = ExtResource("2_kxhqp")
+default_dialogue = ExtResource("1_dg16s")
+schedule = ExtResource("3_2ho1x")
+move_speed = 30.0

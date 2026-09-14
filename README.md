@@ -1,8 +1,9 @@
 # open-farm · 牧场物语复刻
 
 用 **Godot 4.7.2** 搭建的 2D 俯视角像素风农场生活模拟游戏（牧场物语 / 矿石镇风格）。
-当前进度：**整体骨架已完成并可运行** —— 核心循环、玩家、农场、畜牧、NPC/经济、UI、存档、
-本地化、测试全部打通；**美术、字体、BGM、音效全部由脚本生成**，内容可以继续扩展。
+当前进度：**整体骨架已完成并可运行** —— 核心循环、玩家、农场、畜牧、NPC/经济、好感度与恋爱
+（聊天 / 送礼 / 表白 / 结婚 / 生子）、UI、存档、本地化、测试全部打通；
+**美术、字体、BGM、音效全部由脚本生成**，内容可以继续扩展。
 
 ---
 
@@ -53,6 +54,7 @@ timeout 800 ./tools/check.sh smoke
 | `空格` | 使用当前工具 |
 | `E` / `回车` | 交互 / 对话 / 收获 |
 | `Q` / `R` | 切换手持工具 |
+| `G` | 向面前的 NPC 送礼物（好感度 +） |
 | `Tab` / `I` | 背包 |
 | `Esc` | 系统菜单 |
 | `F5` / `F9` | 快捷存档 / 读档（槽位 0） |
@@ -77,6 +79,10 @@ timeout 800 ./tools/check.sh smoke
 地图网络：农场 → 小镇 `town` → 海滩 `beach` → 矿洞 `mine`，
 农场 → `twon` → 图书馆 `library`；每张图由 `SceneRouter` 独立进入，
 渔夫、矿工、图书管理员分别住在海滩 / 矿洞 / 图书馆。
+**好感度与恋爱**：每天第一次交谈、以及送对礼物都会提升 NPC 好感度（攒够 50 点一颗心）。
+铁匠 / 花婆婆 / 渔夫 / 书雅可以攻略：好感 4 心触发表白，5 心并带上一束
+**蓝色羽毛**（杂货店有售）再交谈即可求婚；婚后满 10 天会迎来孩子，
+孩子会出现在农舍旁（未出生时不存在）。
 按 `Esc` 打开菜单可以存读档、也可以回到标题页。
 
 ---
@@ -89,13 +95,14 @@ open-farm/
 ├── src/
 │   ├── art/                   # 调色板与图集排版表（生成器与运行时共用的事实来源）
 │   ├── audio/                 # 音频 id / 路径目录（生成器与运行时共用）
-│   ├── autoload/              # 全局单例（见下方"九大单例"）
+│   ├── autoload/              # 全局单例（见下方"十大单例"）
 │   ├── core/                  # 与玩法无关的基础设施：日期、季节、朝向、状态机、交互基类、网格 A*
 │   ├── data/                  # 数据资源的类定义（CropData / FloraData / ItemData / …）
 │   ├── player/                # 玩家实体、体力、背包、工具带、状态机状态
 │   ├── farm/                  # 农田网格、作物/牲畜生长规则、工具→农场的翻译层
 │   │                          #   以及畜舍系统（AnimalData/State/Husbandry/Manager）
-│   ├── npc/                   # NPC 实体、日程表（NpcSchedule）与行走网格（NpcNavigator）
+│   ├── npc/                   # NPC 实体、日程表（NpcSchedule）、行走网格（NpcNavigator）
+│   │                          #   以及好感度 / 恋爱规则（AffectionRules、RelationshipState）
 │   ├── shop/                  # 商店交易规则（纯逻辑，可单测）
 │   ├── world/                 # 世界场景基类、天气、边界墙、传送门、床、出货箱
 │   │                          #   以及野生植被系统（FloraData/State/Growth/Field）
@@ -124,7 +131,7 @@ open-farm/
 本节只回答"是什么、在哪"；每个设计**为什么**这么写，见
 [docs/architecture.md](docs/architecture.md)（关键决策见 §3，子系统见 §10 / §11）。
 
-### 九大单例（Autoload）
+### 十大单例（Autoload）
 
 启动顺序 = `project.godot` 的声明顺序；依赖图与约束见
 [architecture §2](docs/architecture.md#2-autoload-依赖图)。
@@ -137,6 +144,7 @@ open-farm/
 | `GameClock` | 游戏时钟 | 06:00 起床、次日 02:00 强制结束；**有序日结转钩子**驱动模拟流水线 |
 | `GameState` | 跨场景状态 | 金钱、剧情旗标、统计。玩家体力/背包属于 `Player`，不放这里 |
 | `WeatherSystem` | 天气 | 作为**第一个**日结转钩子，保证其它系统读到的天气已是当天的 |
+| `Relationships` | 好感度与恋爱 | 跨场景持有每 NPC 的好感 / 关系阶段、配偶与孩子；日结转清每日标记并推进婚育 |
 | `SaveManager` | 存档 | JSON + 版本号；鸭子类型收集 `persistent` 组节点；支持跨地图读档 |
 | `SceneRouter` | 场景路由 | 淡入淡出 + 出生点定位；世界场景**缓存复用**，UI 常驻不销毁 |
 | `Audio` | 音频总管 | 合成 BGM / 音效的唯一播放出口；按场景与时间换曲，订阅 `EventBus` 播音效 |
@@ -162,6 +170,7 @@ open-farm/
 | 场景切换 | `SceneRouter._world_cache` | 换 `WorldHost` 子节点而非 `change_scene_to_file`；地图实例缓存复用 | [§3.2](docs/architecture.md#32-世界场景换子节点不用-change_scene_to_file) |
 | 畜舍养殖 | `LivestockManager` | 与 `FarmGrid` 同构：状态在字典、视图可重建、规则纯静态、牲畜不会死 | [§3.3.1](docs/architecture.md#331-畜舍为什么是-farmgrid-的翻版) |
 | 昼夜光照 | `DayNight` + `WorldLighting` | 一条"分钟 → 环境光"曲线；天气染色与昼夜染色必须在同一个 `CanvasModulate` 相乘，路灯由 `WorldProp.light_radius` 生成 | [§12](docs/architecture.md#12-昼夜光照) |
+| 好感度与恋爱 | `Relationships` + `AffectionRules` | 规则纯静态可单测；状态按 `npc_id` 集中存放，换地图、读档都不丢；表白 / 求婚由交谈触发，孩子用 `required_flag` 门控出场 | [§13](docs/architecture.md#13-好感度与恋爱结婚生子) |
 
 > **生命周期铁律**：世界场景会缓存复用，`_ready()` 一生只跑一次。
 > "每次进图都要做一遍"的事情放 `_enter_tree()` / `WorldScene.on_world_enter()`；
@@ -217,6 +226,17 @@ open-farm/
 5. 在 `scenes/world/*.tscn` 里放好 `SchedulePoint`（`point_id` 对应日程的 `location_id`），
    再实例化 `scenes/npc/npc.tscn`，改 `npc_id`。找不到地点时 NPC 会 `push_warning` 并原地不动。
 
+### 让一个 NPC 可以攻略
+
+1. 在 `data/npcs/<id>.tres` 上勾选 `romanceable`，填 `confession_affection` / `marriage_affection`
+   （默认 4 心表白、5 心结婚）以及 `loved_gifts` / `liked_gifts` / `disliked_gifts`（道具 id）。
+2. 加五段对白并挂到 `friend_dialogue` / `lover_dialogue` / `married_dialogue` /
+   `confession_dialogue` / `proposal_dialogue`；问候语照旧走 `default_dialogue`。
+3. 数值不用改代码：心数换算与收益在 `src/npc/affection_rules.gd`，
+   状态与存档在 `Relationships`；`NpcData.validate()` 会在数据不全时报错。
+4. 结婚信物默认是 `blue_feather`（`AffectionRules.PROPOSAL_ITEM`），
+   已上架杂货店；想换信物就改这个常量并补对应道具。
+
 ### 加一个世界场景
 
 1. 复制 `scenes/world/twon.tscn`（户外）或 `scenes/world/library.tscn`（室内），
@@ -248,8 +268,8 @@ func from_dict(data: Dictionary) -> void: ...
 
 | 层次 | 工具 | 覆盖 |
 | --- | --- | --- |
-| 单元测试 | gdUnit4（`tests/unit/`，283 例） | 日期进位、季节/天气、网格换算、背包堆叠、体力、工具带、作物生长（含枯死/多次收获）、牲畜养殖（成年/产出/喂食/好感度）、NPC 日程表与网格 A*、商店经济、状态机、时钟与日结转钩子、数据完整性、存档往返与容错 |
-| 冒烟测试 | `tools/smoke_test.tscn`（189 项） | 真的把游戏跑起来：场景加载、玩家落点、翻地→播种→生长→收获全链路、放养→喂食→成长→收产出、买/卖、存读档、HUD 内容、**NPC 日程与寻路（导航网格、路径、真的走起来）**、**昼夜光照（环境光随时刻变化、路灯白天灭夜里亮）**、**农场 ↔ 小镇 / 农场 ↔ twon 往返后农田与畜舍进度、日结转钩子仍然有效**、**六张地图加载与 NPC 导航可达性** |
+| 单元测试 | gdUnit4（`tests/unit/`，308 例） | 日期进位、季节/天气、网格换算、背包堆叠、体力、工具带、作物生长（含枯死/多次收获）、牲畜养殖（成年/产出/喂食/好感度）、NPC 日程表与网格 A*、商店经济、状态机、时钟与日结转钩子、好感度与恋爱（聊天/送礼/表白/结婚/生子）、数据完整性、存档往返与容错 |
+| 冒烟测试 | `tools/smoke_test.tscn`（197 项） | 真的把游戏跑起来：场景加载、玩家落点、翻地→播种→生长→收获全链路、放养→喂食→成长→收产出、买/卖、存读档、HUD 内容、**NPC 日程与寻路（导航网格、路径、真的走起来）**、**好感度 / 恋爱 / 婚姻链路**、**昼夜光照（环境光随时刻变化、路灯白天灭夜里亮）**、**农场 ↔ 小镇 / 农场 ↔ twon 往返后农田与畜舍进度、日结转钩子仍然有效**、**六张地图加载与 NPC 导航可达性** |
 | 美术规范 | `tests/unit/test_assets.gd` | 生成物存在、尺寸与 `AtlasLayout` 一致、瓦片齐全、字体覆盖翻译表全部字符、数据都挂上了贴图 |
 | 音频规范 | `tests/unit/test_audio.gd` | WAV 真的是 22050 Hz / 16 bit / 单声道；BGM 带 `smpl` 循环点、音效不带；运行时总线就位、音量可调 |
 | 视觉回归 | `tools/screenshot.tscn` / `tools/ui_preview.tscn` | 标题页 + 农场 + 小镇 + twon + 海滩 + 矿洞 + 图书馆截图、各界面布局截图 |
@@ -324,6 +344,9 @@ timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/generate_sa
   （农田靠范围判定，不受影响）。
 - **NPC 日程是固定时刻表**：只按时辰切换地点，没有工作日 / 天气 / 节日差异，
   也不会互相避让或绕开玩家；路上被新长出来的障碍挡住会重算一次，但不排队。
+- **恋爱是"自动里程碑"**：交谈时若满足条件就直接播放表白 / 求婚对白，
+  没有多分支选项界面，也没有分手 / 离婚；目前只有铁匠 / 花婆婆 / 渔夫 / 书雅可以攻略，
+  孩子出生后固定待在家门口，不会长大。
 - **野生植被是"进图补算"而不是后台模拟**：不在场的地图不跑日结转，
   而是在重新进入时把离开的天数一次性补算掉（单次最多 60 天）。
   要做到真正连续的后台模拟，需要把状态外置到 autoload，和当前"状态在场景里"的架构冲突。
@@ -342,7 +365,7 @@ timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/generate_sa
 
 1. **内容**：更多作物 / 季节作物、更多牲畜（鸭 / 羊）与畜舍升级、钓鱼、采矿。
 2. **表现**：更丰富的生成器画法（光影 / 更多逐帧动画）、Tilemap 地形自动过渡。
-3. **系统**：好感度与恋爱、节日与事件、NPC 之间的避让与排队、工具升级与体力上限成长。
+3. **系统**：节日与事件、NPC 之间的避让与排队、工具升级与体力上限成长。
 4. **流程**：多存档槽选择界面、新手引导、结局与结算。
 5. **工程**：导出预设（Windows / Linux / macOS）、GitHub Actions 跑 `tools/check.sh`、帧率与内存基线。
 

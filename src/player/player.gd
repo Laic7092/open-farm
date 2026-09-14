@@ -89,6 +89,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		tool_belt.prev()
 	elif event.is_action_pressed(&"open_inventory"):
 		EventBus.inventory_toggle_requested.emit()
+	elif event.is_action_pressed(&"give_gift"):
+		try_give_gift()
 
 
 # ---------------------------------------------------------------- 能力
@@ -176,6 +178,61 @@ func try_interact() -> bool:
 		return true
 	EventBus.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
 	return false
+
+
+## 把背包里最合适的一件礼物送给面前的 NPC（G 键）。
+##
+## "最合适"= 对该 NPC 好感收益最高的可赠道具：优先 GIFT 分类，
+## 其次是 NPC 偏好表里明确提到过的道具。求婚信物永远不会被当作普通礼物送掉。
+func try_give_gift() -> bool:
+	if GameClock.paused:
+		return false
+	var npc := current_interactable() as Npc
+	if npc == null:
+		EventBus.notification_requested.emit(&"NOTIFY_NO_GIFT_TARGET", {})
+		return false
+	if not Relationships.can_gift(npc.npc_id):
+		EventBus.notification_requested.emit(
+			&"NOTIFY_ALREADY_GIFTED", {"npc": npc.display_name()}
+		)
+		return false
+	var item_id := _pick_gift(npc)
+	if item_id == &"":
+		EventBus.notification_requested.emit(&"NOTIFY_NO_GIFT", {})
+		return false
+	if not inventory.remove(item_id, 1):
+		return false
+	npc.receive_gift(item_id)
+	return true
+
+
+## 挑一件对 [param npc] 收益最高的可赠道具；没有可赠道具时返回空串。
+func _pick_gift(npc: Npc) -> StringName:
+	var best: StringName = &""
+	var best_gain: int = -99999
+	for slot: InventorySlot in inventory.slots:
+		if slot.is_empty() or slot.item_id == AffectionRules.PROPOSAL_ITEM:
+			continue
+		var item := Database.get_item(slot.item_id)
+		if item == null or not _is_giftable(item, npc):
+			continue
+		var gain := Relationships.gift_gain(npc.npc_id, slot.item_id)
+		if gain > best_gain:
+			best_gain = gain
+			best = slot.item_id
+	return best
+
+
+func _is_giftable(item: ItemData, npc: Npc) -> bool:
+	if item.category == ItemData.Category.GIFT:
+		return true
+	if npc.data == null:
+		return false
+	return (
+		npc.data.loved_gifts.has(item.id)
+		or npc.data.liked_gifts.has(item.id)
+		or npc.data.disliked_gifts.has(item.id)
+	)
 
 
 # ---------------------------------------------------------------- 序列化

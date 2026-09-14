@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_883k7"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_mtas2"]
+
+[sub_resource type="Resource" id="Resource_6oil2"]
+script = ExtResource("1_883k7")
+speaker_key = &"NPC_BLACKSMITH"
+text_key = &"DIALOGUE_BLACKSMITH_LOVER"
+
+[resource]
+script = ExtResource("2_mtas2")
+id = &"blacksmith_lover"
+speaker_key = &"NPC_BLACKSMITH"
+lines = Array[ExtResource("1_883k7")]([SubResource("Resource_6oil2")])

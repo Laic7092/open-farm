@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=3]
+[gd_scene load_steps=37 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -33,6 +33,8 @@
 [ext_resource type="PackedScene" path="res://scenes/farm/animal.tscn" id="38_animal"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/coop.png" id="39_coop"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/trough.png" id="40_trough_tex"]
+[ext_resource type="Script" path="res://src/npc/schedule_point.gd" id="41_schedule_point"]
+[ext_resource type="PackedScene" path="res://scenes/npc/npc.tscn" id="42_npc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
 size = Vector2(16, 16)
@@ -279,6 +281,21 @@ target_spawn_id = &"from_farm"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToTwon"]
 shape = SubResource("RectangleShape2D_tile")
+
+[node name="Schedules" type="Node2D" parent="."]
+
+[node name="Home" type="Marker2D" parent="Schedules"]
+position = Vector2(140, 132)
+script = ExtResource("41_schedule_point")
+point_id = &"home"
+
+[node name="Npcs" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="OurChild" parent="Npcs" instance=ExtResource("42_npc")]
+position = Vector2(140, 132)
+npc_id = &"our_child"
+required_flag = &"child_born"
 
 [node name="Player" parent="." instance=ExtResource("6_player")]
 position = Vector2(104, 328)
