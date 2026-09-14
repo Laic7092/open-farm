@@ -48,10 +48,12 @@ GameState     ← EventBus, GameClock
 WeatherSystem ← GameClock（把自己注册成第一个日结转钩子）
 SaveManager   ← EventBus, Persistence（鸭子类型找节点，不静态依赖任何游戏系统）
 SceneRouter   ← EventBus, GameClock
+Audio         ← EventBus, GameClock, SceneRouter（按场景 / 时间换曲，订阅信号播音效）
 ```
 
 **约束**：`WeatherSystem` 必须排在 `GameClock` 之后，否则 `_ready()` 里读
-`GameClock.date` 会拿到 null。这个顺序在 `project.godot` 里有注释说明。
+`GameClock.date` 会拿到 null。`Audio` 排在最后，因为它要在 `_ready()` 里
+把前面几个单例的信号接上。这个顺序在 `project.godot` 里有注释说明。
 
 `SaveManager` 与其它单例之间刻意只有**按名字**的弱引用
 （`get_tree().root.get_node_or_null("/root/GameClock")`），

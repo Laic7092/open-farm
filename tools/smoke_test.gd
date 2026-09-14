@@ -138,6 +138,7 @@ func _run_checks() -> void:
 	_check_shop()
 	_check_save_load()
 	_check_ui()
+	_check_audio()
 
 
 func _check_database() -> void:
@@ -471,6 +472,7 @@ func _check_town() -> void:
 	if world == null:
 		return
 	_check_eq(String(world.get(&"world_id")), "town", "切换后应当在小镇")
+	_check_eq(String(Audio.current_bgm()), "town", "白天进小镇应当换成小镇 BGM")
 	_check(_player() != null, "小镇里应当有玩家")
 	_check(_farm_grid() == null, "小镇里不应该有农场网格")
 	_check(_flora_field() != null, "小镇也应当有自己的野生植被")
@@ -604,6 +606,21 @@ func _find_schedule_point(point_id: StringName) -> SchedulePoint:
 		if point != null and point.point_id == point_id:
 			return point
 	return null
+
+
+func _check_audio() -> void:
+	_check(AudioServer.get_bus_index(&"BGM") >= 0, "应当存在 BGM 总线")
+	_check(AudioServer.get_bus_index(&"SFX") >= 0, "应当存在 SFX 总线")
+	_check_eq(String(Audio.current_bgm()), "farm", "白天进农场应当播放农场 BGM")
+
+	# 音量旋钮真的接到总线上。
+	var original: float = Audio.sfx_volume
+	Audio.set_sfx_volume(0.4)
+	_check(is_equal_approx(Audio.sfx_volume, 0.4), "音效音量应当可以调整")
+	Audio.set_sfx_volume(original)
+
+	# 触发一次真实音效；headless 下听不见，但不应当报错或崩溃。
+	Audio.play_sfx(&"ui_confirm")
 
 
 func _check_farm_state_survived() -> void:

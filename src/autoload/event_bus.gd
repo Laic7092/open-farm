@@ -96,6 +96,8 @@ signal dialogue_requested(dialogue: DialogueData)
 ## 对话开始 / 结束。
 signal dialogue_started(dialogue: DialogueData)
 signal dialogue_finished(dialogue: DialogueData)
+## 对话翻到新的一句（逐字显示之前触发，供打字音效使用）。
+signal dialogue_line_shown()
 ## 请求打开商店。
 signal shop_requested(shop_id: StringName)
 ## 商店开关。
@@ -114,6 +116,8 @@ signal load_completed(slot: int, success: bool)
 ## 场景切换开始 / 结束。
 signal scene_transition_started(target: StringName)
 signal scene_transition_finished(target: StringName)
+## 进入某个世界场景（包括从缓存里重新挂载）。音频等"按地图切换"的系统订阅它。
+signal world_entered(world_id: StringName)
 
 # ---------------------------------------------------------------- UI / 系统
 

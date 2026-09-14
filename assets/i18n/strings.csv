@@ -101,6 +101,8 @@ MENU_SAVE,保存进度,Save
 MENU_LOAD,读取进度,Load
 MENU_QUIT,退出,Quit
 MENU_PAUSED,游戏已暂停,Paused
+MENU_MUSIC,音乐,Music
+MENU_SFX,音效,Sound
 GAME_TITLE,牧场物语 · 复刻,Open Farm
 GAME_SUBTITLE,一个用 Godot 4 搭建的农场生活模拟原型,A farming-life prototype built with Godot 4
 TITLE_NEW_GAME,开始新游戏,New Game

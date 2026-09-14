@@ -18,22 +18,31 @@ if [ ! -x "$GODOT_BIN" ]; then
 	exit 1
 fi
 
+# 每条 Godot 命令都套 timeout：脚本解析失败或测试挂死时不会无限等待。
+# 默认 60 秒；慢机器可用 GODOT_TIMEOUT 覆盖。详见 docs/art_pipeline.md「命令必须能自己退出」。
+TIMEOUT="${GODOT_TIMEOUT:-60}"
+# 少数平台（如 macOS 默认）没有 timeout；退化成直接执行，避免脚本直接报错。
+if ! command -v timeout >/dev/null 2>&1; then
+	echo "警告：未找到 timeout，命令将不设超时（可安装 coreutils 或使用 gtimeout）。" >&2
+	timeout() { shift; "$@"; }
+fi
+
 run_import() {
 	echo "==> 刷新 Godot 导入缓存"
-	"$GODOT_BIN" --headless --path . --import >/dev/null 2>&1 || true
+	timeout "$TIMEOUT" "$GODOT_BIN" --headless --path . --import >/dev/null 2>&1 || true
 }
 
 run_unit() {
 	echo "==> gdUnit4 单元测试"
 	# --ignoreHeadlessMode：CI 里没有窗口，但本项目的测试不依赖真实输入事件。
-	"$GODOT_BIN" --headless --path . \
+	timeout "$TIMEOUT" "$GODOT_BIN" --headless --path . \
 		-s res://addons/gdUnit4/bin/GdUnitCmdTool.gd \
 		--ignoreHeadlessMode -a res://tests
 }
 
 run_smoke() {
 	echo "==> 端到端冒烟测试（真的把游戏跑起来）"
-	"$GODOT_BIN" --headless --path . res://tools/smoke_test.tscn
+	timeout "$TIMEOUT" "$GODOT_BIN" --headless --path . res://tools/smoke_test.tscn
 }
 
 case "$TARGET" in

@@ -54,6 +54,7 @@ func _ready() -> void:
 	# 对话 / 商店等模态界面可能在切换场景时留下暂停状态。
 	get_tree().paused = false
 
+	Audio.enter_title()
 	_refresh()
 	_focus_default()
 
@@ -150,19 +151,23 @@ func _move_focus(step: int) -> void:
 	var current: int = buttons.find(get_viewport().gui_get_focus_owner() as Button)
 	var next: int = posmod(current + step, buttons.size()) if current >= 0 else 0
 	buttons[next].grab_focus()
+	Audio.play_sfx(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
 
 
 func _on_continue_pressed() -> void:
 	if _continue_slot < 0:
 		return
+	Audio.play_sfx(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 	_start_game(Main.BootMode.LOAD_SLOT, _continue_slot)
 
 
 func _on_new_game_pressed() -> void:
+	Audio.play_sfx(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 	_start_game(Main.BootMode.NEW_GAME, 0)
 
 
 func _on_language_pressed() -> void:
+	Audio.play_sfx(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 	AppTheme.set_locale(_next_locale())
 	_refresh()
 	_focus_default()

@@ -12,7 +12,7 @@
 # 运行游戏
 ./godot --path .
 
-# 一键校验（导入缓存 + 235 个单元测试 + 100+ 项端到端冒烟检查）
+# 一键校验（导入缓存 + 269 个单元测试 + 122 项端到端冒烟检查）
 ./tools/check.sh
 
 # 只跑单元测试 / 只跑冒烟测试
@@ -66,7 +66,8 @@ open-farm/
 ├── project.godot              # autoload / InputMap / 像素渲染 / 本地化 / gdUnit4 配置
 ├── src/
 │   ├── art/                   # 调色板与图集排版表（生成器与运行时共用的事实来源）
-│   ├── autoload/              # 全局单例（见下方"八大单例"）
+│   ├── audio/                 # 音频 id / 路径目录（生成器与运行时共用）
+│   ├── autoload/              # 全局单例（见下方"九大单例"）
 │   ├── core/                  # 与玩法无关的基础设施：日期、季节、朝向、状态机、交互基类、网格 A*
 │   ├── data/                  # 数据资源的类定义（CropData / FloraData / ItemData / …）
 │   ├── player/                # 玩家实体、体力、背包、工具带、状态机状态
@@ -80,7 +81,8 @@ open-farm/
 │   └── main/                  # 游戏主入口
 ├── scenes/                    # 场景文件，目录结构与 src/ 一一对应
 ├── data/                      # 实际的数据资源（.tres）：作物/牲畜/道具/NPC/对话/商店/日程，策划直接在编辑器里改
-├── assets/                    # 全部由 tools/art/*.gd 生成（见 docs/art_pipeline.md）
+├── assets/                    # 全部由 tools/*.gd 生成（见 docs/art_pipeline.md、audio_pipeline.md）
+│   ├── audio/                 # BGM 与音效（标题 / 农场 / 小镇 / 夜晚 + 26 个音效）
 │   ├── i18n/strings.csv       # 翻译表（zh_CN / en）
 │   ├── fonts/pixel_cjk.fnt    # 像素中文字体（1100 字形子集 + PNG 图集）
 │   ├── fonts/ui_font.tres     # 子集外字符的系统字体兜底
@@ -89,15 +91,15 @@ open-farm/
 │   ├── title/                 # 标题页背景与云
 │   ├── tilesets/              # 组装出来的 TileSet
 │   └── themes/game_theme.tres # 组装出来的 Theme（字体 + 皮肤）
-├── tests/unit/                # gdUnit4 单元测试（含美术规范测试）
-└── tools/                     # 资源生成、校验、截图等开发工具
+├── tests/unit/                # gdUnit4 单元测试（含美术 / 音频规范测试）
+└── tools/                     # 资源生成（美术 / 音频）、校验、截图等开发工具
 ```
 
 ---
 
 ## 架构
 
-### 八大单例（Autoload）
+### 九大单例（Autoload）
 
 | 名称 | 职责 | 关键点 |
 | --- | --- | --- |
@@ -109,6 +111,7 @@ open-farm/
 | `WeatherSystem` | 天气 | 作为**第一个**日结转钩子，保证其它系统读到的天气已是当天的 |
 | `SaveManager` | 存档 | JSON + 版本号；鸭子类型收集 `persistent` 组节点；支持跨地图读档 |
 | `SceneRouter` | 场景路由 | 淡入淡出 + 出生点定位；世界场景**缓存复用**，UI 常驻不销毁 |
+| `Audio` | 音频总管 | 合成 BGM / 音效的唯一播放出口；按场景与时间换曲，订阅 `EventBus` 播音效 |
 
 ### 三条贯穿全局的设计原则
 
@@ -274,9 +277,10 @@ func from_dict(data: Dictionary) -> void: ...
 
 | 层次 | 工具 | 覆盖 |
 | --- | --- | --- |
-| 单元测试 | gdUnit4（`tests/unit/`，259 例） | 日期进位、季节/天气、网格换算、背包堆叠、体力、工具带、作物生长（含枯死/多次收获）、牲畜养殖（成年/产出/喂食/好感度）、NPC 日程表与网格 A*、商店经济、状态机、时钟与日结转钩子、数据完整性、存档往返与容错 |
-| 冒烟测试 | `tools/smoke_test.tscn`（100+ 项） | 真的把游戏跑起来：场景加载、玩家落点、翻地→播种→生长→收获全链路、放养→喂食→成长→收产出、买/卖、存读档、HUD 内容、**NPC 日程与寻路（导航网格、路径、真的走起来）**、**农场 ↔ 小镇 / 农场 ↔ twon 往返后农田与畜舍进度、日结转钩子仍然有效** |
+| 单元测试 | gdUnit4（`tests/unit/`，269 例） | 日期进位、季节/天气、网格换算、背包堆叠、体力、工具带、作物生长（含枯死/多次收获）、牲畜养殖（成年/产出/喂食/好感度）、NPC 日程表与网格 A*、商店经济、状态机、时钟与日结转钩子、数据完整性、存档往返与容错 |
+| 冒烟测试 | `tools/smoke_test.tscn`（122 项） | 真的把游戏跑起来：场景加载、玩家落点、翻地→播种→生长→收获全链路、放养→喂食→成长→收产出、买/卖、存读档、HUD 内容、**NPC 日程与寻路（导航网格、路径、真的走起来）**、**农场 ↔ 小镇 / 农场 ↔ twon 往返后农田与畜舍进度、日结转钩子仍然有效** |
 | 美术规范 | `tests/unit/test_assets.gd` | 生成物存在、尺寸与 `AtlasLayout` 一致、瓦片齐全、字体覆盖翻译表全部字符、数据都挂上了贴图 |
+| 音频规范 | `tests/unit/test_audio.gd` | WAV 真的是 22050 Hz / 16 bit / 单声道；BGM 带 `smpl` 循环点、音效不带；运行时总线就位、音量可调 |
 | 视觉回归 | `tools/screenshot.tscn` / `tools/ui_preview.tscn` | 标题页 + 农场 + 小镇 + twon 截图、各界面布局截图 |
 
 ```bash
@@ -297,23 +301,51 @@ func from_dict(data: Dictionary) -> void: ...
 贴图挂在数据资源上、生成物提交但永不手改。
 
 ```bash
-# 重新生成全部美术与字体（14 步，约 20 秒）
+# 重新生成全部美术、音频与字体（16 步，约 15 秒）
 ./tools/build_assets.sh
 
 # 只重跑某一个生成器（例如只调了树的形状）
-./godot --headless --path . -s res://tools/art/generate_props.gd
-./godot --headless --path . --import
+timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/art/generate_props.gd
+timeout 60 ./godot --headless --path . --import
 
 # 重置示例数据（作物 / 牲畜 / 道具 / 商店 / NPC / 对话；会顺带挂上贴图）
-./godot --headless --path . -s res://tools/generate_sample_data.gd
+timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/generate_sample_data.gd
 
 # 截图（需要真实渲染后端，--headless 不可用）
-./godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn   # 标题页 + 农场 + 小镇 + twon
-./godot --path . --rendering-driver opengl3 res://tools/ui_preview.tscn   # 各界面布局
+timeout 60 ./godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn   # 标题页 + 农场 + 小镇 + twon
+timeout 60 ./godot --path . --rendering-driver opengl3 res://tools/ui_preview.tscn   # 各界面布局
 ```
+
+> [b]Godot 命令必须能自己退出。[/b] `-s script.gd` 解析失败时 `quit()` 不会被调用，
+> Godot 会一直挂着。统一用 `timeout 60`（慢机器可用 `GODOT_TIMEOUT` 覆盖）加
+> `--quit-after 3`；`build_assets.sh` 与 `check.sh` 已内置。详见
+> [docs/art_pipeline.md](docs/art_pipeline.md) 的「命令必须能自己退出」一节。
 
 真美术到位后：**删掉对应的生成器、把图放到同名路径，游戏代码零改动**
 （运行时只认数据资源里的贴图字段与 `AtlasLayout` 的坐标）。
+
+---
+
+## 音频资源：同样由脚本生成
+
+[b]仓库里也不放手工音频素材。[/b] 4 首 BGM（标题 / 农场 / 小镇 / 夜晚）与 26 个音效
+全部由 `tools/audio/*.gd` 用振荡器、噪声与包络**合成**；格式统一
+22050 Hz / 16 bit / 单声道，并在 BGM 的 WAV 里写入标准 `smpl` 循环块，
+Godot 导入后即可无缝循环。
+
+运行时由 `Audio` 单例唯一播放：进农场 / 小镇按地图换曲、18:00 ~ 次日 06:00 换成夜曲，
+标题页固定放标题曲；翻地、浇水、收获、买卖、对话、脚步等全部订阅 `EventBus` 的既有信号——
+**玩法代码里没有任何播放调用**。系统菜单里的音乐 / 音效滑杆控制 `BGM` / `SFX` 两条总线，
+设置存在 `user://audio_settings.cfg`。
+
+完整规范见 **[docs/audio_pipeline.md](docs/audio_pipeline.md)**，核心同样是
+"格式只在目录里声明一次、噪声用哈希保证确定性、生成物提交但永不手改"。
+
+```bash
+./tools/build_assets.sh     # 连音频一起重新生成（约 20 秒）
+```
+
+真音频到位后同样**删脚本、放同名 WAV，游戏代码零改动**。
 
 ---
 
@@ -321,6 +353,8 @@ func from_dict(data: Dictionary) -> void: ...
 
 - **美术是脚本画的**：像素画由 `tools/art/*.gd` 生成，风格统一但细节有限——
   没有手绘的光影、渐变与逐帧动画，角色只有 3 个朝向 × 4 个姿势。
+- **音频也是脚本合成的**：BGM 是固定 BPM 的循环段、音效是振荡器 + 噪声，
+  没有真实乐器采样、没有人声，也不会随剧情动态配乐；换真音频只需替换同路径 WAV。
 - **中文只覆盖"用到的字"**：像素字体是子集（约 1100 字形），
   玩家名一类运行期才出现的生僻字要走系统字体兜底；
   精简容器里没有系统 CJK 字体时仍会显示方块。加了新文案请重跑 `build_assets.sh`。
@@ -347,7 +381,7 @@ func from_dict(data: Dictionary) -> void: ...
 ## 后续里程碑建议
 
 1. **内容**：更多作物 / 季节作物、更多牲畜（鸭 / 羊）与畜舍升级、钓鱼、采矿。
-2. **表现**：手绘美术替换脚本生成物、Tilemap 地形自动过渡、昼夜光照、音效与 BGM。
+2. **表现**：手绘美术 / 真人配乐替换脚本生成物、Tilemap 地形自动过渡、昼夜光照。
 3. **系统**：好感度与恋爱、节日与事件、NPC 之间的避让与排队、工具升级与体力上限成长。
 4. **流程**：多存档槽选择界面、新手引导、结局与结算。
 5. **工程**：导出预设（Windows / Linux / macOS）、GitHub Actions 跑 `tools/check.sh`、帧率与内存基线。
@@ -360,3 +394,4 @@ func from_dict(data: Dictionary) -> void: ...
 - [gdUnit4 文档](https://mikeschulze.github.io/gdUnit4/)
 - 本仓库的 [架构与设计决策](docs/architecture.md) —— 每个"为什么不按常见教程写"的答案、以及踩过的 Godot 坑
 - 本仓库的 [美术资源规范](docs/art_pipeline.md) —— 为什么美术也应当是代码，以及怎么加新素材
+- 本仓库的 [音频资源规范](docs/audio_pipeline.md) —— 为什么音频也应当是代码，以及怎么加新音色

@@ -53,6 +53,7 @@ func on_world_enter(spawn_id: StringName) -> void:
 	if spawn_id == &"":
 		spawn_id = default_spawn_id
 	_apply_camera_limits()
+	EventBus.world_entered.emit(world_id)
 
 
 ## 本场景被切出（但实例仍保留在缓存里）时调用。

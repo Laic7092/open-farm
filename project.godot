@@ -27,6 +27,7 @@ GameState="*res://src/autoload/game_state.gd"
 WeatherSystem="*res://src/world/weather_system.gd"
 SaveManager="*res://src/autoload/save_manager.gd"
 SceneRouter="*res://src/autoload/scene_router.gd"
+Audio="*res://src/autoload/audio_manager.gd"
 
 [display]
 

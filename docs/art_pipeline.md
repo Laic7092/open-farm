@@ -120,14 +120,14 @@ CI 与玩家不需要跑生成器，也不需要本机装有中文字体。
 ## 4. 怎么跑
 
 ```bash
-./tools/build_assets.sh          # 全部重跑（14 步，约 20 秒）
+./tools/build_assets.sh          # 全部重跑（16 步，约 15 秒）
 ```
 
 顺序不能变，原因是 Godot 的导入管线：
 
 ```
-1. 生成 PNG / .fnt        ← 此时还没有 .import
-2. --import               ← 贴图与字体进入导入管线
+1. 生成 PNG / .fnt / WAV  ← 此时还没有 .import
+2. --import               ← 贴图、字体与音频进入导入管线
 3. 组装 .tres             ← TileSet / SpriteFrames / Theme 引用已导入的资源
 4. --import               ← 让新的 .tres 也被索引
 ```
@@ -135,16 +135,38 @@ CI 与玩家不需要跑生成器，也不需要本机装有中文字体。
 单独跑某一个生成器也可以（例如只调了树的形状）：
 
 ```bash
-./godot --headless --path . -s res://tools/art/generate_props.gd
-./godot --headless --path . --import
+timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/art/generate_props.gd
+timeout 60 ./godot --headless --path . --import
 ```
 
 改完美术想立刻看效果：
 
 ```bash
-./godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn
+timeout 60 ./godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn
 # → res://.tmp/screenshots/{title,shot_00,town,twon}.png
 ```
+
+### 命令必须能自己退出（timeout 60s + --quit-after）
+
+[code]-s script.gd[/code] 是把脚本当主循环来跑。脚本[b]解析失败[/b]时
+[code]_initialize()[/code] 根本不会执行，里面的 [code]quit()[/code] 自然也不会被调用，
+Godot 于是进入主循环一直等下去——CI 与本地脚本都会假死。
+
+所以本仓库运行 Godot 命令遵循两条约定：
+
+1. 用 [code]timeout[/code] 从外部兜底（万一卡在 [code]_initialize()[/code] 里，连主循环都到不了）；
+   默认 [b]60 秒[/b]，慢机器用环境变量 [code]GODOT_TIMEOUT[/code] 覆盖。
+2. 再带 [code]--quit-after 3[/code]，让 Godot 自己在几帧后收尾。
+
+[code]tools/build_assets.sh[/code] 与 [code]tools/check.sh[/code] 已经内置这两条，
+手动跑生成器时也照这个写法：
+
+```bash
+timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/art/generate_props.gd
+```
+
+> 不要用 [code]| grep[/code] 直接接 Godot：管道会等进程退出，报错又会被缓冲吞掉。
+> 先把输出重定向到文件，等进程结束后再 [code]tail[/code] / [code]grep[/code] 文件。
 
 ---
 

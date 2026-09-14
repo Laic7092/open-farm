@@ -68,6 +68,7 @@ func _show_next_line() -> void:
 	speaker_label.text = Text.key(speaker_key)
 	text_label.text = Text.key(line.text_key)
 	hint_label.text = Text.key(&"DIALOGUE_ADVANCE_HINT")
+	EventBus.dialogue_line_shown.emit()
 	_start_typing()
 
 
