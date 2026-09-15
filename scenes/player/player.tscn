@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://src/player/player.gd" id="1_player"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/actors/player_frames.tres" id="2_frames"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://src/player/states/player_state_walk.gd" id="5_walk"]
 [ext_resource type="Script" path="res://src/player/states/player_state_use_tool.gd" id="6_use_tool"]
 [ext_resource type="Script" path="res://src/farm/farm_interactor.gd" id="7_interactor"]
+[ext_resource type="Script" path="res://src/player/states/player_state_fishing.gd" id="8_fishing"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(10, 8)
@@ -56,6 +57,9 @@ script = ExtResource("5_walk")
 
 [node name="UseTool" type="Node" parent="StateMachine"]
 script = ExtResource("6_use_tool")
+
+[node name="Fishing" type="Node" parent="StateMachine"]
+script = ExtResource("8_fishing")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true

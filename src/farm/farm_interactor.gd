@@ -54,6 +54,22 @@ func current_flora() -> FloraField:
 		return null
 	return tree.get_first_node_in_group(FloraField.GROUP) as FloraField
 
+## 当前场景中的水面标记。
+func current_water() -> WaterField:
+	var tree := get_tree()
+	if tree == null:
+		return null
+	return tree.get_first_node_in_group(WaterField.GROUP) as WaterField
+
+## 目标格的水域类型；不是水返回 -1。
+func water_kind_at(cell: Vector2i) -> int:
+	var water := current_water()
+	return water.kind_at(cell) if water != null else -1
+
+## 当前天气；没有服务时按晴算。
+func current_weather() -> Weather.Type:
+	return _weather.current if _weather != null else Weather.Type.SUNNY
+
 
 ## 使用工具；返回是否真的产生了效果。
 func use_tool(tool: ToolData, cell: Vector2i) -> bool:
@@ -82,11 +98,15 @@ func use_tool(tool: ToolData, cell: Vector2i) -> bool:
 			success = _plant(grid, cell)
 		ToolData.Kind.AXE, ToolData.Kind.PICKAXE:
 			success = grid.revert_soil(cell)
+		ToolData.Kind.FISHING:
+			# 钓鱼是多帧时序（抛竿 → 等鱼 → 收竿），由 PlayerStateFishing 驱动；
+			# 走到这里说明状态机没有接管，按"什么也没发生"处理。
+			success = false
 		_:
 			success = false
 
 	if success:
-		_consume_stamina(tool)
+		consume_stamina(tool)
 	else:
 		_notify(&"NOTIFY_NOTHING_HAPPENED")
 
@@ -112,7 +132,7 @@ func _use_tool_on_flora(tool: ToolData, cell: Vector2i) -> bool:
 	var success: bool = not outcome.is_empty()
 	if success:
 		_grant(outcome)
-		_consume_stamina(tool)
+		consume_stamina(tool)
 	else:
 		_notify(&"NOTIFY_NOTHING_HAPPENED")
 
@@ -158,7 +178,7 @@ func _plant(grid: FarmGrid, cell: Vector2i) -> bool:
 	return true
 
 
-func _consume_stamina(tool: ToolData) -> void:
+func consume_stamina(tool: ToolData) -> void:
 	if player == null:
 		return
 	var multiplier: float = _weather.stamina_multiplier() if _weather != null else 1.0

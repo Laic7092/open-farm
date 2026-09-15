@@ -18,7 +18,7 @@ const GROUP: StringName = &"player"
 ## 斧头与镐子必须自带：世界会自己长树长石头，玩家没有清理手段的话，
 ## "更真实的世界"就变成了"走不动的世界"。
 const DEFAULT_TOOLS: Array[StringName] = [
-	&"hoe", &"watering_can", &"sickle", &"seed_bag", &"axe", &"pickaxe",
+	&"hoe", &"watering_can", &"sickle", &"seed_bag", &"axe", &"pickaxe", &"fishing_rod",
 ]
 
 ## 走路速度（像素/秒）。
@@ -36,6 +36,8 @@ var stats: PlayerStats
 var inventory: Inventory
 ## 物品栏：背包前几格的快捷访问视图，不存放任何道具。
 var item_bar: ItemBar
+## 钓鱼用的随机源；冒烟测试会固定种子来复现整条时序。
+var fishing_rng := RandomNumberGenerator.new()
 ## 手动选中的种子；为空时自动取背包里的第一种种子。
 var selected_seed_id: StringName = &""
 
@@ -95,6 +97,7 @@ func _ready() -> void:
 	interaction_area.area_exited.connect(_on_area_exited)
 
 	sprite.flip_h = Facing.flip_h(facing)
+	fishing_rng.randomize()
 	_grant_default_tools()
 	if not inventory.has(&"turnip_seed"):
 		inventory.add(&"turnip_seed", 5)
@@ -171,6 +174,56 @@ func effective_seed_id() -> StringName:
 		if item != null and item.category == ItemData.Category.SEED:
 			return slot.item_id
 	return &""
+
+
+## 当前手持道具对应的工具数据；手持的不是工具时返回 null。
+func selected_tool() -> ToolData:
+	return item_bar.selected_tool()
+
+
+## 手持的是不是钓竿。
+func wants_fishing() -> bool:
+	var tool := item_bar.selected_tool()
+	return tool != null and tool.kind == ToolData.Kind.FISHING
+
+
+## 面前那一格的水域类型；不是水返回 -1。
+func fishing_water_kind() -> int:
+	return interactor.water_kind_at(target_cell())
+
+
+## 此刻能否下竿（手持钓竿 + 面前是水）。
+func can_fish() -> bool:
+	return wants_fishing() and fishing_water_kind() >= 0
+
+
+## 当前季节；没有时钟时按春算。
+func current_season() -> Season.Type:
+	return _clock.date.season if _clock != null else Season.Type.SPRING
+
+
+## 当前整点小时。
+func current_hour() -> int:
+	return _clock.hour() if _clock != null else GameDateClock.DAY_START_HOUR
+
+
+## 当前天气；没有服务时按晴算。
+func current_weather() -> Weather.Type:
+	return interactor.current_weather()
+
+
+## 结算一次成功钓鱼：放进背包并广播。背包放不下时返回 false（不吞掉这条鱼）。
+func land_fish(fish: FishData, size_cm: int) -> bool:
+	if fish == null or fish.item_id == &"":
+		return false
+	if inventory.add(fish.item_id, 1) > 0:
+		return false
+	EventBus.farm.fish_caught.emit(fish.id, fish.item_id, size_cm)
+	EventBus.ui.notification_requested.emit(
+		&"NOTIFY_FISH_CAUGHT",
+		{"item": Text.item_name(Database.get_item(fish.item_id)), "size": size_cm}
+	)
+	return true
 
 
 # ---------------------------------------------------------------- 交互

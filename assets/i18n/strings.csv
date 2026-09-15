@@ -232,3 +232,19 @@ EVENT_FIRST_SNOW,初雪落下了，冬天到了。农场也安静下来。,The f
 EVENT_LIBRARIAN_VISIT,书雅带了几本书来，想和你聊聊。,Shuyai brought some books and wants to talk.
 
 
+ITEM_FISHING_ROD,钓竿,Fishing Rod
+TOOL_FISHING_ROD_DESC,对着水面按空格抛竿，咬钩时再按一次收竿,Pull it out at the water and reel in on the bite
+ITEM_SARDINE,沙丁鱼,Sardine
+ITEM_MACKEREL,鲭鱼,Mackerel
+ITEM_SEA_BREAM,鲷鱼,Sea Bream
+ITEM_SQUID,鱿鱼,Squid
+ITEM_OCTOPUS,章鱼,Octopus
+ITEM_TUNA,金枪鱼,Tuna
+ITEM_CRUCIAN,鲫鱼,Crucian Carp
+ITEM_CARP,鲤鱼,Carp
+ITEM_CATFISH,鲶鱼,Catfish
+ITEM_GOLDEN_CARP,金鲤,Golden Carp
+NOTIFY_FISH_BITE,咬钩了！再按一次空格收竿,It is biting! Press Space again
+NOTIFY_FISH_CAUGHT,钓到了 {item}（{size} 厘米）,Caught {item} ({size} cm)
+NOTIFY_FISH_ESCAPED,鱼跑掉了……,The fish got away...
+NOTIFY_FISH_CANCELLED,收竿了,Reeled in

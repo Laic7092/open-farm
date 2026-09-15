@@ -19,6 +19,7 @@ const CROP_DIR: String = "res://data/crops"
 const ANIMAL_DIR: String = "res://data/animals"
 const BUILDING_DIR: String = "res://data/buildings"
 const FLORA_DIR: String = "res://data/flora"
+const FISH_DIR: String = "res://data/fish"
 const ITEM_DIR: String = "res://data/items"
 const TOOL_DIR: String = "res://data/tools"
 const DIALOGUE_DIR: String = "res://data/dialogue"
@@ -41,7 +42,7 @@ const TWON_SCENE: String = "res://scenes/world/twon.tscn"
 
 func _initialize() -> void:
 	for directory: String in [
-		CROP_DIR, ANIMAL_DIR, BUILDING_DIR, FLORA_DIR,
+		CROP_DIR, ANIMAL_DIR, BUILDING_DIR, FLORA_DIR, FISH_DIR,
 		ITEM_DIR, TOOL_DIR, DIALOGUE_DIR, NPC_DIR, SCHEDULE_DIR, SHOP_DIR,
 		FESTIVAL_DIR, EVENT_DIR
 	]:
@@ -53,6 +54,7 @@ func _initialize() -> void:
 	_build_buildings()
 	_build_flora()
 	_build_items()
+	_build_fish()
 	_build_dialogues()
 	_build_schedules()
 	_build_npcs()
@@ -110,6 +112,14 @@ func _build_tools() -> void:
 	pickaxe.kind = ToolData.Kind.PICKAXE
 	pickaxe.stamina_cost = 3
 	_save(pickaxe, TOOL_DIR.path_join("pickaxe.tres"))
+
+	# 钓竿：对着水面按空格抛竿，咬钩时再按一次收竿（见 player_state_fishing.gd）。
+	var rod := ToolData.new()
+	rod.id = &"fishing_rod"
+	rod.display_name_key = &"ITEM_FISHING_ROD"
+	rod.kind = ToolData.Kind.FISHING
+	rod.stamina_cost = 1
+	_save(rod, TOOL_DIR.path_join("fishing_rod.tres"))
 
 
 # ---------------------------------------------------------------- 作物
@@ -410,6 +420,20 @@ func _build_items() -> void:
 	_tool_item(&"axe", &"ITEM_AXE", &"TOOL_AXE_DESC", &"axe")
 	_tool_item(&"pickaxe", &"ITEM_PICKAXE", &"TOOL_PICKAXE_DESC", &"pickaxe")
 
+	# 钓鱼产出：和畜产品一样属于"能吃能卖"的食物，海边与池塘各有一批。
+	_food_item(&"sardine", &"ITEM_SARDINE", 40)
+	_food_item(&"mackerel", &"ITEM_MACKEREL", 60)
+	_food_item(&"sea_bream", &"ITEM_SEA_BREAM", 130)
+	_food_item(&"squid", &"ITEM_SQUID", 90)
+	_food_item(&"octopus", &"ITEM_OCTOPUS", 160)
+	_food_item(&"tuna", &"ITEM_TUNA", 320)
+	_food_item(&"crucian", &"ITEM_CRUCIAN", 35)
+	_food_item(&"carp", &"ITEM_CARP", 55)
+	_food_item(&"catfish", &"ITEM_CATFISH", 120)
+	_food_item(&"golden_carp", &"ITEM_GOLDEN_CARP", 420)
+
+	_tool_item(&"fishing_rod", &"ITEM_FISHING_ROD", &"TOOL_FISHING_ROD_DESC", &"fishing_rod")
+
 	var seed_bag := ItemData.new()
 	seed_bag.id = &"seed_bag"
 	seed_bag.display_name_key = &"ITEM_SEED_BAG"
@@ -512,6 +536,81 @@ func _tool_item(
 	item.sellable = false
 	item.icon = _item_icon(item_id)
 	_save(item, ITEM_DIR.path_join("%s.tres" % item_id))
+
+
+# ---------------------------------------------------------------- 钓鱼
+
+## 鱼种：出没水域 / 季节 / 天气 / 时段 / 稀有度。
+##
+## 数值调法：
+## [br]- [code]weight[/code] 越大越常见
+## [br]- [code]difficulty[/code] 1~5 只影响收竿窗口，不额外掷骰
+## [br]- 时段用 24 小时制，[code]min_hour > max_hour[/code] 表示跨午夜
+func _build_fish() -> void:
+	# 海：白天为主，夏夜有鱿鱼，稀有金枪鱼只在盛夏晴天的白天露面。
+	_fish(&"sardine", &"sardine", [WaterKind.Kind.OCEAN] as Array[int],
+		[] as Array[Season.Type], [] as Array[Weather.Type],
+		0, 23, 30, 1, Vector2i(12, 26))
+	_fish(&"mackerel", &"mackerel", [WaterKind.Kind.OCEAN] as Array[int],
+		[] as Array[Season.Type], [] as Array[Weather.Type],
+		0, 23, 22, 2, Vector2i(20, 45))
+	_fish(&"sea_bream", &"sea_bream", [WaterKind.Kind.OCEAN] as Array[int],
+		[Season.Type.SPRING, Season.Type.SUMMER] as Array[Season.Type],
+		[] as Array[Weather.Type],
+		5, 18, 10, 3, Vector2i(30, 70))
+	_fish(&"squid", &"squid", [WaterKind.Kind.OCEAN] as Array[int],
+		[Season.Type.SUMMER, Season.Type.FALL] as Array[Season.Type],
+		[] as Array[Weather.Type],
+		18, 4, 12, 2, Vector2i(18, 40))
+	_fish(&"octopus", &"octopus", [WaterKind.Kind.OCEAN] as Array[int],
+		[Season.Type.SUMMER] as Array[Season.Type], [] as Array[Weather.Type],
+		10, 20, 5, 4, Vector2i(30, 90))
+	_fish(&"tuna", &"tuna", [WaterKind.Kind.OCEAN] as Array[int],
+		[Season.Type.SUMMER] as Array[Season.Type],
+		[Weather.Type.SUNNY] as Array[Weather.Type],
+		6, 16, 2, 5, Vector2i(80, 220))
+
+	# 池塘：鲫鱼 / 鲤鱼常驻；雨天的鲶鱼与极稀有的金鲤是这里的目标。
+	_fish(&"crucian", &"crucian", [WaterKind.Kind.POND] as Array[int],
+		[] as Array[Season.Type], [] as Array[Weather.Type],
+		0, 23, 30, 1, Vector2i(12, 28))
+	_fish(&"carp", &"carp", [WaterKind.Kind.POND] as Array[int],
+		[] as Array[Season.Type], [] as Array[Weather.Type],
+		0, 23, 20, 2, Vector2i(25, 60))
+	_fish(&"catfish", &"catfish", [WaterKind.Kind.POND] as Array[int],
+		[Season.Type.SPRING, Season.Type.SUMMER, Season.Type.FALL] as Array[Season.Type],
+		[Weather.Type.RAINY, Weather.Type.STORMY] as Array[Weather.Type],
+		0, 23, 10, 3, Vector2i(40, 90))
+	_fish(&"golden_carp", &"golden_carp", [WaterKind.Kind.POND] as Array[int],
+		[] as Array[Season.Type], [] as Array[Weather.Type],
+		0, 23, 1, 5, Vector2i(40, 100))
+
+
+## 建一条鱼并保存。
+func _fish(
+	fish_id: StringName,
+	item_id: StringName,
+	water: Array[int],
+	seasons: Array[Season.Type],
+	weathers: Array[Weather.Type],
+	min_hour: int,
+	max_hour: int,
+	weight: int,
+	difficulty: int,
+	size_cm: Vector2i
+) -> void:
+	var fish := FishData.new()
+	fish.id = fish_id
+	fish.item_id = item_id
+	fish.water = water
+	fish.seasons = seasons
+	fish.weathers = weathers
+	fish.min_hour = min_hour
+	fish.max_hour = max_hour
+	fish.weight = weight
+	fish.difficulty = difficulty
+	fish.size_cm = size_cm
+	_save(fish, FISH_DIR.path_join("%s.tres" % fish_id))
 
 
 # ---------------------------------------------------------------- 对话
@@ -775,7 +874,8 @@ func _build_npcs() -> void:
 
 	var fisher := {"move_speed": 30.0}
 	fisher.merge(_romance_overrides(
-		&"fisher", [&"mushroom"], [&"egg"], [&"fiber"]
+		&"fisher", [&"mushroom", &"sea_bream", &"golden_carp"],
+		[&"egg", &"sardine", &"mackerel", &"carp"], [&"fiber"]
 	))
 	_add_npc(&"fisher", &"NPC_FISHER", "fisher_greeting.tres", "fisher_schedule.tres", fisher)
 

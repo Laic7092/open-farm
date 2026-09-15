@@ -6,7 +6,7 @@
 
 - **项目**：Godot **4.7.2** 的 2D 俯视角像素农场模拟；仓库根自带 `./godot`（已 gitignore）。
 - **入口**：`scenes/title/title_screen.tscn` → `scenes/main/main.tscn`；`WorldHost` 换地图，`UiRoot` 常驻。
-- **现状**：核心循环、玩家、农场、畜牧、8 位 NPC、好感度与恋爱（结婚生子）、节日与事件、6 张地图、UI、存档、本地化全部打通。
+- **现状**：核心循环、玩家、农场、畜牧、钓鱼、8 位 NPC、好感度与恋爱（结婚生子）、节日与事件、6 张地图、UI、存档、本地化全部打通。
 - **风格**：注释、文档、提交信息用中文；GDScript 用 Tab 缩进 + 类型标注 + `##` 文档注释，`StringName` 写 `&"..."`。
 - **设计原因**：跨系统速览看 `docs/architecture.md`；单点原因优先读相关脚本顶部的 `##` 注释。
 
@@ -32,7 +32,7 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 
 ## 任务路由
 
-- 加内容（作物 / 牲畜 / 植被 / NPC / 节日 / 地图 / 音效 / UI）：先看 `README.md` 的「扩展入口」。
+- 加内容（作物 / 牲畜 / 植被 / 鱼种 / NPC / 节日 / 地图 / 音效 / UI）：先看 `README.md` 的「扩展入口」。
 - 改玩法数值：优先只改 `data/**/*.tres`。
 - 参与日结转：`GameDateClock.register_day_hook(callable, DayPipeline.PRIORITY_*)`，并在 `_exit_tree` 注销。
 - 参与存档：场景节点实现 `to_dict/from_dict` + `Persistence.register(self, &"id")`；核心状态 / 服务在 `Main._bind_dependencies()` 注册 `SaveSection`。JSON 往返要把 `StringName` 转回。

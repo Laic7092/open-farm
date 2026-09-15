@@ -11,6 +11,7 @@ const CROP_DIR: String = "res://data/crops"
 const ANIMAL_DIR: String = "res://data/animals"
 const BUILDING_DIR: String = "res://data/buildings"
 const FLORA_DIR: String = "res://data/flora"
+const FISH_DIR: String = "res://data/fish"
 const ITEM_DIR: String = "res://data/items"
 const TOOL_DIR: String = "res://data/tools"
 const NPC_DIR: String = "res://data/npcs"
@@ -26,6 +27,7 @@ var _crops: Dictionary[StringName, CropData] = {}
 var _animals: Dictionary[StringName, AnimalData] = {}
 var _buildings: Dictionary[StringName, BuildingData] = {}
 var _floras: Dictionary[StringName, FloraData] = {}
+var _fish: Dictionary[StringName, FishData] = {}
 var _items: Dictionary[StringName, ItemData] = {}
 var _tools: Dictionary[StringName, ToolData] = {}
 var _npcs: Dictionary[StringName, NpcData] = {}
@@ -45,6 +47,7 @@ func reload() -> void:
 	_animals.clear()
 	_buildings.clear()
 	_floras.clear()
+	_fish.clear()
 	_items.clear()
 	_tools.clear()
 	_npcs.clear()
@@ -57,6 +60,7 @@ func reload() -> void:
 	_index(ANIMAL_DIR, _animals, "AnimalData")
 	_index(BUILDING_DIR, _buildings, "BuildingData")
 	_index(FLORA_DIR, _floras, "FloraData")
+	_index(FISH_DIR, _fish, "FishData")
 	_index(ITEM_DIR, _items, "ItemData")
 	_index(TOOL_DIR, _tools, "ToolData")
 	_index(NPC_DIR, _npcs, "NpcData")
@@ -84,6 +88,9 @@ func get_building(id: StringName) -> BuildingData:
 
 func get_flora(id: StringName) -> FloraData:
 	return _floras.get(id) as FloraData
+
+func get_fish(id: StringName) -> FishData:
+	return _fish.get(id) as FishData
 
 
 func get_item(id: StringName) -> ItemData:
@@ -117,6 +124,10 @@ func get_event(id: StringName) -> EventData:
 ## 全部数据桶的只读快照；调用方不应直接迭代内部字典。
 func crops() -> Dictionary:
 	return _crops.duplicate()
+
+## 全部鱼种的只读快照（键为 id）。
+func fish() -> Dictionary:
+	return _fish.duplicate()
 
 
 ## [method crops] 的 get_* 别名。
@@ -337,8 +348,8 @@ func require_shop(id: StringName) -> ShopData:
 func total_count() -> int:
 	return (
 		_crops.size() + _animals.size() + _buildings.size() + _floras.size()
-		+ _items.size() + _tools.size() + _npcs.size() + _shops.size() + _dialogues.size()
-		+ _festivals.size() + _events.size()
+		+ _fish.size() + _items.size() + _tools.size() + _npcs.size() + _shops.size()
+		+ _dialogues.size() + _festivals.size() + _events.size()
 	)
 
 
@@ -346,8 +357,8 @@ func total_count() -> int:
 func validate_all() -> PackedStringArray:
 	var problems := PackedStringArray()
 	for bucket: Dictionary in [
-		_crops, _animals, _buildings, _floras, _items, _tools, _npcs, _shops, _dialogues,
-		_festivals, _events
+		_crops, _animals, _buildings, _floras, _fish, _items, _tools, _npcs, _shops,
+		_dialogues, _festivals, _events
 	]:
 		for key: StringName in bucket:
 			var resource: Resource = bucket[key]

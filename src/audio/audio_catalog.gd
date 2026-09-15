@@ -63,6 +63,9 @@ const SFX_STAMINA_DEPLETED := &"stamina_depleted"
 const SFX_TRANSITION := &"transition"
 const SFX_ERROR := &"error"
 const SFX_MORNING := &"morning"
+const SFX_FISH_CAST := &"fish_cast"
+const SFX_FISH_BITE := &"fish_bite"
+const SFX_FISH_CATCH := &"fish_catch"
 
 ## 全部音效（顺序 = 生成顺序）。
 const SFX_ALL: Array[StringName] = [
@@ -92,6 +95,9 @@ const SFX_ALL: Array[StringName] = [
 	SFX_TRANSITION,
 	SFX_ERROR,
 	SFX_MORNING,
+	SFX_FISH_CAST,
+	SFX_FISH_BITE,
+	SFX_FISH_CATCH,
 ]
 
 

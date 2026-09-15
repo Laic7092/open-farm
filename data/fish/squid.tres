@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="FishData" format=3]
+
+[ext_resource type="Script" path="res://src/data/fish_data.gd" id="1_hn5wa"]
+
+[resource]
+script = ExtResource("1_hn5wa")
+id = &"squid"
+item_id = &"squid"
+water = Array[int]([1])
+seasons = Array[int]([1, 2])
+min_hour = 18
+max_hour = 4
+weight = 12
+difficulty = 2
+size_cm = Vector2i(18, 40)

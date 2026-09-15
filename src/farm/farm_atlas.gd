@@ -23,6 +23,11 @@ const SOIL_WET := AtlasLayout.SOIL_WET
 const WATER := AtlasLayout.WATER
 const WATER_EDGE := AtlasLayout.WATER_EDGE
 const SHALLOW_WATER := AtlasLayout.SHALLOW_WATER
+
+## 这一格图集坐标是否属于水面（深水 / 水岸 / 浅滩）。
+## 钓鱼的"面前是不是水"完全由它判定，因此水面瓦片只有这三种。
+static func is_water(atlas: Vector2i) -> bool:
+	return atlas == WATER or atlas == WATER_EDGE or atlas == SHALLOW_WATER
 const STONE := AtlasLayout.STONE
 const CLIFF := AtlasLayout.CLIFF
 const WOOD := AtlasLayout.WOOD

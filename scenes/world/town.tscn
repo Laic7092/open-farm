@@ -33,6 +33,7 @@ script = ExtResource("1_world")
 world_id = &"town"
 camera_limits = Rect2(0, 0, 640, 416)
 default_spawn_id = &"from_twon"
+water_kind = 0
 
 [node name="Ground" type="TileMapLayer" parent="."]
 z_index = -20

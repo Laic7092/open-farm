@@ -13,6 +13,7 @@ enum Kind {
 	AXE,           ## 斧头：砍树桩
 	PICKAXE,       ## 镐：碎石
 	SICKLE,        ## 镰刀：割草 / 清除枯死作物
+	FISHING,       ## 钓竿：不在地面上结算，由钓鱼状态驱动多帧时序
 }
 
 ## 唯一标识。
@@ -30,9 +31,13 @@ enum Kind {
 @export_range(0, 5) var tier: int = 0
 
 
-## 该工具是否作用于农场地面格子（当前骨架中所有工具都作用在地面上）。
+## 该工具是否作用于农场地面格子（钓竿作用于水面，走专门的钓鱼状态）。
 func targets_ground() -> bool:
-	return true
+	return kind != Kind.FISHING
+
+## 该工具是否作用于水面。
+func targets_water() -> bool:
+	return kind == Kind.FISHING
 
 
 ## 该工具是否为消耗品式的播种工具。

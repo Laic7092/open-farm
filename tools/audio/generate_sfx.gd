@@ -41,6 +41,9 @@ func _initialize() -> void:
 		Catalog.SFX_TRANSITION: _transition,
 		Catalog.SFX_ERROR: _error,
 		Catalog.SFX_MORNING: _morning,
+		Catalog.SFX_FISH_CAST: _fish_cast,
+		Catalog.SFX_FISH_BITE: _fish_bite,
+		Catalog.SFX_FISH_CATCH: _fish_catch,
 	}
 
 	for id: StringName in Catalog.SFX_ALL:
@@ -305,4 +308,35 @@ func _morning() -> PackedFloat32Array:
 	Synth.tone(buf, 0.0, 0.6, 350.0, 0.18, Synth.Wave.SQUARE, 0.01, 0.2, 0.5, 3.0)
 	Synth.noise_burst(buf, 0.0, 0.5, 0.12, 4.0, 811, 3000.0, 0.02, 0.2)
 	Synth.normalize(buf, 0.88)
+	return buf
+
+
+# ---------------------------------------------------------------- 钓鱼
+
+## 抛竿：短促破空 + 落水。
+func _fish_cast() -> PackedFloat32Array:
+	var buf := Synth.new_buffer(0.45)
+	Synth.noise_burst(buf, 0.0, 0.16, 0.35, 18.0, 211, 2600.0, 0.02, 0.05)
+	Synth.sweep(buf, 0.02, 0.14, 700.0, 260.0, 0.16, Synth.Wave.SINE, 0.01, 0.05)
+	Synth.noise_burst(buf, 0.2, 0.2, 0.3, 9.0, 212, 1200.0, 0.001, 0.08)
+	Synth.normalize(buf, 0.7)
+	return buf
+
+
+## 咬钩：短促的上行提示音。
+func _fish_bite() -> PackedFloat32Array:
+	var buf := Synth.new_buffer(0.36)
+	Synth.tone(buf, 0.0, 0.14, 1568.0, 0.5, Synth.Wave.SQUARE, 0.002, 0.03)
+	Synth.tone(buf, 0.09, 0.22, 2093.0, 0.42, Synth.Wave.SQUARE, 0.002, 0.06)
+	Synth.normalize(buf, 0.7)
+	return buf
+
+
+## 上鱼：一串上扬的琶音。
+func _fish_catch() -> PackedFloat32Array:
+	var buf := Synth.new_buffer(0.72)
+	Synth.tone(buf, 0.0, 0.16, 784.0, 0.5, Synth.Wave.TRIANGLE, 0.003, 0.05)
+	Synth.tone(buf, 0.1, 0.16, 988.0, 0.5, Synth.Wave.TRIANGLE, 0.003, 0.05)
+	Synth.tone(buf, 0.2, 0.34, 1319.0, 0.5, Synth.Wave.TRIANGLE, 0.003, 0.12)
+	Synth.normalize(buf, 0.75)
 	return buf

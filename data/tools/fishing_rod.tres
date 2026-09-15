@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ToolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/tool_data.gd" id="1_6xlx2"]
+
+[resource]
+script = ExtResource("1_6xlx2")
+id = &"fishing_rod"
+display_name_key = &"ITEM_FISHING_ROD"
+kind = 6
+stamina_cost = 1

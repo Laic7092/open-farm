@@ -19,9 +19,11 @@ func test_all_expected_flora_are_loaded() -> void:
 
 func test_all_expected_tools_are_loaded() -> void:
 	for tool_id: StringName in [
-		&"hoe", &"watering_can", &"sickle", &"seed_bag", &"axe", &"pickaxe"
+		&"hoe", &"watering_can", &"sickle", &"seed_bag", &"axe", &"pickaxe", &"fishing_rod"
 	]:
-		assert_object(Database.get_tool(tool_id)).is_not_null()
+		assert_object(Database.get_tool(tool_id)).override_failure_message(
+			"缺少工具 %s" % tool_id
+		).is_not_null()
 
 
 func test_shops_and_npcs_are_loaded() -> void:
@@ -194,6 +196,47 @@ func test_blue_feather_is_the_proposal_gift() -> void:
 		return
 	assert_int(item.category).is_equal(ItemData.Category.GIFT)
 	assert_bool(item.sellable).is_false()
+
+
+# ---------------------------------------------------------------- 钓鱼
+
+func test_expected_fish_are_loaded() -> void:
+	for fish_id: StringName in [
+		&"sardine", &"mackerel", &"sea_bream", &"squid", &"octopus", &"tuna",
+		&"crucian", &"carp", &"catfish", &"golden_carp",
+	]:
+		assert_object(Database.get_fish(fish_id)).override_failure_message(
+			"缺少鱼种 %s" % fish_id
+		).is_not_null()
+
+
+## 每条鱼都要能变成背包里一件真实且可出货的道具，否则钓上来会凭空消失。
+func test_every_fish_points_at_a_real_sellable_item() -> void:
+	for fish_id: StringName in Database.fish():
+		var fish := Database.get_fish(fish_id)
+		var item := Database.get_item(fish.item_id)
+		assert_object(item).override_failure_message(
+			"鱼 %s 的产出 %s 不存在" % [fish_id, fish.item_id]
+		).is_not_null()
+		if item != null:
+			assert_bool(item.sellable).override_failure_message(
+				"鱼 %s 应当可以出货" % fish_id
+			).is_true()
+
+
+## 钓竿必须同时接上工具与道具，否则物品栏里选不到它。
+func test_fishing_rod_wires_tool_and_item() -> void:
+	var tool := Database.get_tool(&"fishing_rod")
+	assert_object(tool).is_not_null()
+	if tool == null:
+		return
+	assert_int(tool.kind).is_equal(ToolData.Kind.FISHING)
+	assert_bool(tool.targets_water()).is_true()
+	assert_bool(tool.targets_ground()).is_false()
+	var item := Database.get_item(&"fishing_rod")
+	assert_object(item).is_not_null()
+	if item != null:
+		assert_str(String(item.tool_id)).is_equal("fishing_rod")
 
 
 ## 每个 NPC 都要有能覆盖全天 24 小时的日程（凌晨靠循环回退到最后一段）。

@@ -41,6 +41,17 @@ func _initialize() -> void:
 	Art.save_png(_chicken_icon(), _path("chicken"))
 	Art.save_png(_cow_icon(), _path("cow"))
 	Art.save_png(_blue_feather(), _path("blue_feather"))
+	Art.save_png(_fishing_rod(), _path("fishing_rod"))
+	Art.save_png(_fish_icon(P.STONE_LIGHT, P.WHITE, P.STONE), _path("sardine"))
+	Art.save_png(_fish_icon(P.WATER_DARK, P.STONE_LIGHT, P.WATER), _path("mackerel"))
+	Art.save_png(_fish_icon(P.FLOWER_PINK, P.WHITE, P.FLOWER_RED), _path("sea_bream"))
+	Art.save_png(_squid_icon(), _path("squid"))
+	Art.save_png(_octopus_icon(), _path("octopus"))
+	Art.save_png(_fish_icon(P.WATER, P.WATER_LIGHT, P.WATER_DARK), _path("tuna"))
+	Art.save_png(_fish_icon(P.PATH_LIGHT, P.SAND, P.PATH_DARK), _path("crucian"))
+	Art.save_png(_fish_icon(P.FRUIT_ORANGE, P.FRUIT_YELLOW, P.FRUIT_RED), _path("carp"))
+	Art.save_png(_fish_icon(P.SOIL_DARK, P.SOIL_LIGHT, P.SOIL, true), _path("catfish"))
+	Art.save_png(_fish_icon(P.UI_GOLD, P.FRUIT_YELLOW, P.FRUIT_ORANGE), _path("golden_carp"))
 	print("道具图标生成完成 → ", DIR)
 	quit()
 
@@ -372,5 +383,91 @@ func _mushroom() -> Image:
 	Art.px(image, 6, 6, P.WHITE)
 	Art.px(image, 10, 7, P.WHITE)
 	Art.px(image, 8, 5, P.WHITE)
+	Art.outline(image)
+	return image
+
+
+# ---------------------------------------------------------------- 钓鱼
+
+## 钓竿：斜握的竿身 + 垂下的鱼线与钩。
+func _fishing_rod() -> Image:
+	var image := _blank()
+	# 竿身：左下 → 右上，深色在下做出一点的厚度。
+	for i: int in 11:
+		Art.px(image, 3 + i, 13 - i, P.WOOD)
+		Art.px(image, 3 + i, 14 - i, P.WOOD_DARK)
+	Art.px(image, 6, 10, P.WOOD_LIGHT)
+	Art.px(image, 10, 6, P.WOOD_LIGHT)
+	# 卷线器。
+	Art.rect(image, Rect2i(6, 10, 2, 2), P.STONE_DARK)
+	# 鱼线：从竿尖垂下，末端是钩。
+	for y: int in range(4, 8):
+		Art.px(image, 13, y, P.WHITE)
+	Art.px(image, 12, 7, P.WHITE)
+	Art.px(image, 12, 8, P.STONE_LIGHT)
+	Art.px(image, 13, 8, P.STONE_LIGHT)
+	Art.outline(image)
+	return image
+
+
+## 侧面小鱼；[param whiskers] 为鲶鱼那样的胡须。
+func _fish_icon(body: Color, belly: Color, fin: Color, whiskers: bool = false) -> Image:
+	var image := _blank()
+	Art.ellipse(image, Vector2i(7, 8), Vector2i(4, 3), body)
+	Art.h_line(image, 4, 9, 9, belly)
+	Art.h_line(image, 5, 8, 10, belly)
+	# 尾巴与背鳍。
+	Art.px(image, 11, 6, fin)
+	Art.px(image, 12, 7, fin)
+	Art.px(image, 12, 8, fin)
+	Art.px(image, 12, 9, fin)
+	Art.px(image, 11, 10, fin)
+	Art.px(image, 10, 7, fin)
+	Art.px(image, 10, 8, fin)
+	Art.px(image, 6, 5, fin)
+	Art.px(image, 7, 5, fin)
+	if whiskers:
+		Art.px(image, 3, 9, fin)
+		Art.px(image, 2, 10, fin)
+		Art.px(image, 4, 10, fin)
+	# 眼睛。
+	Art.px(image, 4, 7, P.OUTLINE)
+	Art.outline(image)
+	return image
+
+
+## 鱿鱼：尖头身体 + 触手 + 两点眼睛。
+func _squid_icon() -> Image:
+	var image := _blank()
+	Art.ellipse(image, Vector2i(8, 6), Vector2i(3, 4), P.WALL_LIGHT)
+	Art.px(image, 8, 2, P.WALL)
+	Art.px(image, 11, 5, P.FLOWER_PINK)
+	Art.px(image, 11, 7, P.FLOWER_PINK)
+	Art.px(image, 5, 5, P.FLOWER_PINK)
+	Art.px(image, 5, 7, P.FLOWER_PINK)
+	for x: int in range(5, 12):
+		Art.px(image, x, 10 + (x % 2), P.FLOWER_PINK)
+	Art.px(image, 5, 9, P.FLOWER_PINK)
+	Art.px(image, 11, 9, P.FLOWER_PINK)
+	Art.px(image, 7, 6, P.OUTLINE)
+	Art.px(image, 9, 6, P.OUTLINE)
+	Art.outline(image)
+	return image
+
+
+## 章鱼：圆头 + 一排触手。
+func _octopus_icon() -> Image:
+	var image := _blank()
+	Art.ellipse(image, Vector2i(8, 7), Vector2i(4, 4), P.FRUIT_PURPLE)
+	for x: int in range(4, 13):
+		Art.px(image, x, 11, P.FRUIT_PURPLE)
+	Art.px(image, 4, 12, P.FRUIT_PURPLE)
+	Art.px(image, 7, 12, P.FRUIT_PURPLE)
+	Art.px(image, 9, 12, P.FRUIT_PURPLE)
+	Art.px(image, 12, 12, P.FRUIT_PURPLE)
+	Art.px(image, 6, 6, P.WHITE)
+	Art.px(image, 10, 6, P.WHITE)
+	Art.px(image, 6, 7, P.OUTLINE)
+	Art.px(image, 10, 7, P.OUTLINE)
 	Art.outline(image)
 	return image

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FishData" format=3]
+
+[ext_resource type="Script" path="res://src/data/fish_data.gd" id="1_lx13h"]
+
+[resource]
+script = ExtResource("1_lx13h")
+id = &"mackerel"
+item_id = &"mackerel"
+water = Array[int]([1])
+weight = 22
+difficulty = 2
+size_cm = Vector2i(20, 45)

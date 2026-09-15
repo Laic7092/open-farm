@@ -33,6 +33,7 @@ func physics_update(delta: float) -> void:
 
 func handle_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"use_tool"):
-		request_transition(&"use_tool")
+		# 边走边下竿：判定与待机一致。
+		request_transition(&"fishing" if player.can_fish() else &"use_tool")
 	elif event.is_action_pressed(&"interact"):
 		player.try_interact()

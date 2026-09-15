@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/fishing_rod.png" id="1_s0s3t"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_8n8wo"]
+
+[resource]
+script = ExtResource("2_8n8wo")
+id = &"fishing_rod"
+display_name_key = &"ITEM_FISHING_ROD"
+description_key = &"TOOL_FISHING_ROD_DESC"
+category = 2
+stack_limit = 1
+sellable = false
+icon = ExtResource("1_s0s3t")
+tool_id = &"fishing_rod"

@@ -284,6 +284,8 @@ func _connect_events() -> void:
 	_connect_once(EventBus.farm.crop_harvested, _on_crop_harvested)
 	_connect_once(EventBus.farm.crop_died, _on_crop_died)
 	_connect_once(EventBus.world.flora_cleared, _on_flora_cleared)
+	_connect_once(EventBus.farm.fish_bite, _on_fish_bite)
+	_connect_once(EventBus.farm.fish_caught, _on_fish_caught)
 
 	_connect_once(EventBus.farm.animal_placed, _on_animal_placed)
 	_connect_once(EventBus.farm.animal_fed, _on_animal_fed)
@@ -370,6 +372,14 @@ func _on_crop_harvested(_cell: Vector2i, _item_id: StringName, _amount: int) -> 
 
 func _on_flora_cleared(_cell: Vector2i, _flora_id: StringName, _item_id: StringName, _amount: int) -> void:
 	play_sfx(Catalog.SFX_CHOP)
+
+
+func _on_fish_bite(_fish_id: StringName) -> void:
+	play_sfx(Catalog.SFX_FISH_BITE)
+
+
+func _on_fish_caught(_fish_id: StringName, _item_id: StringName, _size_cm: int) -> void:
+	play_sfx(Catalog.SFX_FISH_CATCH)
 
 
 func _on_dialogue_line_shown() -> void:

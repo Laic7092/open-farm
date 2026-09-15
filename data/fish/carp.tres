@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FishData" format=3]
+
+[ext_resource type="Script" path="res://src/data/fish_data.gd" id="1_pkl1d"]
+
+[resource]
+script = ExtResource("1_pkl1d")
+id = &"carp"
+item_id = &"carp"
+water = Array[int]([0])
+weight = 20
+difficulty = 2
+size_cm = Vector2i(25, 60)

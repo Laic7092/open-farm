@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="FishData" format=3]
+
+[ext_resource type="Script" path="res://src/data/fish_data.gd" id="1_s2u1m"]
+
+[resource]
+script = ExtResource("1_s2u1m")
+id = &"sea_bream"
+item_id = &"sea_bream"
+water = Array[int]([1])
+seasons = Array[int]([0, 1])
+min_hour = 5
+max_hour = 18
+difficulty = 3
+size_cm = Vector2i(30, 70)

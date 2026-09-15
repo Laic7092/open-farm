@@ -17,6 +17,8 @@ extends Node2D
 @export var lighting_effects: bool = true
 ## 是否自动挂载 NPC 行走网格。没有 NPC 的地图可以关掉省一点探测。
 @export var navigation_enabled: bool = true
+## 本场景水面的类型（见 [enum WaterKind.Kind]）；-1 表示这张地图没有可垂钓的水面。
+@export var water_kind: int = -1
 
 ## 组合根注入的玩家档案；世界节点在进入树前就会收到。
 var player_profile: PlayerProfile
@@ -62,6 +64,8 @@ func _ready() -> void:
 		_ensure_lighting()
 	if navigation_enabled:
 		_ensure_navigator()
+	if water_kind >= 0:
+		_ensure_water_field()
 
 
 ## 天气特效由基类统一挂载，而不是每个世界场景各写一份：
@@ -86,6 +90,21 @@ func _ensure_lighting() -> void:
 	lighting.bind_dependencies(player_profile, clock_state)
 	lighting.bind_services(weather_service, relationship_service, calendar_service)
 	add_child(lighting)
+
+
+## 水面标记同样由基类按 [member water_kind] 挂载：
+## 新增一张带水的地图，只要在场景里填上水域类型，鱼就自动能钓。
+func _ensure_water_field() -> void:
+	if get_node_or_null(^"WaterField") != null:
+		return
+	var ground := find_child("Ground", true, false) as TileMapLayer
+	if ground == null:
+		return
+	var water := WaterField.new()
+	water.name = "WaterField"
+	water.ground_layer = ground
+	water.water_kind = water_kind
+	add_child(water)
 
 
 ## NPC 行走网格同样由基类挂载：新地图上的 NPC 自动会寻路。

@@ -1,7 +1,7 @@
 # open-farm · 牧场物语复刻
 
-用 **Godot 4.7.2** 制作的 2D 俯视角像素农场生活模拟。核心循环、玩家、农场、畜牧、8 位 NPC、
-好感度与恋爱（结婚生子）、节日与事件、6 张地图、UI、存档、本地化与自动化测试均已打通。
+用 **Godot 4.7.2** 制作的 2D 俯视角像素农场生活模拟。核心循环、玩家、农场、畜牧、钓鱼、
+8 位 NPC、好感度与恋爱（结婚生子）、节日与事件、6 张地图、UI、存档、本地化与自动化测试均已打通。
 **美术、字体、BGM、音效全部由脚本生成**；仓库里不放手工二进制素材。
 
 ## 快速开始
@@ -23,7 +23,7 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 | 按键 | 功能 |
 | --- | --- |
 | `W A S D` / 方向键 | 移动；按住 `Shift` 奔跑 |
-| `空格` | 使用当前工具 |
+| `空格` | 使用当前工具；水边手持钓竿时抛竿 / 收竿 |
 | `E` / `回车` | 交互 / 对话 / 收获 |
 | `Q` / `R` | 切换手持工具 |
 | `G` | 给面前 NPC 送礼物 |
@@ -36,7 +36,7 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 
 ## 玩法
 
-完整开局指引、农场与畜牧循环、地图与 NPC 日程、恋爱和节日事件见 [docs/gameplay.md](docs/gameplay.md)。
+完整开局指引、农场 / 畜牧 / 钓鱼循环、地图与 NPC 日程、恋爱和节日事件见 [docs/gameplay.md](docs/gameplay.md)。
 
 ## 目录结构
 
@@ -55,6 +55,7 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 | --- | --- |
 | 加作物 | `data/crops/` + `data/items/` + `data/shops/*.tres` + `tools/art/generate_crops.gd` + `strings.csv` |
 | 加牲畜 | `data/animals/` + `data/buildings/` + `data/items/` + `tools/art/generate_animals.gd` |
+| 加鱼种 | `data/fish/` + `data/items/` + `tools/art/generate_items.gd` + `strings.csv` |
 | 加野生植被 | `data/flora/` + `tools/art/generate_flora.gd` + `src/world/flora_field.gd` |
 | 加 NPC / 日程 | `tools/art/generate_actors.gd` + `data/npcs/` + `data/dialogue/` + `data/schedules/` + 场景 `SchedulePoint` |
 | 加商店 / 柜台 | `data/shops/*.tres` + `NpcData.shop_id` + 场景里摆 `ShopCounter`（`src/shop/shop_counter.gd`）并填 `shop_id` / `clerk_id` |
@@ -79,6 +80,7 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 - 世界场景切过后常驻内存；地图继续增加后需改成“按需卸载 + 状态外置”。
 - 水域没有碰撞；NPC 只走固定时刻表，不会互相避让；事件只在日结转时判定。
 - 恋爱是满足条件自动推进的里程碑；牲畜不会死亡或繁殖；存档只有一个槽位。
+- 钓鱼是"等咬钩 → 窗口内按一次收竿"，没有拉扯小游戏；鱼只按水域 / 季节 / 天气 / 时段筛选。
 - 更完整的限制、跨系统架构和生成规范见 `docs/`；单点设计原因看代码中的 `##` 注释。
 
 ## 文档地图

@@ -32,3 +32,7 @@ building_id: StringName, animal_id: StringName, item_id: StringName, amount: int
 )
 ## 牲畜长大成年。
 signal animal_matured(building_id: StringName, animal_id: StringName)
+## 有鱼咬钩（收竿窗口开始）。
+signal fish_bite(fish_id: StringName)
+## 成功钓上一条鱼；[param size_cm] 为体长。
+signal fish_caught(fish_id: StringName, item_id: StringName, size_cm: int)
