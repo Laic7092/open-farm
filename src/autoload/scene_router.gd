@@ -44,6 +44,10 @@ var _pending_spawn_id: StringName = &"default"
 var _player_profile: PlayerProfile
 ## 组合根注入的时钟；仅用于保存 / 恢复传送期间的暂停状态。
 var _clock: GameDateClock
+## 组合根注入的领域服务；世界场景挂载前一并下发。
+var _weather_service: WeatherService
+var _relationship_service: RelationshipService
+var _calendar_service: CalendarService
 
 
 func _ready() -> void:
@@ -62,6 +66,17 @@ func _exit_tree() -> void:
 func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
 	_player_profile = profile
 	_clock = clock
+
+
+## 注入组合根服务；世界场景在进入树前会一并收到。
+func bind_services(
+	weather: WeatherService,
+	relationships: RelationshipService,
+	calendar: CalendarService
+) -> void:
+	_weather_service = weather
+	_relationship_service = relationships
+	_calendar_service = calendar
 
 
 ## 是否正在切换中。
@@ -222,6 +237,10 @@ func _detach_current_world(host: Node) -> void:
 func _inject_world_dependencies(world: Node) -> void:
 	if world != null and world.has_method(&"bind_dependencies"):
 		world.call(&"bind_dependencies", _player_profile, _clock)
+	if world != null and world.has_method(&"bind_services"):
+		world.call(
+			&"bind_services", _weather_service, _relationship_service, _calendar_service
+		)
 
 
 func _discard_world(scene_path: String) -> void:

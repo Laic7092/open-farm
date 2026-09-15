@@ -8,6 +8,7 @@ const TEST_ROOT: String = "res://.tmp/gdunit_saves"
 
 var _profile: PlayerProfile
 var _clock: GameDateClock
+var _weather: WeatherService
 
 
 func before_test() -> void:
@@ -15,13 +16,18 @@ func before_test() -> void:
 	_cleanup()
 	_profile = PlayerProfile.new()
 	_clock = GameDateClock.new()
+	_weather = WeatherService.new()
 	Persistence.register_core_resource(_clock, &"GameClock", 10)
 	Persistence.register_core_resource(_profile, &"GameState", 20)
+	Persistence.register_core_resource(_weather, &"WeatherSystem", 30)
 
 
 func after_test() -> void:
+	Persistence.unregister_core_resource(_weather)
 	Persistence.unregister_core_resource(_clock)
 	Persistence.unregister_core_resource(_profile)
+	_weather.free()
+	_weather = null
 	_profile = null
 	_clock = null
 	_cleanup()
@@ -84,12 +90,12 @@ func test_roundtrip_restores_core_state() -> void:
 
 
 func test_roundtrip_restores_weather() -> void:
-	WeatherSystem.set_weather(Weather.Type.STORMY)
+	_weather.set_weather(Weather.Type.STORMY)
 	SaveManager.save_game(0)
-	WeatherSystem.set_weather(Weather.Type.SUNNY)
+	_weather.set_weather(Weather.Type.SUNNY)
 
 	assert_bool(SaveManager.load_game(0)).is_true()
-	assert_int(WeatherSystem.current).is_equal(Weather.Type.STORMY)
+	assert_int(_weather.current).is_equal(Weather.Type.STORMY)
 
 
 func test_meta_summary_matches_the_save() -> void:

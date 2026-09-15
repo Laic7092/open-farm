@@ -17,13 +17,14 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 
 ## 2. Autoload 与组合根
 
-- 当前 9 个 Autoload，声明顺序即 `_ready()` 顺序：
-  `EventBus` `AppTheme` `Database` `WeatherSystem` `Relationships` `Calendar` `SaveManager` `SceneRouter` `Audio`。
-- 玩家 / 时钟 / 天气 / 关系 / 日历进度状态都由 `Main` 作为组合根持有并显式注入：
-  `PlayerProfile`、`GameDateClock`、`WeatherState`、`RelationshipStore`、`CalendarProgress`。
-- `Main` 在 `_enter_tree()` 里注入依赖，保证早于世界 / UI 子树；
+- 当前 6 个 Autoload：`EventBus` `AppTheme` `Database` `SaveManager` `SceneRouter` `Audio`。
+- 天气 / 关系 / 日历已从 Autoload 收口为 `Main` 组合根拥有的服务节点：
+  `WeatherService`、`RelationshipService`、`CalendarService`；
+  对应状态 `WeatherState` / `RelationshipStore` / `CalendarProgress` 仍由 `Main` 持有并注入。
+- 玩家 / 时钟状态由 `Main` 持有并显式注入：`PlayerProfile`、`GameDateClock`。
+- `Main` 在 `_enter_tree()` 里创建服务并注入依赖，保证早于世界 / UI 子树；
   核心存档参与者通过 `Persistence.register_core*()` 自注册，`SaveManager` 不维护名单。
-- 详细代码入口：`src/main/main.gd`、`src/core/persistence.gd`、`src/autoload/save_manager.gd`。
+- 详细代码入口：`src/main/main.gd`、`src/services/*.gd`、`src/core/persistence.gd`、`src/autoload/save_manager.gd`。
 
 ## 3. 关键设计决策
 
@@ -32,7 +33,7 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 | 存档用 JSON | 避免 `ResourceSaver` 写入脚本路径；显式版本号 + `from_dict` 字段兜底 | `save_manager.gd` |
 | 世界场景换子节点 | `Main` 常驻 `WorldHost` / `UiRoot`，不用 `change_scene_to_file`；`SceneRouter` 缓存地图实例 | `main.gd`、`scene_router.gd` |
 | `_ready()` 一生只跑一次 | 缓存复用场景不重跑 `_ready()`；每次进图逻辑放 `_enter_tree()` / `_exit_tree()` | `world_scene.gd` |
-| 有序日结转 | 不依赖信号回调顺序；`GameDateClock.register_day_hook()` 按注册顺序同步执行 | `game_date_clock.gd` |
+| 有序日结转 | 不依赖信号回调顺序；`GameDateClock` 委托给 `DayPipeline`，按显式 `priority` 同步执行 | `game_date_clock.gd`、`day_pipeline.gd` |
 | 数据驱动 | 内容都在 `.tres`，脚本只认 id；静态数据与运行时状态分离 | `database.gd` |
 | UI 模态栈 | `UiRoot` 统一管理暂停与 `close_all()`，避免读档 / 传送残留菜单 | `ui_root.gd` |
 
@@ -53,8 +54,9 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 | 野生植被 | `src/world/flora_field.gd`、`flora_growth.gd` | 状态在 `Dictionary`；日结转生长 + 进图补算；`allowed_species` 控制物种 |
 | NPC 日程 / 寻路 | `src/npc/npc.gd`、`npc_navigator.gd`、`src/core/grid_pathfinder.gd` | 日程返回“当前生效段”；可通行性来自物理查询并按格缓存 |
 | 昼夜光照 | `src/world/day_night.gd`、`world_lighting.gd` | 分钟到环境光的静态曲线；灯由 `WorldProp.light_radius` 生成 |
-| 好感度 / 恋爱 | `src/autoload/relationships.gd`、`src/npc/affection_rules.gd` | 跨场景状态集中在 `RelationshipStore`；规则纯静态；孩子用 `required_flag` 门控 |
-| 节日 / 事件 | `src/autoload/calendar.gd`、`festival_rules.gd`、`event_rules.gd` | 节日与事件是两类数据；规则纯静态；事件只在日结转判定 |
+| 好感度 / 恋爱 | `src/services/relationship_service.gd`、`src/npc/affection_rules.gd`、`src/npc/marriage_rules.gd` | 跨场景状态集中在 `RelationshipStore`；规则纯静态；孩子用 `required_flag` 门控 |
+| 节日 / 事件 | `src/services/calendar_service.gd`、`festival_rules.gd`、`event_rules.gd` | 节日与事件是两类数据；规则纯静态；事件只在日结转按显式事实输入判定 |
+| 天气 | `src/services/weather_service.gd`、`src/core/weather.gd`、`src/core/weather_state.gd` | 状态在 `WeatherState`；服务注册最高优先级日结转，先掷天气再让日历 / 农场读取 |
 | 世界连接 | `src/autoload/scene_router.gd`、`src/world/scene_door.gd`、`ground_painter.gd` | 链式地图；`auto_enter` / `road_exit`；乡道压纵向中线由 `test_world_map.gd` 守 |
 | 畜舍 | `src/farm/livestock_manager.gd`、`animal_husbandry.gd` | 与 `FarmGrid` 同构：状态字典、视图可重建、规则纯静态 |
 

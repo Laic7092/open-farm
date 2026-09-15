@@ -3,7 +3,7 @@ extends Resource
 ## 关系系统状态（Resource）。
 ##
 ## 只存放可存档数据：每个 NPC 的 [RelationshipState]、配偶、婚育进度。
-## 查询/增减好感/结婚等规则仍在 [Relationships] 服务里；资源不依赖
+## 查询/增减好感/结婚等规则仍在 [RelationshipService] 服务里；资源不依赖
 ## Autoload / 场景树，便于由 [Main] 持有或在测试里单独 new。
 
 ## 每对关系的运行时状态。

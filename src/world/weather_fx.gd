@@ -2,7 +2,7 @@ class_name WeatherFx
 extends Node2D
 ## 天气的"看得见的那一半"：粒子 + 晴天的阳光。
 ##
-## [WeatherSystem] 只负责"今天是雨天"这个事实，不碰任何渲染；
+## [WeatherService] 只负责"今天是雨天"这个事实，不碰任何渲染；
 ## 本节点订阅天气变化，把它翻译成雨丝 / 雪花 / 落叶 / 阳光。
 ##
 ## 全局染色（天气 × 昼夜）不在这里，而在 [WorldLighting]：
@@ -25,16 +25,29 @@ var _leaves: GPUParticles2D
 var _sunburst: Sprite2D
 ## 组合根注入的时钟；只读分钟数判断白天。
 var _clock: GameDateClock
+## 组合根注入的天气服务；只读当前天气。
+var _weather: WeatherService
 
 
 func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
 	_clock = clock
 
 
+## 由 [WorldScene] 在世界进入树前下发领域服务。
+func bind_services(
+	weather: WeatherService,
+	_relationships: RelationshipService,
+	_calendar: CalendarService
+) -> void:
+	_weather = weather
+	if is_node_ready():
+		_apply(_current_weather())
+
+
 func _ready() -> void:
 	z_index = 90
 	_build()
-	_apply(WeatherSystem.current)
+	_apply(_current_weather())
 
 
 func _enter_tree() -> void:
@@ -45,7 +58,7 @@ func _enter_tree() -> void:
 	# 世界场景会缓存复用：_ready() 一生只跑一次，
 	# 从缓存里重新进图时要在这里补一次状态。
 	if is_node_ready():
-		_apply(WeatherSystem.current)
+		_apply(_current_weather())
 
 
 func _exit_tree() -> void:
@@ -122,7 +135,12 @@ func _on_weather_changed(weather: Weather.Type) -> void:
 
 
 func _on_minute_changed(_hour: int, _minute: int) -> void:
-	_update_sunburst(WeatherSystem.current)
+	_update_sunburst(_current_weather())
+
+
+## 当前天气；服务未注入时按晴天处理。
+func _current_weather() -> Weather.Type:
+	return _weather.current if _weather != null else Weather.Type.SUNNY
 
 
 func _apply(weather: Weather.Type) -> void:

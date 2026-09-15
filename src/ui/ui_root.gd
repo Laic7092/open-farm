@@ -19,6 +19,10 @@ var _modals: Array[Control] = []
 var _player_profile: PlayerProfile
 ## 组合根注入的时钟；转发给 Hud / ShopUi。
 var _clock_state: GameDateClock
+## 组合根注入的领域服务；转发给 Hud 等只读界面。
+var _weather_service: WeatherService
+var _relationship_service: RelationshipService
+var _calendar_service: CalendarService
 
 
 ## 由 [Main] 在 UI 子树进入树之前调用；依赖会继续下发给各界面。
@@ -28,6 +32,20 @@ func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
 	for child: Node in get_children():
 		if child.has_method(&"bind_dependencies"):
 			child.call(&"bind_dependencies", profile, clock)
+
+
+## 由 [Main] 在 UI 子树进入树之前调用；领域服务继续下发给各界面。
+func bind_services(
+	weather: WeatherService,
+	relationships: RelationshipService,
+	calendar: CalendarService
+) -> void:
+	_weather_service = weather
+	_relationship_service = relationships
+	_calendar_service = calendar
+	for child: Node in get_children():
+		if child.has_method(&"bind_services"):
+			child.call(&"bind_services", weather, relationships, calendar)
 
 
 func _ready() -> void:

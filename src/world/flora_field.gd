@@ -75,10 +75,21 @@ var _initialized: bool = false
 var _loaded: bool = false
 ## 组合根注入的时钟；日结转钩子注册在它上面。
 var _clock: GameDateClock
+## 组合根注入的天气服务；日结转时决定植被生长。
+var _weather: WeatherService
 
 
 func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
 	_clock = clock
+
+
+## 由 [WorldScene] 在世界进入树前下发领域服务。
+func bind_services(
+	weather: WeatherService,
+	_relationships: RelationshipService,
+	_calendar: CalendarService
+) -> void:
+	_weather = weather
 
 
 ## 注册在 [code]_enter_tree()[/code] 而不是 [code]_ready()[/code]：
@@ -89,7 +100,7 @@ func _enter_tree() -> void:
 	add_to_group(GROUP)
 	Persistence.register(self, persistence_id)
 	if _clock != null:
-		_clock.register_day_hook(_on_day_rollover)
+		_clock.register_day_hook(_on_day_rollover, DayPipeline.PRIORITY_WORLD)
 	# 重新进入场景树（从缓存挂回来）：把不在的这几天补算掉。
 	#
 	# 用 call_deferred 而不是直接调用：此刻兄弟节点（出生点、门）还没进场景树，
@@ -193,7 +204,7 @@ func clear(
 # ---------------------------------------------------------------- 日结转
 
 func _on_day_rollover(date: GameDate) -> void:
-	_simulate_day(date.season, WeatherSystem.current)
+	_simulate_day(date.season, _current_weather())
 	_last_day = date.absolute_day()
 
 
@@ -213,9 +224,14 @@ func _catch_up() -> void:
 	for index: int in steps:
 		# 过去这几天的天气无从考据，统一用当前天气近似；季节按天还原。
 		_simulate_day(
-			GameDate.from_absolute_day(start + index + 1).season, WeatherSystem.current
+			GameDate.from_absolute_day(start + index + 1).season, _current_weather()
 		)
 	_last_day = now
+
+
+## 当前天气；服务未注入时按晴天处理。
+func _current_weather() -> Weather.Type:
+	return _weather.current if _weather != null else Weather.Type.SUNNY
 
 
 func _simulate_day(season: Season.Type, weather: Weather.Type) -> void:

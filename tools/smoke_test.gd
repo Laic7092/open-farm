@@ -32,6 +32,9 @@ var _phase: int = 0
 var _main: Main
 var _profile: PlayerProfile
 var _clock: GameDateClock
+var _weather: WeatherService
+var _relationships: RelationshipService
+var _calendar: CalendarService
 
 ## 跨场景往返测试用的锚点。
 var _anchor_cell: Vector2i = Vector2i.ZERO
@@ -63,6 +66,9 @@ func _ready() -> void:
 	_profile = _main.player_profile
 	_clock = _main.clock_state
 	add_child(_main)
+	_weather = _main.weather_service
+	_relationships = _main.relationship_service
+	_calendar = _main.calendar_service
 
 
 func _process(_delta: float) -> void:
@@ -197,8 +203,8 @@ func _run_checks() -> void:
 func _check_calendar() -> void:
 	_check(Database.get_festival(&"new_year") != null, "应当有新年祭数据")
 	_check(Database.get_event(&"traveler_visit") != null, "应当有旅人事件数据")
-	_check(Calendar.has_festival_today(), "春 1 日应当是新年祭")
-	_check_eq(Calendar.today_text(), Text.key(&"FESTIVAL_NEW_YEAR"), "今日节日文本应当是新年祭")
+	_check(_calendar.has_festival_today(), "春 1 日应当是新年祭")
+	_check_eq(_calendar.today_text(), Text.key(&"FESTIVAL_NEW_YEAR"), "今日节日文本应当是新年祭")
 
 	var hud := get_tree().root.find_child("Hud", true, false)
 	if hud != null:
@@ -206,24 +212,24 @@ func _check_calendar() -> void:
 		_check(label != null and label.visible, "HUD 应当显示今日节日横幅")
 
 	# 会场 08:00 才开门。
-	_check(not Calendar.is_active(&"new_year"), "06:00 新年祭还没开门")
+	_check(not _calendar.is_active(&"new_year"), "06:00 新年祭还没开门")
 	_clock.set_time(9, 0)
-	_check(Calendar.is_active(&"new_year"), "09:00 新年祭应当开放")
+	_check(_calendar.is_active(&"new_year"), "09:00 新年祭应当开放")
 
-	var before := Relationships.affection(&"mayor")
-	_check(Calendar.attend(&"new_year"), "应当能参加新年祭")
-	_check_eq(Relationships.affection(&"mayor"), before + 4, "参加节日应当给在场 NPC 加好感")
-	_check(not Calendar.attend(&"new_year"), "同一年不能重复参加")
+	var before := _relationships.affection(&"mayor")
+	_check(_calendar.attend(&"new_year"), "应当能参加新年祭")
+	_check_eq(_relationships.affection(&"mayor"), before + 4, "参加节日应当给在场 NPC 加好感")
+	_check(not _calendar.attend(&"new_year"), "同一年不能重复参加")
 
 	# 参加记录要能跟着存档走。
-	var snapshot := Calendar.to_dict()
-	Calendar.reset()
-	Calendar.from_dict(snapshot)
-	_check(Calendar.has_attended(&"new_year"), "读档后应当记得参加过新年祭")
+	var snapshot := _calendar.to_dict()
+	_calendar.reset()
+	_calendar.from_dict(snapshot)
+	_check(_calendar.has_attended(&"new_year"), "读档后应当记得参加过新年祭")
 
 	# 还原到开局状态：后面的时钟检查依赖"春 1 日 06:00"。
-	Calendar.reset()
-	Relationships.set_affection(&"mayor", before)
+	_calendar.reset()
+	_relationships.set_affection(&"mayor", before)
 	_clock.set_time(GameDateClock.DAY_START_HOUR, 0)
 
 
@@ -795,27 +801,27 @@ func _check_library() -> void:
 
 ## 关系系统的端到端检查：聊天 / 送礼 / 表白 / 结婚能真实串起来。
 ##
-## 这里直接驱动 [code]Relationships[/code]，不调用 [method Npc.interact]——
+## 这里直接驱动 [code]RelationshipService[/code]，不调用 [method Npc.interact]——
 ## 后者会弹出对话框并暂停场景树，把冒烟测试的主循环一起冻住。
 func _check_relationships() -> void:
 	var npc := _find_npc(&"librarian")
 	_check(npc != null, "图书馆应当有可攻略 NPC 书雅")
 	if npc == null:
 		return
-	var before := Relationships.affection(&"librarian")
-	_check(Relationships.talk(&"librarian") > 0, "首次聊天应当获得好感")
-	_check(Relationships.affection(&"librarian") > before, "聊天后好感应当上升")
+	var before := _relationships.affection(&"librarian")
+	_check(_relationships.talk(&"librarian") > 0, "首次聊天应当获得好感")
+	_check(_relationships.affection(&"librarian") > before, "聊天后好感应当上升")
 	_check(
-		Relationships.give_gift(&"librarian", &"flower") > 0,
+		_relationships.give_gift(&"librarian", &"flower") > 0,
 		"野花应当是书雅喜欢的礼物"
 	)
-	Relationships.set_affection(&"librarian", 250)
-	_check(Relationships.confess(&"librarian"), "好感达标后应当可以表白")
-	_check(Relationships.marry(&"librarian"), "交往后应当可以结婚")
-	_check(Relationships.is_married(), "结婚后应当记录配偶")
+	_relationships.set_affection(&"librarian", 250)
+	_check(_relationships.confess(&"librarian"), "好感达标后应当可以表白")
+	_check(_relationships.marry(&"librarian"), "交往后应当可以结婚")
+	_check(_relationships.is_married(), "结婚后应当记录配偶")
 	_check_eq(npc.current_dialogue().id, &"librarian_married", "婚后应当使用婚后对白")
 	# 复位，避免影响后续检查。
-	Relationships.reset()
+	_relationships.reset()
 
 
 ## 建筑外观：每栋房子都要挂上角色专属贴图，且不能两栋共用一张。

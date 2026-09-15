@@ -4,7 +4,7 @@ extends RefCounted
 ##
 ## 与静态的 [NpcData] 分离：数据定义"这个人能追吗、最爱什么礼物"，
 ## 这里只记录"玩家和他现在关系如何"。
-## [code]Relationships[/code] 用 [code]npc_id → RelationshipState[/code] 的表统一持有，
+## [code]RelationshipService[/code] 用 [code]npc_id → RelationshipState[/code] 的表统一持有，
 ## 所以 NPC 节点不在场上时（换地图 / 尚未出生）关系也不会丢。
 
 ## 对应的 [member NpcData.id]。

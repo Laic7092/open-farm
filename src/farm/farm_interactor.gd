@@ -17,10 +17,21 @@ signal action_finished(tool_id: StringName, cell: Vector2i, success: bool)
 var player: Player
 ## 组合根注入的时钟；种植时读取季节。
 var _clock: GameDateClock
+## 组合根注入的天气服务；工具体力消耗倍率。
+var _weather: WeatherService
 
 
 func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
 	_clock = clock
+
+
+## 由 [WorldScene] 在世界进入树前下发领域服务。
+func bind_services(
+	weather: WeatherService,
+	_relationships: RelationshipService,
+	_calendar: CalendarService
+) -> void:
+	_weather = weather
 
 
 ## 由 [Player] 在 [code]_ready()[/code] 中调用。
@@ -150,7 +161,8 @@ func _plant(grid: FarmGrid, cell: Vector2i) -> bool:
 func _consume_stamina(tool: ToolData) -> void:
 	if player == null:
 		return
-	var cost: int = int(ceilf(float(tool.stamina_cost) * WeatherSystem.stamina_multiplier()))
+	var multiplier: float = _weather.stamina_multiplier() if _weather != null else 1.0
+	var cost: int = int(ceilf(float(tool.stamina_cost) * multiplier))
 	if cost > 0:
 		player.stats.consume(cost)
 

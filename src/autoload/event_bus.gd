@@ -9,7 +9,8 @@ extends Node
 ## [b]使用约定[/b]
 ## [br]- 本脚本[b]只允许声明信号[/b]，不写任何逻辑与状态；
 ## [br]- 一对一的父子通信仍然直接用节点信号，不要绕道 EventBus；
-## [br]- 需要"确定性执行顺序"的模拟逻辑请用 [method GameDateClock.register_day_hook]，
+## [br]- 需要"确定性执行顺序"的模拟逻辑请用
+##   [method GameDateClock.register_day_hook] / [DayPipeline]，显式声明优先级。
 ##   不要依赖信号连接顺序（信号回调顺序在 Godot 中不作保证）。
 
 # ---------------------------------------------------------------- 时间 / 日历
@@ -95,7 +96,7 @@ signal child_born(child_id: StringName)
 signal festival_day_started(festival_id: StringName)
 ## 玩家参加了某节日；[param affection] 为每位到场 NPC 得到的好感度。
 signal festival_attended(festival_id: StringName, affection: int)
-## 一次性事件被触发（[code]Calendar[/code] 判定命中并结算完效果后发出）。
+## 一次性事件被触发（[code]CalendarService[/code] 判定命中并结算完效果后发出）。
 signal calendar_event_triggered(event_id: StringName)
 
 # ---------------------------------------------------------------- 野生植被

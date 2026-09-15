@@ -3,8 +3,9 @@ extends Resource
 ## 游戏日期与时间状态（Resource），同时接管原 [GameDateClock] 的推进规则。
 ##
 ## 这个 Resource 既是可存档状态，也是本局时钟的唯一权威对象：日期、当天
-## 分钟、倍率、暂停标记、推进累积器和有序日结转钩子都在这里。场景节点由
-## [Main] 显式注入同一份实例，不再通过 Autoload 全局名访问。
+## 分钟、倍率、暂停标记与推进累积器都在这里。日结转钩子拆到 [DayPipeline]，
+## 由 [Main] 在 [method bind_dependencies] 阶段显式注册；场景节点注入同一份实例，
+## 不再通过 Autoload 全局名访问。
 ##
 ## 资源本身不进入场景树，[Main] 每帧调用 [method tick] 驱动时间；所有观察者
 ## 通过资源信号或由 [Main] 转发后的 [EventBus] 信号收到变化通知。
@@ -13,7 +14,7 @@ extends Resource
 signal minute_changed(hour: int, minute: int)
 ## 整点变化。
 signal hour_changed(hour: int)
-## 跨天（含季节 / 年份进位）完成，所有日结转钩子已执行。
+## 跨天（含季节 / 年份进位）完成，[member day_pipeline] 已执行完毕。
 signal day_changed(date: GameDate)
 ## 季节变化。
 signal season_changed(season: Season.Type)
@@ -46,7 +47,8 @@ var time_scale: float = 1.0
 var paused: bool = false
 
 var _accumulator: float = 0.0
-var _day_hooks: Array[Callable] = []
+## 日结转流水线：按显式优先级执行跨天钩子。
+var day_pipeline: DayPipeline = DayPipeline.new()
 
 
 func _init() -> void:
@@ -161,15 +163,20 @@ func sleep_until_morning() -> void:
 
 # ---------------------------------------------------------------- 日结转钩子
 
-## 注册日结转钩子。同一个 [Callable] 只会注册一次。
-func register_day_hook(callback: Callable) -> void:
-	if not _day_hooks.has(callback):
-		_day_hooks.append(callback)
+## 注册日结转钩子。同一个 [Callable] 只会注册一次；[param priority]
+## 见 [DayPipeline] 的常量，数值越小越先执行。
+func register_day_hook(callback: Callable, priority: int = DayPipeline.PRIORITY_DEFAULT) -> void:
+	day_pipeline.register(callback, priority)
 
 
 ## 注销日结转钩子（节点退出场景树时调用，避免野指针）。
 func unregister_day_hook(callback: Callable) -> void:
-	_day_hooks.erase(callback)
+	day_pipeline.unregister(callback)
+
+
+## 清空全部日结转钩子（测试 / 重建组合根时使用）。
+func clear_day_hooks() -> void:
+	day_pipeline.clear()
 
 
 # ---------------------------------------------------------------- 序列化
@@ -225,10 +232,8 @@ func _roll_over_day() -> void:
 	if bool(crossed.get(&"season", false)):
 		season_changed.emit(date.season)
 
-	# 有序执行模拟流水线，顺序即依赖顺序。
-	for hook: Callable in _day_hooks.duplicate():
-		if hook.is_valid():
-			hook.call(date)
+	# 显式优先级的模拟流水线；依赖顺序不再由注册先后碰运气。
+	day_pipeline.run(date)
 
 	# 钩子跑完后再通知观察者（UI 等）。
 	day_changed.emit(date)

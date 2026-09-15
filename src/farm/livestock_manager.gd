@@ -40,7 +40,7 @@ func _enter_tree() -> void:
 	add_to_group(GROUP)
 	Persistence.register(self, persistence_id)
 	if _clock != null:
-		_clock.register_day_hook(_on_day_rollover)
+		_clock.register_day_hook(_on_day_rollover, DayPipeline.PRIORITY_WORLD)
 
 
 func _exit_tree() -> void:

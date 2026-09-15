@@ -39,7 +39,7 @@ const TITLE_SCENE: String = "res://scenes/title/title_screen.tscn"
 
 @onready var world_host: Node2D = %WorldHost
 
-## 本局玩家档案；由 Main 作为组合根持有并注入世界 / UI / Autoload 服务。
+## 本局玩家档案；由 Main 作为组合根持有并注入世界 / UI / 服务。
 var player_profile: PlayerProfile = PlayerProfile.new()
 ## 本局时钟状态；由 Main 持有、每帧驱动，并注入给所有消费者。
 var clock_state: GameDateClock = GameDateClock.new()
@@ -50,6 +50,14 @@ var relationship_store: RelationshipStore = RelationshipStore.new()
 ## 本局节日 / 事件进度；由 Main 作为组合根持有。
 var calendar_progress: CalendarProgress = CalendarProgress.new()
 
+## 天气服务；由 Main 创建为子节点，不再是 Autoload。
+var weather_service: WeatherService
+## 关系服务；由 Main 创建为子节点，不再是 Autoload。
+var relationship_service: RelationshipService
+## 日历服务；由 Main 创建为子节点，不再是 Autoload。
+var calendar_service: CalendarService
+
+var _services_created: bool = false
 var _dependencies_bound: bool = false
 
 
@@ -66,8 +74,9 @@ static func return_to_title(tree: SceneTree) -> void:
 
 
 func _enter_tree() -> void:
-	# 组合根依赖要在世界 / UI 子树的 _enter_tree() 之前下发；Main 的
-	# _enter_tree() 早于子节点的对应回调，因此这里是最早的安全点。
+	# 服务节点先作为 Main 的子节点建立；再把状态与互相依赖显式注入。
+	# Main 的 _enter_tree() 早于世界 / UI 子树的对应回调，因此这里是最早的安全点。
+	_ensure_services()
 	_bind_dependencies()
 
 
@@ -82,7 +91,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	# Autoload 消失后，时钟与游玩时长由组合根统一驱动。
+	# 时钟与游玩时长由组合根统一驱动。
 	clock_state.tick(delta)
 	player_profile.tick(delta)
 
@@ -107,7 +116,26 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # ---------------------------------------------------------------- 组合根
 
-## 把本局状态注册为核心存档节，并注入到所有常驻 / 世界消费者。
+## 创建本局服务节点；服务在 _ready() 里注册自己的核心存档节。
+func _ensure_services() -> void:
+	if _services_created:
+		return
+	_services_created = true
+
+	weather_service = WeatherService.new()
+	weather_service.name = "WeatherService"
+	add_child(weather_service)
+
+	relationship_service = RelationshipService.new()
+	relationship_service.name = "RelationshipService"
+	add_child(relationship_service)
+
+	calendar_service = CalendarService.new()
+	calendar_service.name = "CalendarService"
+	add_child(calendar_service)
+
+
+## 把本局状态注入服务与所有常驻 / 世界消费者。
 func _bind_dependencies() -> void:
 	if _dependencies_bound:
 		return
@@ -130,22 +158,30 @@ func _bind_dependencies() -> void:
 	if not player_profile.money_changed.is_connected(_on_profile_money_changed):
 		player_profile.money_changed.connect(_on_profile_money_changed)
 
-	# 常驻 Autoload 服务：状态 Resource 由 Main 注入，方法通过显式接口接线。
-	WeatherSystem.set_state(weather_state)
-	WeatherSystem.bind_clock(clock_state)
-	Relationships.set_state(relationship_store)
-	Relationships.bind_dependencies(player_profile, clock_state)
-	Calendar.set_state(calendar_progress)
-	Calendar.bind_dependencies(player_profile, clock_state)
+	# 本局服务：状态 Resource 与彼此依赖全部在 Main 显式注入。
+	# 服务节点在各自 _ready() 里注册核心存档节（沿用旧存档键名）。
+	weather_service.bind_dependencies(clock_state, weather_state)
+
+	relationship_service.set_state(relationship_store)
+	relationship_service.bind_dependencies(player_profile, clock_state)
+
+	calendar_service.set_state(calendar_progress)
+	calendar_service.bind_dependencies(
+		player_profile, clock_state, weather_service, relationship_service
+	)
+
 	Audio.bind_clock(clock_state)
 
 	# 世界路由保存同一份引用，在挂载世界场景前注入给世界根节点。
 	SceneRouter.bind_dependencies(player_profile, clock_state)
+	SceneRouter.bind_services(weather_service, relationship_service, calendar_service)
 
 	# UI 子树也提前拿到同一份依赖。
 	var ui_root := get_node_or_null(^"UiRoot")
 	if ui_root != null and ui_root.has_method(&"bind_dependencies"):
 		ui_root.call(&"bind_dependencies", player_profile, clock_state)
+	if ui_root != null and ui_root.has_method(&"bind_services"):
+		ui_root.call(&"bind_services", weather_service, relationship_service, calendar_service)
 
 
 # ---------------------------------------------------------------- 启动
@@ -165,10 +201,10 @@ func _boot_from_save() -> bool:
 
 func _boot_new_game() -> void:
 	player_profile.reset()
-	Relationships.reset()
+	relationship_service.reset()
 	clock_state.reset()
-	WeatherSystem.reroll(clock_state.date.season)
-	Calendar.reset()
+	weather_service.reroll(clock_state.date.season)
+	calendar_service.reset()
 	# 开局也要让 HUD / Audio 看到完整状态，而不依赖某次日结转。
 	clock_state.refresh_observers()
 	SceneRouter.clear_world_cache()

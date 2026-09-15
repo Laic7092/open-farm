@@ -1,14 +1,14 @@
+class_name CalendarService
 extends Node
-## 节日与事件系统（Autoload：`Calendar`）。
+## 节日与事件服务（由 [Main] 组合根持有，不再是 Autoload）。
 ##
-## [b]为什么单独一个单例[/b]：节日与事件是[b]跨场景[/b]的日历状态——
-## 玩家在农场睡觉时"今天是花祭"就已经成立，换到小镇才看得见会场；
-## "哪些事件已经发生过"也必须跟着存档走。这些都不属于某张地图，
-## 所以和 [code]Relationships[/code] 一样单独放一个单例。
+## 节日与事件是[b]跨场景[/b]的日历状态：玩家在农场睡觉时"今天是花祭"
+## 就已经成立，换到小镇才看得见会场；"哪些事件已经发生过"也必须跟着存档走。
+## 状态本体是 [CalendarProgress]（Resource），服务只负责查表、判定与广播。
 ##
 ## 职责边界：
 ## [br]- 从 [Database] 装填节日 / 事件表；
-## [br]- 在注入时钟的 `register_day_hook()` 日结转里判定今天的节日与事件；
+## [br]- 在 [DayPipeline] 的 [constant DayPipeline.PRIORITY_CALENDAR] 钩子里判定；
 ## [br]- 持有"今年参加过哪些节日 / 哪些事件已触发"并负责存档；
 ## [br]- 通过 [EventBus] 广播，不直接碰 UI 或场景节点。
 ##
@@ -35,24 +35,40 @@ var _progress: CalendarProgress = CalendarProgress.new()
 var _clock: GameDateClock
 ## 组合根注入的玩家档案；用于旗标与奖励。
 var _profile: PlayerProfile
+## 组合根注入的天气服务；事件条件需要读取当天天气。
+var _weather: WeatherService
+## 组合根注入的关系服务；事件条件需要读取指定 NPC 好感。
+var _relationships: RelationshipService
+## 表数据是否已经从 [Database] 装入，避免重复 reload 造成重复播报。
+var _tables_loaded: bool = false
 
 
 func _ready() -> void:
+	# 存档键名继续保持 "Calendar"，兼容旧存档。
 	Persistence.register_core(self, &"Calendar", 50)
-	Database.reloaded.connect(reload)
-	reload()
+	if not Database.reloaded.is_connected(reload):
+		Database.reloaded.connect(reload)
+	if not _tables_loaded:
+		reload()
 
 
-## 注入组合根持有的状态，并重新注册日结转钩子。
-func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
+## 注入组合根持有的状态与服务，并重新注册日结转钩子。
+func bind_dependencies(
+	profile: PlayerProfile,
+	clock: GameDateClock,
+	weather: WeatherService,
+	relationships: RelationshipService
+) -> void:
 	if _clock != null:
 		_clock.unregister_day_hook(_on_day_rollover)
 	_profile = profile
 	_clock = clock
+	_weather = weather
+	_relationships = relationships
 	if _clock != null:
-		_clock.register_day_hook(_on_day_rollover)
+		_clock.register_day_hook(_on_day_rollover, DayPipeline.PRIORITY_CALENDAR)
 	_today_absolute_day = -1
-	refresh()
+	reload()
 
 
 ## 当前节日 / 事件进度；由组合根持有，可整体替换。
@@ -79,6 +95,7 @@ func _exit_tree() -> void:
 func reload() -> void:
 	_festivals = Database.festival_list()
 	_events = Database.event_list()
+	_tables_loaded = true
 	_today_absolute_day = -1
 	refresh()
 
@@ -209,17 +226,11 @@ func events_for_today() -> Array[EventData]:
 	var result: Array[EventData] = []
 	if _clock == null or _profile == null:
 		return result
+	var weather := _current_weather()
 	for entry: EventData in _events:
 		if _was_triggered(entry.id, _clock.date):
 			continue
-		if EventRules.matches(
-			entry,
-			_clock.date,
-			int(WeatherSystem.current),
-			_profile.has_flag(entry.required_flag),
-			_profile.has_flag(entry.forbidden_flag),
-			Relationships.affection(entry.required_npc)
-		):
+		if _matches(entry, _clock.date, weather, _affection_for(entry.required_npc)):
 			result.append(entry)
 	return result
 
@@ -260,7 +271,8 @@ func attend(festival_id: StringName) -> bool:
 	if entry.attendance_flag != &"":
 		_profile.set_flag(entry.attendance_flag)
 	for npc_id: StringName in entry.npc_ids:
-		Relationships.add_affection(npc_id, entry.attendance_affection)
+		if _relationships != null:
+			_relationships.add_affection(npc_id, entry.attendance_affection)
 	EventBus.festival_attended.emit(festival_id, entry.attendance_affection)
 	EventBus.notification_requested.emit(NOTIFY_ATTENDED, {
 		"festival": Text.key(entry.display_name_key),
@@ -292,8 +304,8 @@ func from_dict(data: Dictionary) -> void:
 
 ## 日结转：先播报今天的节日，再判定一次性事件。
 ##
-## 钩子注册顺序保证此时 [WeatherSystem] 已经掷出了今天的天气，
-## 所以事件可以拿天气当条件。
+## [constant DayPipeline.PRIORITY_WEATHER] 数值低于本钩子，保证此时
+## [WeatherService] 已经掷出了今天的天气，事件可以拿天气当条件。
 func _on_day_rollover(date: GameDate) -> void:
 	_today_absolute_day = -1
 	for entry: FestivalData in today_festivals():
@@ -301,25 +313,40 @@ func _on_day_rollover(date: GameDate) -> void:
 		EventBus.notification_requested.emit(NOTIFY_TODAY, {
 			"festival": Text.key(entry.display_name_key),
 		})
+	var weather := _current_weather()
 	for entry: EventData in _events:
 		if _was_triggered(entry.id, date):
 			continue
-		if not _matches(entry, date):
+		if not _matches(entry, date, weather, _affection_for(entry.required_npc)):
 			continue
 		_trigger(entry, date)
 
 
-func _matches(entry: EventData, date: GameDate) -> bool:
+## 纯函数式判定入口：所有外部事实（日期 / 天气 / 旗标 / 好感）都由调用方
+## 查好后传入，规则层不读任何 Autoload 或服务。
+func _matches(entry: EventData, date: GameDate, weather: int, affection: int) -> bool:
 	if _profile == null:
 		return false
 	return EventRules.matches(
 		entry,
 		date,
-		int(WeatherSystem.current),
+		weather,
 		_profile.has_flag(entry.required_flag),
 		_profile.has_flag(entry.forbidden_flag),
-		Relationships.affection(entry.required_npc)
+		affection
 	)
+
+
+## 当前天气；服务未注入时按晴天处理，保证纯测试可运行。
+func _current_weather() -> int:
+	return int(_weather.current) if _weather != null else int(Weather.Type.SUNNY)
+
+
+## 指定 NPC 的好感；关系服务未注入或 NPC 为空时返回 0。
+func _affection_for(npc_id: StringName) -> int:
+	if npc_id == &"" or _relationships == null:
+		return 0
+	return _relationships.affection(npc_id)
 
 
 func _trigger(entry: EventData, date: GameDate) -> void:

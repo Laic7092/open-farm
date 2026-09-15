@@ -20,8 +20,8 @@ func after_test() -> void:
 	_hooks.clear()
 
 
-func _register(hook: Callable) -> Callable:
-	_clock.register_day_hook(hook)
+func _register(hook: Callable, priority: int = DayPipeline.PRIORITY_DEFAULT) -> Callable:
+	_clock.register_day_hook(hook, priority)
 	_hooks.append(hook)
 	return hook
 
@@ -112,7 +112,18 @@ func test_sleep_returns_to_morning_and_advances_a_day() -> void:
 
 # ---------------------------------------------------------------- 日结转钩子
 
-func test_day_hooks_run_in_registration_order() -> void:
+func test_day_hooks_run_in_explicit_priority_order() -> void:
+	var order: Array[String] = []
+	# 故意按与期望相反的注册顺序注册，优先级的权威性才不会被注册顺序掩盖。
+	_register(func(_date: GameDate) -> void: order.append("world"), DayPipeline.PRIORITY_WORLD)
+	_register(func(_date: GameDate) -> void: order.append("calendar"), DayPipeline.PRIORITY_CALENDAR)
+	_register(func(_date: GameDate) -> void: order.append("weather"), DayPipeline.PRIORITY_WEATHER)
+
+	_clock.sleep_until_morning()
+	assert_array(order).contains_exactly(["weather", "calendar", "world"])
+
+
+func test_day_hooks_with_same_priority_keep_registration_order() -> void:
 	var order: Array[String] = []
 	_register(func(_date: GameDate) -> void: order.append("first"))
 	_register(func(_date: GameDate) -> void: order.append("second"))

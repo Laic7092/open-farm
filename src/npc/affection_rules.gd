@@ -5,7 +5,7 @@ extends RefCounted
 ## 这里只放"数值怎么算"的纯函数：不碰场景树、不注册 autoload、不读写存档，
 ## 因此 [code]tests/unit/test_affection_rules.gd[/code] 可以脱离引擎逐条断言。
 ## 运行时状态（某人现在多少好感、是否在交往）由 [RelationshipState] /
-## [code]Relationships[/code] 持有；两者的边界与 [CropData] / [CropGrowth] 一致。
+## [code]RelationshipService[/code] 持有；两者的边界与 [CropData] / [CropGrowth] 一致。
 ##
 ## [b]心数[/b]是对玩家暴露的唯一好感度单位：好感度每 [constant HEART_SIZE] 点折一颗心，
 ## 上限 [constant MAX_HEARTS] 颗。对白 / 礼物 / 表白 / 求婚的门槛都以心数为直觉来定。

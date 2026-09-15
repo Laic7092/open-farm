@@ -2,7 +2,7 @@ class_name WorldLighting
 extends Node2D
 ## 昼夜光照的"看得见的那一半"：全局环境光 + 夜晚点光源 + 雷暴闪光。
 ##
-## [DayNight] 给出"几点钟该多亮"的曲线，[WeatherSystem] 给出今天什么天气；
+## [DayNight] 给出"几点钟该多亮"的曲线，[WeatherService] 给出今天什么天气；
 ## 本节点把两者相乘后写进唯一的 [CanvasModulate]。
 ## 之所以必须合并：Godot 每张画布只认一个 [CanvasModulate]，
 ## 天气与昼夜各挂一个的话只有一个会生效。
@@ -37,10 +37,23 @@ var _flash_timer: Timer
 var _flash_tween: Tween
 ## 组合根注入的时钟；只读分钟数计算环境光。
 var _clock: GameDateClock
+## 组合根注入的天气服务；只读当前天气。
+var _weather: WeatherService
 
 
 func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
 	_clock = clock
+
+
+## 由 [WorldScene] 在世界进入树前下发领域服务。
+func bind_services(
+	weather: WeatherService,
+	_relationships: RelationshipService,
+	_calendar: CalendarService
+) -> void:
+	_weather = weather
+	if is_node_ready():
+		_refresh()
 
 
 func _ready() -> void:
@@ -87,12 +100,17 @@ func _refresh() -> void:
 	_refresh_storm()
 
 
+## 当前天气；服务未注入时按晴天处理。
+func _current_weather() -> Weather.Type:
+	return _weather.current if _weather != null else Weather.Type.SUNNY
+
+
 func _refresh_tint() -> void:
 	if _tint == null:
 		return
 	var minute := _clock.minute_of_day if _clock != null else GameDateClock.DAY_START_HOUR * 60
 	var color := DayNight.ambient_color(minute)
-	color *= WEATHER_TINTS.get(WeatherSystem.current, ArtPalette.WEATHER_SUNNY)
+	color *= WEATHER_TINTS.get(_current_weather(), ArtPalette.WEATHER_SUNNY)
 	if flash_strength > 0.0:
 		color = color.lerp(FLASH_COLOR, flash_strength)
 	_tint.color = color
@@ -103,7 +121,12 @@ func _refresh_tint() -> void:
 func _refresh_lights() -> void:
 	var minute := _clock.minute_of_day if _clock != null else GameDateClock.DAY_START_HOUR * 60
 	var energy := DayNight.lamp_energy(minute)
-	for node: Node in get_tree().get_nodes_in_group(WorldProp.NIGHT_LIGHT_GROUP):
+	if not is_inside_tree():
+		return
+	var tree := get_tree()
+	if tree == null:
+		return
+	for node: Node in tree.get_nodes_in_group(WorldProp.NIGHT_LIGHT_GROUP):
 		if node is WorldProp:
 			(node as WorldProp).apply_night_energy(energy)
 
@@ -112,7 +135,7 @@ func _refresh_storm() -> void:
 	if _flash_timer == null:
 		return
 	_flash_timer.stop()
-	if WeatherSystem.current == Weather.Type.STORMY:
+	if _current_weather() == Weather.Type.STORMY:
 		_flash_timer.start()
 
 

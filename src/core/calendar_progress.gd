@@ -3,7 +3,7 @@ extends Resource
 ## 节日 / 事件进度（Resource）。
 ##
 ## 只存放"今年参加过哪些节日 / 哪些事件已触发"这类可存档状态；
-## 表数据与今日缓存仍在 [Calendar] 服务里。资源不依赖 Autoload，
+## 表数据与今日缓存仍在 [CalendarService] 服务里。资源不依赖 Autoload，
 ## 可由 [Main] 持有或测试里单独 new。
 
 ## festival_id → 参加时的年份。

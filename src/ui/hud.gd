@@ -45,11 +45,27 @@ var _item_slots: Array[HudSlot] = []
 var _profile: PlayerProfile
 ## 组合根注入的时钟；HUD 只读。
 var _clock: GameDateClock
+## 组合根注入的天气服务；HUD 只读。
+var _weather: WeatherService
+## 组合根注入的日历服务；HUD 只读。
+var _calendar: CalendarService
 
 
 func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
 	_profile = profile
 	_clock = clock
+	if is_node_ready():
+		_refresh_all()
+
+
+## 由 [UiRoot] 在 UI 进入树前下发领域服务；HUD 只读。
+func bind_services(
+	weather: WeatherService,
+	_relationships: RelationshipService,
+	calendar: CalendarService
+) -> void:
+	_weather = weather
+	_calendar = calendar
 	if is_node_ready():
 		_refresh_all()
 
@@ -93,7 +109,7 @@ func _refresh_date() -> void:
 
 ## 今日节日横幅：没有节日时整行隐藏，不占屏幕。
 func _refresh_festival() -> void:
-	var text := Calendar.today_text()
+	var text := _calendar.today_text() if _calendar != null else ""
 	festival_label.text = text
 	festival_label.visible = not text.is_empty()
 
@@ -104,18 +120,20 @@ func _refresh_time() -> void:
 
 
 func _refresh_weather() -> void:
-	var weather_name := Text.weather_name(WeatherSystem.current)
-	var forecast_name := Text.weather_name(WeatherSystem.forecast)
+	var current: Weather.Type = _weather.current if _weather != null else Weather.Type.SUNNY
+	var forecast: Weather.Type = _weather.forecast if _weather != null else Weather.Type.SUNNY
+	var weather_name := Text.weather_name(current)
+	var forecast_name := Text.weather_name(forecast)
 
 	# 天气 / 明日预报只保留图标；文字塞进 tooltip，减少屏幕上的常驻文案。
 	weather_label.text = weather_name
 	weather_label.visible = false
-	weather_icon.texture = _weather_icon(WeatherSystem.current)
+	weather_icon.texture = _weather_icon(current)
 	weather_icon.tooltip_text = weather_name
 
 	forecast_label.text = Text.format(&"HUD_FORECAST", {"weather": forecast_name})
 	forecast_label.visible = false
-	forecast_icon.texture = _weather_icon(WeatherSystem.forecast)
+	forecast_icon.texture = _weather_icon(forecast)
 	forecast_icon.tooltip_text = Text.format(&"HUD_FORECAST", {"weather": forecast_name})
 
 

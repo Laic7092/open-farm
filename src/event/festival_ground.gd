@@ -3,13 +3,25 @@ extends Interactable
 ## 节日会场：节日当天开门，玩家按 E 参加。
 ##
 ## 会场只认 [member festival_ids] 里的节日 id："今天办不办、现在开不开门"全部问
-## [code]Calendar[/code]，因此同一个地点按 E 会参加"此刻正在进行的那一场"。
+## [code]CalendarService[/code]，因此同一个地点按 E 会参加"此刻正在进行的那一场"。
 ## 子节点 `Stall`（可空）是摊位贴图，非节日期间自动收起来。
 
 ## 在这个会场举办的节日 id（同一地点可以轮办多场节日）。
 @export var festival_ids: Array[StringName] = []
 
 @onready var _stall: Sprite2D = get_node_or_null(^"Stall") as Sprite2D
+## 组合根注入的日历服务；判断节日是否进行中并参加。
+var _calendar: CalendarService
+
+
+## 由 [WorldScene] 在世界进入树前下发领域服务。
+func bind_services(
+	_weather: WeatherService,
+	_relationships: RelationshipService,
+	calendar: CalendarService
+) -> void:
+	_calendar = calendar
+	_refresh_visual()
 
 
 func _enter_tree() -> void:
@@ -33,7 +45,7 @@ func _exit_tree() -> void:
 ## 此刻正在这个会场举办的节日；没有则返回空串。
 func active_id() -> StringName:
 	for festival_id: StringName in festival_ids:
-		if Calendar.is_active(festival_id):
+		if _calendar.is_active(festival_id):
 			return festival_id
 	return &""
 
@@ -48,9 +60,9 @@ func interact(actor: Node2D) -> void:
 	if festival_id == &"":
 		return
 	super.interact(actor)
-	var entry := Calendar.festival(festival_id)
-	var first_time: bool = not Calendar.has_attended(festival_id)
-	if not Calendar.attend(festival_id):
+	var entry := _calendar.festival(festival_id)
+	var first_time: bool = not _calendar.has_attended(festival_id)
+	if not _calendar.attend(festival_id):
 		return
 	# 首次参加才播开场对白，之后每年再来只发好感与提示。
 	if first_time and entry != null and entry.intro_dialogue != null:

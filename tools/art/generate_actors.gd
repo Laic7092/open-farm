@@ -113,7 +113,7 @@ const NPC_LOOKS := {
 		"glasses": true,
 		"hair_long": true,
 	},
-	# 玩家与配偶的孩子（婚后出生才出现，见 Relationships）。
+	# 玩家与配偶的孩子（婚后出生才出现，见 RelationshipService）。
 	&"our_child": {
 		"hair": P.NPC_HAIR,
 		"hair_light": P.WHITE,

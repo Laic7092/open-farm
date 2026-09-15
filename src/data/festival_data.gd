@@ -4,7 +4,7 @@ extends Resource
 ## 节日的静态定义：哪天、在哪张地图、哪些村民来、参加有什么好处。
 ##
 ## 与 [NpcData] 一样，这是[b]不变的数据[/b]；"今年参没参加过"属于运行时状态，
-## 由 [code]Calendar[/code] 单例持有并写进存档。
+## 由 [code]CalendarService[/code] 服务持有并写进存档。
 ## 判定规则全在纯静态的 [FestivalRules] 里，本类只描述数据。
 
 ## 唯一标识。

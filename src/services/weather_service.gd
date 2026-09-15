@@ -1,10 +1,10 @@
+class_name WeatherService
 extends Node
-## 天气系统（Autoload：`WeatherSystem`）。
+## 天气服务（由 [Main] 组合根持有，不再是 Autoload）。
 ##
 ## 每天开始时掷出当天天气并预报表日天气；天气决定作物是否自动浇水
-## 以及玩家体力消耗倍率。
-##
-## 通过注入时钟的 `register_day_hook()` 注册为[b]第一个[/b]日结转钩子，
+## 以及玩家体力消耗倍率。服务持有 [WeatherState]，并向 [GameDateClock]
+## 的 [DayPipeline] 注册 [constant DayPipeline.PRIORITY_WEATHER] 钩子，
 ## 保证其它系统在响应日结转时读到的 [member current] 已经是当天的天气。
 
 ## 天气变化时发出（与 [signal EventBus.weather_changed] 同步）。
@@ -28,17 +28,29 @@ var _clock: GameDateClock
 
 
 func _ready() -> void:
+	# 存档键名继续保持 "WeatherSystem"，兼容旧存档。
 	Persistence.register_core(self, &"WeatherSystem", 30)
 	_rng.randomize()
 
 
-## 注入组合根持有的时钟，并重新注册日结转钩子。
-func bind_clock(clock: GameDateClock) -> void:
+func _exit_tree() -> void:
+	if _clock != null:
+		_clock.unregister_day_hook(_on_day_rollover)
+
+
+## 注入组合根持有的时钟与天气状态，并重新注册日结转钩子。
+func bind_dependencies(clock: GameDateClock, state: WeatherState) -> void:
+	set_state(state)
 	if _clock != null:
 		_clock.unregister_day_hook(_on_day_rollover)
 	_clock = clock
 	if _clock != null:
-		_clock.register_day_hook(_on_day_rollover)
+		_clock.register_day_hook(_on_day_rollover, DayPipeline.PRIORITY_WEATHER)
+
+
+## 兼容旧调用：只换时钟、不改状态。
+func bind_clock(clock: GameDateClock) -> void:
+	bind_dependencies(clock, _state)
 
 
 ## 当前天气状态；由组合根持有，可整体替换。

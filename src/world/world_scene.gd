@@ -22,6 +22,10 @@ extends Node2D
 var player_profile: PlayerProfile
 ## 组合根注入的时钟状态；世界节点在进入树前就会收到。
 var clock_state: GameDateClock
+## 组合根注入的领域服务；世界节点在进入树前就会收到。
+var weather_service: WeatherService
+var relationship_service: RelationshipService
+var calendar_service: CalendarService
 
 
 ## 由 [SceneRouter] 在世界场景 [method Node.add_child] 之前调用。
@@ -31,10 +35,23 @@ func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
 	_distribute_dependencies()
 
 
+## 由 [SceneRouter] 在世界场景 [method Node.add_child] 之前调用。
+func bind_services(
+	weather: WeatherService,
+	relationships: RelationshipService,
+	calendar: CalendarService
+) -> void:
+	weather_service = weather
+	relationship_service = relationships
+	calendar_service = calendar
+	_distribute_services()
+
+
 func _enter_tree() -> void:
 	# 父节点的 _enter_tree 先于子节点执行；在这里把状态推给场景里的服务节点，
 	# 它们的 _enter_tree / _ready 就能立即使用组合根依赖。
 	_distribute_dependencies()
+	_distribute_services()
 
 
 func _ready() -> void:
@@ -55,6 +72,7 @@ func _ensure_weather_fx() -> void:
 	var fx := WeatherFx.new()
 	fx.name = "WeatherFx"
 	fx.bind_dependencies(player_profile, clock_state)
+	fx.bind_services(weather_service, relationship_service, calendar_service)
 	add_child(fx)
 
 
@@ -66,6 +84,7 @@ func _ensure_lighting() -> void:
 	var lighting := WorldLighting.new()
 	lighting.name = "WorldLighting"
 	lighting.bind_dependencies(player_profile, clock_state)
+	lighting.bind_services(weather_service, relationship_service, calendar_service)
 	add_child(lighting)
 
 
@@ -88,6 +107,7 @@ func on_world_enter(spawn_id: StringName) -> void:
 	if spawn_id == &"":
 		spawn_id = default_spawn_id
 	_distribute_dependencies()
+	_distribute_services()
 	_apply_camera_limits()
 	EventBus.world_entered.emit(world_id)
 
@@ -102,6 +122,15 @@ func _distribute_dependencies() -> void:
 	for node: Node in find_children("*", "", true, false):
 		if node.has_method(&"bind_dependencies"):
 			node.call(&"bind_dependencies", player_profile, clock_state)
+
+
+## 把领域服务推给所有实现了 `bind_services()` 的子节点。
+func _distribute_services() -> void:
+	for node: Node in find_children("*", "", true, false):
+		if node.has_method(&"bind_services"):
+			node.call(
+				&"bind_services", weather_service, relationship_service, calendar_service
+			)
 
 
 func _apply_camera_limits() -> void:

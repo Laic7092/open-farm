@@ -42,10 +42,21 @@ var selected_seed_id: StringName = &""
 var _nearby: Array[Interactable] = []
 ## 组合根注入的时钟；日结转钩子注册在它上面。
 var _clock: GameDateClock
+## 组合根注入的关系服务；赠礼结算。
+var _relationships: RelationshipService
 
 
 func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
 	_clock = clock
+
+
+## 由 [WorldScene] 在世界进入树前下发领域服务。
+func bind_services(
+	_weather: WeatherService,
+	relationships: RelationshipService,
+	_calendar: CalendarService
+) -> void:
+	_relationships = relationships
 
 @onready var sprite: AnimatedSprite2D = %Sprite
 @onready var state_machine: StateMachine = %StateMachine
@@ -74,7 +85,7 @@ func _enter_tree() -> void:
 	add_to_group(GROUP)
 	Persistence.register(self, persistence_id)
 	if _clock != null:
-		_clock.register_day_hook(_on_day_rollover)
+		_clock.register_day_hook(_on_day_rollover, DayPipeline.PRIORITY_WORLD)
 
 
 func _ready() -> void:
@@ -205,7 +216,7 @@ func try_give_gift() -> bool:
 	if npc == null:
 		EventBus.notification_requested.emit(&"NOTIFY_NO_GIFT_TARGET", {})
 		return false
-	if not Relationships.can_gift(npc.npc_id):
+	if not _relationships.can_gift(npc.npc_id):
 		EventBus.notification_requested.emit(
 			&"NOTIFY_ALREADY_GIFTED", {"npc": npc.display_name()}
 		)
@@ -230,7 +241,7 @@ func _pick_gift(npc: Npc) -> StringName:
 		var item := Database.get_item(slot.item_id)
 		if item == null or not _is_giftable(item, npc):
 			continue
-		var gain := Relationships.gift_gain(npc.npc_id, slot.item_id)
+		var gain := _relationships.gift_gain(npc.npc_id, slot.item_id)
 		if gain > best_gain:
 			best_gain = gain
 			best = slot.item_id

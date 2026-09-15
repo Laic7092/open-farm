@@ -40,7 +40,7 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 
 ## 目录结构
 
-- `src/`：按玩法分层（`autoload` / `core` / `data` / `player` / `farm` / `npc` / `event` / `shop` / `world` / `ui` / `main`），规则尽量写成可脱离引擎测试的纯静态函数。
+- `src/`：按玩法分层（`autoload` / `services` / `core` / `data` / `player` / `farm` / `npc` / `event` / `shop` / `world` / `ui` / `main`），规则尽量写成可脱离引擎测试的纯静态函数。
 - `scenes/`、`data/`、`assets/`、`tests/unit/`、`tools/`：场景、`.tres` 数据、生成物、单元测试、开发与生成脚本。
 - `docs/`：跨系统流程与美术/音频规范；`project.godot` 配置 autoload、InputMap、像素渲染与本地化。
 
@@ -57,8 +57,8 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 | 加牲畜 | `data/animals/` + `data/buildings/` + `data/items/` + `tools/art/generate_animals.gd` |
 | 加野生植被 | `data/flora/` + `tools/art/generate_flora.gd` + `src/world/flora_field.gd` |
 | 加 NPC / 日程 | `tools/art/generate_actors.gd` + `data/npcs/` + `data/dialogue/` + `data/schedules/` + 场景 `SchedulePoint` |
-| 加节日 / 事件 | `data/festivals/` + `data/events/` + 地图 `FestivalGround` + `src/event/*_rules.gd` + `src/autoload/calendar.gd` |
-| 加恋爱线 | `NpcData` 的 `romanceable` / `*_dialogue` / 礼物偏好 + 五段对白 + `AffectionRules` + `Relationships` |
+| 加节日 / 事件 | `data/festivals/` + `data/events/` + 地图 `FestivalGround` + `src/event/*_rules.gd` + `src/services/calendar_service.gd` |
+| 加恋爱线 | `NpcData` 的 `romanceable` / `*_dialogue` / 礼物偏好 + 五段对白 + `AffectionRules` + `src/services/relationship_service.gd` |
 | 加地图 | 复制 `scenes/world/twon.tscn` 或 `library.tscn`；地面用 `src/world/*_ground.gd`；放 `SpawnPoint` 并用 `SceneDoor` 互连；同步 `tests/unit/test_world_map.gd` 的 `MAPS` |
 | 加音效 / BGM | `src/audio/audio_catalog.gd` + `tools/audio/generate_*.gd` + `src/autoload/audio_manager.gd` |
 | 改 UI | `src/ui/*.gd` + `scenes/ui/*.tscn` + `src/ui/ui_root.gd` |

@@ -37,7 +37,7 @@ func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
 func _enter_tree() -> void:
 	add_to_group(GROUP)
 	if _clock != null:
-		_clock.register_day_hook(_on_day_rollover)
+		_clock.register_day_hook(_on_day_rollover, DayPipeline.PRIORITY_WORLD)
 	_rebuild_region()
 
 

@@ -2,7 +2,7 @@ class_name Weather
 extends RefCounted
 ## 天气规则。
 ##
-## 天气由 [WeatherSystem] 在每天开始时抽取，会影响：
+## 天气由 [WeatherService] 在每天开始时抽取，会影响：
 ## [br]- 作物是否需要手动浇水（雨天自动浇水）
 ## [br]- 玩家体力消耗
 ## [br]- 可采集物与 NPC 行程

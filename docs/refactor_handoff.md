@@ -1,6 +1,6 @@
 # open-farm 重构交接文档
 
-> 本文件描述 P0 修复与阶段 B 后的现状，以及把 11 个 Autoload 继续收敛为组合根架构的完整计划。
+> 本文件描述 P0 修复、阶段 B/C 后的现状，以及把剩余 Autoload 收敛为组合根架构的完整计划。
 > 代码事实以 `project.godot`、`src/**/*.gd`、`scenes/**/*.tscn`、`tests/**` 为准。
 
 ---
@@ -55,9 +55,9 @@
 ```gdscript
 Persistence.register_core_resource(clock_state, &"GameClock", 10)
 Persistence.register_core_resource(player_profile, &"GameState", 20)
-WeatherSystem.bind_clock(clock_state)
-Relationships.bind_dependencies(player_profile, clock_state)
-Calendar.bind_dependencies(player_profile, clock_state)
+weather_service.bind_dependencies(clock_state, weather_state)
+relationship_service.bind_dependencies(player_profile, clock_state)
+calendar_service.bind_dependencies(player_profile, clock_state, weather_service, relationship_service)
 ```
 
 阶段 A 时 Autoload 还保留公开查询门面；阶段 B 已完成去门面，玩家 / 时钟状态
@@ -84,15 +84,25 @@ Calendar.bind_dependencies(player_profile, clock_state)
 - `GameDateClock` 从纯状态 Resource 扩展为“状态 + 规则 + 有序日结转钩子”的组合根对象：
   `Main` 每帧调用 `tick(delta)`，由 Main 把时钟信号转发到 `EventBus`。
   `GameDateClock` 可脱离 Autoload 直接 `new` 并单测。
-- `Main._enter_tree()` 把 `PlayerProfile` / `GameDateClock` 注入 `WeatherSystem` /
-  `Relationships` / `Calendar` / `Audio` / `SceneRouter`，并在世界 / UI 子树进入树前
-  下发给 `WorldScene`、`UiRoot`。
+- `Main._enter_tree()` 把 `PlayerProfile` / `GameDateClock` 注入服务与 `Audio` / `SceneRouter`，
+  并在世界 / UI 子树进入树前下发给 `WorldScene`、`UiRoot`（阶段 C 后天气 / 关系 / 日历为服务节点）。
 - `Persistence` 新增 `register_core_resource()`；`PlayerProfile` / `GameDateClock`
   以对象形式注册核心存档节，旧存档的 `GameState` / `GameClock` 键和字段保持不变。
 - 世界节点（`FarmGrid`、`LivestockManager`、`NpcNavigator`、`FloraField`、`Player`、
   `Npc`、`Bed`、`WeatherFx`、`WorldLighting`、`SceneDoor`、`ShippingBin` 等）改为
   `bind_dependencies()` 显式接收状态，不再读全局门面。
 - 验收命令 `rg "GameState\.|GameClock\." src tests tools` 归零；单元测试 / 冒烟测试全绿。
+
+### 1.6 本次提交：完成阶段 C（Weather / Relationship / Calendar 去 Autoload）
+
+- 删除 `project.godot` 的 `WeatherSystem` / `Relationships` / `Calendar` 三个 Autoload；
+  数量从 9 降到 6。
+- 三者改为 `Main` 持有的服务节点：`WeatherService` / `RelationshipService` / `CalendarService`；
+  状态 Resource 仍由 `Main` 注入，旧存档键名不变。
+- 新增 `DayPipeline`：日结转按显式 `priority` 执行；`GameDateClock.register_day_hook(callable, priority)`。
+- 新增 `MarriageRules.advance_day()`；`CalendarService._matches()` 改为纯输入判定。
+- 世界 / UI 节点新增 `bind_services()` 下发链；`Calendar` / `Relationships` / `WeatherSystem`
+  不再作为全局名出现在代码里。
 
 ---
 
@@ -102,9 +112,9 @@ Calendar.bind_dependencies(player_profile, clock_state)
 GODOT_TIMEOUT=240 timeout 900 ./tools/check.sh
 ```
 
-当前结果：
+当前结果（阶段 C 后）：
 
-- 单元测试：344/344 通过
+- 单元测试：345/345 通过
 - 冒烟测试：286/286 通过
 - `git diff --check` 通过
 
@@ -168,8 +178,8 @@ Autoload 只允许保留：
 
 产物：
 
-- 9 个 Autoload（`EventBus` / `AppTheme` / `Database` / `WeatherSystem` /
-  `Relationships` / `Calendar` / `SaveManager` / `SceneRouter` / `Audio`）。
+- 阶段 B 后曾为 9 个 Autoload；阶段 C 已把 `WeatherSystem` / `Relationships` /
+  `Calendar` 收口为 `Main` 持有的服务节点，目前剩 6 个。
 - `GameDateClock` 同时承担时钟状态与推进 / 钩子服务。
 - `Persistence.register_core_resource()` 与 `Main` 组合根注入链。
 - 世界 / UI 节点显式 `bind_dependencies()`。
@@ -200,11 +210,11 @@ Autoload 只允许保留：
 - 新游戏 / 读档 / 日结转 / 存档仍全绿。
 - 单独 new `PlayerProfile` / `GameDateClock` 即可测试，不启动 Autoload。
 
-### 阶段 C：删除 `WeatherSystem / Relationships / Calendar` 门面
+### 阶段 C：已完成（删除 `WeatherSystem / Relationships / Calendar` 门面）
 
 目标：把跨场景领域服务从 Autoload 转为组合根拥有的节点或 Service 对象。
 
-步骤：
+步骤（均已完成）：
 
 1. `WeatherSystem` 服务节点化：
    - 持有 `WeatherState`。
@@ -223,11 +233,20 @@ Autoload 只允许保留：
    - `Main` 或组合根显式按序注册
    - 不再依赖 `project.godot` 声明顺序
 
+产物：
+
+- 三个服务节点（`WeatherService` / `RelationshipService` / `CalendarService`）由 `Main` 创建并持有；
+  对应状态 Resource 仍由 `Main` 注入。
+- `DayPipeline` 取代 `GameDateClock` 内的按注册顺序钩子数组；`register_day_hook()` 增加 `priority`。
+- `MarriageRules.advance_day()` 纯函数接管婚育推进；`CalendarService._matches()` 改为接收
+  `Date + Weather + Flags + Affection` 纯输入。
+- 世界 / UI 增加 `bind_services()` 下发链；消费者不再通过全局名调用。
+
 关键验收：
 
-- `WeatherSystem` / `Relationships` / `Calendar` 不再是全局名。
-- `Calendar._matches()` 不再直接读 5 个 Autoload。
-- 日结转顺序由显式优先级或组合根代码决定。
+- [x] `WeatherSystem` / `Relationships` / `Calendar` 不再是全局名（仅保留旧存档键字符串）。
+- [x] `Calendar._matches()` 不再直接读 Autoload / 服务，而是纯输入参数。
+- [x] 日结转顺序由显式优先级或组合根代码决定。
 
 ### 阶段 D：`SceneRouter / SaveManager / Audio` 收口
 
@@ -290,9 +309,9 @@ Autoload 只允许保留：
 
 不要一次提交一个巨型“完全重构”。建议按以下边界提交：
 
-1. `refactor: 状态 Resource 化并迁移 Main 组合根`（本次提交）
+1. `refactor: 状态 Resource 化并迁移 Main 组合根`（已完成）
 2. `refactor: 移除 GameState / GameClock 全局门面`（已完成）
-3. `refactor: 移除 WeatherSystem / Relationships / Calendar 全局门面`
+3. `refactor: 移除 WeatherSystem / Relationships / Calendar 全局门面`（已完成）
 4. `refactor: SceneRouter / SaveManager 去单例耦合`（`Audio` 子项已完成）
 5. `refactor: 收窄 EventBus 与 Database`
 6. `test: 补充组合根与纯逻辑隔离测试`
@@ -307,7 +326,7 @@ Autoload 只允许保留：
 2. **`Main` 重建**：标题页 → 游戏会创建新的 `Main`，新的 Resource；Autoload 服务 / 世界 / UI 都必须由新 Main 重新显式注入，不能保留上一局 Resource 的引用。
 3. **世界场景缓存**：`_ready()` 一生只跑一次，注入如果只放在 `_ready()` 会漏掉缓存复用场景；用 `_enter_tree()` 或 `on_world_enter()`。
 4. **信号连接泄漏**：Resource 不负责连接；所有连接必须由节点在 `_enter_tree/_exit_tree` 成对管理。
-5. **日结转顺序**：当前仍依赖 `GameDateClock` 上的注册顺序；阶段 C 必须拆成显式 `DayPipeline` 优先级。
+5. **日结转顺序**：已拆出 `DayPipeline`；新增钩子必须显式传 `DayPipeline.PRIORITY_*`。
 6. **测试隔离**：新 Resource 让 `before_test` 可以 `new` 干净实例；不要再用“重置 5 个单例”作为默认方案。
 7. **文档同步**：改依赖图 / 状态归属时，同步更新 `docs/architecture.md`、`README.md` / `AGENTS.md` 与相关脚本的 `##` 设计注释。
 
@@ -315,8 +334,8 @@ Autoload 只允许保留：
 
 ## 7. 当前遗留问题（已知）
 
-- 9 个 Autoload 仍然存在；阶段 B 已删除 `GameState` / `GameClock` 门面，但
-  `WeatherSystem` / `Relationships` / `Calendar` 仍是消费者通过全局名访问的服务。
+- 6 个 Autoload 仍然存在（`EventBus` / `AppTheme` / `Database` / `SaveManager` /
+  `SceneRouter` / `Audio`）；天气 / 关系 / 日历已收口为 `Main` 持有的服务节点。
 - `SceneRouter` 仍持有 `_world_cache / _current_world`，是场景节点生命周期错配。
 - `Audio` 的反向依赖与不可追踪连接已解决（见 §1.4）；`SceneRouter` / `SaveManager`
   的去单例耦合仍待完成。
@@ -330,6 +349,9 @@ Autoload 只允许保留：
 ## 8. 快速定位
 
 - 状态资源：`src/core/{player_profile,game_date_clock,weather_state,relationship_store,calendar_progress}.gd`
+- 服务节点：`src/services/{weather,relationship,calendar}_service.gd`
+- 日结转流水线：`src/core/day_pipeline.gd`、`src/core/game_date_clock.gd`
+- 婚育规则：`src/npc/marriage_rules.gd`
 - 组合根：`src/main/main.gd`
 - 存档注册：`src/core/persistence.gd`、`src/autoload/save_manager.gd`
 - 纯逻辑：`src/core/text.gd`、`src/shop/shop.gd`、`src/player/player_stats.gd`、`src/player/inventory.gd`

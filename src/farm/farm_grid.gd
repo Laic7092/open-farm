@@ -55,10 +55,21 @@ var _crop_nodes: Dictionary[Vector2i, Crop] = {}
 var _rng := RandomNumberGenerator.new()
 ## 组合根注入的时钟；日结转钩子注册在它上面。
 var _clock: GameDateClock
+## 组合根注入的天气服务；日结转时决定作物是否自动浇水。
+var _weather: WeatherService
 
 
 func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
 	_clock = clock
+
+
+## 由 [WorldScene] 在世界进入树前下发领域服务。
+func bind_services(
+	weather: WeatherService,
+	_relationships: RelationshipService,
+	_calendar: CalendarService
+) -> void:
+	_weather = weather
 
 
 ## 注册在 [code]_enter_tree()[/code] 而不是 [code]_ready()[/code]：
@@ -69,7 +80,7 @@ func _enter_tree() -> void:
 	add_to_group(GROUP)
 	Persistence.register(self, persistence_id)
 	if _clock != null:
-		_clock.register_day_hook(_on_day_rollover)
+		_clock.register_day_hook(_on_day_rollover, DayPipeline.PRIORITY_WORLD)
 
 
 func _exit_tree() -> void:
@@ -499,4 +510,5 @@ func flora_blocks(cell: Vector2i) -> bool:
 
 
 func _on_day_rollover(date: GameDate) -> void:
-	advance_day(date, WeatherSystem.waters_crops())
+	var waters: bool = _weather.waters_crops() if _weather != null else false
+	advance_day(date, waters)

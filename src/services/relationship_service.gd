@@ -1,17 +1,18 @@
+class_name RelationshipService
 extends Node
-## 全局关系系统（Autoload：`Relationships`）。
+## 关系服务（由 [Main] 组合根持有，不再是 Autoload）。
 ##
-## [b]为什么是独立单例[/b]：好感度、恋爱与婚姻是[b]跨场景[/b]状态——
-## 玩家在小镇和书雅聊天，换到矿洞时书雅并不在场上，但关系必须还在；
-## 存档、读档也要一次拿全。把这些塞进 [PlayerProfile] 会让"全局状态"无限膨胀，
-## 也违反"状态归组合根、跨场景服务集中持有"的分层约定，所以单独一个单例。
+## 好感度、恋爱与婚姻是[b]跨场景[/b]状态：玩家在小镇和书雅聊天，换到矿洞时
+## 书雅并不在场上，但关系必须还在；存档、读档也要一次拿全。状态本体是
+## [RelationshipStore]（Resource），服务只负责规则入口、日结转与广播。
 ##
 ## 职责边界：
 ## [br]- 持有 [code]npc_id → RelationshipState[/code]，做增删改查；
-## [br]- 在注入时钟的 `register_day_hook()` 日结转里清每日标记、推进婚育；
+## [br]- 在注入时钟的 [DayPipeline] 里清每日标记、推进婚育；
 ## [br]- 通过 [EventBus] 广播好感 / 关系变化，不直接碰任何 UI 或场景节点。
 ##
-## 数值规则全在纯静态的 [AffectionRules] 里，本脚本只负责"持有状态 + 持久化"。
+## 数值规则全在纯静态的 [AffectionRules] / [MarriageRules] 里，本脚本只负责
+## "持有状态 + 持久化"。
 
 ## 关系状态；由组合根持有，可整体替换。
 var _store: RelationshipStore = RelationshipStore.new()
@@ -39,7 +40,13 @@ var child_born: bool:
 
 
 func _ready() -> void:
+	# 存档键名继续保持 "Relationships"，兼容旧存档。
 	Persistence.register_core(self, &"Relationships", 40)
+
+
+func _exit_tree() -> void:
+	if _clock != null:
+		_clock.unregister_day_hook(_on_day_rollover)
 
 
 ## 注入组合根持有的状态，并重新注册日结转钩子。
@@ -49,7 +56,7 @@ func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
 	_profile = profile
 	_clock = clock
 	if _clock != null:
-		_clock.register_day_hook(_on_day_rollover)
+		_clock.register_day_hook(_on_day_rollover, DayPipeline.PRIORITY_RELATIONSHIPS)
 
 
 ## 当前关系状态；由组合根持有，可整体替换。
@@ -259,22 +266,15 @@ func _set_status(npc_id: StringName, value: AffectionRules.Status) -> void:
 
 
 ## 日结转：清每日标记，并推进"婚后 → 怀孕 → 生子"。
-func _on_day_rollover(_date: GameDate) -> void:
-	for npc_id: StringName in _store.states:
-		_store.states[npc_id].reset_daily()
-	if not is_married():
-		return
-	_store.days_married += 1
-	if child_born or pregnancy_days_left <= 0:
-		return
-	_store.pregnancy_days_left -= 1
-	if pregnancy_days_left <= 0:
+##
+## 数值推进在纯静态的 [MarriageRules.advance_day]；这里只负责把结果写成
+## 玩家旗标并广播。
+func _on_day_rollover(date: GameDate) -> void:
+	if MarriageRules.advance_day(_store, date):
 		_birth_child()
 
 
 func _birth_child() -> void:
-	_store.child_born = true
-	_store.pregnancy_days_left = 0
 	if _profile != null:
 		_profile.set_flag(&"child_born")
 	EventBus.child_born.emit(&"our_child")

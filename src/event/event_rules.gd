@@ -3,7 +3,7 @@ extends RefCounted
 ## 一次性事件的条件判定（纯静态）。
 ##
 ## 传入的都是"已经查好的事实"（日期 / 天气 / 旗标有无 / 好感度），
-## 而不是 [PlayerProfile] 或 [WeatherSystem] 本体：这样规则层不依赖 autoload，
+## 而不是 [PlayerProfile] 或 [WeatherService] 本体：这样规则层不依赖 autoload，
 ## 单元测试只要拼几个参数就能覆盖全部分支。
 
 

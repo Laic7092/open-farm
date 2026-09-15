@@ -3,7 +3,7 @@ extends Resource
 ## 天气状态（Resource）。
 ##
 ## 只存放可存档的当日 / 明日天气；掷天气规则仍在纯静态的 [Weather]，
-## 事件订阅与日结转仍由 [WeatherSystem] 服务负责。资源不认识 Autoload，
+## 事件订阅与日结转仍由 [WeatherService] 服务负责。资源不认识 Autoload，
 ## 便于由 [Main] 持有或测试里单独 new。
 
 ## 今天的天气。
