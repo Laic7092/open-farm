@@ -97,10 +97,6 @@ timeout 60 ./godot --headless --path . --quit-after 3 -s res://tools/audio/gener
 timeout 60 ./godot --headless --path . --import
 ```
 
-> **Godot 命令必须能自己退出**：统一用 `timeout 60` 从外部兜底并带 `--quit-after 3`；
-> `build_assets.sh` 与 `check.sh` 已内置。规范的唯一原文见
-> [art_pipeline.md「命令必须能自己退出」](art_pipeline.md#命令必须能自己退出)。
-
 > **加了新音频怎么办？** 在 `AudioCatalog` 里加 id → 在对应生成器里写配方 →
 > 重跑 `build_assets.sh` → 需要时在 `AudioManager`（Autoload 名 `Audio`）里接一个事件。
 

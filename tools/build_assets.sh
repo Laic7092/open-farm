@@ -21,7 +21,7 @@ if [ ! -x "$GODOT_BIN" ]; then
 fi
 
 # 每条 Godot 命令都套 timeout：脚本解析失败时不会调用 quit()，Godot 会一直挂在主循环里。
-# 默认 60 秒；慢机器可用 GODOT_TIMEOUT 覆盖。详见 docs/art_pipeline.md「命令必须能自己退出」。
+# 默认 60 秒；慢机器可用 GODOT_TIMEOUT 覆盖。
 TIMEOUT="${GODOT_TIMEOUT:-60}"
 # 少数平台（如 macOS 默认）没有 timeout；退化成直接执行，避免脚本直接报错。
 if ! command -v timeout >/dev/null 2>&1; then

@@ -83,6 +83,8 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 - 钓鱼是"等咬钩 → 窗口内按一次收竿"，没有拉扯小游戏；鱼只按水域 / 季节 / 天气 / 时段筛选。
 - 更完整的限制、跨系统架构和生成规范见 `docs/`；单点设计原因看代码中的 `##` 注释。
 
+这些限制的偿还顺序与优先级见 [docs/roadmap.md](docs/roadmap.md)。
+
 ## 文档地图
 
 设计原因优先看对应脚本顶部的 `##` 注释；跨系统流程和扩展说明看下列文档。
@@ -90,8 +92,9 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 | 文档 | 内容 |
 | --- | --- |
 | `docs/architecture.md` | 跨系统架构速览：分层、组合根、关键决策、Godot 坑与测试策略 |
-| `docs/art_pipeline.md` | 美术生成规范；“Godot 命令必须能自己退出”原文 |
+| `docs/art_pipeline.md` | 美术生成规范：调色板 / 图集坐标 / 确定性 / 生成流程 |
 | `docs/audio_pipeline.md` | 音频合成规范 |
 | `docs/gameplay.md` | 玩家向玩法指南：开局、农场/畜牧、地图/NPC、恋爱、节日、存档 |
 | `docs/big_files.md` | 大文件规范：阈值、阅读 / 修改协议、目录分级与特别注意的文件 |
+| `docs/roadmap.md` | 未来开发方向：循环深度、内容广度、技术债、平台化与里程碑 |
 | `AGENTS.md` | 给编码 Agent 的最短上手说明 |

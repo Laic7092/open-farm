@@ -52,7 +52,7 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 - `godot -s script.gd` 在 autoload 注册前编译脚本；生成器用 `preload()`，依赖 autoload 的工具做成场景运行。
 - Godot 每张画布只允许一个 `CanvasModulate`；天气与昼夜必须由 `WorldLighting` 统一相乘，否则只有一个生效。
 - 子节点 `_ready()` 先于父节点；状态机初始切换用 `call_deferred()`，避免父节点 `@onready` 还是 null。
-- Godot 命令统一 `timeout ... --quit-after 3`，不要用管道直连；规范原文见 `art_pipeline.md`。
+- Godot 命令必须能自己退出：统一套 `timeout` 并在末尾带 `--quit-after 3`（脚本解析失败时不会调用 `quit()`，会挂死在主循环）；不要用管道直连，先重定向到文件再 `tail` / `grep`。
 
 ## 5. 子系统索引
 

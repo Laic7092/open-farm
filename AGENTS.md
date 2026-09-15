@@ -7,6 +7,7 @@
 - **项目**：Godot **4.7.2** 的 2D 俯视角像素农场模拟；仓库根自带 `./godot`（已 gitignore）。
 - **入口**：`scenes/title/title_screen.tscn` → `scenes/main/main.tscn`；`WorldHost` 换地图，`UiRoot` 常驻。
 - **现状**：核心循环、玩家、农场、畜牧、钓鱼、8 位 NPC、好感度与恋爱（结婚生子）、节日与事件、6 张地图、UI、存档、本地化全部打通。
+- **未来**：开发方向、优先级与里程碑见 `docs/roadmap.md`。
 - **风格**：注释、文档、提交信息用中文；GDScript 用 Tab 缩进 + 类型标注 + `##` 文档注释，`StringName` 写 `&"..."`。
 - **设计原因**：跨系统速览看 `docs/architecture.md`；单点原因优先读相关脚本顶部的 `##` 注释。
 

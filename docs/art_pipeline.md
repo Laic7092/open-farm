@@ -146,26 +146,6 @@ timeout 60 ./godot --path . --rendering-driver opengl3 res://tools/screenshot.ts
 # → res://.tmp/screenshots/{title,shot_00,town,twon}.png
 ```
 
-### 命令必须能自己退出
-
-> 本仓库所有 Godot 调用都有同一个硬性前提：**进程必须能自己结束**。
-> 这一节是该规范的**唯一原文**，其它文档只链接、不回述。
-
-`-s script.gd` 是把脚本当主循环来跑。脚本**解析失败**时 `_initialize()` 根本不会执行，
-里面的 `quit()` 自然也不会被调用，Godot 于是进入主循环一直等下去——CI 与本地脚本都会假死。
-
-所以本仓库运行 Godot 命令遵循两条约定：
-
-1. 用 `timeout` 从外部兜底（万一卡在 `_initialize()` 里，连主循环都到不了）；
-   默认 **60 秒**，慢机器用环境变量 `GODOT_TIMEOUT` 覆盖。
-2. 再带 `--quit-after 3`，让 Godot 自己在几帧后收尾。
-
-`tools/build_assets.sh` 与 `tools/check.sh` 已经内置这两条；手动跑命令时照上方
-「怎么跑」里的写法即可。
-
-> 不要用 `| grep` 直接接 Godot：管道会等进程退出，报错又会被缓冲吞掉。
-> 先把输出重定向到文件，等进程结束后再 `tail` / `grep` 文件。
-
 ---
 
 ## 5. 像素中文字体
