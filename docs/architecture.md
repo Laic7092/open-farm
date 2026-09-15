@@ -76,12 +76,13 @@ Calendar      ← EventBus, GameClock, Database, GameState, WeatherSystem,
                 （节日与事件：同样把自己的日结转钩子排在 Relationships 之后）
 SaveManager   ← EventBus, Persistence（鸭子类型找节点，不静态依赖任何游戏系统）
 SceneRouter   ← EventBus, GameClock
-Audio         ← EventBus, GameClock, SceneRouter（按场景 / 时间换曲，订阅信号播音效）
+Audio         ← EventBus, GameDateClock（状态由组合根注入；世界 id 来自 world_entered）
 ```
 
 **约束**：`WeatherSystem` 必须排在 `GameClock` 之后，否则 `_ready()` 里读
-`GameClock.date` 会拿到 null。`Audio` 排在最后，因为它要在 `_ready()` 里
-把前面几个单例的信号接上。这个顺序在 `project.godot` 里有注释说明。
+`GameClock.date` 会拿到 null。`Audio` 不再静态依赖 `GameClock` / `SceneRouter`：
+世界 id 由 `EventBus.world_entered` 推送，时钟状态由 `Main` 在组合根中通过
+`Audio.bind_clock()` 注入；`Audio` 仍排在最后，保持“EventBus 先就绪再接信号”的声明顺序。
 
 核心单例在各自 `_ready()` 里调用 `Persistence.register_core(self, &"id", order)`
 自注册到 `persistent_core` 组；`SaveManager` 只按 `order` 排序后调用
@@ -104,7 +105,8 @@ P0 迁移后，`GameState` / `GameClock` / `WeatherSystem` / `Relationships` / `
 | `CalendarProgress` | `Calendar` 的已参加节日 / 已触发事件 |
 
 这些 Resource 由 `Main`（组合根）持有，并在 `_ready()` 里通过
-`GameState.set_profile()` / `GameClock.set_state()` 等接口注入。
+`GameState.set_profile()` / `GameClock.set_state()` 等接口注入；
+`Audio.bind_clock(clock_state)` 让音频选曲也只读同一份时钟状态，不反向依赖 `GameClock`。
 好处：
 
 - 状态所有权从 Autoload 转移到组合根，单例只保留服务职责。

@@ -162,7 +162,7 @@ open-farm/
 | `Calendar` | 节日与事件 | 从 `data/festivals` / `data/events` 读表；日结转播报今日节日并判定一次性事件。进度在 `CalendarProgress`（`Main` 注入） |
 | `SaveManager` | 存档 | JSON + 版本号；鸭子类型收集 `persistent` 组节点；支持跨地图读档 |
 | `SceneRouter` | 场景路由 | 淡入淡出 + 出生点定位；世界场景**缓存复用**，UI 常驻不销毁 |
-| `Audio` | 音频总管 | 合成 BGM / 音效的唯一播放出口；按场景与时间换曲，订阅 `EventBus` 播音效 |
+| `Audio` | 音频总管 | 合成 BGM / 音效的唯一播放出口；订阅 `EventBus` 播音效，世界 id 来自 `world_entered`，时钟状态由 `Main` 注入（只读） |
 
 ### 三条贯穿全局的设计原则
 

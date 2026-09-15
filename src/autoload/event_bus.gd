@@ -154,3 +154,5 @@ signal inventory_toggle_requested()
 signal pause_menu_toggle_requested()
 ## 全局暂停状态变化（打开菜单 / 对话 / 商店时）。
 signal game_paused_changed(paused: bool)
+## 请求播放一条 UI 音效（UI 只发事件，不直接依赖 Audio）。
+signal ui_sound_requested(sound_id: StringName, pitch: float, volume_db: float)

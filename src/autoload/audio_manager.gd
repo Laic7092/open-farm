@@ -4,6 +4,8 @@ extends Node
 ## 它只做三件事：把 BGM / 音效播出去、按场景与时间切换曲目、响应全局事件。
 ## 所有声音都通过 [EventBus] 的既有信号触发，游戏逻辑里不出现任何播放调用，
 ## 于是"加一个音效"不需要改玩法代码，删掉整个音频系统游戏逻辑也照常跑。
+## 世界 id 来自 [signal EventBus.world_entered]，时钟状态由组合根注入，
+## 因此不反向依赖 [SceneRouter] / [GameClock] 这类全局单例。
 ##
 ## 音频资源同样由脚本生成（见 [code]docs/audio_pipeline.md[/code]），
 ## 目录在 [AudioCatalog] 里，运行时按 id 取路径。
@@ -55,6 +57,10 @@ var _last_played: Dictionary = {}
 var _current_bgm: StringName = &""
 ## 标题页等"不属于任何世界"的场景，用它压过按世界自动选曲。
 var _bgm_context: StringName = &""
+## 组合根注入的时钟状态；Audio 只读，不推进时间。
+var _clock: GameDateClock
+## 最近一次 EventBus.world_entered 的世界 id，避免反向查询 SceneRouter。
+var _current_world_id: StringName = &""
 var _bgm_tween: Tween
 var _step_accum: float = 0.0
 var _step_index: int = 0
@@ -133,14 +139,23 @@ func play_sfx(sound_id: StringName, pitch: float = 1.0, volume_db: float = 0.0) 
 
 ## 进入标题页：固定播放标题曲，时钟 / 世界事件不再改它。
 func enter_title() -> void:
+	_current_world_id = &""
 	_bgm_context = Catalog.BGM_TITLE
 	play_bgm(Catalog.BGM_TITLE)
 
 
 ## 进入某个世界：交回"按世界 + 时间选曲"。
 func enter_world(world_id: StringName) -> void:
+	_current_world_id = world_id
 	_bgm_context = &""
 	_refresh_bgm(world_id)
+
+
+## 组合根注入本局时钟状态。Audio 只读取其中的时间，不持有 / 不推进时间。
+func bind_clock(clock: GameDateClock) -> void:
+	_clock = clock
+	if _bgm_context == &"" and _current_world_id != &"":
+		_refresh_bgm()
 
 
 ## 设置 BGM 音量（0 ~ 1）。
@@ -177,9 +192,7 @@ func _refresh_bgm(world_id: StringName = &"") -> void:
 	if _bgm_context != &"":
 		return
 	if world_id == &"":
-		var world := SceneRouter.current_world()
-		if world != null and world.get("world_id") != null:
-			world_id = world.get("world_id")
+		world_id = _current_world_id
 	play_bgm(_track_for(world_id))
 
 
@@ -192,11 +205,11 @@ func _track_for(world_id: StringName) -> StringName:
 	return Catalog.BGM_FARM
 
 
-## 夜晚：18:00 ~ 次日 06:00（与 [DayNight] 共用同一份定义）。时钟还没跑起来时按白天算。
+## 夜晚：18:00 ~ 次日 06:00（与 [DayNight] 共用同一份定义）。时钟还没注入时按白天算。
 func _is_night() -> bool:
-	if GameClock == null:
+	if _clock == null:
 		return false
-	return DayNight.is_night(GameClock.minute_of_day)
+	return DayNight.is_night(_clock.minute_of_day)
 
 
 func _stream(kind: StringName, id: StringName) -> AudioStream:
@@ -254,52 +267,41 @@ static func _volume_db(value: float) -> float:
 
 # ---------------------------------------------------------------- 内部：事件
 
+func _connect_once(sig: Signal, callback: Callable) -> void:
+	if not sig.is_connected(callback):
+		sig.connect(callback)
+
+
 func _connect_events() -> void:
-	EventBus.world_entered.connect(_on_world_entered)
-	EventBus.hour_changed.connect(_on_hour_changed)
-	EventBus.day_changed.connect(_on_day_changed)
+	_connect_once(EventBus.world_entered, _on_world_entered)
+	_connect_once(EventBus.hour_changed, _on_hour_changed)
+	_connect_once(EventBus.day_changed, _on_day_changed)
 
-	EventBus.tool_used.connect(_on_tool_used)
-	EventBus.tile_tilled.connect(func(_cell: Vector2i) -> void: play_sfx(Catalog.SFX_TILL))
-	EventBus.tile_watered.connect(func(_cell: Vector2i) -> void: play_sfx(Catalog.SFX_WATER))
-	EventBus.crop_planted.connect(_on_crop_planted)
-	EventBus.crop_harvested.connect(_on_crop_harvested)
-	EventBus.crop_died.connect(func(_cell: Vector2i) -> void: play_sfx(Catalog.SFX_ERROR, 0.7))
-	EventBus.flora_cleared.connect(_on_flora_cleared)
+	_connect_once(EventBus.tool_used, _on_tool_used)
+	_connect_once(EventBus.tile_tilled, _on_tile_tilled)
+	_connect_once(EventBus.tile_watered, _on_tile_watered)
+	_connect_once(EventBus.crop_planted, _on_crop_planted)
+	_connect_once(EventBus.crop_harvested, _on_crop_harvested)
+	_connect_once(EventBus.crop_died, _on_crop_died)
+	_connect_once(EventBus.flora_cleared, _on_flora_cleared)
 
-	EventBus.animal_placed.connect(
-		func(_building: StringName, _animal: StringName) -> void: play_sfx(Catalog.SFX_ANIMAL_HAPPY)
-	)
-	EventBus.animal_fed.connect(
-		func(_building: StringName, _count: int) -> void: play_sfx(Catalog.SFX_ANIMAL_EAT)
-	)
-	EventBus.animal_petted.connect(_on_animal_petted)
-	EventBus.animal_product_collected.connect(
-		func(_b: StringName, _a: StringName, _i: StringName, _n: int) -> void:
-			play_sfx(Catalog.SFX_HARVEST, 1.1)
-	)
-	EventBus.animal_matured.connect(
-		func(_b: StringName, _a: StringName) -> void: play_sfx(Catalog.SFX_MATURE)
-	)
+	_connect_once(EventBus.animal_placed, _on_animal_placed)
+	_connect_once(EventBus.animal_fed, _on_animal_fed)
+	_connect_once(EventBus.animal_petted, _on_animal_petted)
+	_connect_once(EventBus.animal_product_collected, _on_animal_product_collected)
+	_connect_once(EventBus.animal_matured, _on_animal_matured)
 
-	EventBus.transaction_completed.connect(_on_transaction)
-	EventBus.dialogue_line_shown.connect(
-		func() -> void: play_sfx(Catalog.SFX_DIALOGUE, 1.0, -3.0)
-	)
-	EventBus.game_paused_changed.connect(_on_game_paused_changed)
-	EventBus.notification_requested.connect(_on_notification)
-	EventBus.inventory_full.connect(
-		func(_item: StringName) -> void: play_sfx(Catalog.SFX_ERROR)
-	)
+	_connect_once(EventBus.transaction_completed, _on_transaction)
+	_connect_once(EventBus.dialogue_line_shown, _on_dialogue_line_shown)
+	_connect_once(EventBus.game_paused_changed, _on_game_paused_changed)
+	_connect_once(EventBus.notification_requested, _on_notification)
+	_connect_once(EventBus.inventory_full, _on_inventory_full)
+	_connect_once(EventBus.ui_sound_requested, _on_ui_sound_requested)
 
-	EventBus.save_completed.connect(_on_save_completed)
-	EventBus.load_completed.connect(_on_load_completed)
-	EventBus.stamina_depleted.connect(
-		func() -> void: play_sfx(Catalog.SFX_STAMINA_DEPLETED)
-	)
-	EventBus.scene_transition_started.connect(
-		func(_spawn: StringName) -> void: play_sfx(Catalog.SFX_TRANSITION, 1.0, -4.0)
-	)
+	_connect_once(EventBus.save_completed, _on_save_completed)
+	_connect_once(EventBus.load_completed, _on_load_completed)
+	_connect_once(EventBus.stamina_depleted, _on_stamina_depleted)
+	_connect_once(EventBus.scene_transition_started, _on_scene_transition_started)
 
 
 func _on_world_entered(world_id: StringName) -> void:
@@ -312,14 +314,50 @@ func _on_hour_changed(_hour: int) -> void:
 
 func _on_day_changed(_date: GameDate) -> void:
 	# 凌晨 02:00 的自然跨天不放鸡叫，只有睡到早上的那一天才放。
-	if GameClock.hour() >= 5:
+	if _hour() >= 5:
 		play_sfx(Catalog.SFX_MORNING, 1.0, -6.0)
+
+
+func _hour() -> int:
+	if _clock == null:
+		return 0
+	return int(_clock.minute_of_day / GameDateClock.MINUTES_PER_HOUR)
 
 
 func _on_tool_used(_tool_id: StringName, _cell: Vector2i, success: bool) -> void:
 	# 失败的尝试由 NOTIFY_* 统一发失败音，这里避免重复。
 	if success:
 		play_sfx(Catalog.SFX_TOOL_SWING, 1.0, -3.0)
+
+
+func _on_tile_tilled(_cell: Vector2i) -> void:
+	play_sfx(Catalog.SFX_TILL)
+
+
+func _on_tile_watered(_cell: Vector2i) -> void:
+	play_sfx(Catalog.SFX_WATER)
+
+
+func _on_crop_died(_cell: Vector2i) -> void:
+	play_sfx(Catalog.SFX_ERROR, 0.7)
+
+
+func _on_animal_placed(_building_id: StringName, _animal_id: StringName) -> void:
+	play_sfx(Catalog.SFX_ANIMAL_HAPPY)
+
+
+func _on_animal_fed(_building_id: StringName, _count: int) -> void:
+	play_sfx(Catalog.SFX_ANIMAL_EAT)
+
+
+func _on_animal_product_collected(
+	_building_id: StringName, _animal_id: StringName, _item_id: StringName, _amount: int
+) -> void:
+	play_sfx(Catalog.SFX_HARVEST, 1.1)
+
+
+func _on_animal_matured(_building_id: StringName, _animal_id: StringName) -> void:
+	play_sfx(Catalog.SFX_MATURE)
 
 
 func _on_crop_planted(_cell: Vector2i, _crop_id: StringName) -> void:
@@ -332,6 +370,18 @@ func _on_crop_harvested(_cell: Vector2i, _item_id: StringName, _amount: int) -> 
 
 func _on_flora_cleared(_cell: Vector2i, _flora_id: StringName, _item_id: StringName, _amount: int) -> void:
 	play_sfx(Catalog.SFX_CHOP)
+
+
+func _on_dialogue_line_shown() -> void:
+	play_sfx(Catalog.SFX_DIALOGUE, 1.0, -3.0)
+
+
+func _on_inventory_full(_item_id: StringName) -> void:
+	play_sfx(Catalog.SFX_ERROR)
+
+
+func _on_ui_sound_requested(sound_id: StringName, pitch: float, volume_db: float) -> void:
+	play_sfx(sound_id, pitch, volume_db)
 
 
 func _on_animal_petted(_building: StringName, _animal: StringName, _affection: int) -> void:
@@ -365,6 +415,14 @@ func _on_load_completed(_slot: int, success: bool) -> void:
 	play_sfx(Catalog.SFX_LOAD if success else Catalog.SFX_ERROR)
 
 
+func _on_stamina_depleted() -> void:
+	play_sfx(Catalog.SFX_STAMINA_DEPLETED)
+
+
+func _on_scene_transition_started(_target: StringName) -> void:
+	play_sfx(Catalog.SFX_TRANSITION, 1.0, -4.0)
+
+
 # ---------------------------------------------------------------- 内部：脚步
 
 ## 玩家移动时按走过的距离触发脚步，不侵入移动状态机。
@@ -387,11 +445,7 @@ func _update_footsteps(delta: float) -> void:
 
 
 func _footstep_on_path() -> bool:
-	var world := SceneRouter.current_world()
-	if world == null:
-		return false
-	var world_id: StringName = world.get("world_id") if world.get("world_id") != null else &""
-	return world_id in [&"town", &"twon", &"beach", &"mine", &"library"]
+	return _current_world_id in [&"town", &"twon", &"beach", &"mine", &"library"]
 
 
 # ---------------------------------------------------------------- 内部：设置

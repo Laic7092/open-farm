@@ -69,7 +69,8 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 
 - **十一个单例（顺序 = `project.godot` 声明顺序）**：
   `EventBus` `AppTheme` `Database` `GameClock` `GameState` `WeatherSystem` `Relationships` `Calendar` `SaveManager` `SceneRouter` `Audio`。
-  依赖图与约束见 `docs/architecture.md` §2。
+  依赖图与约束见 `docs/architecture.md` §2。`Audio` 不静态依赖 `GameClock` / `SceneRouter`：
+  世界 id 来自 `EventBus.world_entered`，时钟状态由 `Main` 通过 `Audio.bind_clock()` 注入。
 - `src/art/` 调色板 + 图集排版表；`src/audio/` 音频 id/路径目录；`src/core/` 日期/季节/状态机/网格 A*；
   `src/data/` 资源类定义；`src/player/`；`src/farm/`；`src/npc/`；`src/event/`（节日与事件规则 + 会场节点）；`src/shop/`；`src/world/`；`src/ui/`；`src/main/`。
 - 可存档状态资源：`src/core/player_profile.gd`、`game_date_clock.gd`、`weather_state.gd`、`relationship_store.gd`、`calendar_progress.gd`；由 `Main` 持有并注入对应 Autoload 门面。

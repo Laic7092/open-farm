@@ -111,9 +111,11 @@ timeout 60 ./godot --headless --path . --import
 `Audio`（`src/autoload/audio_manager.gd`，类 `AudioManager`）是唯一播放出口，它只做三件事：
 
 1. **按场景与时间切 BGM**：世界场景进入时发 `EventBus.world_entered`，
-   白天放农场 / 小镇曲、18:00 ~ 次日 06:00 换成夜曲；标题页固定放标题曲。
+   `Audio` 缓存世界 id；白天放农场 / 小镇曲、18:00 ~ 次日 06:00 换成夜曲，
+   时间来自 `Main` 注入的 `GameDateClock`（只读）。标题页固定放标题曲。
 2. **订阅既有信号播音效**：翻地、浇水、播种、收获、买卖、对话、存读档、脚步……
-   全部通过 `EventBus` 的现有信号触发，**玩法代码里不出现任何播放调用**。
+   全部通过 `EventBus` 的现有信号触发，UI 也改发 `ui_sound_requested`，
+   **玩法 / UI 代码里不出现任何 `Audio.play_sfx()` 调用**。
 3. **管理两条总线**：启动时确保 `Master → BGM / SFX` 存在，
    设置菜单里的两个滑杆只改总线音量，并把设置存到 `user://audio_settings.cfg`。
 

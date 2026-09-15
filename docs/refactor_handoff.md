@@ -69,6 +69,20 @@ Autoload 仍保留公开 API，但只做：
 
 状态所有权已经从 Autoload 转移到 `Main`。
 
+### 1.4 本次提交：Audio 去单例耦合（阶段 D 的 Audio 子项）
+
+- `Audio` 不再通过 `SceneRouter.current_world()` 反向取世界；世界 id 改为订阅
+  `EventBus.world_entered` 并缓存在 `_current_world_id`。
+- `Audio` 不再直接访问 `GameClock`；`Main` 在组合根把 `GameDateClock` 通过
+  `Audio.bind_clock()` 注入，时间选曲 / 早晨音效只读该状态。
+- 新增 `EventBus.ui_sound_requested`；`TitleScreen` / `ShopUi` 不再直接调用
+  `Audio.play_sfx()`，UI 只发事件。
+- `Audio` 内所有 lambda 连接改为具名方法，并用 `_connect_once()` 做 `is_connected`
+  守卫，重复初始化不会叠加回调。
+- `tests/unit/test_audio.gd` 增加注入时钟后的昼夜选曲回归测试。
+
+仍未完成：`SceneRouter` / `SaveManager` 收口（阶段 D 其余部分）。
+
 ---
 
 ## 2. 当前验证基线
@@ -79,7 +93,7 @@ GODOT_TIMEOUT=240 timeout 900 ./tools/check.sh
 
 当前结果：
 
-- 单元测试：343/343 通过
+- 单元测试：344/344 通过
 - 冒烟测试：286/286 通过
 - `git diff --check` 通过
 
@@ -198,6 +212,8 @@ Autoload 只允许保留：
 
 ### 阶段 D：`SceneRouter / SaveManager / Audio` 收口
 
+> 进度（本次提交）：`Audio` 子项已完成；`SceneRouter` / `SaveManager` 待办。
+
 目标：消除单例持有场景节点、字符串路径与不可追踪连接。
 
 `SceneRouter`：
@@ -216,12 +232,13 @@ Autoload 只允许保留：
 2. `Main` 注册 `Array[SaveSection]`。
 3. 可选：把 JSON I/O 与注册表拆开，标题页只用静态 `SaveCodec.read_meta()`。
 
-`Audio`：
+`Audio`（本次已完成）：
 
-1. 删除反向依赖 `SceneRouter.current_world()`。
-2. 改为订阅 `EventBus.world_entered(world_id)`。
-3. 所有 lambda 连接改成具名方法 + `is_connected` 守卫。
-4. UI 不再直接调 `Audio.play_sfx`，改为发 `ui_sound_requested` 事件。
+- [x] 删除反向依赖 `SceneRouter.current_world()`。
+- [x] 改为订阅 `EventBus.world_entered(world_id)`，并在 `Audio` 内缓存世界 id。
+- [x] 所有 lambda 连接改成具名方法 + `_connect_once()` 的 `is_connected` 守卫。
+- [x] UI 不再直接调 `Audio.play_sfx`，改为发 `ui_sound_requested` 事件。
+- [x] 额外：`Main` 注入 `GameDateClock`，`Audio` 不再访问 `GameClock` 全局名。
 
 关键验收：
 
@@ -257,7 +274,7 @@ Autoload 只允许保留：
 1. `refactor: 状态 Resource 化并迁移 Main 组合根`（本次提交）
 2. `refactor: 移除 GameState / GameClock 全局门面`
 3. `refactor: 移除 WeatherSystem / Relationships / Calendar 全局门面`
-4. `refactor: SceneRouter / SaveManager / Audio 去单例耦合`
+4. `refactor: SceneRouter / SaveManager 去单例耦合`（`Audio` 子项已完成）
 5. `refactor: 收窄 EventBus 与 Database`
 6. `test: 补充组合根与纯逻辑隔离测试`
 
@@ -281,7 +298,8 @@ Autoload 只允许保留：
 
 - 11 个 Autoload 仍然存在，其中 5 个已退化为门面，但消费者仍通过全局名访问。
 - `SceneRouter` 仍持有 `_world_cache / _current_world`，是场景节点生命周期错配。
-- `Audio` 仍反向依赖 `SceneRouter`、`GameClock`，且部分 lambda 连接不可追踪。
+- `Audio` 的反向依赖与不可追踪连接已解决（见 §1.4）；`SceneRouter` / `SaveManager`
+  的去单例耦合仍待完成。
 - `EventBus` 54 个全局信号尚未按域拆分。
 - `Database` 的公开字典仍可被直接迭代。
 - `Npc.affection` 与 `RelationshipStore` 仍存在双真值同步。

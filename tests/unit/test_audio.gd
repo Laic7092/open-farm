@@ -141,6 +141,21 @@ func test_playing_bgm_remembers_track() -> void:
 	assert_str(String(Audio.current_bgm())).is_equal(String(Catalog.BGM_FARM))
 
 
+func test_injected_clock_drives_night_track_selection() -> void:
+	var clock := GameDateClock.new()
+	clock.minute_of_day = 23 * 60
+	Audio.bind_clock(clock)
+
+	assert_bool(Audio._is_night()).is_true()
+	assert_str(String(Audio._track_for(&"farm"))).is_equal(String(Catalog.BGM_NIGHT))
+
+	clock.minute_of_day = 12 * 60
+	assert_bool(Audio._is_night()).is_false()
+	assert_str(String(Audio._track_for(&"farm"))).is_equal(String(Catalog.BGM_FARM))
+
+	Audio.bind_clock(null)
+
+
 # ---------------------------------------------------------------- 工具
 
 ## 读 WAV 头（只解析到第一个 data 块，足够核对格式）。

@@ -54,6 +54,8 @@ var calendar_progress: CalendarProgress = CalendarProgress.new()
 func _ready() -> void:
 	GameState.set_profile(player_profile)
 	GameClock.set_state(clock_state)
+	# 音频只读时钟状态；这样它不再直接依赖 GameClock 全局名。
+	Audio.bind_clock(clock_state)
 	WeatherSystem.set_state(weather_state)
 	Relationships.set_state(relationship_store)
 	Calendar.set_state(calendar_progress)
