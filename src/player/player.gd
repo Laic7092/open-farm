@@ -55,9 +55,13 @@ var _nearby: Array[Interactable] = []
 func _init() -> void:
 	stats = PlayerStats.new()
 	inventory = Inventory.new()
+	inventory.set_stack_limit_provider(Callable(Database, &"get_item"))
 	item_bar = ItemBar.new(inventory)
-	# 背包是唯一的道具来源；它一变就通知 UI 重新读一遍。
+	# 纯数据对象只发本地信号；由 Player 这个拥有者统一转发到 EventBus。
+	stats.changed.connect(_on_stats_changed)
+	stats.depleted.connect(_on_stats_depleted)
 	inventory.changed.connect(_on_inventory_changed)
+	inventory.full.connect(_on_inventory_full)
 
 
 func _enter_tree() -> void:
@@ -302,7 +306,7 @@ func _try_harvest_crop(grid: FarmGrid, cell: Vector2i) -> bool:
 	var item_id: StringName = outcome.get("item_id", &"")
 	inventory.add(item_id, amount)
 	EventBus.notification_requested.emit(
-		&"NOTIFY_CROP_HARVESTED", {"item": Text.item_name(item_id), "count": amount}
+		&"NOTIFY_CROP_HARVESTED", {"item": Text.item_name(Database.get_item(item_id)), "count": amount}
 	)
 	return true
 
@@ -319,7 +323,7 @@ func _try_pick_flora(cell: Vector2i) -> bool:
 	var item_id: StringName = outcome.get("item_id", &"")
 	inventory.add(item_id, amount)
 	EventBus.notification_requested.emit(
-		&"NOTIFY_FLORA_CLEARED", {"item": Text.item_name(item_id), "count": amount}
+		&"NOTIFY_FLORA_CLEARED", {"item": Text.item_name(Database.get_item(item_id)), "count": amount}
 	)
 	return true
 
@@ -346,9 +350,24 @@ func _on_day_rollover(_date: GameDate) -> void:
 		stats.refill()
 
 
+## 体力变化后转发给 UI / 音频。
+func _on_stats_changed(current: int, maximum: int) -> void:
+	EventBus.stamina_changed.emit(current, maximum)
+
+
+## 力竭后转发给音频。
+func _on_stats_depleted() -> void:
+	EventBus.stamina_depleted.emit()
+
+
 ## 背包内容变化后转发给 UI（物品栏与背包界面都订阅 [signal EventBus.inventory_changed]）。
 func _on_inventory_changed() -> void:
 	EventBus.inventory_changed.emit()
+
+
+## 背包满时转发给音频。
+func _on_inventory_full(item_id: StringName) -> void:
+	EventBus.inventory_full.emit(item_id)
 
 
 func _emit_all() -> void:

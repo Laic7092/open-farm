@@ -508,7 +508,7 @@ func _check_shop() -> void:
 
 	var inventory := Inventory.new()
 	GameState.set_money(1000)
-	var shop := Shop.new(shop_data)
+	var shop := Shop.new(shop_data, GameState, Database, EventBus)
 	shop.restock()
 	var entries := shop.available_entries(GameClock.date.day)
 	_check(not entries.is_empty(), "商店应当有可购买的商品")

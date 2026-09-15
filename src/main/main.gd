@@ -39,8 +39,24 @@ const TITLE_SCENE: String = "res://scenes/title/title_screen.tscn"
 
 @onready var world_host: Node2D = %WorldHost
 
+## 本局玩家档案；由 Main 作为组合根持有，GameState 只是它的门面。
+var player_profile: PlayerProfile = PlayerProfile.new()
+## 本局时钟状态；由 Main 作为组合根持有，GameClock 只执行推进规则。
+var clock_state: GameDateClock = GameDateClock.new()
+## 本局天气状态；由 Main 作为组合根持有，WeatherSystem 只执行规则/广播。
+var weather_state: WeatherState = WeatherState.new()
+## 本局关系状态；由 Main 作为组合根持有，Relationships 只执行规则/广播。
+var relationship_store: RelationshipStore = RelationshipStore.new()
+## 本局节日 / 事件进度；由 Main 作为组合根持有。
+var calendar_progress: CalendarProgress = CalendarProgress.new()
+
 
 func _ready() -> void:
+	GameState.set_profile(player_profile)
+	GameClock.set_state(clock_state)
+	WeatherSystem.set_state(weather_state)
+	Relationships.set_state(relationship_store)
+	Calendar.set_state(calendar_progress)
 	PointerInput.hide_cursor()
 	GameState.set_playtime_counting(true)
 	EventBus.pause_menu_toggle_requested.connect(_on_pause_menu_requested)
@@ -99,6 +115,7 @@ func _boot_new_game() -> void:
 	GameState.reset()
 	Relationships.reset()
 	GameClock.reset()
+	WeatherSystem.reroll()
 	Calendar.reset()
 	SceneRouter.clear_world_cache()
 	await SceneRouter.change_scene_to(FIRST_WORLD, FIRST_SPAWN)

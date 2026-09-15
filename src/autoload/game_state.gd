@@ -1,156 +1,164 @@
 extends Node
-## 全局游戏状态（Autoload：`GameState`）。
+## 全局游戏状态门面（Autoload：`GameState`）。
 ##
-## 存放"跨场景存活、且不属于任何单个场景"的数据：金钱、剧情旗标、统计。
-## 玩家的体力 / 背包属于 [Player] 实体，不放在这里，避免全局状态无限膨胀。
+## 真正的跨场景数据在 [PlayerProfile]（Resource）里，由 [Main] 持有并注入。
+## 本节点只负责：
+## [br]- 给现有调用方稳定的全局名；
+## [br]- 在状态变化时转发 [EventBus] 信号；
+## [br]- 承担存档核心节。
+##
+## 测试 / 组合根可以调用 [method set_profile] 换入一份全新的 [PlayerProfile]，
+## 从而获得干净的隔离状态。
 
-## 开局资金。
-const STARTING_MONEY: int = 500
+## 开局资金（兼容旧调用方；权威值在 [constant PlayerProfile.STARTING_MONEY]）。
+const STARTING_MONEY: int = PlayerProfile.STARTING_MONEY
 
-## 玩家名字（新游戏时可由 UI 输入）。
-var player_name: String = "农夫"
-
-## 当前金钱，永不为负。
-var money: int = STARTING_MONEY
-
-## 剧情旗标：键为旗标名，值为计数 / 布尔。
-var flags: Dictionary[StringName, int] = {}
-
-## 累计赚到的钱（成就 / 结算用）。
-var total_earned: int = 0
-
-## 累计出货件数。
-var total_shipped: int = 0
-
-## 累计游玩秒数。
-var play_seconds: float = 0.0
-
-var _counting_playtime: bool = false
+var _profile: PlayerProfile = PlayerProfile.new()
 
 
 func _ready() -> void:
+	Persistence.register_core(self, &"GameState", 20)
 	reset()
 	EventBus.day_changed.connect(_on_day_changed)
 
 
 func _process(delta: float) -> void:
-	if _counting_playtime:
-		play_seconds += delta
+	_profile.tick(delta)
+
+
+# ---------------------------------------------------------------- 状态注入
+
+## 当前玩家档案。
+func profile() -> PlayerProfile:
+	return _profile
+
+
+## 换入玩家档案；传 null 会创建一份新的默认档案。
+func set_profile(value: PlayerProfile) -> void:
+	_profile = value if value != null else PlayerProfile.new()
+
+
+# ---------------------------------------------------------------- 只读视图
+
+## 玩家名字。
+var player_name: String:
+	get:
+		return _profile.player_name
+
+## 当前金钱。
+var money: int:
+	get:
+		return _profile.money
+
+## 剧情旗标只读视图。
+var flags: Dictionary[StringName, int]:
+	get:
+		return _profile.flags
+
+## 累计赚到的钱。
+var total_earned: int:
+	get:
+		return _profile.total_earned
+
+## 累计出货件数。
+var total_shipped: int:
+	get:
+		return _profile.total_shipped
+
+## 累计游玩秒数。
+var play_seconds: float:
+	get:
+		return _profile.play_seconds
 
 
 # ---------------------------------------------------------------- 金钱
 
 ## 是否买得起。
 func can_afford(amount: int) -> bool:
-	return money >= amount
+	return _profile.can_afford(amount)
 
 
 ## 花钱；余额不足时返回 false 且不改变状态。
 func spend(amount: int) -> bool:
-	if amount < 0 or not can_afford(amount):
+	if not _profile.spend(amount):
 		return false
-	_set_money(money - amount, -amount)
+	EventBus.money_changed.emit(_profile.money, -amount)
 	return true
 
 
 ## 赚钱。
 func earn(amount: int) -> void:
-	if amount <= 0:
-		return
-	total_earned += amount
-	_set_money(money + amount, amount)
+	var gained := _profile.earn(amount)
+	if gained > 0:
+		EventBus.money_changed.emit(_profile.money, gained)
 
 
 ## 直接设置金钱（读档 / 调试用）。
 func set_money(value: int) -> void:
-	_set_money(maxi(value, 0), 0)
+	_profile.set_money(value)
+	EventBus.money_changed.emit(_profile.money, 0)
+
+
+## 设置玩家名字（新游戏 UI / 读档用）。
+func set_player_name(value: String) -> void:
+	_profile.set_player_name(value)
 
 
 # ---------------------------------------------------------------- 旗标
 
 ## 设置旗标。
 func set_flag(flag: StringName, value: int = 1) -> void:
-	flags[flag] = value
+	_profile.set_flag(flag, value)
 
 
 ## 读取旗标（默认 0 / false）。
 func get_flag(flag: StringName, default_value: int = 0) -> int:
-	return flags.get(flag, default_value)
+	return _profile.get_flag(flag, default_value)
 
 
 ## 旗标是否为真。
 func has_flag(flag: StringName) -> bool:
-	return flags.get(flag, 0) != 0
+	return _profile.has_flag(flag)
 
 
 ## 清除旗标。
 func clear_flag(flag: StringName) -> void:
-	flags.erase(flag)
+	_profile.clear_flag(flag)
 
 
 # ---------------------------------------------------------------- 统计
 
 ## 记录一次出货。
 func record_shipped(count: int = 1) -> void:
-	total_shipped += maxi(count, 0)
+	_profile.record_shipped(count)
 
 
 # ---------------------------------------------------------------- 生命周期
 
-## 复位到新游戏状态。
+## 复位当前档案。
 func reset() -> void:
-	player_name = "农夫"
-	money = STARTING_MONEY
-	flags.clear()
-	total_earned = 0
-	total_shipped = 0
-	play_seconds = 0.0
-	_counting_playtime = false
-	EventBus.money_changed.emit(money, 0)
+	_profile.reset()
+	EventBus.money_changed.emit(_profile.money, 0)
 
 
 ## 开始 / 停止累计游玩时长（读档完成前不计时）。
 func set_playtime_counting(enabled: bool) -> void:
-	_counting_playtime = enabled
+	_profile.set_playtime_counting(enabled)
 
 
 # ---------------------------------------------------------------- 序列化
 
 func to_dict() -> Dictionary:
-	var flag_data := {}
-	for flag: StringName in flags:
-		flag_data[String(flag)] = flags[flag]
-	return {
-		"player_name": player_name,
-		"money": money,
-		"flags": flag_data,
-		"total_earned": total_earned,
-		"total_shipped": total_shipped,
-		"play_seconds": play_seconds,
-	}
+	return _profile.to_dict()
 
 
 func from_dict(data: Dictionary) -> void:
-	player_name = str(data.get("player_name", "农夫"))
-	money = maxi(int(data.get("money", STARTING_MONEY)), 0)
-	flags.clear()
-	var flag_data: Variant = data.get("flags", {})
-	if flag_data is Dictionary:
-		for key: Variant in flag_data:
-			flags[StringName(str(key))] = int(flag_data[key])
-	total_earned = maxi(int(data.get("total_earned", 0)), 0)
-	total_shipped = maxi(int(data.get("total_shipped", 0)), 0)
-	play_seconds = maxf(float(data.get("play_seconds", 0.0)), 0.0)
-	EventBus.money_changed.emit(money, 0)
+	_profile.from_dict(data)
+	EventBus.money_changed.emit(_profile.money, 0)
 
 
 # ---------------------------------------------------------------- 内部
 
-func _set_money(value: int, delta: int) -> void:
-	money = maxi(value, 0)
-	EventBus.money_changed.emit(money, delta)
-
-
 func _on_day_changed(_date: GameDate) -> void:
 	# 跨天时给玩家结算一次"今天还在玩"的计时开关，读档流程会临时关掉它。
-	_counting_playtime = true
+	_profile.set_playtime_counting(true)

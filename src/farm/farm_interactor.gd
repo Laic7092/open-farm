@@ -121,7 +121,7 @@ func _grant(outcome: Dictionary) -> void:
 	if player != null:
 		player.inventory.add(item_id, amount)
 	EventBus.notification_requested.emit(
-		&"NOTIFY_FLORA_CLEARED", {"item": Text.item_name(item_id), "count": amount}
+		&"NOTIFY_FLORA_CLEARED", {"item": Text.item_name(Database.get_item(item_id)), "count": amount}
 	)
 
 
@@ -136,7 +136,7 @@ func _plant(grid: FarmGrid, cell: Vector2i) -> bool:
 
 	player.inventory.remove(seed_id, 1)
 	EventBus.notification_requested.emit(
-		&"NOTIFY_PLANTED", {"item": Text.item_name(seed_id)}
+		&"NOTIFY_PLANTED", {"item": Text.item_name(Database.get_item(seed_id))}
 	)
 	return true
 

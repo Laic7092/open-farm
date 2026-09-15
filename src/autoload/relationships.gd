@@ -13,41 +13,52 @@ extends Node
 ##
 ## 数值规则全在纯静态的 [AffectionRules] 里，本脚本只负责"持有状态 + 持久化"。
 
-## 每对关系的运行时状态。
-var _states: Dictionary[StringName, RelationshipState] = {}
+## 关系状态；由组合根持有，可整体替换。
+var _store: RelationshipStore = RelationshipStore.new()
 
-## 配偶的 [member NpcData.id]；空串表示未婚。
-var spouse_id: StringName = &""
-## 婚后经过的游戏日数。
-var days_married: int = 0
-## 距离孩子出生还剩几天；0 且已婚未育表示尚未进入待产。
-var pregnancy_days_left: int = 0
-## 孩子是否已经出生。
-var child_born: bool = false
+## 配偶的 [member NpcData.id]；空串表示未婚。只读。
+var spouse_id: StringName:
+	get:
+		return _store.spouse_id
+## 婚后经过的游戏日数。只读。
+var days_married: int:
+	get:
+		return _store.days_married
+## 距离孩子出生还剩几天；0 且已婚未育表示尚未进入待产。只读。
+var pregnancy_days_left: int:
+	get:
+		return _store.pregnancy_days_left
+## 孩子是否已经出生。只读。
+var child_born: bool:
+	get:
+		return _store.child_born
 
 
 func _ready() -> void:
+	Persistence.register_core(self, &"Relationships", 40)
 	GameClock.register_day_hook(_on_day_rollover)
+
+
+## 当前关系状态；由组合根持有，可整体替换。
+func state() -> RelationshipStore:
+	return _store
+
+
+## 换入关系状态；传 null 会创建一份新的默认状态。
+func set_state(value: RelationshipStore) -> void:
+	_store = value if value != null else RelationshipStore.new()
 
 
 # ---------------------------------------------------------------- 查询
 
 ## 取某 NPC 的关系状态；没有就懒创建一个。
 func state_of(npc_id: StringName) -> RelationshipState:
-	if npc_id == &"":
-		return RelationshipState.new(&"")
-	if not _states.has(npc_id):
-		_states[npc_id] = RelationshipState.new(npc_id)
-	return _states[npc_id]
+	return _store.state_of(npc_id)
 
 
 ## 所有已建立关系的 NPC id（按字母序，便于测试与 UI 稳定输出）。
 func known_npcs() -> Array[StringName]:
-	var ids: Array[StringName] = []
-	for npc_id: StringName in _states:
-		ids.append(npc_id)
-	ids.sort()
-	return ids
+	return _store.known_npcs()
 
 
 func affection(npc_id: StringName) -> int:
@@ -196,10 +207,10 @@ func marry(npc_id: StringName) -> bool:
 	if not can_marry(npc_id):
 		return false
 	_set_status(npc_id, AffectionRules.Status.MARRIED)
-	spouse_id = npc_id
-	days_married = 0
-	pregnancy_days_left = AffectionRules.DAYS_UNTIL_CHILD
-	child_born = false
+	_store.spouse_id = npc_id
+	_store.days_married = 0
+	_store.pregnancy_days_left = AffectionRules.DAYS_UNTIL_CHILD
+	_store.child_born = false
 	EventBus.player_married.emit(npc_id)
 	EventBus.notification_requested.emit(&"NOTIFY_MARRIED", {"npc": npc_name(npc_id)})
 	return true
@@ -209,42 +220,15 @@ func marry(npc_id: StringName) -> bool:
 
 ## 复位到新游戏状态。
 func reset() -> void:
-	_states.clear()
-	spouse_id = &""
-	days_married = 0
-	pregnancy_days_left = 0
-	child_born = false
+	_store.reset()
 
 
 func to_dict() -> Dictionary:
-	var state_data := {}
-	for npc_id: StringName in _states:
-		state_data[String(npc_id)] = _states[npc_id].to_dict()
-	return {
-		"states": state_data,
-		"spouse_id": String(spouse_id),
-		"days_married": days_married,
-		"pregnancy_days_left": pregnancy_days_left,
-		"child_born": child_born,
-	}
+	return _store.to_dict()
 
 
 func from_dict(data: Dictionary) -> void:
-	reset()
-	var state_data: Variant = data.get("states", {})
-	if state_data is Dictionary:
-		for key: Variant in state_data:
-			var entry: Variant = state_data[key]
-			if not entry is Dictionary:
-				continue
-			var npc_id := StringName(str(key))
-			var state := RelationshipState.new(npc_id)
-			state.from_dict(entry)
-			_states[npc_id] = state
-	spouse_id = StringName(str(data.get("spouse_id", "")))
-	days_married = maxi(int(data.get("days_married", 0)), 0)
-	pregnancy_days_left = maxi(int(data.get("pregnancy_days_left", 0)), 0)
-	child_born = bool(data.get("child_born", false))
+	_store.from_dict(data)
 	if child_born:
 		GameState.set_flag(&"child_born")
 
@@ -263,21 +247,21 @@ func _set_status(npc_id: StringName, value: AffectionRules.Status) -> void:
 
 ## 日结转：清每日标记，并推进"婚后 → 怀孕 → 生子"。
 func _on_day_rollover(_date: GameDate) -> void:
-	for npc_id: StringName in _states:
-		_states[npc_id].reset_daily()
+	for npc_id: StringName in _store.states:
+		_store.states[npc_id].reset_daily()
 	if not is_married():
 		return
-	days_married += 1
+	_store.days_married += 1
 	if child_born or pregnancy_days_left <= 0:
 		return
-	pregnancy_days_left -= 1
+	_store.pregnancy_days_left -= 1
 	if pregnancy_days_left <= 0:
 		_birth_child()
 
 
 func _birth_child() -> void:
-	child_born = true
-	pregnancy_days_left = 0
+	_store.child_born = true
+	_store.pregnancy_days_left = 0
 	GameState.set_flag(&"child_born")
 	EventBus.child_born.emit(&"our_child")
 	EventBus.notification_requested.emit(&"NOTIFY_CHILD_BORN", {})

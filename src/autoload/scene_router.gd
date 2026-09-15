@@ -43,6 +43,7 @@ var _pending_spawn_id: StringName = &"default"
 
 
 func _ready() -> void:
+	Persistence.register_core(self, &"SceneRouter", 60)
 	_build_overlay()
 	# 常驻在场景树里，切换场景不会销毁。
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -77,14 +78,14 @@ func change_scene_to(scene_path: String, spawn_id: StringName = &"default") -> v
 	EventBus.scene_transition_started.emit(spawn_id)
 
 	var was_paused: bool = GameClock.paused
-	GameClock.paused = true
+	GameClock.set_paused(true)
 
 	await _fade_to(1.0, fade_out_duration)
 	await _swap_world(scene_path, packed, spawn_id)
 	_place_player(spawn_id)
 	await _fade_to(0.0, fade_in_duration)
 
-	GameClock.paused = was_paused
+	GameClock.set_paused(was_paused)
 	_transitioning = false
 	EventBus.scene_transition_finished.emit(spawn_id)
 

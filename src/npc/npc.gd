@@ -431,7 +431,7 @@ func receive_gift(item_id: StringName) -> int:
 		key = &"NOTIFY_GIFT_DISLIKED"
 	EventBus.notification_requested.emit(key, {
 		"npc": display_name(),
-		"item": Text.item_name(item_id),
+		"item": Text.item_name(Database.get_item(item_id)),
 		"amount": gain,
 	})
 	return gain

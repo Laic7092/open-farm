@@ -72,6 +72,7 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
   依赖图与约束见 `docs/architecture.md` §2。
 - `src/art/` 调色板 + 图集排版表；`src/audio/` 音频 id/路径目录；`src/core/` 日期/季节/状态机/网格 A*；
   `src/data/` 资源类定义；`src/player/`；`src/farm/`；`src/npc/`；`src/event/`（节日与事件规则 + 会场节点）；`src/shop/`；`src/world/`；`src/ui/`；`src/main/`。
+- 可存档状态资源：`src/core/player_profile.gd`、`game_date_clock.gd`、`weather_state.gd`、`relationship_store.gd`、`calendar_progress.gd`；由 `Main` 持有并注入对应 Autoload 门面。
 - `tools/art/`、`tools/audio/` 生成器；`tools/build_assets.sh`（唯一编排入口）；`tools/check.sh`；
   `tools/smoke_test.gd` + `smoke_test.tscn`；`tools/generate_sample_data.gd`（重置示例数据）。
 - `tests/unit/` gdUnit4（断言风格：`assert_int(x).override_failure_message("...").is_equal(y)`）。

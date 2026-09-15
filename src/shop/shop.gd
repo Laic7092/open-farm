@@ -21,12 +21,23 @@ const REASON_NO_SPACE: StringName = &"NOTIFY_INVENTORY_FULL"
 ## 静态定义。
 var data: ShopData
 
+## 依赖（由拥有者注入，不在方法体内按 Autoload 全局名获取）：
+## [param _wallet] 需实现 has_flag / can_afford / spend / earn / record_shipped；
+## [param _catalog] 需实现 get_item；
+## [param _events] 需带 transaction_completed 信号。
+var _wallet
+var _catalog
+var _events
+
 ## 有限库存的剩余量：item_id → 剩余件数。
 var _remaining: Dictionary[StringName, int] = {}
 
 
-func _init(p_data: ShopData) -> void:
+func _init(p_data: ShopData, p_wallet, p_catalog, p_events) -> void:
 	data = p_data
+	_wallet = p_wallet
+	_catalog = p_catalog
+	_events = p_events
 	restock()
 
 
@@ -48,7 +59,7 @@ func available_entries(day_of_season: int) -> Array[ShopStock]:
 	for entry: ShopStock in data.stock:
 		if entry == null or entry.item_id == &"":
 			continue
-		if entry.required_flag != &"" and not GameState.has_flag(entry.required_flag):
+		if entry.required_flag != &"" and not _wallet.has_flag(entry.required_flag):
 			continue
 		if not entry.is_available_on(day_of_season):
 			continue
@@ -60,7 +71,7 @@ func available_entries(day_of_season: int) -> Array[ShopStock]:
 func price_of(entry: ShopStock) -> int:
 	if entry == null:
 		return 0
-	return entry.effective_price(Database.get_item(entry.item_id))
+	return entry.effective_price(_catalog.get_item(entry.item_id))
 
 
 ## 剩余库存；-1 表示无限。
@@ -80,7 +91,7 @@ func buy(entry: ShopStock, count: int, inventory: Inventory) -> bool:
 	var total: int = price_of(entry) * count
 	if total <= 0:
 		return _reject(REASON_NO_ITEM)
-	if not GameState.can_afford(total):
+	if not _wallet.can_afford(total):
 		return _reject(REASON_NO_MONEY)
 
 	var left: int = stock_left(entry)
@@ -89,14 +100,14 @@ func buy(entry: ShopStock, count: int, inventory: Inventory) -> bool:
 	if inventory.first_empty_index() < 0 and not inventory.has(entry.item_id):
 		return _reject(REASON_NO_SPACE)
 
-	if not GameState.spend(total):
+	if not _wallet.spend(total):
 		return _reject(REASON_NO_MONEY)
 	inventory.add(entry.item_id, count)
 	if left >= 0:
 		_remaining[entry.item_id] = left - count
 
 	purchased.emit(entry.item_id, count, total)
-	EventBus.transaction_completed.emit(entry.item_id, count, total, true)
+	_events.transaction_completed.emit(entry.item_id, count, total, true)
 	return true
 
 
@@ -107,7 +118,7 @@ func sell(item_id: StringName, count: int, inventory: Inventory) -> bool:
 	if not inventory.has(item_id, count):
 		return _reject(REASON_NO_ITEM)
 
-	var item := Database.get_item(item_id)
+	var item: Variant = _catalog.get_item(item_id)
 	if item == null or not item.sellable:
 		return _reject(REASON_NO_ITEM)
 
@@ -118,11 +129,11 @@ func sell(item_id: StringName, count: int, inventory: Inventory) -> bool:
 		return _reject(REASON_NO_ITEM)
 
 	inventory.remove(item_id, count)
-	GameState.earn(total)
-	GameState.record_shipped(count)
+	_wallet.earn(total)
+	_wallet.record_shipped(count)
 
 	sold.emit(item_id, count, total)
-	EventBus.transaction_completed.emit(item_id, count, total, false)
+	_events.transaction_completed.emit(item_id, count, total, false)
 	return true
 
 

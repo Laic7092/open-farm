@@ -12,19 +12,36 @@ signal changed(weather: Weather.Type)
 
 var _rng := RandomNumberGenerator.new()
 
-## 今天的天气。
-var current: Weather.Type = Weather.Type.SUNNY
+## 今天的天气。只读；通过 [method set_weather] / 日结转修改。
+var current: Weather.Type:
+	get:
+		return _state.current
 
-## 明天的天气预报（电视 / 告示牌会展示）。
-var forecast: Weather.Type = Weather.Type.SUNNY
+## 明天的天气预报（电视 / 告示牌会展示）。只读。
+var forecast: Weather.Type:
+	get:
+		return _state.forecast
+
+var _state: WeatherState = WeatherState.new()
 
 
 func _ready() -> void:
+	Persistence.register_core(self, &"WeatherSystem", 30)
 	_rng.randomize()
 	GameClock.register_day_hook(_on_day_rollover)
 	# 开局那一天也要有天气。
-	current = roll_for(GameClock.date.season)
-	forecast = roll_for(GameClock.date.season)
+	_state.current = roll_for(GameClock.date.season)
+	_state.forecast = roll_for(GameClock.date.season)
+
+
+## 当前天气状态；由组合根持有，可整体替换。
+func state() -> WeatherState:
+	return _state
+
+
+## 换入天气状态；传 null 会创建一份新的默认状态。
+func set_state(value: WeatherState) -> void:
+	_state = value if value != null else WeatherState.new()
 
 
 ## 为某个季节掷一次天气。可注入 [param rng] 以便测试复现。
@@ -35,9 +52,9 @@ func roll_for(season: Season.Type, rng: RandomNumberGenerator = null) -> Weather
 
 ## 直接设置天气（读档 / 剧情演出）。
 func set_weather(weather: Weather.Type) -> void:
-	if current == weather:
+	if _state.current == weather:
 		return
-	current = weather
+	_state.current = weather
 	changed.emit(current)
 	EventBus.weather_changed.emit(current)
 
@@ -70,14 +87,14 @@ func to_dict() -> Dictionary:
 
 
 func from_dict(data: Dictionary) -> void:
-	current = Weather.from_key(str(data.get("current", "sunny")))
-	forecast = Weather.from_key(str(data.get("forecast", "sunny")))
+	_state.current = Weather.from_key(str(data.get("current", "sunny")))
+	_state.forecast = Weather.from_key(str(data.get("forecast", "sunny")))
 	changed.emit(current)
 	EventBus.weather_changed.emit(current)
 
 
 func _on_day_rollover(date: GameDate) -> void:
-	current = forecast
-	forecast = roll_for(date.season)
+	_state.current = _state.forecast
+	_state.forecast = roll_for(date.season)
 	changed.emit(current)
 	EventBus.weather_changed.emit(current)

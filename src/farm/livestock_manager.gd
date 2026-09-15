@@ -122,8 +122,8 @@ func introduce(building_id: StringName, player: Player) -> bool:
 			continue
 		_add_animal(building_id, animal.id)
 		EventBus.notification_requested.emit(&"NOTIFY_ANIMAL_PLACED", {
-			"animal": Text.animal_name(animal.id),
-			"building": Text.building_name(building_id),
+			"animal": Text.animal_name(Database.get_animal(animal.id)),
+			"building": Text.building_name(Database.get_building(building_id)),
 		})
 		return true
 	return false

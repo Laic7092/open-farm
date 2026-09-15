@@ -29,16 +29,26 @@ var _events: Array[EventData] = []
 var _today: Array[FestivalData] = []
 ## 缓存对应的绝对天数；-1 表示需要重算。
 var _today_absolute_day: int = -1
-## festival_id → 参加时的年份。
-var _attended: Dictionary[StringName, int] = {}
-## event_id → 触发时的绝对天数。
-var _triggered: Dictionary[StringName, int] = {}
+## 节日 / 事件进度；由组合根持有，可整体替换。
+var _progress: CalendarProgress = CalendarProgress.new()
 
 
 func _ready() -> void:
+	Persistence.register_core(self, &"Calendar", 50)
 	GameClock.register_day_hook(_on_day_rollover)
 	Database.reloaded.connect(reload)
 	reload()
+
+
+## 当前节日 / 事件进度；由组合根持有，可整体替换。
+func state() -> CalendarProgress:
+	return _progress
+
+
+## 换入节日 / 事件进度；传 null 会创建一份新的默认状态。
+func set_state(value: CalendarProgress) -> void:
+	_progress = value if value != null else CalendarProgress.new()
+	_today_absolute_day = -1
 
 
 func _exit_tree() -> void:
@@ -153,7 +163,7 @@ func gather_point_for(npc_id: StringName) -> StringName:
 
 ## 今年是否已经参加过该节日（节日每年重办，奖励每年一次）。
 func has_attended(festival_id: StringName) -> bool:
-	return int(_attended.get(festival_id, 0)) == GameClock.date.year
+	return int(_progress.attended.get(festival_id, 0)) == GameClock.date.year
 
 
 ## 此刻能不能参加（会场开着且今年还没参加过）。
@@ -214,7 +224,7 @@ func attend(festival_id: StringName) -> bool:
 		})
 		return false
 	var entry := festival(festival_id)
-	_attended[festival_id] = GameClock.date.year
+	_progress.attended[festival_id] = GameClock.date.year
 	if entry.attendance_flag != &"":
 		GameState.set_flag(entry.attendance_flag)
 	for npc_id: StringName in entry.npc_ids:
@@ -231,36 +241,17 @@ func attend(festival_id: StringName) -> bool:
 
 ## 复位到新游戏状态（开新档时调用）。
 func reset() -> void:
-	_attended.clear()
-	_triggered.clear()
+	_progress.reset()
 	_today_absolute_day = -1
 	refresh()
 
 
 func to_dict() -> Dictionary:
-	var attended := {}
-	for festival_id: StringName in _attended:
-		attended[String(festival_id)] = int(_attended[festival_id])
-	var triggered := {}
-	for event_id: StringName in _triggered:
-		triggered[String(event_id)] = int(_triggered[event_id])
-	return {
-		"attended": attended,
-		"triggered": triggered,
-	}
+	return _progress.to_dict()
 
 
 func from_dict(data: Dictionary) -> void:
-	_attended.clear()
-	_triggered.clear()
-	var attended: Variant = data.get("attended", {})
-	if attended is Dictionary:
-		for key: Variant in attended:
-			_attended[StringName(str(key))] = int(attended[key])
-	var triggered: Variant = data.get("triggered", {})
-	if triggered is Dictionary:
-		for key: Variant in triggered:
-			_triggered[StringName(str(key))] = int(triggered[key])
+	_progress.from_dict(data)
 	_today_absolute_day = -1
 	refresh()
 
@@ -298,7 +289,7 @@ func _matches(entry: EventData, date: GameDate) -> bool:
 
 
 func _trigger(entry: EventData, date: GameDate) -> void:
-	_triggered[entry.id] = date.absolute_day()
+	_progress.triggered[entry.id] = date.absolute_day()
 	if entry.set_flag != &"":
 		GameState.set_flag(entry.set_flag)
 	if entry.grant_money > 0:
@@ -312,10 +303,10 @@ func _trigger(entry: EventData, date: GameDate) -> void:
 
 ## 是否已经发生过；[member EventData.once] 为 false 时按"同一个游戏年内"判断。
 func _was_triggered(event_id: StringName, date: GameDate) -> bool:
-	if not _triggered.has(event_id):
+	if not _progress.triggered.has(event_id):
 		return false
 	var entry := event(event_id)
 	if entry != null and not entry.once:
-		var at := GameDate.from_absolute_day(int(_triggered[event_id]))
+		var at := GameDate.from_absolute_day(int(_progress.triggered[event_id]))
 		return at.year == date.year
 	return true

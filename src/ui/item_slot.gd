@@ -21,7 +21,7 @@ func set_item(item_id: StringName, count: int) -> void:
 		return
 
 	var item := Database.get_item(item_id)
-	var display_name := Text.item_name(item_id)
+	var display_name := Text.item_name(item)
 
 	modulate.a = 1.0
 	icon.texture = item.icon if item != null else null

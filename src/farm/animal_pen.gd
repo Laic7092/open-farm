@@ -46,7 +46,7 @@ func interact(actor: Node2D) -> void:
 	if mgr.introduce(building_id, player):
 		return
 	EventBus.notification_requested.emit(&"NOTIFY_PEN_STATUS", {
-		"building": Text.building_name(building_id),
+		"building": Text.building_name(Database.get_building(building_id)),
 		"count": mgr.animal_count(building_id),
 		"capacity": capacity(),
 	})

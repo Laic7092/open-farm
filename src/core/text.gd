@@ -22,44 +22,29 @@ static func format(text_key: StringName, args: Dictionary = {}) -> String:
 	return template.format(args)
 
 
-## 道具显示名。
-static func item_name(item_id: StringName) -> String:
-	var item := Database.get_item(item_id)
-	if item == null:
-		return String(item_id)
-	return key(item.display_name_key)
+## 道具显示名；[param item] 为 null 时返回空串。
+static func item_name(item: ItemData) -> String:
+	return key(item.display_name_key) if item != null else ""
 
 
-## 工具显示名。
-static func tool_name(tool_id: StringName) -> String:
-	var tool := Database.get_tool(tool_id)
-	if tool == null:
-		return String(tool_id)
-	return key(tool.display_name_key)
+## 工具显示名；[param tool] 为 null 时返回空串。
+static func tool_name(tool: ToolData) -> String:
+	return key(tool.display_name_key) if tool != null else ""
 
 
-## 作物显示名。
-static func crop_name(crop_id: StringName) -> String:
-	var crop := Database.get_crop(crop_id)
-	if crop == null:
-		return String(crop_id)
-	return key(crop.display_name_key)
+## 作物显示名；[param crop] 为 null 时返回空串。
+static func crop_name(crop: CropData) -> String:
+	return key(crop.display_name_key) if crop != null else ""
 
 
-## 动物显示名。
-static func animal_name(animal_id: StringName) -> String:
-	var data := Database.get_animal(animal_id)
-	if data == null:
-		return String(animal_id)
-	return key(data.display_name_key)
+## 动物显示名；[param data] 为 null 时返回空串。
+static func animal_name(data: AnimalData) -> String:
+	return key(data.display_name_key) if data != null else ""
 
 
-## 畜舍显示名。
-static func building_name(building_id: StringName) -> String:
-	var data := Database.get_building(building_id)
-	if data == null:
-		return String(building_id)
-	return key(data.display_name_key)
+## 畜舍显示名；[param data] 为 null 时返回空串。
+static func building_name(data: BuildingData) -> String:
+	return key(data.display_name_key) if data != null else ""
 
 
 ## 季节显示名。

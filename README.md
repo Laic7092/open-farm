@@ -17,6 +17,7 @@
 | `README.md`（本文） | 项目是什么、怎么跑 / 怎么玩、目录结构、扩展步骤、测试覆盖、已知限制、里程碑 | 人类开发者 |
 | [AGENTS.md](AGENTS.md) | 编码 Agent 的最短上手：铁律、速查表、踩过的坑 | AI / 自动化 |
 | [docs/architecture.md](docs/architecture.md) | 设计决策的**为什么**：分层、Autoload 依赖、生命周期、引擎坑的原理 | 维护者 |
+| [docs/refactor_handoff.md](docs/refactor_handoff.md) | P0 重构现状与后续阶段计划：状态 Resource、组合根、去 Autoload 步骤与验收 | 接手重构的人 |
 | [docs/art_pipeline.md](docs/art_pipeline.md) | 美术生成规范；**「Godot 命令必须能自己退出」的规范原文** | 改美术的人 |
 | [docs/audio_pipeline.md](docs/audio_pipeline.md) | 音频合成规范 | 改音频的人 |
 
@@ -154,11 +155,11 @@ open-farm/
 | `EventBus` | 全局信号总线 | **只声明信号**，不写逻辑。生产者 emit、消费者 connect，双方互不相识 |
 | `AppTheme` | 语言与字体引导 | 语言匹配 + 缺中文字体时自动兜底，避免"豆腐块" |
 | `Database` | 静态数据仓库 | 启动扫描 `res://data/`，按 id 建索引。业务代码永不硬编码文件路径 |
-| `GameClock` | 游戏时钟 | 06:00 起床、次日 02:00 强制结束；**有序日结转钩子**驱动模拟流水线 |
-| `GameState` | 跨场景状态 | 金钱、剧情旗标、统计。玩家体力/背包属于 `Player`，不放这里 |
-| `WeatherSystem` | 天气 | 作为**第一个**日结转钩子，保证其它系统读到的天气已是当天的 |
-| `Relationships` | 好感度与恋爱 | 跨场景持有每 NPC 的好感 / 关系阶段、配偶与孩子；日结转清每日标记并推进婚育 |
-| `Calendar` | 节日与事件 | 从 `data/festivals` / `data/events` 读表；日结转播报今日节日并判定一次性事件；参加奖励与"已发生"状态跟着存档走 |
+| `GameClock` | 游戏时钟 | 06:00 起床、次日 02:00 强制结束；**有序日结转钩子**驱动模拟流水线。状态在 `GameDateClock`（`Main` 注入） |
+| `GameState` | 跨场景状态 | 金钱、剧情旗标、统计。状态在 `PlayerProfile`（`Main` 注入）；玩家体力/背包属于 `Player` |
+| `WeatherSystem` | 天气 | 作为**第一个**日结转钩子，保证其它系统读到的天气已是当天的。状态在 `WeatherState`（`Main` 注入） |
+| `Relationships` | 好感度与恋爱 | 跨场景持有每 NPC 的好感 / 关系阶段、配偶与孩子；日结转清每日标记并推进婚育。状态在 `RelationshipStore`（`Main` 注入） |
+| `Calendar` | 节日与事件 | 从 `data/festivals` / `data/events` 读表；日结转播报今日节日并判定一次性事件。进度在 `CalendarProgress`（`Main` 注入） |
 | `SaveManager` | 存档 | JSON + 版本号；鸭子类型收集 `persistent` 组节点；支持跨地图读档 |
 | `SceneRouter` | 场景路由 | 淡入淡出 + 出生点定位；世界场景**缓存复用**，UI 常驻不销毁 |
 | `Audio` | 音频总管 | 合成 BGM / 音效的唯一播放出口；按场景与时间换曲，订阅 `EventBus` 播音效 |

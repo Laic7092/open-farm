@@ -3,7 +3,8 @@ extends RefCounted
 ## 背包（格子 + 堆叠）。
 ##
 ## 纯数据对象，不依赖场景树；[FarmGrid] 播种、[Shop] 买卖都只跟它打交道。
-## 通过 [signal EventBus.inventory_changed] 通知 UI 刷新。
+## 变化通过本地信号广播，由 [Player] 转发到 [EventBus]，本类不认识 Autoload。
+## 堆叠上限由外部 [member _stack_limit_provider] 提供，默认 99。
 
 ## 默认格数。
 const DEFAULT_CAPACITY: int = 24
@@ -13,6 +14,12 @@ signal changed()
 
 ## 单格内容变化，便于 UI 做局部刷新。
 signal slot_changed(index: int)
+
+## 放入失败（还有 [param item_id] 没放下）。
+signal full(item_id: StringName)
+
+## 堆叠上限查询器；返回 [ItemData] 或 null。由拥有者在构造时注入。
+var _stack_limit_provider: Callable = Callable()
 
 ## 格数。
 var capacity: int
@@ -69,7 +76,7 @@ func add(item_id: StringName, count: int = 1) -> int:
 	if not touched.is_empty():
 		changed.emit()
 	if remaining > 0:
-		EventBus.inventory_full.emit(item_id)
+		full.emit(item_id)
 	return remaining
 
 
@@ -141,6 +148,11 @@ func used_slots() -> int:
 	return used
 
 
+## 设置堆叠上限查询器；[param provider] 接受 item_id，返回 [ItemData] 或 null。
+func set_stack_limit_provider(provider: Callable) -> void:
+	_stack_limit_provider = provider
+
+
 ## 清空背包。
 func clear() -> void:
 	for index: int in capacity:
@@ -192,5 +204,8 @@ func _has_stack_room() -> bool:
 
 
 func _stack_limit(item_id: StringName) -> int:
-	var item := Database.get_item(item_id)
-	return item.stack_limit if item != null else 99
+	if _stack_limit_provider.is_valid():
+		var item: Variant = _stack_limit_provider.call(item_id)
+		if item is ItemData:
+			return maxi((item as ItemData).stack_limit, 1)
+	return 99

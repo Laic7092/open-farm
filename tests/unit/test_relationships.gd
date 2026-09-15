@@ -6,7 +6,7 @@ extends GdUnitTestSuite
 
 func before_test() -> void:
 	GameClock.reset()
-	GameClock.paused = false
+	GameClock.set_paused(false)
 	Relationships.reset()
 	GameState.reset()
 

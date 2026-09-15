@@ -9,7 +9,7 @@ var _shop: Shop
 func before_test() -> void:
 	GameState.reset()
 	GameState.set_money(1000)
-	_shop = Shop.new(Database.get_shop(SHOP_ID))
+	_shop = Shop.new(Database.get_shop(SHOP_ID), GameState, Database, EventBus)
 	_shop.restock()
 
 
@@ -52,7 +52,7 @@ func test_limited_stock_decreases_after_purchase() -> void:
 	limited.id = &"limited"
 	limited.display_name_key = &"SHOP_GENERAL_STORE"
 	limited.stock = [entry] as Array[ShopStock]
-	var shop := Shop.new(limited)
+	var shop := Shop.new(limited, GameState, Database, EventBus)
 
 	assert_int(shop.stock_left(entry)).is_equal(3)
 	assert_bool(shop.buy(entry, 2, Inventory.new(4))).is_true()
@@ -127,7 +127,7 @@ func test_buyback_price_respects_multiplier() -> void:
 	data.id = &"test"
 	data.display_name_key = &"SHOP_GENERAL_STORE"
 	data.sell_multiplier = 0.5
-	var shop := Shop.new(data)
+	var shop := Shop.new(data, GameState, Database, EventBus)
 	var item := Database.get_item(&"turnip")
 	assert_int(shop.buyback_price(item)).is_equal(int(floorf(item.sell_price * 0.5)))
 
@@ -148,7 +148,7 @@ func test_limited_day_stock_is_hidden_on_other_days() -> void:
 	data.id = &"day_limited"
 	data.display_name_key = &"SHOP_GENERAL_STORE"
 	data.stock = [entry] as Array[ShopStock]
-	var shop := Shop.new(data)
+	var shop := Shop.new(data, GameState, Database, EventBus)
 
 	assert_array(shop.available_entries(2)).has_size(1)
 	assert_array(shop.available_entries(9)).is_empty()
@@ -162,7 +162,7 @@ func test_flag_locked_stock_needs_the_flag() -> void:
 	data.id = &"flag_locked"
 	data.display_name_key = &"SHOP_GENERAL_STORE"
 	data.stock = [entry] as Array[ShopStock]
-	var shop := Shop.new(data)
+	var shop := Shop.new(data, GameState, Database, EventBus)
 
 	assert_array(shop.available_entries(1)).is_empty()
 	GameState.set_flag(&"met_mayor")

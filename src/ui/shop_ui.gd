@@ -32,13 +32,28 @@ var _entries: Array[ShopStock] = []
 var _sellable_ids: Array[StringName] = []
 var _side: ShopSide = ShopSide.BUY
 
+## 由 [UiRoot] 在组合根注入；[ShopUi] 不按 Autoload 全局名取依赖。
+var _wallet
+var _catalog
+var _events
+var _clock
+
 
 func _ready() -> void:
 	visible = false
 	hint_label.text = Text.key(&"SHOP_UI_HINT")
 	buy_list.item_selected.connect(func(_index: int) -> void: _refresh_info())
 	sell_list.item_selected.connect(func(_index: int) -> void: _refresh_sell_info())
-	EventBus.money_changed.connect(func(_money: int, _delta: int) -> void: _refresh_money())
+
+
+## 注入运行时依赖。必须在 [method open] 之前调用。
+func configure(wallet, catalog, events, clock) -> void:
+	_wallet = wallet
+	_catalog = catalog
+	_events = events
+	_clock = clock
+	if _events != null and not _events.money_changed.is_connected(_on_money_changed):
+		_events.money_changed.connect(_on_money_changed)
 
 
 ## 打开某家商店。
@@ -46,7 +61,10 @@ func open(shop_data: ShopData) -> void:
 	if shop_data == null:
 		push_error("ShopUi: 商店数据为空")
 		return
-	_shop = Shop.new(shop_data)
+	if _wallet == null or _catalog == null or _events == null or _clock == null:
+		push_error("ShopUi: 未注入依赖，无法打开商店")
+		return
+	_shop = Shop.new(shop_data, _wallet, _catalog, _events)
 	_shop.purchased.connect(_on_transaction)
 	_shop.sold.connect(_on_transaction)
 	_shop.rejected.connect(_on_rejected)
@@ -80,14 +98,16 @@ func refresh() -> void:
 
 
 func _refresh_money() -> void:
-	money_label.text = Text.format(&"HUD_MONEY", {"value": GameState.money})
+	if _wallet == null:
+		return
+	money_label.text = Text.format(&"HUD_MONEY", {"value": _wallet.money})
 
 
 func _refresh_buy_list() -> void:
-	_entries = _shop.available_entries(GameClock.date.day)
+	_entries = _shop.available_entries(_clock.date.day)
 	buy_list.clear()
 	for entry: ShopStock in _entries:
-		var item := Database.get_item(entry.item_id)
+		var item: Variant = _catalog.get_item(entry.item_id)
 		var price: int = _shop.price_of(entry)
 		var left: int = _shop.stock_left(entry)
 		var stock_text := (
@@ -97,7 +117,7 @@ func _refresh_buy_list() -> void:
 		)
 		buy_list.add_item(
 			"%s   %s   [%s]" % [
-				Text.item_name(entry.item_id),
+				Text.item_name(_catalog.get_item(entry.item_id)),
 				Text.format(&"SHOP_UI_PRICE", {"value": price}),
 				stock_text,
 			]
@@ -117,14 +137,14 @@ func _refresh_sell_list() -> void:
 	for slot: InventorySlot in inventory.slots:
 		if slot.is_empty() or _sellable_ids.has(slot.item_id):
 			continue
-		var item := Database.get_item(slot.item_id)
+		var item: Variant = _catalog.get_item(slot.item_id)
 		if item == null or not item.sellable:
 			continue
 		_sellable_ids.append(slot.item_id)
 		var unit: int = _shop.buyback_price(item)
 		sell_list.add_item(
 			"%s ×%d   %s" % [
-				Text.item_name(slot.item_id),
+				Text.item_name(_catalog.get_item(slot.item_id)),
 				slot.count,
 				Text.format(&"SHOP_UI_PRICE", {"value": unit}),
 			]
@@ -140,7 +160,7 @@ func _refresh_info() -> void:
 		return
 	var entry: ShopStock = _entries[index]
 	info_label.text = "%s  %s" % [
-		Text.item_name(entry.item_id),
+		Text.item_name(_catalog.get_item(entry.item_id)),
 		Text.format(&"SHOP_UI_PRICE", {"value": _shop.price_of(entry)}),
 	]
 
@@ -150,10 +170,10 @@ func _refresh_sell_info() -> void:
 	if index < 0 or index >= _sellable_ids.size():
 		info_label.text = ""
 		return
-	var item := Database.get_item(_sellable_ids[index])
+	var item: Variant = _catalog.get_item(_sellable_ids[index])
 	if item != null:
 		info_label.text = "%s  %s" % [
-			Text.item_name(item.id),
+			Text.item_name(item),
 			Text.format(&"SHOP_UI_PRICE", {"value": _shop.buyback_price(item)}),
 		]
 
@@ -164,6 +184,11 @@ func _refresh_info_for_side() -> void:
 		_refresh_sell_info()
 	else:
 		_refresh_info()
+
+
+func _on_money_changed(_money: int, _delta: int) -> void:
+	if visible:
+		_refresh_money()
 
 
 # ---------------------------------------------------------------- 键盘导航
@@ -280,7 +305,8 @@ func _on_transaction(_item_id: StringName, _count: int, _total: int) -> void:
 
 
 func _on_rejected(reason_key: StringName) -> void:
-	EventBus.notification_requested.emit(reason_key, {})
+	if _events != null:
+		_events.notification_requested.emit(reason_key, {})
 
 
 func _player_inventory() -> Inventory:

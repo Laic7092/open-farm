@@ -50,10 +50,10 @@ func test_delete_save() -> void:
 # ---------------------------------------------------------------- 往返
 
 func test_roundtrip_restores_core_state() -> void:
-	GameClock.date = GameDate.new(2, Season.Type.SUMMER, 9)
+	GameClock.set_date(GameDate.new(2, Season.Type.SUMMER, 9))
 	GameClock.set_time(14, 25)
 	GameState.set_money(1234)
-	GameState.player_name = "小明"
+	GameState.set_player_name("小明")
 	GameState.set_flag(&"met_mayor", 3)
 
 	assert_bool(SaveManager.save_game(0)).is_true()
@@ -84,9 +84,9 @@ func test_roundtrip_restores_weather() -> void:
 
 
 func test_meta_summary_matches_the_save() -> void:
-	GameClock.date = GameDate.new(4, Season.Type.WINTER, 21)
+	GameClock.set_date(GameDate.new(4, Season.Type.WINTER, 21))
 	GameState.set_money(777)
-	GameState.player_name = "阿花"
+	GameState.set_player_name("阿花")
 	SaveManager.save_game(0)
 
 	var meta := SaveManager.read_meta(0)

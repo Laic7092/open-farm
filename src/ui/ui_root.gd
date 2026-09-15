@@ -21,6 +21,9 @@ func _ready() -> void:
 	# 界面必须能在暂停时继续响应输入（否则暂停后就按不动了）。
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
+	# 组合根注入：界面层仍可使用 EventBus，但商店逻辑依赖由此显式传入。
+	shop_ui.configure(GameState, Database, EventBus, GameClock)
+
 	EventBus.dialogue_requested.connect(_on_dialogue_requested)
 	EventBus.shop_requested.connect(_on_shop_requested)
 	EventBus.inventory_toggle_requested.connect(_on_inventory_toggle)

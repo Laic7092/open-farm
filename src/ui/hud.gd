@@ -121,7 +121,7 @@ func _refresh_hand() -> void:
 	var item_id := _hand_item_id()
 	# 旧的手持文字行已经隐藏，但保留节点以便兼容外部查找；
 	# 真正的手持道具由底部物品栏高亮显示。
-	tool_label.text = Text.item_name(item_id)
+	tool_label.text = Text.item_name(Database.get_item(item_id))
 	tool_icon.texture = _item_icon(item_id)
 
 

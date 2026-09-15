@@ -32,7 +32,7 @@ func set_item(item_id: StringName, count: int, selected: bool = false) -> void:
 	icon.texture = item.icon if item != null else null
 	icon.visible = icon.texture != null
 	count_label.text = str(count) if count > 1 else ""
-	tooltip_text = Text.item_name(item_id) if item != null else String(item_id)
+	tooltip_text = Text.item_name(item) if item != null else String(item_id)
 	_set_selected(selected)
 
 

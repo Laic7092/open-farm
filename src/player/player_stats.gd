@@ -3,7 +3,13 @@ extends RefCounted
 ## 玩家体力值。
 ##
 ## 纯数据对象（[RefCounted]），不依赖场景树，因此可以脱离引擎循环做单元测试。
-## 变化通过 [signal EventBus.stamina_changed] 广播给 HUD。
+## 变化通过本地信号广播，由 [Player] 转发到 [EventBus]，本类不认识 Autoload。
+
+## 体力变化；[param current] 是当前值，[param maximum] 是上限。
+signal changed(current: int, maximum: int)
+
+## 体力归零 / 力竭。
+signal depleted()
 
 ## 默认体力上限。
 const DEFAULT_MAX_STAMINA: int = 100
@@ -91,10 +97,10 @@ func from_dict(data: Dictionary) -> void:
 
 func _emit() -> void:
 	_last_emitted = stamina
-	EventBus.stamina_changed.emit(stamina, max_stamina)
+	changed.emit(stamina, max_stamina)
 
 
 func _mark_exhausted() -> void:
 	exhausted = true
 	_emit()
-	EventBus.stamina_depleted.emit()
+	depleted.emit()

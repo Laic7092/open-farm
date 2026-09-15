@@ -66,11 +66,13 @@
 EventBus      ← 无依赖
 AppTheme      ← 无依赖（只碰 TranslationServer / ThemeDB）
 Database      ← 无依赖（只读 res://data）
-GameClock     ← EventBus
-GameState     ← EventBus, GameClock
-WeatherSystem ← GameClock（把自己注册成第一个日结转钩子）
-Relationships ← EventBus, GameClock, Database, GameState（排在 WeatherSystem 之后注册日结转钩子）
-Calendar      ← EventBus, GameClock, Database, GameState, WeatherSystem, Relationships
+GameClock     ← EventBus, GameDateClock（状态由组合根注入）
+GameState     ← EventBus, PlayerProfile（状态由组合根注入）
+WeatherSystem ← GameClock, WeatherState（把自己注册成第一个日结转钩子）
+Relationships ← EventBus, GameClock, Database, GameState,
+                RelationshipStore（排在 WeatherSystem 之后注册日结转钩子）
+Calendar      ← EventBus, GameClock, Database, GameState, WeatherSystem,
+                Relationships, CalendarProgress
                 （节日与事件：同样把自己的日结转钩子排在 Relationships 之后）
 SaveManager   ← EventBus, Persistence（鸭子类型找节点，不静态依赖任何游戏系统）
 SceneRouter   ← EventBus, GameClock
@@ -81,9 +83,34 @@ Audio         ← EventBus, GameClock, SceneRouter（按场景 / 时间换曲，
 `GameClock.date` 会拿到 null。`Audio` 排在最后，因为它要在 `_ready()` 里
 把前面几个单例的信号接上。这个顺序在 `project.godot` 里有注释说明。
 
-`SaveManager` 与其它单例之间刻意只有**按名字**的弱引用
-（`get_tree().root.get_node_or_null("/root/GameClock")`），
-所以某天把 `WeatherSystem` 拆成插件也不会编译失败，只会少存一段数据。
+核心单例在各自 `_ready()` 里调用 `Persistence.register_core(self, &"id", order)`
+自注册到 `persistent_core` 组；`SaveManager` 只按 `order` 排序后调用
+`to_dict()` / `from_dict()`，不维护参与者名单，也不做
+`get_node_or_null("/root/<Name>")` 字符串反射。新增 / 重命名核心系统只改一处。
+
+---
+
+### 2.0 状态资源与组合根
+
+P0 迁移后，`GameState` / `GameClock` / `WeatherSystem` / `Relationships` / `Calendar`
+不再自己持有可存档状态，而是只提供查询 / 规则 / 广播门面；真正的数据在：
+
+| 状态资源 | 旧 Autoload 字段 |
+| --- | --- |
+| `PlayerProfile` | `GameState` 的姓名 / 金钱 / 旗标 / 统计 / 游玩时长 |
+| `GameDateClock` | `GameClock` 的日期 / 分钟 / 时间倍率 / 暂停标记 |
+| `WeatherState` | `WeatherSystem` 的当日 / 明日天气 |
+| `RelationshipStore` | `Relationships` 的 NPC 关系字典 / 配偶 / 婚育进度 |
+| `CalendarProgress` | `Calendar` 的已参加节日 / 已触发事件 |
+
+这些 Resource 由 `Main`（组合根）持有，并在 `_ready()` 里通过
+`GameState.set_profile()` / `GameClock.set_state()` 等接口注入。
+好处：
+
+- 状态所有权从 Autoload 转移到组合根，单例只保留服务职责。
+- 测试可以直接 `new PlayerProfile()` / `new GameDateClock()` 构造干净状态，
+  不必再依赖 Autoload 内部的隐式字段复位。
+- 存档仍走 `to_dict()` / `from_dict()`，门面接口和旧存档格式保持不变。
 
 ---
 
@@ -95,7 +122,8 @@ Audio         ← EventBus, GameClock, SceneRouter（按场景 / 时间换曲，
 Main/PauseMenu
   └─ await SaveManager.load_game_and_restore_world(slot)
        1. load_game(slot)
-          ├─ 恢复核心单例：GameClock / GameState / WeatherSystem / Relationships / SceneRouter
+          ├─ 按 persistent_core 组的注册顺序恢复核心单例
+          │  （GameClock → GameState → WeatherSystem → Relationships → Calendar → SceneRouter）
           └─ 暂存 payload["nodes"]，并对当前树上的节点 apply_node_state()
        2. await SceneRouter.restore_saved_world()
           ├─ 存档地图 == 当前地图 → 复用缓存实例，只重新放置玩家

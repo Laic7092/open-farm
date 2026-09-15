@@ -6,7 +6,7 @@ extends GdUnitTestSuite
 
 func before_test() -> void:
 	GameClock.reset()
-	GameClock.paused = false
+	GameClock.set_paused(false)
 	GameState.reset()
 	Relationships.reset()
 	Calendar.reset()
@@ -31,7 +31,7 @@ func test_today_festival_is_new_year_on_spring_1() -> void:
 
 
 func test_today_festival_is_empty_on_a_plain_day() -> void:
-	GameClock.date = GameDate.new(1, Season.Type.SPRING, 3)
+	GameClock.set_date(GameDate.new(1, Season.Type.SPRING, 3))
 	assert_bool(Calendar.has_festival_today()).is_false()
 	assert_str(Calendar.today_text()).is_equal("")
 
@@ -67,7 +67,7 @@ func test_required_flag_gates_a_festival() -> void:
 # ---------------------------------------------------------------- 参加
 
 func test_attend_gives_affection_and_sets_flag() -> void:
-	GameClock.date = GameDate.new(1, Season.Type.SPRING, 14)
+	GameClock.set_date(GameDate.new(1, Season.Type.SPRING, 14))
 	GameClock.set_time(10, 0)
 	var before := Relationships.affection(&"florist")
 	assert_bool(Calendar.attend(&"flower_festival")).is_true()
@@ -96,7 +96,7 @@ func test_attend_fails_when_the_ground_is_closed() -> void:
 
 
 func test_attend_fails_on_another_day() -> void:
-	GameClock.date = GameDate.new(1, Season.Type.SPRING, 2)
+	GameClock.set_date(GameDate.new(1, Season.Type.SPRING, 2))
 	GameClock.set_time(9, 0)
 	assert_bool(Calendar.attend(&"new_year")).is_false()
 
@@ -104,7 +104,7 @@ func test_attend_fails_on_another_day() -> void:
 # ---------------------------------------------------------------- 事件
 
 func test_event_triggers_once_and_grants_money() -> void:
-	GameClock.date = GameDate.new(1, Season.Type.SPRING, 7)
+	GameClock.set_date(GameDate.new(1, Season.Type.SPRING, 7))
 	var before: int = GameState.money
 	GameClock.sleep_until_morning()
 	assert_bool(Calendar.has_triggered(&"traveler_visit")).is_true()
@@ -115,7 +115,7 @@ func test_event_triggers_once_and_grants_money() -> void:
 
 
 func test_event_waits_for_its_conditions() -> void:
-	GameClock.date = GameDate.new(1, Season.Type.SPRING, 7)
+	GameClock.set_date(GameDate.new(1, Season.Type.SPRING, 7))
 	GameClock.sleep_until_morning()
 	assert_bool(Calendar.has_triggered(&"librarian_visit")).is_false()
 	Relationships.set_affection(&"librarian", 120)
@@ -124,14 +124,14 @@ func test_event_waits_for_its_conditions() -> void:
 
 
 func test_event_can_set_a_flag() -> void:
-	GameClock.date = GameDate.new(1, Season.Type.FALL, 28)
+	GameClock.set_date(GameDate.new(1, Season.Type.FALL, 28))
 	GameClock.sleep_until_morning()
 	assert_int(GameClock.date.season).is_equal(Season.Type.WINTER)
 	assert_bool(GameState.has_flag(&"winter_seen")).is_true()
 
 
 func test_events_for_today_lists_matching_events() -> void:
-	GameClock.date = GameDate.new(1, Season.Type.SPRING, 8)
+	GameClock.set_date(GameDate.new(1, Season.Type.SPRING, 8))
 	var ids := PackedStringArray()
 	for entry: EventData in Calendar.events_for_today():
 		ids.append(String(entry.id))
@@ -144,7 +144,7 @@ func test_persistence_round_trip() -> void:
 	GameClock.set_time(9, 0)
 	Calendar.attend(&"new_year")
 	# 跳到春 8，让 traveler_visit 也发生一次，这样两类状态都被快照覆盖。
-	GameClock.date = GameDate.new(1, Season.Type.SPRING, 7)
+	GameClock.set_date(GameDate.new(1, Season.Type.SPRING, 7))
 	GameClock.sleep_until_morning()
 	var snapshot := Calendar.to_dict()
 

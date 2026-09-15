@@ -8,8 +8,8 @@ var _hooks: Array[Callable] = []
 
 func before_test() -> void:
 	GameClock.reset()
-	GameClock.paused = false
-	GameClock.time_scale = 1.0
+	GameClock.set_paused(false)
+	GameClock.set_time_scale(1.0)
 	_hooks.clear()
 
 
@@ -88,14 +88,14 @@ func test_time_does_not_roll_over_before_0200() -> void:
 
 
 func test_season_advances_after_the_last_day() -> void:
-	GameClock.date = GameDate.new(1, Season.Type.SPRING, Season.DAYS_PER_SEASON)
+	GameClock.set_date(GameDate.new(1, Season.Type.SPRING, Season.DAYS_PER_SEASON))
 	GameClock.sleep_until_morning()
 	assert_int(GameClock.date.season).is_equal(Season.Type.SUMMER)
 	assert_int(GameClock.date.day).is_equal(1)
 
 
 func test_year_advances_after_winter() -> void:
-	GameClock.date = GameDate.new(1, Season.Type.WINTER, Season.DAYS_PER_SEASON)
+	GameClock.set_date(GameDate.new(1, Season.Type.WINTER, Season.DAYS_PER_SEASON))
 	GameClock.sleep_until_morning()
 	assert_int(GameClock.date.year).is_equal(2)
 	assert_int(GameClock.date.season).is_equal(Season.Type.SPRING)
@@ -125,7 +125,7 @@ func test_day_hook_receives_the_new_date() -> void:
 	var received: Array[GameDate] = []
 	_register(func(date: GameDate) -> void: received.append(date))
 
-	GameClock.date = GameDate.new(1, Season.Type.SPRING, 7)
+	GameClock.set_date(GameDate.new(1, Season.Type.SPRING, 7))
 	GameClock.sleep_until_morning()
 
 	assert_array(received).has_size(1)
@@ -168,7 +168,7 @@ func test_day_hooks_only_run_on_rollover() -> void:
 
 func test_paused_clock_does_not_advance() -> void:
 	GameClock.set_time(10, 0)
-	GameClock.paused = true
+	GameClock.set_paused(true)
 	GameClock._process(10.0)
 	assert_int(GameClock.hour()).is_equal(10)
 	assert_int(GameClock.minute()).is_equal(0)
@@ -185,7 +185,7 @@ func test_unpaused_clock_advances_with_process() -> void:
 func test_time_scale_speeds_up_the_clock() -> void:
 	GameClock.set_time(10, 0)
 	GameClock.seconds_per_game_minute = 1.0
-	GameClock.time_scale = 4.0
+	GameClock.set_time_scale(4.0)
 	GameClock._process(3.0)
 	assert_int(GameClock.minute()).is_equal(12)
 
@@ -193,7 +193,7 @@ func test_time_scale_speeds_up_the_clock() -> void:
 # ---------------------------------------------------------------- 序列化
 
 func test_serialization_roundtrip() -> void:
-	GameClock.date = GameDate.new(2, Season.Type.FALL, 13)
+	GameClock.set_date(GameDate.new(2, Season.Type.FALL, 13))
 	GameClock.set_time(15, 42)
 	var snapshot := GameClock.to_dict()
 
@@ -208,7 +208,7 @@ func test_serialization_roundtrip() -> void:
 
 
 func test_from_dict_survives_a_json_roundtrip() -> void:
-	GameClock.date = GameDate.new(3, Season.Type.SUMMER, 4)
+	GameClock.set_date(GameDate.new(3, Season.Type.SUMMER, 4))
 	GameClock.set_time(9, 5)
 	var parsed: Variant = JSON.parse_string(JSON.stringify(GameClock.to_dict()))
 

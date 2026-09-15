@@ -8,7 +8,8 @@ extends Node
 ##
 ## [b]扩展方式[/b]：任何节点只要加入 [constant Persistence.GROUP] 组
 ## 并实现 [code]to_dict()[/code] / [code]from_dict()[/code]，就会被自动存档，
-## 不需要修改本脚本。
+## 不需要修改本脚本。核心单例则用 [method Persistence.register_core]
+## 声明恢复顺序，[SaveManager] 不硬编码节点名。
 
 ## 当前存档结构版本。字段语义发生不兼容变化时才递增。
 const SAVE_VERSION: int = 1
@@ -16,16 +17,6 @@ const SAVE_VERSION: int = 1
 const SLOT_COUNT: int = 3
 ## 默认存档目录。单元测试会把它改写到工作区内的临时目录。
 const DEFAULT_SAVE_ROOT: String = "user://saves"
-
-## 核心单例的存取顺序（读档时必须先恢复时间，再恢复世界）。
-const CORE_PARTICIPANTS: Array[StringName] = [
-	&"GameClock",
-	&"GameState",
-	&"WeatherSystem",
-	&"Relationships",
-	&"Calendar",
-	&"SceneRouter",
-]
 
 ## 存档根目录；可写，便于测试注入。
 var save_root: String = DEFAULT_SAVE_ROOT
@@ -146,10 +137,15 @@ func collect() -> Dictionary:
 		"version": SAVE_VERSION,
 		"saved_at": Time.get_datetime_string_from_system(false, true),
 	}
-	for id: StringName in CORE_PARTICIPANTS:
-		var participant := _core_participant(id)
-		if participant != null:
-			payload[String(id)] = participant.call(&"to_dict")
+	for participant: Node in _core_participants():
+		var problems := Persistence.validate(participant)
+		if not problems.is_empty():
+			push_error(
+				"SaveManager: 核心存档节点 '%s' 不满足契约：%s"
+				% [Persistence.id_of(participant), ", ".join(problems)]
+			)
+			continue
+		payload[String(Persistence.id_of(participant))] = participant.call(&"to_dict")
 	payload["nodes"] = nodes
 	return payload
 
@@ -167,11 +163,16 @@ func apply(data: Dictionary) -> bool:
 		return false
 
 	# 1) 先恢复核心单例：世界节点在 _ready() 时依赖它们。
-	for id: StringName in CORE_PARTICIPANTS:
-		var participant := _core_participant(id)
-		if participant == null:
+	for participant: Node in _core_participants():
+		var problems := Persistence.validate(participant)
+		if not problems.is_empty():
+			push_error(
+				"SaveManager: 核心存档节点 '%s' 不满足契约：%s"
+				% [Persistence.id_of(participant), ", ".join(problems)]
+			)
 			continue
-		var section: Variant = data.get(String(id), {})
+		var id := String(Persistence.id_of(participant))
+		var section: Variant = data.get(id, {})
 		if section is Dictionary and not section.is_empty():
 			participant.call(&"from_dict", section)
 
@@ -200,10 +201,28 @@ func apply_node_state() -> void:
 
 # ---------------------------------------------------------------- 内部
 
-func _core_participant(id: StringName) -> Node:
+## 已注册的核心存档节点，按 [constant Persistence.META_CORE_ORDER] 升序。
+##
+## 核心单例在各自 [code]_ready()[/code] 里调用
+## [method Persistence.register_core] 自注册；[SaveManager] 不维护
+## [code]/root/<Name>[/code] 字符串反射，也不硬编码参与者名单。
+func _core_participants() -> Array[Node]:
+	var participants: Array[Node] = []
 	if not is_inside_tree():
-		return null
-	return get_tree().root.get_node_or_null(NodePath("/root/" + String(id)))
+		return participants
+	for node: Node in get_tree().get_nodes_in_group(Persistence.CORE_GROUP):
+		if is_instance_valid(node):
+			participants.append(node)
+	participants.sort_custom(_sort_core_participants)
+	return participants
+
+
+func _sort_core_participants(a: Node, b: Node) -> bool:
+	var order_a := Persistence.core_order_of(a)
+	var order_b := Persistence.core_order_of(b)
+	if order_a == order_b:
+		return String(Persistence.id_of(a)) < String(Persistence.id_of(b))
+	return order_a < order_b
 
 
 func _ensure_root() -> void:
