@@ -13,6 +13,7 @@ var _weather: WeatherService
 
 func before_test() -> void:
 	SaveManager.save_root = TEST_ROOT
+	SaveManager.current_slot = -1
 	_cleanup()
 	_profile = PlayerProfile.new()
 	_clock = GameDateClock.new()
@@ -32,6 +33,7 @@ func after_test() -> void:
 	_clock = null
 	_cleanup()
 	SaveManager.save_root = SaveManager.DEFAULT_SAVE_ROOT
+	SaveManager.current_slot = -1
 
 
 # ---------------------------------------------------------------- 基础
@@ -51,9 +53,67 @@ func test_save_then_has_save() -> void:
 	assert_array(SaveManager.existing_slots()).contains_exactly([0])
 
 
-func test_save_rejects_invalid_slot() -> void:
+func test_save_rejects_negative_slot() -> void:
 	assert_bool(SaveManager.save_game(-1)).is_false()
-	assert_bool(SaveManager.save_game(SaveManager.SLOT_COUNT)).is_false()
+
+
+## 槽位不再有数量上限：任何非负整数都能存，目录里有几个文件就有几局。
+func test_slots_are_unbounded() -> void:
+	assert_bool(SaveManager.save_game(9)).is_true()
+	assert_bool(SaveManager.save_game(3)).is_true()
+	assert_array(SaveManager.existing_slots()).contains_exactly([3, 9])
+
+
+## 新槽位复用被删掉的最低空档，而不是无限往后加。
+func test_next_slot_reuses_the_lowest_gap() -> void:
+	SaveManager.save_game(0)
+	SaveManager.save_game(2)
+	assert_int(SaveManager.next_slot()).is_equal(1)
+	SaveManager.delete_save(0)
+	assert_int(SaveManager.next_slot()).is_equal(0)
+
+
+# ---------------------------------------------------------------- 本局槽位
+
+func test_new_game_has_no_slot_until_first_save() -> void:
+	SaveManager.begin_new_game()
+	assert_int(SaveManager.current_slot).is_equal(-1)
+	assert_bool(SaveManager.save_current()).is_true()
+	assert_int(SaveManager.current_slot).is_equal(0)
+
+
+## 新游戏第一次存档要避开已有存档，不能覆盖别人。
+func test_save_current_allocates_a_free_slot() -> void:
+	SaveManager.save_game(0)
+	SaveManager.begin_new_game()
+	assert_bool(SaveManager.save_current()).is_true()
+	assert_int(SaveManager.current_slot).is_equal(1)
+
+
+func test_load_remembers_the_slot() -> void:
+	SaveManager.save_game(4)
+	SaveManager.begin_new_game()
+	assert_bool(SaveManager.load_game(4)).is_true()
+	assert_int(SaveManager.current_slot).is_equal(4)
+
+
+func test_delete_current_slot_detaches_the_session() -> void:
+	SaveManager.save_game(2)
+	assert_int(SaveManager.current_slot).is_equal(2)
+	assert_bool(SaveManager.delete_save(2)).is_true()
+	assert_int(SaveManager.current_slot).is_equal(-1)
+
+
+## 列表按最近保存时间倒序，标题页"继续游戏"默认选中最新的一局。
+func test_all_meta_is_sorted_by_recency() -> void:
+	SaveManager.save_game(0)
+	SaveManager.save_game(1)
+	_set_saved_at(0, "2024-01-01 10:00:00")
+	_set_saved_at(1, "2024-02-01 10:00:00")
+	var metas := SaveManager.all_meta()
+	assert_int(metas.size()).is_equal(2)
+	assert_int(int(metas[0].get("slot", -1))).is_equal(1)
+	assert_int(SaveManager.latest_slot()).is_equal(1)
 
 
 func test_delete_save() -> void:
@@ -164,6 +224,22 @@ func test_apply_ignores_unknown_sections() -> void:
 
 
 # ---------------------------------------------------------------- 工具
+
+## 直接改存档里的 saved_at，用来做不依赖真实时钟的排序断言。
+func _set_saved_at(slot: int, stamp: String) -> void:
+	var path := SaveManager.slot_path(slot)
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return
+	var data: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	if not (data is Dictionary):
+		return
+	data["saved_at"] = stamp
+	file = FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(JSON.stringify(data))
+	file.close()
+
 
 func _cleanup() -> void:
 	var absolute := ProjectSettings.globalize_path(TEST_ROOT)

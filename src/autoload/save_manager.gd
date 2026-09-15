@@ -6,6 +6,13 @@ extends Node
 ## JSON 配合显式的 [constant SAVE_VERSION] 与逐字段的 [code]from_dict[/code]
 ## 兜底默认值，才能做到"旧存档永远读得回来"。
 ##
+## [b]槽位[/b]：槽位号是 0 起的任意非负整数，没有数量上限——磁盘上每个
+## [code]slot_<n>.json[/code] 就是"一局游戏"。于是"新增多局"只是分配一个
+## 没人占用的槽位号，"继续游戏"则是在标题页的存档列表里挑一个读。
+##
+## [b]手动存档收敛[/b]：[member current_slot] 记录本局对应哪个槽位；菜单手动存档
+## 与日结自动存档都写到它，UI 不再让人手选槽位。选局只发生在标题页。
+##
 ## [b]扩展方式[/b]：任何节点只要加入 [constant Persistence.GROUP] 组
 ## 并实现 [code]to_dict()[/code] / [code]from_dict()[/code]，就会被自动存档，
 ## 不需要修改本脚本。核心单例则用 [method Persistence.register_core]
@@ -13,13 +20,16 @@ extends Node
 
 ## 当前存档结构版本。字段语义发生不兼容变化时才递增。
 const SAVE_VERSION: int = 1
-## 存档槽数量。
-const SLOT_COUNT: int = 3
 ## 默认存档目录。单元测试会把它改写到工作区内的临时目录。
 const DEFAULT_SAVE_ROOT: String = "user://saves"
 
 ## 存档根目录；可写，便于测试注入。
 var save_root: String = DEFAULT_SAVE_ROOT
+
+## 本局所在的槽位；-1 表示新游戏还没有落盘。
+##
+## 手动存档 / 日结自动存档都写到这里，所以 UI 不需要（也不应该）手选槽位。
+var current_slot: int = -1
 
 ## 最近一次读入的"场景内节点"存档数据。
 ##
@@ -54,29 +64,54 @@ func _ready() -> void:
 	_ensure_root()
 
 
-# ---------------------------------------------------------------- 公开 API
+# ---------------------------------------------------------------- 槽位
 
 ## 槽位对应的文件路径。
 func slot_path(slot: int) -> String:
-	return "%s/slot_%d.json" % [save_root, slot]
+	return "%s/%s" % [save_root, SaveSlots.file_name(slot)]
 
 
-## 该槽位是否已有存档。
+## 该槽位是否已有存档。槽位号只要求非负。
 func has_save(slot: int) -> bool:
-	return slot >= 0 and slot < SLOT_COUNT and FileAccess.file_exists(slot_path(slot))
+	return slot >= 0 and FileAccess.file_exists(slot_path(slot))
 
 
-## 所有已有存档的槽位号。
+## 所有已有存档的槽位号，升序。上限只由磁盘上的文件数量决定。
 func existing_slots() -> Array[int]:
 	var slots: Array[int] = []
-	for slot: int in SLOT_COUNT:
-		if has_save(slot):
+	_ensure_root()
+	var dir := DirAccess.open(save_root)
+	if dir == null:
+		return slots
+	for file_name: String in dir.get_files():
+		var slot := SaveSlots.slot_from_file_name(file_name)
+		if slot >= 0:
 			slots.append(slot)
+	slots.sort()
 	return slots
+
+
+## 下一个可用槽位：从 0 起找第一个没被占用的整数（复用被删掉的空档）。
+func next_slot() -> int:
+	return SaveSlots.next_free(existing_slots())
+
+
+## 最近一次保存的槽位；没有存档时返回 -1。
+func latest_slot() -> int:
+	var best := -1
+	var best_stamp := ""
+	for slot: int in existing_slots():
+		var stamp := str(read_meta(slot).get("saved_at", ""))
+		if best < 0 or stamp > best_stamp:
+			best = slot
+			best_stamp = stamp
+	return best
 
 
 ## 读取槽位的摘要信息，供存档界面显示，避免加载整个存档。
 func read_meta(slot: int) -> Dictionary:
+	if slot < 0:
+		return {}
 	var data := _read_json(slot_path(slot))
 	if data.is_empty():
 		return {}
@@ -95,19 +130,45 @@ func read_meta(slot: int) -> Dictionary:
 	}
 
 
-## 保存到 [param slot]。
+## 所有存档的摘要，按最近保存时间倒序（同刻按槽位号升序）。
+func all_meta() -> Array[Dictionary]:
+	var metas: Array[Dictionary] = []
+	for slot: int in existing_slots():
+		var meta := read_meta(slot)
+		if not meta.is_empty():
+			metas.append(meta)
+	SaveSlots.sort_meta_by_recency(metas)
+	return metas
+
+
+# ---------------------------------------------------------------- 存档 / 读档
+
+## 保存到 [param slot]（槽位号非负即可）。成功后把它记为本局槽位。
 func save_game(slot: int) -> bool:
-	if slot < 0 or slot >= SLOT_COUNT:
+	if slot < 0:
 		push_error("SaveManager: 非法槽位 %d" % slot)
 		return false
 	_ensure_root()
 	var success := _write_json(slot_path(slot), collect())
+	if success:
+		current_slot = slot
 	save_finished.emit(slot, success)
 	EventBus.save_completed.emit(slot, success)
 	return success
 
 
-## 从 [param slot] 读取核心状态。
+## 保存本局：[member current_slot] 还没分配时先取 [method next_slot]。
+##
+## 这是菜单"保存进度"与日结自动存档共用的唯一入口——手动存档因此收敛成
+## "存当前这一局"，不再有手选槽位的机会。
+func save_current() -> bool:
+	var slot := current_slot
+	if slot < 0:
+		slot = next_slot()
+	return save_game(slot)
+
+
+## 从 [param slot] 读取核心状态。成功后把它记为本局槽位。
 ##
 ## 注意：这个方法是同步的（方便单元测试），只负责恢复核心单例
 ## 以及[b]当前已挂在场景树上[/b]的持久化节点。
@@ -115,6 +176,8 @@ func save_game(slot: int) -> bool:
 func load_game(slot: int) -> bool:
 	var data := _read_json(slot_path(slot))
 	var success: bool = not data.is_empty() and apply(data)
+	if success:
+		current_slot = slot
 	load_finished.emit(slot, success)
 	EventBus.load_completed.emit(slot, success)
 	return success
@@ -134,12 +197,31 @@ func load_game_and_restore_world(slot: int) -> bool:
 	return true
 
 
-## 删除槽位存档。
+## 读取本局槽位并重建世界；还没分配槽位时返回 false。
+func load_current_and_restore_world() -> bool:
+	if current_slot < 0:
+		return false
+	return await load_game_and_restore_world(current_slot)
+
+
+## 开始一局新游戏：清空本局槽位，第一次保存时才分配新的槽位号。
+func begin_new_game() -> void:
+	current_slot = -1
+
+
+## 删除槽位存档；删掉的正好是本局槽位时，本局回到"未落盘"。
 func delete_save(slot: int) -> bool:
 	if not has_save(slot):
 		return false
-	return DirAccess.remove_absolute(ProjectSettings.globalize_path(slot_path(slot))) == OK
+	var removed := DirAccess.remove_absolute(
+		ProjectSettings.globalize_path(slot_path(slot))
+	) == OK
+	if removed and current_slot == slot:
+		current_slot = -1
+	return removed
 
+
+# ---------------------------------------------------------------- 收集 / 应用
 
 ## 收集当前世界的完整存档数据。
 func collect() -> Dictionary:

@@ -88,6 +88,12 @@ func _check_clock() -> void:
 	_check_eq(_clock.hour(), GameDateClock.DAY_ROLLOVER_HOUR, "跨天后应当停在 02:00")
 	_check(_clock.minutes_since_day_start() >= 0, "当天已过分钟数不应为负")
 
+	# 日结自动存档：跨天时由 Main 的日结钩子落盘，槽位自动分配。
+	_check(
+		SaveManager.current_slot >= 0 and SaveManager.has_save(SaveManager.current_slot),
+		"跨天后应当自动存档到本局槽位"
+	)
+
 	# 睡到早上：应当回到 06:00。
 	_clock.sleep_until_morning()
 	_check_eq(_clock.hour(), GameDateClock.DAY_START_HOUR, "睡醒后应当回到 06:00")

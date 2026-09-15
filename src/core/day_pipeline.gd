@@ -17,6 +17,8 @@ const PRIORITY_RELATIONSHIPS: int = 20
 const PRIORITY_CALENDAR: int = 30
 ## 世界内模拟：作物、植被、牲畜、玩家状态等。
 const PRIORITY_WORLD: int = 100
+## 日结自动存档：排在所有模拟钩子之后，落盘的是"新一天刚开始"的状态。
+const PRIORITY_AUTOSAVE: int = 200
 ## 未声明优先级时的默认值；与 [constant PRIORITY_WORLD] 同层。
 const PRIORITY_DEFAULT: int = PRIORITY_WORLD
 

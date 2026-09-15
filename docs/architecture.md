@@ -30,15 +30,16 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 - 玩家 / 时钟状态由 `Main` 持有并显式注入：`PlayerProfile`、`GameDateClock`。
 - `Main` 在 `_enter_tree()` 里创建服务并注入依赖，保证早于世界 / UI 子树；核心存档节由 `Main` 显式注册为
   `Array[SaveSection]`，场景节点继续用 `Persistence.register()` 自注册，`SaveManager` 统一包装成 `SaveSection`。
+  日结自动存档是 `Main` 注册的最高优先级日结转钩子，跑在所有模拟钩子之后。
 - 世界实例缓存与待恢复目标在 `WorldHost`；`SceneRouter.change_scene_to(host, path, spawn)` 只做无状态过渡。
 - 代码入口：`src/main/main.gd`、`src/main/world_host.gd`、`src/services/*.gd`、`src/core/save_section.gd`、
-  `src/core/persistence.gd`、`src/autoload/save_manager.gd`。
+  `src/core/persistence.gd`、`src/core/save_slots.gd`、`src/autoload/save_manager.gd`。
 
 ## 3. 关键设计决策
 
 | 决策 | 要点 | 代码入口 |
 | --- | --- | --- |
-| 存档用 JSON | 避免 `ResourceSaver` 写入脚本路径；显式版本号 + `from_dict` 字段兜底 | `save_manager.gd` |
+| 存档用 JSON，槽位无上限 | 避免 `ResourceSaver` 写入脚本路径；槽位号进文件名，目录扫描即槽位列表；显式版本号 + `from_dict` 字段兜底 | `save_manager.gd` |
 | 世界场景换子节点 | `Main` 常驻 `WorldHost` / `UiRoot`，不用 `change_scene_to_file`；缓存与当前实例在 `WorldHost`，`SceneRouter` 只做无状态过渡 | `main.gd`、`world_host.gd`、`scene_router.gd` |
 | 领域事件 | 全局只留时间 / 场景 / 存档信号；玩家 / 农场 / 世界 / UI 信号挂在由状态或宿主持有的领域对象上 | `event_bus.gd`、`src/events/*.gd` |
 | `_ready()` 一生只跑一次 | 缓存复用场景不重跑 `_ready()`；每次进图逻辑放 `_enter_tree()` / `_exit_tree()` | `world_scene.gd` |
@@ -80,6 +81,7 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 | 天气 | `src/services/weather_service.gd`、`src/core/weather.gd`、`src/core/weather_state.gd` | 状态在 `WeatherState`；服务注册最高优先级日结转，先掷天气再让日历 / 农场读取 |
 | 世界连接 | `src/autoload/scene_router.gd`、`src/world/scene_door.gd`、`ground_painter.gd` | 链式地图；`auto_enter` / `road_exit`；乡道压纵向中线由 `test_world_map.gd` 守 |
 | 畜舍 | `src/farm/livestock_manager.gd`、`animal_husbandry.gd` | 与 `FarmGrid` 同构：状态字典、视图可重建、规则纯静态 |
+| 存档 / 多存档槽 | `src/autoload/save_manager.gd`、`src/core/save_slots.gd`、`src/core/save_section.gd` | 槽位 = 目录里的 `slot_<n>.json`；`current_slot` 记本局；日结自动存档是 `Main` 的最高优先级日结钩子 |
 
 ## 6. 测试策略
 

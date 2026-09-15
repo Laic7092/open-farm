@@ -32,8 +32,6 @@ static var boot_slot: int = 0
 const FIRST_WORLD: String = "res://scenes/world/farm.tscn"
 ## 新游戏落地的出生点。
 const FIRST_SPAWN: StringName = &"start"
-## 快捷存 / 读档使用的槽位。
-const QUICK_SLOT: int = 0
 ## 标题页场景路径（"回到标题"要知道回到哪）。
 const TITLE_SCENE: String = "res://scenes/title/title_screen.tscn"
 
@@ -77,6 +75,8 @@ static func return_to_title(tree: SceneTree) -> void:
 	if tree == null:
 		return
 	tree.paused = false
+	# 回到标题就不再持有“本局”，否则下一次开新档会误写进上一局的槽位。
+	SaveManager.begin_new_game()
 	var host := tree.get_first_node_in_group(WorldHost.GROUP) as WorldHost
 	if host != null:
 		host.clear_world_cache()
@@ -115,10 +115,7 @@ func _input(event: InputEvent) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"quick_save"):
 		get_viewport().set_input_as_handled()
-		SaveManager.save_game(QUICK_SLOT)
-		EventBus.ui.notification_requested.emit(
-			&"NOTIFY_SAVED", {"slot": QUICK_SLOT}
-		)
+		_quick_save()
 	elif event.is_action_pressed(&"quick_load"):
 		get_viewport().set_input_as_handled()
 		_quick_load()
@@ -177,6 +174,11 @@ func _bind_dependencies() -> void:
 	if host != null:
 		save_sections.append(SaveSection.new(host, &"SceneRouter", 60, true))
 	SaveManager.set_core_sections(save_sections)
+
+	# 日结自动存档：排在所有模拟钩子之后，落盘的是新一天开始的状态。
+	clock_state.register_day_hook(
+		_on_day_rollover_autosave, DayPipeline.PRIORITY_AUTOSAVE
+	)
 
 	# 时钟信号由 Main 作为 presenter 转发到 EventBus；消费者继续只订阅 EventBus。
 	if not clock_state.minute_changed.is_connected(_on_clock_minute_changed):
@@ -239,6 +241,7 @@ func _boot_from_save() -> bool:
 
 
 func _boot_new_game() -> void:
+	SaveManager.begin_new_game()
 	player_profile.reset()
 	relationship_service.reset()
 	clock_state.reset()
@@ -250,15 +253,33 @@ func _boot_new_game() -> void:
 	await SceneRouter.change_scene_to(world_host, FIRST_WORLD, FIRST_SPAWN)
 
 
+## 快捷存档：写到本局槽位；新游戏第一次存档时才分配槽位号。
+func _quick_save() -> void:
+	if SaveManager.save_current():
+		EventBus.ui.notification_requested.emit(
+			&"NOTIFY_SAVED", {"slot": SaveManager.current_slot + 1}
+		)
+	else:
+		EventBus.ui.notification_requested.emit(&"NOTIFY_SAVE_FAILED", {})
+
+
 func _quick_load() -> void:
-	if not await SaveManager.load_game_and_restore_world(QUICK_SLOT):
+	if not await SaveManager.load_current_and_restore_world():
 		EventBus.ui.notification_requested.emit(&"NOTIFY_LOAD_FAILED", {})
 		return
-	EventBus.ui.notification_requested.emit(&"NOTIFY_LOADED", {"slot": QUICK_SLOT})
+	EventBus.ui.notification_requested.emit(
+		&"NOTIFY_LOADED", {"slot": SaveManager.current_slot + 1}
+	)
+
+
+## 日结自动存档：日结转流水线的最后一棒，存下的是"新一天刚开始"的状态。
+func _on_day_rollover_autosave(_date: GameDate) -> void:
+	if SaveManager.save_current():
+		EventBus.ui.notification_requested.emit(&"NOTIFY_AUTO_SAVED", {})
 
 
 func _on_pause_menu_requested() -> void:
-	# UiRoot 已经负责开关菜单与暂停，这里只留一个扩展点（例如自动存档）。
+	# UiRoot 已经负责开关菜单与暂停，这里只留一个扩展点。
 	pass
 
 

@@ -13,7 +13,7 @@
 | 内容量少 | `data/`：3 作物 / 2 牲畜 / 10 鱼 / 7 植被 / 5 节日 / 5 事件 / 2 商店 | 十几个小时见底 |
 | 循环太浅 | 钓鱼无拉扯；牲畜不死不繁殖；恋爱是自动里程碑 | 每个系统“点一下就完” |
 | 明确留白 | `ToolData.tier` 注释「骨架阶段仅保留字段」；`dialogue_line.gd`「分支对话留待后续」；`shipping_bin.gd` 自认「一次性全卖」简化；全仓无 cooking / recipe / 博物馆 / 任务 / 成就 | 缺长期目标与自我表达 |
-| 底座债 | `README.md` 已知限制：场景常驻内存、水无碰撞、NPC 不避让、事件仅日结转判定、单存档槽、纯键盘 | 内容一多就碰壁 |
+| 底座债 | `README.md` 已知限制：场景常驻内存、水无碰撞、NPC 不避让、事件仅日结转判定、纯键盘 | 内容一多就碰壁 |
 
 由此得到的排序原则：**补深度 → 扩内容 → 还债 → 产品化**，而不是再挂一个并列的新系统。
 
@@ -54,7 +54,7 @@
 | 水域无碰撞 | 补碰撞层 / 水域导航，钓鱼与寻路同时受益 | 场景 + `src/core/water_kind.gd` |
 | NPC 不互相避让 | 动态占用网格 + 局部避让 | `src/npc/npc_navigator.gd`、`src/core/grid_pathfinder.gd` |
 | 事件仅日结转判定 | 区域 / 实时触发（`Area` → `EventBus` → 规则） | `src/event/event_rules.gd` |
-| 单存档槽 | 多槽 + 自动存档 + 版本迁移（JSON 已带版本号） | `src/autoload/save_manager.gd`、`src/core/persistence.gd` |
+| 存档迁移 | 多槽 + 日结自动存档已完成；待补跨版本字段迁移（JSON 已带版本号） | `src/autoload/save_manager.gd`、`src/core/persistence.gd` |
 | 字体字符子集 | 动态字形加载或打包完整 CJK，避免生僻字方块 | `tools/art/generate_font.gd` |
 | 纯键盘、鼠标隐藏 | 手柄映射 + 可选触摸，为 Deck / 移动端铺路 | `project.godot` InputMap、`src/core/pointer_input.gd` |
 

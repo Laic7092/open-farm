@@ -31,7 +31,7 @@
 | 加内容（作物 / 牲畜 / 植被 / 鱼种 / NPC / 节日 / 地图 / 音效 / UI） | `README.md`「扩展入口」 |
 | 改玩法数值 | 优先只改 `data/**/*.tres` |
 | 参与日结转 | `GameDateClock.register_day_hook(callable, DayPipeline.PRIORITY_*)`，并在 `_exit_tree` 注销 |
-| 参与存档 | `to_dict/from_dict` + `Persistence.register(self, &"id")`；核心状态 / 服务在 `Main._bind_dependencies()` 注册 `SaveSection`；JSON 往返把 `StringName` 转回 |
+| 参与存档 | `to_dict/from_dict` + `Persistence.register(self, &"id")`；核心状态 / 服务在 `Main._bind_dependencies()` 注册 `SaveSection`；JSON 往返把 `StringName` 转回；槽位无上限，手动与日结自动存档统一走 `SaveManager.save_current()` |
 | 改地图瓦片 / 外观 | `src/art/atlas_layout.gd` + `tools/art/generate_terrain.gd`；已发布格子只能往后追加 |
 | 大文件怎么读 / 怎么改 | `docs/big_files.md`；先 `python3 tools/outline.py map` 定位 |
 | Godot 命令与引擎坑 | `docs/architecture.md` §4 |

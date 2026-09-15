@@ -9,11 +9,14 @@ extends Control
 ## 画面全部来自 [code]tools/art/generate_title.gd[/code] 生成的像素素材：
 ## 背景是 1:1 的 640×360 像素画，云朵单独出图以便在代码里飘。
 ##
+## [b]按钮条件显示[/b]：没有任何存档时"继续游戏"整个隐藏（而不是只置灰），
+## 焦点自动落到"新游戏"，避免键盘玩家停在按不动的按钮上；
+## 有存档时两个按钮都出现，"继续游戏"打开存档列表让人选一局。
+##
 ## 操作：WASD / 方向键选择，Enter / 空格 确认；鼠标已关闭（见 [PointerInput]）。
 ##
 ## W / A / S / D 已经并进内置的 ui_* 动作（见 [code]project.godot[/code] 的 InputMap），
-## 所以这里直接用 Godot 的焦点导航；被禁用的"继续游戏"把 focus_mode 设为 NONE，
-## 导航会自动跳过它。
+## 所以菜单直接用 Godot 的焦点导航；存档列表也是按钮，方向键天然可选中。
 
 ## 语言选择按钮上显示的本地化名称。
 const LOCALE_NAMES := {
@@ -24,9 +27,13 @@ const LOCALE_NAMES := {
 ## 每朵云的水平漂移速度（像素/秒），负值向左。
 const CLOUD_SPEEDS: Array[float] = [-6.0, -3.5, -9.0]
 
+## 删除存档的按键；纯键盘操作下用它管理存档列表。
+const DELETE_KEY: Key = KEY_DELETE
+
 @onready var _title_block: VBoxContainer = %TitleBlock
 @onready var _title_label: Label = %TitleLabel
 @onready var _subtitle_label: Label = %SubtitleLabel
+@onready var _menu: VBoxContainer = %Menu
 @onready var _continue_button: Button = %ContinueButton
 @onready var _save_info_label: Label = %SaveInfoLabel
 @onready var _new_game_button: Button = %NewGameButton
@@ -34,6 +41,10 @@ const CLOUD_SPEEDS: Array[float] = [-6.0, -3.5, -9.0]
 @onready var _quit_button: Button = %QuitButton
 @onready var _hint_label: Label = %HintLabel
 @onready var _footer_label: Label = %FooterLabel
+@onready var _save_panel: Control = %SavePanel
+@onready var _save_title_label: Label = %SaveTitleLabel
+@onready var _save_list: VBoxContainer = %SaveList
+@onready var _save_hint_label: Label = %SaveHintLabel
 @onready var _cloud_1: TextureRect = %Cloud1
 @onready var _cloud_2: TextureRect = %Cloud2
 @onready var _cloud_3: TextureRect = %Cloud3
@@ -44,8 +55,8 @@ var _title_base_y: float = 0.0
 ## 是否已经记录过底板的基准位置（容器布局要等一帧才生效）。
 var _title_base_ready: bool = false
 var _elapsed: float = 0.0
-## 本次要读的存档槽位；-1 表示没有存档。
-var _continue_slot: int = -1
+## 标题页当前看到的存档摘要；按最近保存时间倒序。
+var _saves: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -61,6 +72,7 @@ func _ready() -> void:
 	# 对话 / 商店等模态界面可能在切换场景时留下暂停状态。
 	get_tree().paused = false
 
+	_save_panel.visible = false
 	_refresh()
 	_focus_default()
 
@@ -84,12 +96,33 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	# 存档列表打开时接住 Esc（返回）与 Delete（删档）。
+	if not _save_panel.visible:
+		return
+	if event.is_action_pressed(&"ui_cancel"):
+		get_viewport().set_input_as_handled()
+		_close_save_panel()
+		return
+	if (
+		event is InputEventKey
+		and event.pressed
+		and not event.echo
+		and event.keycode == DELETE_KEY
+	):
+		get_viewport().set_input_as_handled()
+		_delete_focused_save()
+
+
 # ---------------------------------------------------------------- 文本
 
 ## 按当前语言刷新所有文案与存档摘要。
 func _refresh() -> void:
 	_title_label.text = Text.key(&"GAME_TITLE")
 	_subtitle_label.text = Text.key(&"GAME_SUBTITLE")
+	_continue_button.text = Text.key(&"TITLE_CONTINUE")
+	_save_title_label.text = Text.key(&"TITLE_SAVE_TITLE")
+	_save_hint_label.text = Text.key(&"TITLE_SAVE_HINT")
 	_new_game_button.text = Text.key(&"TITLE_NEW_GAME")
 	_language_button.text = "%s：%s" % [Text.key(&"TITLE_LANGUAGE"), _next_locale_name()]
 	_quit_button.text = Text.key(&"TITLE_QUIT")
@@ -101,71 +134,126 @@ func _refresh() -> void:
 	_refresh_save_info()
 
 
+## 刷新"继续游戏"按钮的可见性与下方的存档摘要。
+##
+## 没有存档时按钮整个隐藏：禁用按钮仍会占位、且对纯键盘玩家没有意义。
 func _refresh_save_info() -> void:
-	_continue_slot = _newest_slot()
-	if _continue_slot < 0:
-		_continue_button.text = Text.key(&"TITLE_CONTINUE")
-		_set_continue_enabled(false)
+	_saves = SaveManager.all_meta()
+	if _saves.is_empty():
+		_set_continue_visible(false)
 		_save_info_label.text = Text.key(&"TITLE_SAVE_EMPTY")
 		return
 
-	_set_continue_enabled(true)
-	_continue_button.text = Text.key(&"TITLE_CONTINUE")
-	var meta := SaveManager.read_meta(_continue_slot)
+	_set_continue_visible(true)
+	_save_info_label.text = _slot_text(_saves[0])
+
+
+## 启用 / 隐藏"继续游戏"按钮。
+##
+## 隐藏的按钮要同时退出焦点链，否则方向键会在它上面停住。
+func _set_continue_visible(visible_now: bool) -> void:
+	_continue_button.visible = visible_now
+	_continue_button.disabled = not visible_now
+	_continue_button.focus_mode = Control.FOCUS_ALL if visible_now else Control.FOCUS_NONE
+
+
+## 一行存档摘要："存档 2　春 3 日　1200G"。
+func _slot_text(meta: Dictionary) -> String:
 	var date: GameDate = meta.get("date", GameDate.new())
-	_save_info_label.text = "%s　%s　%sG" % [
-		Text.format(&"TITLE_SAVE_LABEL", {"slot": _continue_slot + 1}),
+	return "%s　%s　%dG" % [
+		Text.format(&"TITLE_SAVE_LABEL", {"slot": int(meta.get("slot", 0)) + 1}),
 		Text.date_text(date),
-		meta.get("money", 0),
+		int(meta.get("money", 0)),
 	]
 
 
-## 最近一次保存的槽位；没有存档时返回 -1。
-func _newest_slot() -> int:
-	var slots := SaveManager.existing_slots()
-	if slots.is_empty():
-		return -1
-	var best: int = slots[0]
-	var best_time: String = str(SaveManager.read_meta(best).get("saved_at", ""))
-	for slot: int in slots:
-		var stamp: String = str(SaveManager.read_meta(slot).get("saved_at", ""))
-		if stamp > best_time:
-			best = slot
-			best_time = stamp
-	return best
+# ---------------------------------------------------------------- 存档列表
+
+## 打开存档列表：藏起主菜单、按最近保存顺序铺出每一局。
+func _open_save_panel() -> void:
+	if _saves.is_empty():
+		return
+	_refresh_save_list()
+	_save_panel.visible = true
+	_menu.visible = false
+	_focus_save_list(0)
+
+
+func _close_save_panel() -> void:
+	_save_panel.visible = false
+	_menu.visible = true
+	# 删过档或时间变了，回到主菜单时同步一次。
+	_refresh_save_info()
+	_focus_default()
+
+
+## 重建存档列表；每一项都是按钮，直接复用 Godot 的焦点导航。
+func _refresh_save_list() -> void:
+	for child: Node in _save_list.get_children():
+		_save_list.remove_child(child)
+		child.queue_free()
+	for meta: Dictionary in _saves:
+		var slot := int(meta.get("slot", 0))
+		var button := Button.new()
+		button.text = _slot_text(meta)
+		button.custom_minimum_size = Vector2(0.0, 24.0)
+		button.pressed.connect(_on_slot_chosen.bind(slot))
+		button.focus_entered.connect(_on_menu_focus)
+		_save_list.add_child(button)
+
+
+## 把焦点放到列表第 [param index] 项；列表为空时不动。
+func _focus_save_list(index: int) -> void:
+	var buttons := _save_list.get_children()
+	if buttons.is_empty():
+		return
+	var target := clampi(index, 0, buttons.size() - 1)
+	(buttons[target] as Button).grab_focus()
+
+
+## 删除当前焦点所在的那一局；删完还有存档就继续留在列表里。
+func _delete_focused_save() -> void:
+	var focused := get_viewport().gui_get_focus_owner() as Button
+	if focused == null or focused.get_parent() != _save_list:
+		return
+	var index := focused.get_index()
+	var slot := int(_saves[index].get("slot", -1)) if index < _saves.size() else -1
+	if slot < 0:
+		return
+	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
+	SaveManager.delete_save(slot)
+	_saves = SaveManager.all_meta()
+	if _saves.is_empty():
+		_close_save_panel()
+		return
+	_refresh_save_list()
+	_focus_save_list(index)
 
 
 # ---------------------------------------------------------------- 交互
 
 func _focus_default() -> void:
-	var target: Button = _continue_button if not _continue_button.disabled else _new_game_button
+	var target: Button = _continue_button if _continue_button.visible else _new_game_button
 	target.grab_focus()
-
-
-## 启用 / 禁用"继续游戏"。
-##
-## 禁用的按钮要同时退出焦点链，否则方向键会在它上面停住。
-func _set_continue_enabled(enabled: bool) -> void:
-	_continue_button.disabled = not enabled
-	_continue_button.focus_mode = Control.FOCUS_ALL if enabled else Control.FOCUS_NONE
 
 
 ## 焦点落到某个按钮上时的移动音效。
 func _on_menu_focus() -> void:
 	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
 
-
 func _on_continue_pressed() -> void:
-	if _continue_slot < 0:
+	if _saves.is_empty():
 		return
 	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
-	_start_game(Main.BootMode.LOAD_SLOT, _continue_slot)
+	_open_save_panel()
 
+func _on_slot_chosen(slot: int) -> void:
+	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
+	_start_game(Main.BootMode.LOAD_SLOT, slot)
 
 func _on_new_game_pressed() -> void:
 	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 	_start_game(Main.BootMode.NEW_GAME, 0)
-
 
 func _on_language_pressed() -> void:
 	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
@@ -173,10 +261,8 @@ func _on_language_pressed() -> void:
 	_refresh()
 	_focus_default()
 
-
 func _on_quit_pressed() -> void:
 	get_tree().quit()
-
 
 ## 交给 [Main] 的入口参数，然后切场景。
 func _start_game(mode: Main.BootMode, slot: int) -> void:
@@ -184,7 +270,6 @@ func _start_game(mode: Main.BootMode, slot: int) -> void:
 	Main.boot_slot = slot
 	# 标题页到此为止：它会被 change_scene_to_file 整个释放。
 	get_tree().change_scene_to_file("res://scenes/main/main.tscn")
-
 
 # ---------------------------------------------------------------- 语言
 
@@ -197,11 +282,9 @@ func _next_locale() -> String:
 	var index: int = locales.find(TranslationServer.get_locale())
 	return locales[posmod(index + 1, locales.size())]
 
-
 func _next_locale_name() -> String:
 	var locale := _next_locale()
 	return LOCALE_NAMES.get(locale, locale)
-
 
 # ---------------------------------------------------------------- 云
 

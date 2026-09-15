@@ -74,13 +74,22 @@ func close() -> void:
 	visible = false
 
 
+## 手动存档收敛成"存当前这一局"：槽位由 [SaveManager] 自己管理，菜单不再手选。
 func _on_save_pressed() -> void:
-	SaveManager.save_game(0)
+	if SaveManager.save_current():
+		EventBus.ui.notification_requested.emit(
+			&"NOTIFY_SAVED", {"slot": SaveManager.current_slot + 1}
+		)
+	else:
+		EventBus.ui.notification_requested.emit(&"NOTIFY_SAVE_FAILED", {})
 
 
+## 读档只重载当前这一局；要换一局请到标题页的存档列表里选。
 func _on_load_pressed() -> void:
-	if await SaveManager.load_game_and_restore_world(0):
+	if await SaveManager.load_current_and_restore_world():
 		close_requested.emit()
+	else:
+		EventBus.ui.notification_requested.emit(&"NOTIFY_LOAD_FAILED", {})
 
 
 func _on_quit_pressed() -> void:

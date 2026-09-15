@@ -28,7 +28,7 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 | `G` | 给面前 NPC 送礼物 |
 | `Tab` / `I` | 背包 |
 | `Esc` | 系统菜单 |
-| `F5` / `F9` | 快捷存档 / 读档（槽位 0） |
+| `F5` / `F9` | 快捷存档 / 读档（当前这一局） |
 
 纯键盘操作，鼠标隐藏：菜单、商店、标题页均可用方向键或 `WASD` 导航，回车 / 空格 / `E` 确认，
 `Esc` 返回；商店内 `A` / `D` 切换购买与卖出列表。
@@ -56,7 +56,7 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 | 加地图 | 复制 `scenes/world/twon.tscn` 或 `library.tscn`；地面用 `src/world/*_ground.gd`；放 `SpawnPoint` 并用 `SceneDoor` 互连；同步 `tests/unit/test_world_map.gd` 的 `MAPS` |
 | 加音效 / BGM | `src/audio/audio_catalog.gd` + `tools/audio/generate_*.gd` + 场景里的 `SceneAudio`（`src/audio/scene_audio.gd`）|
 | 改 UI | `src/ui/*.gd` + `scenes/ui/*.tscn` + `src/ui/ui_root.gd` |
-| 参与存档 | 节点实现 `to_dict/from_dict`，并 `Persistence.register(self, &"id")`；JSON 往返后 `StringName` 要转回 |
+| 参与存档 | 节点实现 `to_dict/from_dict`，并 `Persistence.register(self, &"id")`；JSON 往返后 `StringName` 要转回。槽位无上限，手动与日结自动存档都走 `SaveManager.save_current()` |
 
 ## 测试
 
@@ -69,9 +69,8 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 - 美术与音频由脚本生成，细节和动态表现有限；中文像素字体是字符子集，容器缺字时生僻字会显示方块。
 - 世界场景切过后常驻内存；地图继续增加后需改成「按需卸载 + 状态外置」。
 - 水域没有碰撞；NPC 只走固定时刻表，不会互相避让；事件只在日结转时判定。
-- 恋爱是满足条件自动推进的里程碑；牲畜不会死亡或繁殖；存档只有一个槽位。
+- 恋爱是满足条件自动推进的里程碑；牲畜不会死亡或繁殖。
 - 钓鱼是「等咬钩 → 窗口内按一次收竿」，没有拉扯小游戏；鱼只按水域 / 季节 / 天气 / 时段筛选。
-- `assets/i18n/strings.csv` 中 `MENU_TITLE` 重复定义，当前生效的是「回到标题」。
 - 偿还顺序见 [docs/roadmap.md](docs/roadmap.md)；单点设计原因看代码中的 `##` 注释。
 
 ## 文档地图
