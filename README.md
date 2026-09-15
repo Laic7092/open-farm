@@ -107,7 +107,7 @@ open-farm/
 ├── src/
 │   ├── art/                   # 调色板与图集排版表（生成器与运行时共用的事实来源）
 │   ├── audio/                 # 音频 id / 路径目录（生成器与运行时共用）
-│   ├── autoload/              # 全局单例（见下方"十大单例"）
+│   ├── autoload/              # 剩余全局单例（见下方"九大单例"）
 │   ├── core/                  # 与玩法无关的基础设施：日期、季节、朝向、状态机、交互基类、网格 A*
 │   ├── data/                  # 数据资源的类定义（CropData / FloraData / ItemData / …）
 │   ├── player/                # 玩家实体、体力、背包、物品栏、状态机状态
@@ -145,7 +145,7 @@ open-farm/
 本节只回答"是什么、在哪"；每个设计**为什么**这么写，见
 [docs/architecture.md](docs/architecture.md)（关键决策见 §3，子系统见 §10 起）。
 
-### 十一大单例（Autoload）
+### 九大单例（Autoload）
 
 启动顺序 = `project.godot` 的声明顺序；依赖图与约束见
 [architecture §2](docs/architecture.md#2-autoload-依赖图)。
@@ -155,8 +155,6 @@ open-farm/
 | `EventBus` | 全局信号总线 | **只声明信号**，不写逻辑。生产者 emit、消费者 connect，双方互不相识 |
 | `AppTheme` | 语言与字体引导 | 语言匹配 + 缺中文字体时自动兜底，避免"豆腐块" |
 | `Database` | 静态数据仓库 | 启动扫描 `res://data/`，按 id 建索引。业务代码永不硬编码文件路径 |
-| `GameClock` | 游戏时钟 | 06:00 起床、次日 02:00 强制结束；**有序日结转钩子**驱动模拟流水线。状态在 `GameDateClock`（`Main` 注入） |
-| `GameState` | 跨场景状态 | 金钱、剧情旗标、统计。状态在 `PlayerProfile`（`Main` 注入）；玩家体力/背包属于 `Player` |
 | `WeatherSystem` | 天气 | 作为**第一个**日结转钩子，保证其它系统读到的天气已是当天的。状态在 `WeatherState`（`Main` 注入） |
 | `Relationships` | 好感度与恋爱 | 跨场景持有每 NPC 的好感 / 关系阶段、配偶与孩子；日结转清每日标记并推进婚育。状态在 `RelationshipStore`（`Main` 注入） |
 | `Calendar` | 节日与事件 | 从 `data/festivals` / `data/events` 读表；日结转播报今日节日并判定一次性事件。进度在 `CalendarProgress`（`Main` 注入） |
@@ -171,7 +169,7 @@ open-farm/
 2. **静态数据 ↔ 运行时状态分离**：`XxxData`（`Resource`，不变）↔ `XxxState`
    （`RefCounted`，会变）；规则写在 `XxxGrowth` / `XxxHusbandry` 的纯静态函数里，可脱离引擎单测。
 3. **信号解耦，顺序显式化**：UI 单向订阅 `EventBus`；有依赖顺序的日结转走
-   `GameClock.register_day_hook()` 的有序列表——顺序即流水线
+   注入时钟的 `register_day_hook()` 有序列表——顺序即流水线
    （[architecture §3.3](docs/architecture.md#33-用有序钩子而不是信号做日结转)）。
 
 展开与代码示例见 [architecture §3](docs/architecture.md#3-关键设计决策)。

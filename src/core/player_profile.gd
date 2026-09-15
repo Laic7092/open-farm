@@ -6,10 +6,13 @@ extends Resource
 ## 统计与游玩时长。金钱 / 旗标等规则集中在这里；不依赖场景树，也不认识
 ## EventBus，因此可以由 [Main] 持有、测试里直接 new 一份干净实例。
 ##
-## [GameState] 只是它的 Autoload 门面；真正的状态所有权在组合根。
+## 场景节点由 [Main] 显式注入同一份实例，不再通过 Autoload 全局名访问。
 
 ## 开局资金。
 const STARTING_MONEY: int = 500
+
+## 金钱变化；由拥有者（[Main]）转发到 [EventBus]。
+signal money_changed(money: int, delta: int)
 
 ## 玩家名字。
 @export var player_name: String = "农夫"
@@ -42,6 +45,7 @@ func reset() -> void:
 	total_shipped = 0
 	play_seconds = 0.0
 	counting_playtime = false
+	money_changed.emit(money, 0)
 
 
 ## 每帧累计游玩时长。
@@ -66,6 +70,7 @@ func spend(amount: int) -> bool:
 	if amount < 0 or not can_afford(amount):
 		return false
 	money -= amount
+	money_changed.emit(money, -amount)
 	return true
 
 
@@ -75,12 +80,14 @@ func earn(amount: int) -> int:
 		return 0
 	total_earned += amount
 	money += amount
+	money_changed.emit(money, amount)
 	return amount
 
 
 ## 直接设置金钱（读档 / 调试用）。
 func set_money(value: int) -> void:
 	money = maxi(value, 0)
+	money_changed.emit(money, 0)
 
 
 ## 设置旗标。
@@ -138,3 +145,4 @@ func from_dict(data: Dictionary) -> void:
 	total_earned = maxi(int(data.get("total_earned", 0)), 0)
 	total_shipped = maxi(int(data.get("total_shipped", 0)), 0)
 	play_seconds = maxf(float(data.get("play_seconds", 0.0)), 0.0)
+	money_changed.emit(money, 0)

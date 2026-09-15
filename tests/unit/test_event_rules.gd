@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## 事件条件测试：季节 / 日期 / 天气 / 旗标 / 好感门槛。
 ##
-## [EventRules] 只吃"已经查好的事实"，所以这里连 [GameState] 都不用碰。
+## [EventRules] 只吃"已经查好的事实"，所以这里连 [PlayerProfile] 都不用碰。
 
 
 func _event() -> EventData:

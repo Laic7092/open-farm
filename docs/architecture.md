@@ -66,35 +66,35 @@
 EventBus      ← 无依赖
 AppTheme      ← 无依赖（只碰 TranslationServer / ThemeDB）
 Database      ← 无依赖（只读 res://data）
-GameClock     ← EventBus, GameDateClock（状态由组合根注入）
-GameState     ← EventBus, PlayerProfile（状态由组合根注入）
-WeatherSystem ← GameClock, WeatherState（把自己注册成第一个日结转钩子）
-Relationships ← EventBus, GameClock, Database, GameState,
-                RelationshipStore（排在 WeatherSystem 之后注册日结转钩子）
-Calendar      ← EventBus, GameClock, Database, GameState, WeatherSystem,
-                Relationships, CalendarProgress
-                （节日与事件：同样把自己的日结转钩子排在 Relationships 之后）
-SaveManager   ← EventBus, Persistence（鸭子类型找节点，不静态依赖任何游戏系统）
-SceneRouter   ← EventBus, GameClock
-Audio         ← EventBus, GameDateClock（状态由组合根注入；世界 id 来自 world_entered）
+WeatherSystem ← EventBus, GameDateClock（时钟由组合根注入；注册日结转钩子）
+Relationships ← EventBus, Database, PlayerProfile, GameDateClock,
+                RelationshipStore（排 WeatherSystem 之后注册日结转钩子）
+Calendar      ← EventBus, Database, PlayerProfile, GameDateClock,
+                WeatherSystem, Relationships, CalendarProgress
+SaveManager   ← EventBus, Persistence（鸭子类型找对象，不静态依赖任何游戏系统）
+SceneRouter   ← EventBus, PlayerProfile, GameDateClock（组合根注入，供世界节点使用）
+Audio         ← EventBus, GameDateClock（世界 id 来自 world_entered）
 ```
 
-**约束**：`WeatherSystem` 必须排在 `GameClock` 之后，否则 `_ready()` 里读
-`GameClock.date` 会拿到 null。`Audio` 不再静态依赖 `GameClock` / `SceneRouter`：
-世界 id 由 `EventBus.world_entered` 推送，时钟状态由 `Main` 在组合根中通过
-`Audio.bind_clock()` 注入；`Audio` 仍排在最后，保持“EventBus 先就绪再接信号”的声明顺序。
 
-核心单例在各自 `_ready()` 里调用 `Persistence.register_core(self, &"id", order)`
-自注册到 `persistent_core` 组；`SaveManager` 只按 `order` 排序后调用
+**约束**：`GameDateClock` 与 `PlayerProfile` 由 `Main` 在进入游戏时创建，
+并在世界 / UI 子树的 `_enter_tree()` 之前注入；`WeatherSystem` / `Relationships` /
+`Calendar` 的钩子也由 `Main` 显式绑定，不依赖 Autoload 声明顺序。
+`Audio` 不静态依赖 `SceneRouter`：世界 id 由 `EventBus.world_entered` 推送，
+时钟状态由 `Main` 通过 `Audio.bind_clock()` 注入。
+
+节点核心在各自 `_ready()` 里调用 `Persistence.register_core(self, &"id", order)`
+自注册到 `persistent_core` 组；状态 Resource 由 `Main` 调用
+`Persistence.register_core_resource(...)` 注册。`SaveManager` 只按 `order` 排序后调用
 `to_dict()` / `from_dict()`，不维护参与者名单，也不做
-`get_node_or_null("/root/<Name>")` 字符串反射。新增 / 重命名核心系统只改一处。
+`get_node_or_null("/root/<Name>")` 字符串反射。新增 / 重命名核心系统只改注册处。
 
 ---
 
 ### 2.0 状态资源与组合根
 
-P0 迁移后，`GameState` / `GameClock` / `WeatherSystem` / `Relationships` / `Calendar`
-不再自己持有可存档状态，而是只提供查询 / 规则 / 广播门面；真正的数据在：
+阶段 B 后，`WeatherSystem` / `Relationships` / `Calendar` 仍提供查询 / 规则 / 广播；
+真正的数据在 `Main` 持有的 Resource：
 
 | 状态资源 | 旧 Autoload 字段 |
 | --- | --- |
@@ -104,15 +104,16 @@ P0 迁移后，`GameState` / `GameClock` / `WeatherSystem` / `Relationships` / `
 | `RelationshipStore` | `Relationships` 的 NPC 关系字典 / 配偶 / 婚育进度 |
 | `CalendarProgress` | `Calendar` 的已参加节日 / 已触发事件 |
 
-这些 Resource 由 `Main`（组合根）持有，并在 `_ready()` 里通过
-`GameState.set_profile()` / `GameClock.set_state()` 等接口注入；
-`Audio.bind_clock(clock_state)` 让音频选曲也只读同一份时钟状态，不反向依赖 `GameClock`。
+这些 Resource 由 `Main`（组合根）持有，并在 Main 的 `_enter_tree()` 里通过
+`bind_clock()` / `bind_dependencies()` 等显式方法注入；世界场景根在挂载前也会把
+同一份 `PlayerProfile` / `GameDateClock` 分发给子节点。`GameDateClock` 同时接管
+原时钟服务的推进、查询与有序日结转钩子，因此不再需要 `GameClock` Autoload。
 好处：
 
-- 状态所有权从 Autoload 转移到组合根，单例只保留服务职责。
+- 玩家 / 时钟状态所有权在组合根，消费者只拿显式注入的引用。
 - 测试可以直接 `new PlayerProfile()` / `new GameDateClock()` 构造干净状态，
-  不必再依赖 Autoload 内部的隐式字段复位。
-- 存档仍走 `to_dict()` / `from_dict()`，门面接口和旧存档格式保持不变。
+  不必启动 Autoload。
+- 存档仍走 `to_dict()` / `from_dict()`，旧存档的 `GameClock` / `GameState` 键保持不变。
 
 ---
 
@@ -124,8 +125,8 @@ P0 迁移后，`GameState` / `GameClock` / `WeatherSystem` / `Relationships` / `
 Main/PauseMenu
   └─ await SaveManager.load_game_and_restore_world(slot)
        1. load_game(slot)
-          ├─ 按 persistent_core 组的注册顺序恢复核心单例
-          │  （GameClock → GameState → WeatherSystem → Relationships → Calendar → SceneRouter）
+          ├─ 按注册顺序恢复核心节
+          │  （GameDateClock → PlayerProfile → WeatherSystem → Relationships → Calendar → SceneRouter）
           └─ 暂存 payload["nodes"]，并对当前树上的节点 apply_node_state()
        2. await SceneRouter.restore_saved_world()
           ├─ 存档地图 == 当前地图 → 复用缓存实例，只重新放置玩家
@@ -151,7 +152,7 @@ JSON + 显式 `SAVE_VERSION` + 每个 `from_dict` 都给字段兜底默认值，
 
 1. **键统一当 `String` 处理**。`StringName` 键经过 `JSON.stringify` → `parse_string`
    会变成 `String`，`from_dict` 里必须 `StringName(str(key))` 转回来
-   （`GameState.flags` 就是这么处理的）。
+   （`PlayerProfile.flags` 就是这么处理的）。
 2. **版本号只增不减语义**：字段语义发生不兼容变化时才 `SAVE_VERSION += 1`，
    读取时拒绝比程序更新的存档，避免用旧代码解释新数据。
 
@@ -205,7 +206,7 @@ add_child（同一个实例）→ _enter_tree     ← 没有 _ready 了
 
 | 要做的事 | 放哪里 | 例子 |
 | --- | --- | --- |
-| 每次进出树都要生效 | `_enter_tree()` / `_exit_tree()` | `GameClock.register_day_hook()`、`add_to_group()`、`Persistence.register()` |
+| 每次进出树都要生效 | `_enter_tree()` / `_exit_tree()` | 注入的 `GameDateClock.register_day_hook()`、`add_to_group()`、`Persistence.register()` |
 | 只做一次的初始化 | `_init()` 或 `_ready()` | 背包/体力的构造（`_init`）、铺地面（`_ready`） |
 | 只跑一次但要能重跑 | 显式方法 | `FarmGrid.paint_ground()` 是幂等的，重跑无害 |
 
@@ -224,7 +225,7 @@ Godot **不保证同名信号的多个回调按连接顺序执行**。但日结�
 ```
 
 如果靠信号，某个版本改了回调排序，作物就会用昨天的天气生长，而且这种 bug
-极难复现。所以 `GameClock` 提供 `register_day_hook(callable)`，
+极难复现。所以 Main 注入的 `GameDateClock` 提供 `register_day_hook(callable)`，
 按注册顺序同步执行；钩子跑完之后才 emit `day_changed` 给 UI 这类观察者。
 
 新增参与日结转的系统时，在 `_enter_tree()` 注册、在 `_exit_tree()` 注销，
@@ -322,10 +323,10 @@ ground_layer = NodePath("../Ground")
 ## 5. `-s` 脚本与 autoload 的坑
 
 `godot -s res://xxx.gd` 会在 **autoload 注册全局标识符之前**编译该脚本。
-所以在 `-s` 脚本里直接写 `GameClock.reset()` 会得到：
+所以在 `-s` 脚本里直接写 `SceneRouter.clear_world_cache()` 会得到：
 
 ```
-SCRIPT ERROR: Compile Error: Identifier not found: GameClock
+SCRIPT ERROR: Compile Error: Identifier not found: SceneRouter
 ```
 
 （同一个脚本作为**场景**运行则完全正常。）
@@ -371,7 +372,7 @@ SCRIPT ERROR: Compile Error: Identifier not found: GameClock
 | 视觉预览（截图） | 人眼确认布局与画面 | 不做像素级 diff（尚未需要） |
 
 **为什么冒烟测试不可省**：单元测试全绿但游戏起不来是常态——
-导出的节点引用为 null、`%UniqueName` 拼错、autoload 顺序不对，
+导出的节点引用为 null、`%UniqueName` 拼错、组合根注入顺序不对，
 这些都不会让任何单元测试变红，只会让游戏静默地不工作。
 `tools/smoke_test.tscn` 就是为这一类问题存在的。
 
@@ -528,7 +529,7 @@ NPC 是 `Area2D`（`Interactable` 的子类），不参与物理碰撞。
 一条从"一天中的分钟"到"画面多亮"的曲线，加上会随时间亮的点光源。
 
 ```
-GameClock.minute_of_day
+GameDateClock.minute_of_day（Main 注入）
         │
         ▼
   DayNight.ambient_color ──┐
@@ -607,9 +608,8 @@ Godot 每张画布只认一个 `CanvasModulate`（官方文档："Only one can b
 
 ### 13.5 生命周期
 
-`Relationships` 是常驻 autoload，日结转钩子在 `_ready()` 注册一次即可，
-不存在世界场景那种"进图 / 出图"的注册时机问题；
-它注册在 `WeatherSystem` 之后的钩子顺序里，先让天气就位，再推进婚育倒计时。
+`Relationships` 仍是常驻 Autoload，但日结转钩子由 `Main` 在注入 `GameDateClock`
+时注册到显式钩子列表里，位置排在 `WeatherSystem` 之后：先让天气就位，再推进婚育倒计时。
 
 ---
 
@@ -632,7 +632,7 @@ Godot 每张画布只认一个 `CanvasModulate`（官方文档："Only one can b
 ### 14.2 为什么规则在 FestivalRules / EventRules（纯静态）
 
 "哪天办、现在开不开门、条件命中没有"全是纯函数：不碰场景树、不读 autoload
-（`EventRules.matches()` 收的是"已经查好的事实"，不是 `GameState` 本体）。
+（`EventRules.matches()` 收的是"已经查好的事实"，不是 `PlayerProfile` 本体）。
 于是 `tests/unit/test_festival_rules.gd` / `test_event_rules.gd` 可以穷举边界，
 和 `CropGrowth` / `AffectionRules` 是同一种拆分。
 
@@ -672,8 +672,8 @@ Godot 每张画布只认一个 `CanvasModulate`（官方文档："Only one can b
 
 ### 14.6 生命周期
 
-`Calendar` 是常驻 autoload：日结转钩子在 `_ready()` 注册一次，
-"已参加 / 已触发"随 `SaveManager` 的核心单例流程存档。
+`Calendar` 仍是常驻 Autoload，日结转钩子由 `Main` 注入 `GameDateClock` 时注册；
+"已参加 / 已触发"随 `SaveManager` 的核心节流程存档。
 `today_festivals()` 的结果按**绝对天数**缓存，读档 / 开新档 / 跨天时置脏重算，
 所以"读档后 HUD 上的今日节日"不需要任何额外同步。
 

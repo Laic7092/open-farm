@@ -8,7 +8,7 @@ extends Node
 ##
 ## 职责边界：
 ## [br]- 从 [Database] 装填节日 / 事件表；
-## [br]- 在 [method GameClock.register_day_hook] 的日结转里判定今天的节日与事件；
+## [br]- 在注入时钟的 `register_day_hook()` 日结转里判定今天的节日与事件；
 ## [br]- 持有"今年参加过哪些节日 / 哪些事件已触发"并负责存档；
 ## [br]- 通过 [EventBus] 广播，不直接碰 UI 或场景节点。
 ##
@@ -31,13 +31,28 @@ var _today: Array[FestivalData] = []
 var _today_absolute_day: int = -1
 ## 节日 / 事件进度；由组合根持有，可整体替换。
 var _progress: CalendarProgress = CalendarProgress.new()
+## 组合根注入的时钟；未注入时刷新 / 判定查询安全地返回空。
+var _clock: GameDateClock
+## 组合根注入的玩家档案；用于旗标与奖励。
+var _profile: PlayerProfile
 
 
 func _ready() -> void:
 	Persistence.register_core(self, &"Calendar", 50)
-	GameClock.register_day_hook(_on_day_rollover)
 	Database.reloaded.connect(reload)
 	reload()
+
+
+## 注入组合根持有的状态，并重新注册日结转钩子。
+func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
+	if _clock != null:
+		_clock.unregister_day_hook(_on_day_rollover)
+	_profile = profile
+	_clock = clock
+	if _clock != null:
+		_clock.register_day_hook(_on_day_rollover)
+	_today_absolute_day = -1
+	refresh()
 
 
 ## 当前节日 / 事件进度；由组合根持有，可整体替换。
@@ -52,7 +67,8 @@ func set_state(value: CalendarProgress) -> void:
 
 
 func _exit_tree() -> void:
-	GameClock.unregister_day_hook(_on_day_rollover)
+	if _clock != null:
+		_clock.unregister_day_hook(_on_day_rollover)
 	if Database.reloaded.is_connected(reload):
 		Database.reloaded.disconnect(reload)
 
@@ -111,10 +127,12 @@ func event(event_id: StringName) -> EventData:
 
 ## 今天要办的节日（缓存 + 惰性重算，跨天由 [method _on_day_rollover] 置脏）。
 func today_festivals() -> Array[FestivalData]:
-	if _today_absolute_day != GameClock.date.absolute_day():
-		_today_absolute_day = GameClock.date.absolute_day()
+	if _clock == null:
+		return []
+	if _today_absolute_day != _clock.date.absolute_day():
+		_today_absolute_day = _clock.date.absolute_day()
 		_today = []
-		for entry: FestivalData in FestivalRules.on_date(_festivals, GameClock.date):
+		for entry: FestivalData in FestivalRules.on_date(_festivals, _clock.date):
 			if is_available(entry):
 				_today.append(entry)
 	return _today
@@ -126,7 +144,9 @@ func is_available(entry: FestivalData) -> bool:
 		return false
 	if entry.required_flag == &"":
 		return true
-	return GameState.has_flag(entry.required_flag)
+	if _profile == null:
+		return false
+	return _profile.has_flag(entry.required_flag)
 
 
 ## 今天是否有节日。
@@ -136,16 +156,20 @@ func has_festival_today() -> bool:
 
 ## 该节日此刻是否"正在进行"（是今天、且会场已开门）。
 func is_active(festival_id: StringName) -> bool:
+	if _clock == null:
+		return false
 	var entry := festival(festival_id)
 	if entry == null or not today_festivals().has(entry):
 		return false
-	return FestivalRules.is_within(entry, GameClock.minute_of_day)
+	return FestivalRules.is_within(entry, _clock.minute_of_day)
 
 
 ## 此刻正在进行的节日；没有则返回 null。
 func active_festival() -> FestivalData:
+	if _clock == null:
+		return null
 	for entry: FestivalData in today_festivals():
-		if FestivalRules.is_within(entry, GameClock.minute_of_day):
+		if FestivalRules.is_within(entry, _clock.minute_of_day):
 			return entry
 	return null
 
@@ -163,7 +187,9 @@ func gather_point_for(npc_id: StringName) -> StringName:
 
 ## 今年是否已经参加过该节日（节日每年重办，奖励每年一次）。
 func has_attended(festival_id: StringName) -> bool:
-	return int(_progress.attended.get(festival_id, 0)) == GameClock.date.year
+	if _clock == null:
+		return false
+	return int(_progress.attended.get(festival_id, 0)) == _clock.date.year
 
 
 ## 此刻能不能参加（会场开着且今年还没参加过）。
@@ -173,21 +199,25 @@ func can_attend(festival_id: StringName) -> bool:
 
 ## 事件是否已经发生过（[member EventData.once] 为 false 时按"今年"判断）。
 func has_triggered(event_id: StringName) -> bool:
-	return _was_triggered(event_id, GameClock.date)
+	if _clock == null:
+		return false
+	return _was_triggered(event_id, _clock.date)
 
 
 ## 今天已命中条件、可触发的事件。
 func events_for_today() -> Array[EventData]:
 	var result: Array[EventData] = []
+	if _clock == null or _profile == null:
+		return result
 	for entry: EventData in _events:
-		if _was_triggered(entry.id, GameClock.date):
+		if _was_triggered(entry.id, _clock.date):
 			continue
 		if EventRules.matches(
 			entry,
-			GameClock.date,
+			_clock.date,
 			int(WeatherSystem.current),
-			GameState.has_flag(entry.required_flag),
-			GameState.has_flag(entry.forbidden_flag),
+			_profile.has_flag(entry.required_flag),
+			_profile.has_flag(entry.forbidden_flag),
 			Relationships.affection(entry.required_npc)
 		):
 			result.append(entry)
@@ -216,6 +246,8 @@ func today_text() -> String:
 ##
 ## 返回 true 表示这次真的结算了（调用方据此决定要不要播首次对白）。
 func attend(festival_id: StringName) -> bool:
+	if _clock == null or _profile == null:
+		return false
 	if not is_active(festival_id):
 		return false
 	if has_attended(festival_id):
@@ -224,9 +256,9 @@ func attend(festival_id: StringName) -> bool:
 		})
 		return false
 	var entry := festival(festival_id)
-	_progress.attended[festival_id] = GameClock.date.year
+	_progress.attended[festival_id] = _clock.date.year
 	if entry.attendance_flag != &"":
-		GameState.set_flag(entry.attendance_flag)
+		_profile.set_flag(entry.attendance_flag)
 	for npc_id: StringName in entry.npc_ids:
 		Relationships.add_affection(npc_id, entry.attendance_affection)
 	EventBus.festival_attended.emit(festival_id, entry.attendance_affection)
@@ -278,22 +310,25 @@ func _on_day_rollover(date: GameDate) -> void:
 
 
 func _matches(entry: EventData, date: GameDate) -> bool:
+	if _profile == null:
+		return false
 	return EventRules.matches(
 		entry,
 		date,
 		int(WeatherSystem.current),
-		GameState.has_flag(entry.required_flag),
-		GameState.has_flag(entry.forbidden_flag),
+		_profile.has_flag(entry.required_flag),
+		_profile.has_flag(entry.forbidden_flag),
 		Relationships.affection(entry.required_npc)
 	)
 
 
 func _trigger(entry: EventData, date: GameDate) -> void:
 	_progress.triggered[entry.id] = date.absolute_day()
-	if entry.set_flag != &"":
-		GameState.set_flag(entry.set_flag)
-	if entry.grant_money > 0:
-		GameState.earn(entry.grant_money)
+	if _profile != null:
+		if entry.set_flag != &"":
+			_profile.set_flag(entry.set_flag)
+		if entry.grant_money > 0:
+			_profile.earn(entry.grant_money)
 	EventBus.calendar_event_triggered.emit(entry.id)
 	var message_key: StringName = entry.message_key if entry.message_key != &"" else entry.title_key
 	EventBus.notification_requested.emit(message_key, {"money": entry.grant_money})

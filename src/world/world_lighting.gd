@@ -35,6 +35,12 @@ var flash_strength: float = 0.0:
 var _tint: CanvasModulate
 var _flash_timer: Timer
 var _flash_tween: Tween
+## 组合根注入的时钟；只读分钟数计算环境光。
+var _clock: GameDateClock
+
+
+func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
+	_clock = clock
 
 
 func _ready() -> void:
@@ -84,7 +90,8 @@ func _refresh() -> void:
 func _refresh_tint() -> void:
 	if _tint == null:
 		return
-	var color := DayNight.ambient_color(GameClock.minute_of_day)
+	var minute := _clock.minute_of_day if _clock != null else GameDateClock.DAY_START_HOUR * 60
+	var color := DayNight.ambient_color(minute)
 	color *= WEATHER_TINTS.get(WeatherSystem.current, ArtPalette.WEATHER_SUNNY)
 	if flash_strength > 0.0:
 		color = color.lerp(FLASH_COLOR, flash_strength)
@@ -94,7 +101,8 @@ func _refresh_tint() -> void:
 
 ## 按昼夜曲线统一调节所有发光摆件的亮度。
 func _refresh_lights() -> void:
-	var energy := DayNight.lamp_energy(GameClock.minute_of_day)
+	var minute := _clock.minute_of_day if _clock != null else GameDateClock.DAY_START_HOUR * 60
+	var energy := DayNight.lamp_energy(minute)
 	for node: Node in get_tree().get_nodes_in_group(WorldProp.NIGHT_LIGHT_GROUP):
 		if node is WorldProp:
 			(node as WorldProp).apply_night_energy(energy)

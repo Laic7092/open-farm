@@ -7,7 +7,7 @@ extends Node
 ##
 ## 注意：这里必须用[b]场景[/b]而不是 [code]-s[/code] 脚本启动。
 ## Godot 在加载 [code]-s[/code] 脚本时还没注册 autoload 的全局标识符，
-## 脚本里直接写 [code]GameClock[/code] 会编译失败；跑场景则没有这个问题。
+## 脚本里直接写已删除的 Autoload 名会编译失败；跑场景才使用组合根。
 ##
 ## 用法：[code]godot --headless --path . res://tools/smoke_test.tscn[/code]
 ## 退出码 0 表示全部通过。
@@ -28,6 +28,10 @@ var _failures := PackedStringArray()
 var _checks: int = 0
 var _frames: int = 0
 var _phase: int = 0
+## 本局 Main（组合根）及其实例状态，后面的检查直接读它。
+var _main: Main
+var _profile: PlayerProfile
+var _clock: GameDateClock
 
 ## 跨场景往返测试用的锚点。
 var _anchor_cell: Vector2i = Vector2i.ZERO
@@ -51,7 +55,14 @@ func _ready() -> void:
 		_fail("无法加载 main.tscn")
 		_report()
 		return
-	add_child(scene.instantiate())
+	_main = scene.instantiate() as Main
+	if _main == null:
+		_fail("main.tscn 根节点不是 Main")
+		_report()
+		return
+	_profile = _main.player_profile
+	_clock = _main.clock_state
+	add_child(_main)
 
 
 func _process(_delta: float) -> void:
@@ -196,7 +207,7 @@ func _check_calendar() -> void:
 
 	# 会场 08:00 才开门。
 	_check(not Calendar.is_active(&"new_year"), "06:00 新年祭还没开门")
-	GameClock.set_time(9, 0)
+	_clock.set_time(9, 0)
 	_check(Calendar.is_active(&"new_year"), "09:00 新年祭应当开放")
 
 	var before := Relationships.affection(&"mayor")
@@ -213,7 +224,7 @@ func _check_calendar() -> void:
 	# 还原到开局状态：后面的时钟检查依赖"春 1 日 06:00"。
 	Calendar.reset()
 	Relationships.set_affection(&"mayor", before)
-	GameClock.set_time(GameClock.DAY_START_HOUR, 0)
+	_clock.set_time(GameDateClock.DAY_START_HOUR, 0)
 
 
 func _check_database() -> void:
@@ -259,20 +270,20 @@ func _check_spawn() -> void:
 
 
 func _check_clock() -> void:
-	_check_eq(GameClock.hour(), GameClock.DAY_START_HOUR, "开局时间应当是 06:00")
-	var day_before: int = GameClock.date.day
+	_check_eq(_clock.hour(), GameDateClock.DAY_START_HOUR, "开局时间应当是 06:00")
+	var day_before: int = _clock.date.day
 
 	# 刚好跨过 02:00 这个分界点：应当同时推进日期并停在 02:00。
-	GameClock.set_time(GameClock.DAY_ROLLOVER_HOUR - 1, 59)
-	GameClock.advance_minutes(1)
-	_check_eq(GameClock.date.day, day_before + 1, "跨过 02:00 后日期应当 +1")
-	_check_eq(GameClock.hour(), GameClock.DAY_ROLLOVER_HOUR, "跨天后应当停在 02:00")
-	_check(GameClock.minutes_since_day_start() >= 0, "当天已过分钟数不应为负")
+	_clock.set_time(GameDateClock.DAY_ROLLOVER_HOUR - 1, 59)
+	_clock.advance_minutes(1)
+	_check_eq(_clock.date.day, day_before + 1, "跨过 02:00 后日期应当 +1")
+	_check_eq(_clock.hour(), GameDateClock.DAY_ROLLOVER_HOUR, "跨天后应当停在 02:00")
+	_check(_clock.minutes_since_day_start() >= 0, "当天已过分钟数不应为负")
 
 	# 睡到早上：应当回到 06:00。
-	GameClock.sleep_until_morning()
-	_check_eq(GameClock.hour(), GameClock.DAY_START_HOUR, "睡醒后应当回到 06:00")
-	_check_eq(GameClock.date.day, day_before + 2, "睡觉应当再推进一天")
+	_clock.sleep_until_morning()
+	_check_eq(_clock.hour(), GameDateClock.DAY_START_HOUR, "睡醒后应当回到 06:00")
+	_check_eq(_clock.date.day, day_before + 2, "睡觉应当再推进一天")
 
 
 func _check_day_night() -> void:
@@ -287,12 +298,12 @@ func _check_day_night() -> void:
 	var lights := world.find_children("*", "PointLight2D", true, false)
 	_check(not lights.is_empty(), "带 light_radius 的路灯应当生成 PointLight2D")
 
-	GameClock.set_time(12, 0)
+	_clock.set_time(12, 0)
 	var noon_tint := lighting.tint_color()
 	var noon_energy := _max_light_energy(world)
 	_check(noon_energy <= 0.01, "正午路灯应当熄灭（实际 %.2f）" % noon_energy)
 
-	GameClock.set_time(23, 0)
+	_clock.set_time(23, 0)
 	var night_tint := lighting.tint_color()
 	var night_energy := _max_light_energy(world)
 	_check(
@@ -304,7 +315,7 @@ func _check_day_night() -> void:
 	_check(night_energy > 0.5, "深夜路灯应当点亮（实际 %.2f）" % night_energy)
 
 	# 后面的检查依赖"早上 06:00"这个起点，把时间还回去。
-	GameClock.set_time(GameClock.DAY_START_HOUR, 0)
+	_clock.set_time(GameDateClock.DAY_START_HOUR, 0)
 
 
 func _max_light_energy(world: Node) -> float:
@@ -339,7 +350,7 @@ func _check_farming() -> void:
 	var data := Database.get_crop(&"turnip")
 	var mature_days: int = CropGrowth.mature_days(data)
 	for _i: int in mature_days:
-		grid.advance_day(GameClock.date, true)
+		grid.advance_day(_clock.date, true)
 	_check(
 		CropGrowth.can_harvest(data, grid.get_crop(cell)),
 		"浇水 %d 天后萝卜应当成熟" % mature_days
@@ -372,7 +383,7 @@ func _check_flora() -> void:
 	var growing := _first_growing_flora(field)
 	if growing != Vector2i(-1, -1):
 		var before: int = field.flora[growing].days_grown
-		GameClock.sleep_until_morning()
+		_clock.sleep_until_morning()
 		if field.occupied(growing):
 			_check(
 				field.flora[growing].days_grown > before,
@@ -388,7 +399,7 @@ func _check_flora() -> void:
 func _first_growing_flora(field: FloraField) -> Vector2i:
 	for cell: Vector2i in field.flora:
 		var data := Database.get_flora(field.flora[cell].flora_id)
-		if data != null and FloraGrowth.can_grow(data, GameClock.date.season):
+		if data != null and FloraGrowth.can_grow(data, _clock.date.season):
 			return cell
 	return Vector2i(-1, -1)
 
@@ -476,7 +487,7 @@ func _check_livestock() -> void:
 	player.inventory.add(&"hay", 20)
 	for _i: int in chicken.mature_days:
 		_check(mgr.feed(&"coop", player.inventory) > 0, "饿着的鸡应当能被喂到")
-		mgr.advance_day(GameClock.date)
+		mgr.advance_day(_clock.date)
 	var state := mgr.animal_state_at(&"coop", 0)
 	_check(
 		AnimalHusbandry.is_mature(chicken, state),
@@ -486,7 +497,7 @@ func _check_livestock() -> void:
 	# 产出：成年后再过 produce_days 个喂养日，就有鸡蛋可收。
 	for _i: int in chicken.produce_days:
 		mgr.feed(&"coop", player.inventory)
-		mgr.advance_day(GameClock.date)
+		mgr.advance_day(_clock.date)
 	state = mgr.animal_state_at(&"coop", 0)
 	_check(AnimalHusbandry.can_collect(chicken, state), "过了一个产出周期后应当有鸡蛋可收")
 	var outcome := mgr.collect(&"coop", 0)
@@ -507,10 +518,10 @@ func _check_shop() -> void:
 		return
 
 	var inventory := Inventory.new()
-	GameState.set_money(1000)
-	var shop := Shop.new(shop_data, GameState, Database, EventBus)
+	_profile.set_money(1000)
+	var shop := Shop.new(shop_data, _profile, Database, EventBus)
 	shop.restock()
-	var entries := shop.available_entries(GameClock.date.day)
+	var entries := shop.available_entries(_clock.date.day)
 	_check(not entries.is_empty(), "商店应当有可购买的商品")
 	if entries.is_empty():
 		return
@@ -518,7 +529,7 @@ func _check_shop() -> void:
 	var entry: ShopStock = entries[0]
 	var price: int = shop.price_of(entry)
 	_check(shop.buy(entry, 1, inventory), "应当可以购买商品")
-	_check_eq(GameState.money, 1000 - price, "购买后金钱应当扣除")
+	_check_eq(_profile.money, 1000 - price, "购买后金钱应当扣除")
 	_check(inventory.count_of(entry.item_id) == 1, "购买后背包应当有该道具")
 
 
@@ -529,8 +540,8 @@ func _check_save_load() -> void:
 		return
 
 	player.inventory.add(&"turnip", 3)
-	var money_before: int = GameState.money
-	var day_before: int = GameClock.date.day
+	var money_before: int = _profile.money
+	var day_before: int = _clock.date.day
 	var tilled_before: int = grid.tilled_count() if grid != null else 0
 
 	_check(SaveManager.save_game(0), "应当能保存到槽位 0")
@@ -540,11 +551,11 @@ func _check_save_load() -> void:
 	_check_eq(int(meta.get("money", -1)), money_before, "存档摘要中的金钱应当一致")
 
 	# 篡改运行时状态，再读档还原。
-	GameState.set_money(1)
-	GameClock.date.day = 1
+	_profile.set_money(1)
+	_clock.date.day = 1
 	_check(SaveManager.load_game(0), "应当能读取槽位 0")
-	_check_eq(GameState.money, money_before, "读档后金钱应当还原")
-	_check_eq(GameClock.date.day, day_before, "读档后日期应当还原")
+	_check_eq(_profile.money, money_before, "读档后金钱应当还原")
+	_check_eq(_clock.date.day, day_before, "读档后日期应当还原")
 	if grid != null:
 		_check_eq(grid.tilled_count(), tilled_before, "读档后农田状态应当还原")
 
@@ -615,7 +626,7 @@ func _check_town() -> void:
 
 	# 在别的地图上过一天：农场不在场景树里，它的日结转钩子是注销的，
 	# 所以农场的植被只能靠"重新进图时补算"追上——这正是最后一步要验证的。
-	GameClock.sleep_until_morning()
+	_clock.sleep_until_morning()
 
 
 func _check_twon() -> void:
@@ -1014,7 +1025,7 @@ func _check_farm_state_survived() -> void:
 	# 否则作物再也不会生长。
 	if crop != null:
 		var grown_before: int = crop.days_grown
-		GameClock.sleep_until_morning()
+		_clock.sleep_until_morning()
 		_check(
 			crop.days_grown > grown_before,
 			"往返后日结转钩子应当仍然生效（作物应当继续生长）"

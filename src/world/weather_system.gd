@@ -4,7 +4,7 @@ extends Node
 ## 每天开始时掷出当天天气并预报表日天气；天气决定作物是否自动浇水
 ## 以及玩家体力消耗倍率。
 ##
-## 通过 [method GameClock.register_day_hook] 注册为[b]第一个[/b]日结转钩子，
+## 通过注入时钟的 `register_day_hook()` 注册为[b]第一个[/b]日结转钩子，
 ## 保证其它系统在响应日结转时读到的 [member current] 已经是当天的天气。
 
 ## 天气变化时发出（与 [signal EventBus.weather_changed] 同步）。
@@ -23,15 +23,22 @@ var forecast: Weather.Type:
 		return _state.forecast
 
 var _state: WeatherState = WeatherState.new()
+## 组合根注入的时钟；未注入时不会读取日期或注册钩子。
+var _clock: GameDateClock
 
 
 func _ready() -> void:
 	Persistence.register_core(self, &"WeatherSystem", 30)
 	_rng.randomize()
-	GameClock.register_day_hook(_on_day_rollover)
-	# 开局那一天也要有天气。
-	_state.current = roll_for(GameClock.date.season)
-	_state.forecast = roll_for(GameClock.date.season)
+
+
+## 注入组合根持有的时钟，并重新注册日结转钩子。
+func bind_clock(clock: GameDateClock) -> void:
+	if _clock != null:
+		_clock.unregister_day_hook(_on_day_rollover)
+	_clock = clock
+	if _clock != null:
+		_clock.register_day_hook(_on_day_rollover)
 
 
 ## 当前天气状态；由组合根持有，可整体替换。
@@ -60,7 +67,7 @@ func set_weather(weather: Weather.Type) -> void:
 
 
 ## 强制重掷今天的天气。
-func reroll(season: Season.Type = GameClock.date.season) -> void:
+func reroll(season: Season.Type = Season.Type.SPRING) -> void:
 	set_weather(roll_for(season))
 
 

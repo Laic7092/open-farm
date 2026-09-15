@@ -15,6 +15,19 @@ extends CanvasLayer
 @onready var pause_menu: PauseMenu = %PauseMenu
 
 var _modals: Array[Control] = []
+## 组合根注入的玩家档案；转发给 Hud / ShopUi。
+var _player_profile: PlayerProfile
+## 组合根注入的时钟；转发给 Hud / ShopUi。
+var _clock_state: GameDateClock
+
+
+## 由 [Main] 在 UI 子树进入树之前调用；依赖会继续下发给各界面。
+func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
+	_player_profile = profile
+	_clock_state = clock
+	for child: Node in get_children():
+		if child.has_method(&"bind_dependencies"):
+			child.call(&"bind_dependencies", profile, clock)
 
 
 func _ready() -> void:
@@ -22,7 +35,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 	# 组合根注入：界面层仍可使用 EventBus，但商店逻辑依赖由此显式传入。
-	shop_ui.configure(GameState, Database, EventBus, GameClock)
+	shop_ui.configure(_player_profile, Database, EventBus, _clock_state)
 
 	EventBus.dialogue_requested.connect(_on_dialogue_requested)
 	EventBus.shop_requested.connect(_on_shop_requested)

@@ -40,6 +40,10 @@ var _last_spawn_id: StringName = &"default"
 ## 读档时记录"存档所在地图"，等世界重建完再消费。
 var _pending_world_path: String = ""
 var _pending_spawn_id: StringName = &"default"
+## 组合根注入的状态；世界场景挂载前用于注入节点。
+var _player_profile: PlayerProfile
+## 组合根注入的时钟；仅用于保存 / 恢复传送期间的暂停状态。
+var _clock: GameDateClock
 
 
 func _ready() -> void:
@@ -52,6 +56,12 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	# 退出时主动释放缓存的世界场景，避免退出期出现一堆"资源仍在使用"的报错。
 	clear_world_cache()
+
+
+## 注入组合根状态；世界场景在进入树前会收到同一份引用。
+func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
+	_player_profile = profile
+	_clock = clock
 
 
 ## 是否正在切换中。
@@ -77,15 +87,17 @@ func change_scene_to(scene_path: String, spawn_id: StringName = &"default") -> v
 	_transitioning = true
 	EventBus.scene_transition_started.emit(spawn_id)
 
-	var was_paused: bool = GameClock.paused
-	GameClock.set_paused(true)
+	var was_paused: bool = _clock.paused if _clock != null else false
+	if _clock != null:
+		_clock.set_paused(true)
 
 	await _fade_to(1.0, fade_out_duration)
 	await _swap_world(scene_path, packed, spawn_id)
 	_place_player(spawn_id)
 	await _fade_to(0.0, fade_in_duration)
 
-	GameClock.set_paused(was_paused)
+	if _clock != null:
+		_clock.set_paused(was_paused)
 	_transitioning = false
 	EventBus.scene_transition_finished.emit(spawn_id)
 
@@ -177,6 +189,9 @@ func _swap_world(scene_path: String, packed: PackedScene, spawn_id: StringName) 
 	if not _world_cache.has(scene_path):
 		_world_cache[scene_path] = packed.instantiate()
 	_current_world = _world_cache[scene_path]
+	# 世界子节点的 _enter_tree() 会在 add_child() 时立即执行，因此必须在
+	# 挂载前把组合根状态注入场景根；缓存复用也一样。
+	_inject_world_dependencies(_current_world)
 	host.add_child(_current_world)
 
 	# 等两帧，确保新场景的 _ready() 全部跑完、节点进入场景树。
@@ -201,6 +216,12 @@ func _detach_current_world(host: Node) -> void:
 	if world.get_parent() == host:
 		host.remove_child(world)
 	_current_world = null
+
+
+## 把组合根状态注入世界场景；必须发生在 [method Node.add_child] 之前。
+func _inject_world_dependencies(world: Node) -> void:
+	if world != null and world.has_method(&"bind_dependencies"):
+		world.call(&"bind_dependencies", _player_profile, _clock)
 
 
 func _discard_world(scene_path: String) -> void:

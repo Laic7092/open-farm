@@ -40,6 +40,12 @@ var item_bar: ItemBar
 var selected_seed_id: StringName = &""
 
 var _nearby: Array[Interactable] = []
+## 组合根注入的时钟；日结转钩子注册在它上面。
+var _clock: GameDateClock
+
+
+func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
+	_clock = clock
 
 @onready var sprite: AnimatedSprite2D = %Sprite
 @onready var state_machine: StateMachine = %StateMachine
@@ -67,7 +73,8 @@ func _init() -> void:
 func _enter_tree() -> void:
 	add_to_group(GROUP)
 	Persistence.register(self, persistence_id)
-	GameClock.register_day_hook(_on_day_rollover)
+	if _clock != null:
+		_clock.register_day_hook(_on_day_rollover)
 
 
 func _ready() -> void:
@@ -84,7 +91,8 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
-	GameClock.unregister_day_hook(_on_day_rollover)
+	if _clock != null:
+		_clock.unregister_day_hook(_on_day_rollover)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -191,7 +199,7 @@ func try_interact() -> bool:
 ## "最合适"= 对该 NPC 好感收益最高的可赠道具：优先 GIFT 分类，
 ## 其次是 NPC 偏好表里明确提到过的道具。求婚信物永远不会被当作普通礼物送掉。
 func try_give_gift() -> bool:
-	if GameClock.paused:
+	if _clock == null or _clock.paused:
 		return false
 	var npc := current_interactable() as Npc
 	if npc == null:

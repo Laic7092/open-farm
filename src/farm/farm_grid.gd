@@ -53,6 +53,12 @@ var tiles: Dictionary[Vector2i, FarmTile] = {}
 
 var _crop_nodes: Dictionary[Vector2i, Crop] = {}
 var _rng := RandomNumberGenerator.new()
+## 组合根注入的时钟；日结转钩子注册在它上面。
+var _clock: GameDateClock
+
+
+func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
+	_clock = clock
 
 
 ## 注册在 [code]_enter_tree()[/code] 而不是 [code]_ready()[/code]：
@@ -62,11 +68,13 @@ var _rng := RandomNumberGenerator.new()
 func _enter_tree() -> void:
 	add_to_group(GROUP)
 	Persistence.register(self, persistence_id)
-	GameClock.register_day_hook(_on_day_rollover)
+	if _clock != null:
+		_clock.register_day_hook(_on_day_rollover)
 
 
 func _exit_tree() -> void:
-	GameClock.unregister_day_hook(_on_day_rollover)
+	if _clock != null:
+		_clock.unregister_day_hook(_on_day_rollover)
 
 
 func _ready() -> void:

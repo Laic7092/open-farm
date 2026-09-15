@@ -137,7 +137,7 @@ func collect() -> Dictionary:
 		"version": SAVE_VERSION,
 		"saved_at": Time.get_datetime_string_from_system(false, true),
 	}
-	for participant: Node in _core_participants():
+	for participant: Object in _core_entries():
 		var problems := Persistence.validate(participant)
 		if not problems.is_empty():
 			push_error(
@@ -163,7 +163,7 @@ func apply(data: Dictionary) -> bool:
 		return false
 
 	# 1) 先恢复核心单例：世界节点在 _ready() 时依赖它们。
-	for participant: Node in _core_participants():
+	for participant: Object in _core_entries():
 		var problems := Persistence.validate(participant)
 		if not problems.is_empty():
 			push_error(
@@ -201,23 +201,23 @@ func apply_node_state() -> void:
 
 # ---------------------------------------------------------------- 内部
 
-## 已注册的核心存档节点，按 [constant Persistence.META_CORE_ORDER] 升序。
+## 已注册的核心存档节，按 [constant Persistence.META_CORE_ORDER] 升序。
 ##
-## 核心单例在各自 [code]_ready()[/code] 里调用
-## [method Persistence.register_core] 自注册；[SaveManager] 不维护
-## [code]/root/<Name>[/code] 字符串反射，也不硬编码参与者名单。
-func _core_participants() -> Array[Node]:
-	var participants: Array[Node] = []
-	if not is_inside_tree():
-		return participants
-	for node: Node in get_tree().get_nodes_in_group(Persistence.CORE_GROUP):
-		if is_instance_valid(node):
-			participants.append(node)
-	participants.sort_custom(_sort_core_participants)
+## 节点核心在各自 [code]_ready()[/code] 里自注册；状态 Resource 由 [Main]
+## 显式注册。[SaveManager] 不维护参与者名单，也不做字符串反射。
+func _core_entries() -> Array[Object]:
+	var participants: Array[Object] = []
+	if is_inside_tree():
+		for node: Node in get_tree().get_nodes_in_group(Persistence.CORE_GROUP):
+			if is_instance_valid(node):
+				participants.append(node)
+	for resource: Object in Persistence.core_resources():
+		participants.append(resource)
+	participants.sort_custom(_sort_core_entries)
 	return participants
 
 
-func _sort_core_participants(a: Node, b: Node) -> bool:
+func _sort_core_entries(a: Object, b: Object) -> bool:
 	var order_a := Persistence.core_order_of(a)
 	var order_b := Persistence.core_order_of(b)
 	if order_a == order_b:

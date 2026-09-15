@@ -5,7 +5,7 @@ extends Node
 ## 所有声音都通过 [EventBus] 的既有信号触发，游戏逻辑里不出现任何播放调用，
 ## 于是"加一个音效"不需要改玩法代码，删掉整个音频系统游戏逻辑也照常跑。
 ## 世界 id 来自 [signal EventBus.world_entered]，时钟状态由组合根注入，
-## 因此不反向依赖 [SceneRouter] / [GameClock] 这类全局单例。
+## 因此不反向依赖 [SceneRouter] / [GameDateClock] 这类全局单例。
 ##
 ## 音频资源同样由脚本生成（见 [code]docs/audio_pipeline.md[/code]），
 ## 目录在 [AudioCatalog] 里，运行时按 id 取路径。

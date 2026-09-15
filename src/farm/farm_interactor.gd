@@ -15,6 +15,12 @@ signal action_finished(tool_id: StringName, cell: Vector2i, success: bool)
 
 ## 所属玩家，由 [method setup] 注入。
 var player: Player
+## 组合根注入的时钟；种植时读取季节。
+var _clock: GameDateClock
+
+
+func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
+	_clock = clock
 
 
 ## 由 [Player] 在 [code]_ready()[/code] 中调用。
@@ -131,7 +137,7 @@ func _plant(grid: FarmGrid, cell: Vector2i) -> bool:
 	var seed_id: StringName = player.effective_seed_id()
 	if seed_id == &"" or not player.inventory.has(seed_id):
 		return false
-	if not grid.plant(cell, seed_id, GameClock.date.season):
+	if _clock == null or not grid.plant(cell, seed_id, _clock.date.season):
 		return false
 
 	player.inventory.remove(seed_id, 1)

@@ -73,6 +73,12 @@ var _rng := RandomNumberGenerator.new()
 var _last_day: int = 0
 var _initialized: bool = false
 var _loaded: bool = false
+## 组合根注入的时钟；日结转钩子注册在它上面。
+var _clock: GameDateClock
+
+
+func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
+	_clock = clock
 
 
 ## 注册在 [code]_enter_tree()[/code] 而不是 [code]_ready()[/code]：
@@ -82,7 +88,8 @@ var _loaded: bool = false
 func _enter_tree() -> void:
 	add_to_group(GROUP)
 	Persistence.register(self, persistence_id)
-	GameClock.register_day_hook(_on_day_rollover)
+	if _clock != null:
+		_clock.register_day_hook(_on_day_rollover)
 	# 重新进入场景树（从缓存挂回来）：把不在的这几天补算掉。
 	#
 	# 用 call_deferred 而不是直接调用：此刻兄弟节点（出生点、门）还没进场景树，
@@ -93,7 +100,8 @@ func _enter_tree() -> void:
 
 
 func _exit_tree() -> void:
-	GameClock.unregister_day_hook(_on_day_rollover)
+	if _clock != null:
+		_clock.unregister_day_hook(_on_day_rollover)
 
 
 func _ready() -> void:
@@ -102,7 +110,7 @@ func _ready() -> void:
 			continue
 		_species.append(Database.get_flora(flora_id))
 	_rng.seed = maxi(world_seed, 1) * 7919 + 104729
-	_last_day = GameClock.date.absolute_day()
+	_last_day = _clock.date.absolute_day() if _clock != null else 0
 	_initialized = true
 	_schedule_initial_generation()
 
@@ -196,7 +204,7 @@ func _on_day_rollover(date: GameDate) -> void:
 func _catch_up() -> void:
 	if not is_inside_tree():
 		return
-	var now: int = GameClock.date.absolute_day()
+	var now: int = _clock.date.absolute_day() if _clock != null else _last_day
 	var elapsed: int = now - _last_day
 	if elapsed <= 0:
 		return

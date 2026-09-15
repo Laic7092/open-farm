@@ -1,6 +1,6 @@
 # open-farm 重构交接文档
 
-> 本文件描述本次 P0 修复后的现状，以及把 11 个 Autoload 继续收敛为组合根架构的完整计划。
+> 本文件描述 P0 修复与阶段 B 后的现状，以及把 11 个 Autoload 继续收敛为组合根架构的完整计划。
 > 代码事实以 `project.godot`、`src/**/*.gd`、`scenes/**/*.tscn`、`tests/**` 为准。
 
 ---
@@ -50,24 +50,18 @@
 | `src/core/relationship_store.gd` | `Relationships` 每 NPC 关系 / 配偶 / 婚育进度 |
 | `src/core/calendar_progress.gd` | `Calendar` 已参加节日 / 已触发事件 |
 
-`Main` 现在是组合根，持有这些资源并在 `_ready()` 中注入：
+`Main` 现在是组合根，持有这些资源并在 `_enter_tree()` / `_ready()` 中注入：
 
 ```gdscript
-GameState.set_profile(player_profile)
-GameClock.set_state(clock_state)
-WeatherSystem.set_state(weather_state)
-Relationships.set_state(relationship_store)
-Calendar.set_state(calendar_progress)
+Persistence.register_core_resource(clock_state, &"GameClock", 10)
+Persistence.register_core_resource(player_profile, &"GameState", 20)
+WeatherSystem.bind_clock(clock_state)
+Relationships.bind_dependencies(player_profile, clock_state)
+Calendar.bind_dependencies(player_profile, clock_state)
 ```
 
-Autoload 仍保留公开 API，但只做：
-
-- 查询 / 门面
-- 规则编排
-- `EventBus` 广播
-- 存档核心节
-
-状态所有权已经从 Autoload 转移到 `Main`。
+阶段 A 时 Autoload 还保留公开查询门面；阶段 B 已完成去门面，玩家 / 时钟状态
+只通过显式注入的 `PlayerProfile` / `GameDateClock` 访问。
 
 ### 1.4 本次提交：Audio 去单例耦合（阶段 D 的 Audio 子项）
 
@@ -82,6 +76,23 @@ Autoload 仍保留公开 API，但只做：
 - `tests/unit/test_audio.gd` 增加注入时钟后的昼夜选曲回归测试。
 
 仍未完成：`SceneRouter` / `SaveManager` 收口（阶段 D 其余部分）。
+
+### 1.5 本次提交：完成阶段 B（删除 `GameState / GameClock` 门面）
+
+- 删除 `project.godot` 的 `GameState` / `GameClock` 两个 Autoload；Autoload 数量
+  从 11 个降到 9 个。
+- `GameDateClock` 从纯状态 Resource 扩展为“状态 + 规则 + 有序日结转钩子”的组合根对象：
+  `Main` 每帧调用 `tick(delta)`，由 Main 把时钟信号转发到 `EventBus`。
+  `GameDateClock` 可脱离 Autoload 直接 `new` 并单测。
+- `Main._enter_tree()` 把 `PlayerProfile` / `GameDateClock` 注入 `WeatherSystem` /
+  `Relationships` / `Calendar` / `Audio` / `SceneRouter`，并在世界 / UI 子树进入树前
+  下发给 `WorldScene`、`UiRoot`。
+- `Persistence` 新增 `register_core_resource()`；`PlayerProfile` / `GameDateClock`
+  以对象形式注册核心存档节，旧存档的 `GameState` / `GameClock` 键和字段保持不变。
+- 世界节点（`FarmGrid`、`LivestockManager`、`NpcNavigator`、`FloraField`、`Player`、
+  `Npc`、`Bed`、`WeatherFx`、`WorldLighting`、`SceneDoor`、`ShippingBin` 等）改为
+  `bind_dependencies()` 显式接收状态，不再读全局门面。
+- 验收命令 `rg "GameState\.|GameClock\." src tests tools` 归零；单元测试 / 冒烟测试全绿。
 
 ---
 
@@ -151,11 +162,19 @@ Autoload 只允许保留：
 - `Persistence.register_core()`。
 - 对应的文档与测试更新。
 
-### 阶段 B：删除 `GameState / GameClock` 门面
+### 阶段 B：已完成（删除 `GameState / GameClock` 门面）
 
 目标：消费者不再通过全局名访问玩家 / 时钟状态。
 
-步骤：
+产物：
+
+- 9 个 Autoload（`EventBus` / `AppTheme` / `Database` / `WeatherSystem` /
+  `Relationships` / `Calendar` / `SaveManager` / `SceneRouter` / `Audio`）。
+- `GameDateClock` 同时承担时钟状态与推进 / 钩子服务。
+- `Persistence.register_core_resource()` 与 `Main` 组合根注入链。
+- 世界 / UI 节点显式 `bind_dependencies()`。
+
+原步骤记录（均已完成）：
 
 1. 给所有 `GameState` 消费者加显式依赖：
    - `Npc`
@@ -199,7 +218,7 @@ Autoload 只允许保留：
    - `CalendarProgress` 为 Resource。
    - 节日 / 事件匹配改为纯函数输入：`Date + Weather + Flags + Affection`。
    - `Calendar` 只保留“查表 + 状态 + 广播”。
-4. 把有序日结转钩子从 `GameClock` 拆成显式 `DayPipeline`：
+4. 把有序日结转钩子从 `GameDateClock` 拆成显式 `DayPipeline`：
    - 注册接口带 `priority`
    - `Main` 或组合根显式按序注册
    - 不再依赖 `project.godot` 声明顺序
@@ -224,7 +243,7 @@ Autoload 只允许保留：
    change_scene_to(host: Node, path: String, spawn: StringName)
    ```
 3. `_pending_world_path / _pending_spawn_id` 改为显式 `WorldTarget` 参数。
-4. 删除 `GameClock.paused` 与 `SceneTree.paused` 的双真值，统一暂停控制器。
+4. 删除 `GameDateClock.paused` 与 `SceneTree.paused` 的双真值，统一暂停控制器。
 
 `SaveManager`：
 
@@ -272,7 +291,7 @@ Autoload 只允许保留：
 不要一次提交一个巨型“完全重构”。建议按以下边界提交：
 
 1. `refactor: 状态 Resource 化并迁移 Main 组合根`（本次提交）
-2. `refactor: 移除 GameState / GameClock 全局门面`
+2. `refactor: 移除 GameState / GameClock 全局门面`（已完成）
 3. `refactor: 移除 WeatherSystem / Relationships / Calendar 全局门面`
 4. `refactor: SceneRouter / SaveManager 去单例耦合`（`Audio` 子项已完成）
 5. `refactor: 收窄 EventBus 与 Database`
@@ -285,10 +304,10 @@ Autoload 只允许保留：
 ## 6. 风险与注意事项
 
 1. **旧存档兼容**：`SAVE_VERSION` 不因内部重构递增；核心节键名和字段格式保持不变。
-2. **`Main` 重建**：标题页 → 游戏会创建新的 `Main`，新的 Resource；Autoload 门面必须重新注入。
+2. **`Main` 重建**：标题页 → 游戏会创建新的 `Main`，新的 Resource；Autoload 服务 / 世界 / UI 都必须由新 Main 重新显式注入，不能保留上一局 Resource 的引用。
 3. **世界场景缓存**：`_ready()` 一生只跑一次，注入如果只放在 `_ready()` 会漏掉缓存复用场景；用 `_enter_tree()` 或 `on_world_enter()`。
 4. **信号连接泄漏**：Resource 不负责连接；所有连接必须由节点在 `_enter_tree/_exit_tree` 成对管理。
-5. **日结转顺序**：当前仍依赖注册顺序；阶段 C 必须显式优先级。
+5. **日结转顺序**：当前仍依赖 `GameDateClock` 上的注册顺序；阶段 C 必须拆成显式 `DayPipeline` 优先级。
 6. **测试隔离**：新 Resource 让 `before_test` 可以 `new` 干净实例；不要再用“重置 5 个单例”作为默认方案。
 7. **文档同步**：改依赖图 / 状态归属必须同步 `docs/architecture.md`、`README.md`、`AGENTS.md`。
 
@@ -296,14 +315,15 @@ Autoload 只允许保留：
 
 ## 7. 当前遗留问题（已知）
 
-- 11 个 Autoload 仍然存在，其中 5 个已退化为门面，但消费者仍通过全局名访问。
+- 9 个 Autoload 仍然存在；阶段 B 已删除 `GameState` / `GameClock` 门面，但
+  `WeatherSystem` / `Relationships` / `Calendar` 仍是消费者通过全局名访问的服务。
 - `SceneRouter` 仍持有 `_world_cache / _current_world`，是场景节点生命周期错配。
 - `Audio` 的反向依赖与不可追踪连接已解决（见 §1.4）；`SceneRouter` / `SaveManager`
   的去单例耦合仍待完成。
 - `EventBus` 54 个全局信号尚未按域拆分。
 - `Database` 的公开字典仍可被直接迭代。
 - `Npc.affection` 与 `RelationshipStore` 仍存在双真值同步。
-- `GameClock.paused` 与 `SceneTree.paused` 双暂停真值尚未统一。
+- `GameDateClock.paused` 与 `SceneTree.paused` 双暂停真值尚未统一。
 
 ---
 

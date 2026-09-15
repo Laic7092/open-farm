@@ -26,16 +26,24 @@ const NO_CELL: Vector2i = Vector2i(-32768, -32768)
 
 var _region: Rect2i = Rect2i()
 var _walkable: Dictionary[Vector2i, bool] = {}
+## 组合根注入的时钟；日结转钩子注册在它上面。
+var _clock: GameDateClock
+
+
+func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
+	_clock = clock
 
 
 func _enter_tree() -> void:
 	add_to_group(GROUP)
-	GameClock.register_day_hook(_on_day_rollover)
+	if _clock != null:
+		_clock.register_day_hook(_on_day_rollover)
 	_rebuild_region()
 
 
 func _exit_tree() -> void:
-	GameClock.unregister_day_hook(_on_day_rollover)
+	if _clock != null:
+		_clock.unregister_day_hook(_on_day_rollover)
 
 
 ## 丢弃可通行性缓存（植被长出来后调用）。

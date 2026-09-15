@@ -41,6 +41,17 @@ var _toast_tween: Tween
 var _weather_icons: Dictionary[StringName, Texture2D] = {}
 ## 物品栏格子，按从左到右排列。
 var _item_slots: Array[HudSlot] = []
+## 组合根注入的玩家档案；HUD 只读。
+var _profile: PlayerProfile
+## 组合根注入的时钟；HUD 只读。
+var _clock: GameDateClock
+
+
+func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
+	_profile = profile
+	_clock = clock
+	if is_node_ready():
+		_refresh_all()
 
 
 func _ready() -> void:
@@ -70,13 +81,14 @@ func _refresh_all() -> void:
 	_refresh_festival()
 	_refresh_time()
 	_refresh_weather()
-	_on_money_changed(GameState.money, 0)
+	_on_money_changed(_profile.money if _profile != null else 0, 0)
 	_refresh_item_bar()
 	_refresh_hand()
 
 
 func _refresh_date() -> void:
-	date_label.text = Text.date_text(GameClock.date)
+	if _clock != null:
+		date_label.text = Text.date_text(_clock.date)
 
 
 ## 今日节日横幅：没有节日时整行隐藏，不占屏幕。
@@ -87,7 +99,8 @@ func _refresh_festival() -> void:
 
 
 func _refresh_time() -> void:
-	time_label.text = GameClock.time_string()
+	if _clock != null:
+		time_label.text = _clock.time_string()
 
 
 func _refresh_weather() -> void:

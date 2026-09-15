@@ -5,6 +5,14 @@ extends Interactable
 ## 骨架阶段用"一次性全卖"简化了牧场物语原作的"逐件投放 + 隔天结算"，
 ## 接口保持不变，后续把它换成 [code]ship(item_id, count)[/code] 即可。
 
+## 组合根注入的玩家档案。
+var _profile: PlayerProfile
+
+
+func bind_dependencies(profile: PlayerProfile, _clock: GameDateClock) -> void:
+	_profile = profile
+
+
 func _ready() -> void:
 	prompt_key = &"PROMPT_SHIPPING_BIN"
 
@@ -42,8 +50,9 @@ func interact(actor: Node2D) -> void:
 		EventBus.notification_requested.emit(&"NOTIFY_NOTHING_TO_SHIP", {})
 		return
 
-	GameState.earn(total)
-	GameState.record_shipped(shipped)
+	if _profile != null:
+		_profile.earn(total)
+		_profile.record_shipped(shipped)
 	EventBus.notification_requested.emit(
 		&"NOTIFY_SHIPPED", {"count": shipped, "total": total}
 	)

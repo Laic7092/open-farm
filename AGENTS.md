@@ -31,8 +31,8 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
    （`Database.get_crop(&"turnip")`），不要硬编码文件路径。
 2. **静态数据 ↔ 运行时状态分离**：`XxxData`(Resource，不变) ↔ `XxxState`(RefCounted，会变)，
    生长规则写在 `XxxGrowth` / `XxxHusbandry` 的**纯静态函数**里，便于脱离引擎单测。
-3. **EventBus 只声明信号**，不写逻辑；生产者 emit、消费者 connect。有顺序依赖的模拟走
-   `GameClock.register_day_hook()`，不要依赖信号回调顺序。
+3. **EventBus 只声明信号**，不写逻辑；生产者 emit、消费者 connect。有顺序依赖的模拟走 Main 注入的
+   `GameDateClock.register_day_hook()`，不要依赖信号回调顺序。
 4. **世界场景会被缓存复用**（`SceneRouter._world_cache`）：`_ready()` 一生只跑一次，
    所以"每次进图都要做一遍"的事情放 `_enter_tree()` / `WorldScene.on_world_enter()`。
 5. **所有资源由脚本生成，仓库里不放手工二进制**：美术 `tools/art/*.gd`、音频 `tools/audio/*.gd`、
@@ -57,7 +57,7 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 | 改 UI | `src/ui/*.gd` + `scenes/ui/*.tscn` + `src/ui/ui_root.gd`（模态栈 / 暂停） |
 | 改玩法数值 | 只改 `data/**/*.tres`，不用动代码 |
 | 加全局信号 | `src/autoload/event_bus.gd`（只声明） |
-| 参与日结转 | `GameClock.register_day_hook(callable)`，并在 `_exit_tree` 注销 |
+| 参与日结转 | 从世界传入的 `GameDateClock.register_day_hook(callable)`，并在 `_exit_tree` 注销 |
 | 参与存档 | 节点实现 `to_dict/from_dict` + `Persistence.register(self, &"id")`（JSON 往返把 StringName 变 String，`from_dict` 要转回） |
 | 连地图 / 改出口 | 场景里的 `SceneDoor`（`target_scene` + `target_spawn_id`；边缘出口再加 `auto_enter` + `road_exit`）+ `SpawnPoint`；新增 / 删除地图后同步 `tests/unit/test_world_map.gd` 的 `MAPS` |
 | 改地图瓦片 / 外观 | `src/art/atlas_layout.gd`（坐标真相）+ `tools/art/generate_terrain.gd`；已发布格子**只能往后追加** |
@@ -67,13 +67,14 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 
 ## 4. 代码地图
 
-- **十一个单例（顺序 = `project.godot` 声明顺序）**：
-  `EventBus` `AppTheme` `Database` `GameClock` `GameState` `WeatherSystem` `Relationships` `Calendar` `SaveManager` `SceneRouter` `Audio`。
-  依赖图与约束见 `docs/architecture.md` §2。`Audio` 不静态依赖 `GameClock` / `SceneRouter`：
+- **九个单例（顺序 = `project.godot` 声明顺序）**：
+  `EventBus` `AppTheme` `Database` `WeatherSystem` `Relationships` `Calendar` `SaveManager` `SceneRouter` `Audio`。
+  玩家 / 时钟状态已经是 `Main` 持有的 `PlayerProfile` / `GameDateClock`，不再有全局门面。
+  依赖图与约束见 `docs/architecture.md` §2。`Audio` 不静态依赖 `SceneRouter`：
   世界 id 来自 `EventBus.world_entered`，时钟状态由 `Main` 通过 `Audio.bind_clock()` 注入。
 - `src/art/` 调色板 + 图集排版表；`src/audio/` 音频 id/路径目录；`src/core/` 日期/季节/状态机/网格 A*；
   `src/data/` 资源类定义；`src/player/`；`src/farm/`；`src/npc/`；`src/event/`（节日与事件规则 + 会场节点）；`src/shop/`；`src/world/`；`src/ui/`；`src/main/`。
-- 可存档状态资源：`src/core/player_profile.gd`、`game_date_clock.gd`、`weather_state.gd`、`relationship_store.gd`、`calendar_progress.gd`；由 `Main` 持有并注入对应 Autoload 门面。
+- 可存档状态资源：`src/core/player_profile.gd`、`game_date_clock.gd`、`weather_state.gd`、`relationship_store.gd`、`calendar_progress.gd`；由 `Main` 持有并注入 Autoload 服务 / 世界 / UI 消费者。`GameDateClock` 同时接管原时钟服务的有序日结转。
 - `tools/art/`、`tools/audio/` 生成器；`tools/build_assets.sh`（唯一编排入口）；`tools/check.sh`；
   `tools/smoke_test.gd` + `smoke_test.tscn`；`tools/generate_sample_data.gd`（重置示例数据）。
 - `tests/unit/` gdUnit4（断言风格：`assert_int(x).override_failure_message("...").is_equal(y)`）。

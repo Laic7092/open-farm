@@ -3,18 +3,22 @@ extends Node
 ##
 ## [b]为什么是独立单例[/b]：好感度、恋爱与婚姻是[b]跨场景[/b]状态——
 ## 玩家在小镇和书雅聊天，换到矿洞时书雅并不在场上，但关系必须还在；
-## 存档、读档也要一次拿全。把这些塞进 [GameState] 会让"全局状态"无限膨胀，
+## 存档、读档也要一次拿全。把这些塞进 [PlayerProfile] 会让"全局状态"无限膨胀，
 ## 也违反 [code]docs/architecture.md[/code] 的分层约定，所以单独一个单例。
 ##
 ## 职责边界：
 ## [br]- 持有 [code]npc_id → RelationshipState[/code]，做增删改查；
-## [br]- 在 [method GameClock.register_day_hook] 的日结转里清每日标记、推进婚育；
+## [br]- 在注入时钟的 `register_day_hook()` 日结转里清每日标记、推进婚育；
 ## [br]- 通过 [EventBus] 广播好感 / 关系变化，不直接碰任何 UI 或场景节点。
 ##
 ## 数值规则全在纯静态的 [AffectionRules] 里，本脚本只负责"持有状态 + 持久化"。
 
 ## 关系状态；由组合根持有，可整体替换。
 var _store: RelationshipStore = RelationshipStore.new()
+## 组合根注入的玩家档案；用于把孩子出生旗标写回同一个 PlayerProfile。
+var _profile: PlayerProfile
+## 组合根注入的时钟；日转型服务用它注册 / 注销钩子。
+var _clock: GameDateClock
 
 ## 配偶的 [member NpcData.id]；空串表示未婚。只读。
 var spouse_id: StringName:
@@ -36,7 +40,16 @@ var child_born: bool:
 
 func _ready() -> void:
 	Persistence.register_core(self, &"Relationships", 40)
-	GameClock.register_day_hook(_on_day_rollover)
+
+
+## 注入组合根持有的状态，并重新注册日结转钩子。
+func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
+	if _clock != null:
+		_clock.unregister_day_hook(_on_day_rollover)
+	_profile = profile
+	_clock = clock
+	if _clock != null:
+		_clock.register_day_hook(_on_day_rollover)
 
 
 ## 当前关系状态；由组合根持有，可整体替换。
@@ -229,8 +242,8 @@ func to_dict() -> Dictionary:
 
 func from_dict(data: Dictionary) -> void:
 	_store.from_dict(data)
-	if child_born:
-		GameState.set_flag(&"child_born")
+	if child_born and _profile != null:
+		_profile.set_flag(&"child_born")
 
 
 # ---------------------------------------------------------------- 内部
@@ -262,6 +275,7 @@ func _on_day_rollover(_date: GameDate) -> void:
 func _birth_child() -> void:
 	_store.child_born = true
 	_store.pregnancy_days_left = 0
-	GameState.set_flag(&"child_born")
+	if _profile != null:
+		_profile.set_flag(&"child_born")
 	EventBus.child_born.emit(&"our_child")
 	EventBus.notification_requested.emit(&"NOTIFY_CHILD_BORN", {})

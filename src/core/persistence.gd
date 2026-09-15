@@ -28,6 +28,11 @@ const META_ID: StringName = &"persistence_id"
 const META_CORE_ORDER: StringName = &"persistence_core_order"
 
 
+## 已注册的核心状态 Resource。这里用弱引用保存，Main 重建后旧资源自动失效，
+## SaveManager 每次收集前会先清理一次。
+static var _core_resources: Array[WeakRef] = []
+
+
 ## 声明某节点参与存档；[param id] 必须在全局唯一且稳定（不要用节点路径）。
 static func register(node: Node, id: StringName) -> void:
 	node.add_to_group(GROUP)
@@ -44,26 +49,71 @@ static func register_core(node: Node, id: StringName, order: int) -> void:
 	node.set_meta(META_CORE_ORDER, order)
 
 
-## 读取核心单例的恢复顺序。
-static func core_order_of(node: Node) -> int:
-	return int(node.get_meta(META_CORE_ORDER, 0))
+## 声明一个 Resource / 普通对象作为核心存档节。
+##
+## [PlayerProfile] / [GameDateClock] 不进入场景树，不能加入 Group；组合根用
+## 这个接口把状态 Resource 注册到同一套核心节契约里。
+static func register_core_resource(resource: Object, id: StringName, order: int) -> void:
+	resource.set_meta(META_ID, id)
+	resource.set_meta(META_CORE_ORDER, order)
+	for ref: WeakRef in _core_resources:
+		if ref.get_ref() == resource:
+			return
+	_core_resources.append(weakref(resource))
 
 
-## 读取节点的持久化 id；未显式注册时回退到节点名。
-static func id_of(node: Node) -> StringName:
-	var meta: Variant = node.get_meta(META_ID, null)
+## 注销核心状态 Resource（测试 / 重建组合根时使用）。
+static func unregister_core_resource(resource: Object) -> void:
+	var kept: Array[WeakRef] = []
+	for ref: WeakRef in _core_resources:
+		if ref.get_ref() == resource:
+			continue
+		if ref.get_ref() != null:
+			kept.append(ref)
+	_core_resources = kept
+
+
+## 当前仍有效的核心状态 Resource。
+static func core_resources() -> Array[Object]:
+	var result: Array[Object] = []
+	var kept: Array[WeakRef] = []
+	for ref: WeakRef in _core_resources:
+		var resource: Object = ref.get_ref()
+		if resource == null:
+			continue
+		result.append(resource)
+		kept.append(ref)
+	_core_resources = kept
+	return result
+
+
+## 读取核心存档节的恢复顺序。
+static func core_order_of(object: Object) -> int:
+	return int(object.get_meta(META_CORE_ORDER, 0))
+
+
+## 读取对象的持久化 id；未显式注册时回退到节点名 / Resource 名。
+static func id_of(object: Object) -> StringName:
+	var meta: Variant = object.get_meta(META_ID, null)
 	if meta is StringName:
 		return meta
-	return StringName(node.name.to_snake_case())
+	if object is Node:
+		return StringName((object as Node).name.to_snake_case())
+	if object is Resource:
+		var resource := object as Resource
+		if not resource.resource_name.is_empty():
+			return StringName(resource.resource_name.to_snake_case())
+		return StringName(resource.get_class().to_snake_case())
+	return &""
 
 
-## 校验一个节点是否满足存档契约，返回错误原因列表（为空表示合格）。
-static func validate(node: Node) -> PackedStringArray:
+## 校验一个对象是否满足存档契约，返回错误原因列表（为空表示合格）。
+static func validate(object: Object) -> PackedStringArray:
 	var problems := PackedStringArray()
-	if not node.has_method(&"to_dict"):
+	if not object.has_method(&"to_dict"):
 		problems.append("缺少 to_dict() 方法")
-	if not node.has_method(&"from_dict"):
+	if not object.has_method(&"from_dict"):
 		problems.append("缺少 from_dict(data) 方法")
-	if id_of(node) == &"":
+	if id_of(object) == &"":
 		problems.append("持久化 id 为空")
 	return problems

@@ -55,6 +55,10 @@ var _pending_milestone: Milestone = Milestone.NONE
 var _available: bool = true
 var _schedule: NpcSchedule
 var _current_entry: ScheduleEntry
+## 组合根注入的时钟；日程刷新读取当天分钟 / 季节。
+var _clock: GameDateClock
+## 组合根注入的玩家档案；required_flag 判定使用。
+var _profile: PlayerProfile
 ## 节日聚集用的临时日程段；复用同一个实例，避免每次刷新都新建资源。
 var _festival_entry: ScheduleEntry
 var _target_cell: Vector2i = NpcNavigator.NO_CELL
@@ -64,6 +68,11 @@ var _moving: bool = false
 var _repath_timer: float = 0.0
 
 @onready var sprite: AnimatedSprite2D = %Sprite
+
+
+func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
+	_profile = profile
+	_clock = clock
 
 
 func _enter_tree() -> void:
@@ -167,9 +176,9 @@ func _on_minute_changed(_hour: int, _minute: int) -> void:
 
 
 func _refresh_schedule() -> void:
-	if not _available or _schedule == null or _schedule.is_empty():
+	if _clock == null or not _available or _schedule == null or _schedule.is_empty():
 		return
-	var entry := _schedule.entry_at(GameClock.minute_of_day)
+	var entry := _schedule.entry_at(_clock.minute_of_day)
 	# 节日优先于日常日程：全村到点放下手里的活儿去会场。
 	var festival_point := Calendar.gather_point_for(npc_id)
 	if festival_point != &"":
@@ -369,7 +378,9 @@ func current_dialogue() -> DialogueData:
 			and data.friend_dialogue != null
 		):
 			return data.friend_dialogue
-	return data.dialogue_for_season(GameClock.date.season)
+	if _clock == null:
+		return null
+	return data.dialogue_for_season(_clock.date.season)
 
 
 func interact(actor: Node2D) -> void:
@@ -549,7 +560,7 @@ func _on_child_born(_child_id: StringName) -> void:
 func _refresh_availability() -> void:
 	if required_flag == &"":
 		return
-	var available := GameState.has_flag(required_flag)
+	var available := _profile != null and _profile.has_flag(required_flag)
 	if available == _available:
 		return
 	_available = available

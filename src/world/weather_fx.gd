@@ -23,6 +23,12 @@ var _rain: GPUParticles2D
 var _snow: GPUParticles2D
 var _leaves: GPUParticles2D
 var _sunburst: Sprite2D
+## 组合根注入的时钟；只读分钟数判断白天。
+var _clock: GameDateClock
+
+
+func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
+	_clock = clock
 
 
 func _ready() -> void:
@@ -131,5 +137,6 @@ func _apply(weather: Weather.Type) -> void:
 func _update_sunburst(weather: Weather.Type) -> void:
 	_sunburst.visible = (
 		weather == Weather.Type.SUNNY
-		and DayNight.sun_visible(GameClock.minute_of_day)
+		and _clock != null
+		and DayNight.sun_visible(_clock.minute_of_day)
 	)

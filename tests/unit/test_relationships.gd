@@ -1,14 +1,19 @@
 extends GdUnitTestSuite
 ## 关系系统测试：聊天 / 送礼 / 表白 / 结婚 / 生子 / 存档往返。
 ##
-## [code]Relationships[/code] 是 autoload，用例之间会互相污染，所以每个用例前复位。
+## Relationships 仍是 Autoload，但状态 Resource / 时钟由测试显式注入，避免互相污染。
+
+
+var _profile: PlayerProfile
+var _clock: GameDateClock
 
 
 func before_test() -> void:
-	GameClock.reset()
-	GameClock.set_paused(false)
-	Relationships.reset()
-	GameState.reset()
+	_profile = PlayerProfile.new()
+	_clock = GameDateClock.new()
+	_clock.set_paused(false)
+	Relationships.set_state(RelationshipStore.new())
+	Relationships.bind_dependencies(_profile, _clock)
 
 
 func after_test() -> void:
@@ -36,7 +41,7 @@ func test_talk_gives_affection_only_once_a_day() -> void:
 	assert_int(Relationships.talk(&"librarian")).is_equal(AffectionRules.TALK_GAIN)
 	assert_int(Relationships.talk(&"librarian")).is_equal(0)
 	assert_bool(Relationships.can_talk(&"librarian")).is_false()
-	GameClock.sleep_until_morning()
+	_clock.sleep_until_morning()
 	assert_bool(Relationships.can_talk(&"librarian")).is_true()
 	assert_int(Relationships.talk(&"librarian")).is_equal(AffectionRules.TALK_GAIN)
 
@@ -64,7 +69,7 @@ func test_gift_only_once_a_day() -> void:
 	assert_int(Relationships.affection(&"florist")).is_equal(AffectionRules.GIFT_LOVED)
 	assert_bool(Relationships.can_gift(&"florist")).is_false()
 	assert_int(Relationships.give_gift(&"florist", &"flower")).is_equal(0)
-	GameClock.sleep_until_morning()
+	_clock.sleep_until_morning()
 	assert_bool(Relationships.can_gift(&"florist")).is_true()
 
 
@@ -118,9 +123,9 @@ func test_child_is_born_after_gestation() -> void:
 	Relationships.marry(&"librarian")
 	assert_bool(Relationships.has_child()).is_false()
 	for _day: int in AffectionRules.DAYS_UNTIL_CHILD:
-		GameClock.sleep_until_morning()
+		_clock.sleep_until_morning()
 	assert_bool(Relationships.has_child()).is_true()
-	assert_bool(GameState.has_flag(&"child_born")).is_true()
+	assert_bool(_profile.has_flag(&"child_born")).is_true()
 	assert_int(Relationships.days_married).is_equal(AffectionRules.DAYS_UNTIL_CHILD)
 
 

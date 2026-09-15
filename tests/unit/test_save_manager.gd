@@ -6,15 +6,24 @@ extends GdUnitTestSuite
 
 const TEST_ROOT: String = "res://.tmp/gdunit_saves"
 
+var _profile: PlayerProfile
+var _clock: GameDateClock
+
 
 func before_test() -> void:
 	SaveManager.save_root = TEST_ROOT
 	_cleanup()
-	GameClock.reset()
-	GameState.reset()
+	_profile = PlayerProfile.new()
+	_clock = GameDateClock.new()
+	Persistence.register_core_resource(_clock, &"GameClock", 10)
+	Persistence.register_core_resource(_profile, &"GameState", 20)
 
 
 func after_test() -> void:
+	Persistence.unregister_core_resource(_clock)
+	Persistence.unregister_core_resource(_profile)
+	_profile = null
+	_clock = null
 	_cleanup()
 	SaveManager.save_root = SaveManager.DEFAULT_SAVE_ROOT
 
@@ -50,28 +59,28 @@ func test_delete_save() -> void:
 # ---------------------------------------------------------------- 往返
 
 func test_roundtrip_restores_core_state() -> void:
-	GameClock.set_date(GameDate.new(2, Season.Type.SUMMER, 9))
-	GameClock.set_time(14, 25)
-	GameState.set_money(1234)
-	GameState.set_player_name("小明")
-	GameState.set_flag(&"met_mayor", 3)
+	_clock.set_date(GameDate.new(2, Season.Type.SUMMER, 9))
+	_clock.set_time(14, 25)
+	_profile.set_money(1234)
+	_profile.set_player_name("小明")
+	_profile.set_flag(&"met_mayor", 3)
 
 	assert_bool(SaveManager.save_game(0)).is_true()
 
 	# 把运行时状态全部打乱。
-	GameClock.reset()
-	GameState.reset()
-	assert_int(GameState.money).is_equal(GameState.STARTING_MONEY)
+	_clock.reset()
+	_profile.reset()
+	assert_int(_profile.money).is_equal(PlayerProfile.STARTING_MONEY)
 
 	assert_bool(SaveManager.load_game(0)).is_true()
-	assert_int(GameClock.date.year).is_equal(2)
-	assert_int(GameClock.date.season).is_equal(Season.Type.SUMMER)
-	assert_int(GameClock.date.day).is_equal(9)
-	assert_int(GameClock.hour()).is_equal(14)
-	assert_int(GameClock.minute()).is_equal(25)
-	assert_int(GameState.money).is_equal(1234)
-	assert_str(GameState.player_name).is_equal("小明")
-	assert_int(GameState.get_flag(&"met_mayor")).is_equal(3)
+	assert_int(_clock.date.year).is_equal(2)
+	assert_int(_clock.date.season).is_equal(Season.Type.SUMMER)
+	assert_int(_clock.date.day).is_equal(9)
+	assert_int(_clock.hour()).is_equal(14)
+	assert_int(_clock.minute()).is_equal(25)
+	assert_int(_profile.money).is_equal(1234)
+	assert_str(_profile.player_name).is_equal("小明")
+	assert_int(_profile.get_flag(&"met_mayor")).is_equal(3)
 
 
 func test_roundtrip_restores_weather() -> void:
@@ -84,9 +93,9 @@ func test_roundtrip_restores_weather() -> void:
 
 
 func test_meta_summary_matches_the_save() -> void:
-	GameClock.set_date(GameDate.new(4, Season.Type.WINTER, 21))
-	GameState.set_money(777)
-	GameState.set_player_name("阿花")
+	_clock.set_date(GameDate.new(4, Season.Type.WINTER, 21))
+	_profile.set_money(777)
+	_profile.set_player_name("阿花")
 	SaveManager.save_game(0)
 
 	var meta := SaveManager.read_meta(0)
@@ -141,7 +150,7 @@ func test_corrupt_file_is_reported_not_crashed() -> void:
 func test_apply_ignores_unknown_sections() -> void:
 	var payload := {
 		"version": SaveManager.SAVE_VERSION,
-		"GameClock": GameClock.to_dict(),
+		"GameClock": _clock.to_dict(),
 		"SomethingElse": {"whatever": true},
 		"nodes": {},
 	}

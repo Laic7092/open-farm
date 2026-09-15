@@ -18,6 +18,24 @@ extends Node2D
 ## 是否自动挂载 NPC 行走网格。没有 NPC 的地图可以关掉省一点探测。
 @export var navigation_enabled: bool = true
 
+## 组合根注入的玩家档案；世界节点在进入树前就会收到。
+var player_profile: PlayerProfile
+## 组合根注入的时钟状态；世界节点在进入树前就会收到。
+var clock_state: GameDateClock
+
+
+## 由 [SceneRouter] 在世界场景 [method Node.add_child] 之前调用。
+func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
+	player_profile = profile
+	clock_state = clock
+	_distribute_dependencies()
+
+
+func _enter_tree() -> void:
+	# 父节点的 _enter_tree 先于子节点执行；在这里把状态推给场景里的服务节点，
+	# 它们的 _enter_tree / _ready 就能立即使用组合根依赖。
+	_distribute_dependencies()
+
 
 func _ready() -> void:
 	_apply_camera_limits()
@@ -36,6 +54,7 @@ func _ensure_weather_fx() -> void:
 		return
 	var fx := WeatherFx.new()
 	fx.name = "WeatherFx"
+	fx.bind_dependencies(player_profile, clock_state)
 	add_child(fx)
 
 
@@ -46,6 +65,7 @@ func _ensure_lighting() -> void:
 		return
 	var lighting := WorldLighting.new()
 	lighting.name = "WorldLighting"
+	lighting.bind_dependencies(player_profile, clock_state)
 	add_child(lighting)
 
 
@@ -56,6 +76,7 @@ func _ensure_navigator() -> void:
 	var navigator := NpcNavigator.new()
 	navigator.name = "NpcNavigator"
 	navigator.area = camera_limits
+	navigator.bind_dependencies(player_profile, clock_state)
 	add_child(navigator)
 
 
@@ -66,6 +87,7 @@ func _ensure_navigator() -> void:
 func on_world_enter(spawn_id: StringName) -> void:
 	if spawn_id == &"":
 		spawn_id = default_spawn_id
+	_distribute_dependencies()
 	_apply_camera_limits()
 	EventBus.world_entered.emit(world_id)
 
@@ -73,6 +95,13 @@ func on_world_enter(spawn_id: StringName) -> void:
 ## 本场景被切出（但实例仍保留在缓存里）时调用。
 func on_world_exit() -> void:
 	pass
+
+
+## 把组合根依赖推给所有实现了 `bind_dependencies()` 的子节点。
+func _distribute_dependencies() -> void:
+	for node: Node in find_children("*", "", true, false):
+		if node.has_method(&"bind_dependencies"):
+			node.call(&"bind_dependencies", player_profile, clock_state)
 
 
 func _apply_camera_limits() -> void:

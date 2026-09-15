@@ -46,6 +46,11 @@ func _ready() -> void:
 	sell_list.item_selected.connect(func(_index: int) -> void: _refresh_sell_info())
 
 
+## 组合根依赖注入；由 [UiRoot] 下发。
+func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
+	configure(profile, Database, EventBus, clock)
+
+
 ## 注入运行时依赖。必须在 [method open] 之前调用。
 func configure(wallet, catalog, events, clock) -> void:
 	_wallet = wallet

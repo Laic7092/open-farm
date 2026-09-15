@@ -30,6 +30,13 @@ const PLAYER_LAYER: int = 2
 ## [code]tests/unit/test_world_map.gd[/code] 按这个标志检查世界是不是接得整齐。
 @export var road_exit: bool = false
 
+## 组合根注入的玩家档案；required_flag 判定使用。
+var _profile: PlayerProfile
+
+
+func bind_dependencies(profile: PlayerProfile, _clock: GameDateClock) -> void:
+	_profile = profile
+
 
 func _ready() -> void:
 	if prompt_key == &"PROMPT_INTERACT":
@@ -44,7 +51,7 @@ func _ready() -> void:
 func can_interact() -> bool:
 	if not super.can_interact():
 		return false
-	return required_flag == &"" or GameState.has_flag(required_flag)
+	return required_flag == &"" or (_profile != null and _profile.has_flag(required_flag))
 
 
 func interact(actor: Node2D) -> void:
