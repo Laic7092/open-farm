@@ -1,7 +1,7 @@
 # 架构速览
 
-本文只保留**跨模块、难以从单个文件看出的约定**；单个系统的设计原因写在对应脚本顶部的 `##` 注释里。
-需要完整历史版本时看 git 历史，不再维护 700 行长文。
+本文只保留**跨模块、难以从单个文件看出的约定**；单个系统的设计原因写在对应脚本顶部的 `##` 注释里，
+完整历史版本看 git 历史。
 
 ## 1. 分层与依赖方向
 
@@ -17,24 +17,22 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 
 ## 2. Autoload 与组合根
 
-- Autoload 仍是 `EventBus` `AppTheme` `Database` `SaveManager` `SceneRouter`；
-  其中 `Database` 只暴露只读 getter 快照，`EventBus` 只保留 10 个跨域时间 / 场景 / 存档信号。
+- Autoload：`EventBus` `AppTheme` `Database` `SaveManager` `SceneRouter`。
+  `Database` 只暴露只读 getter 快照；`EventBus` 只保留跨域时间 / 场景 / 存档信号。
 - 领域事件拆为 `EventBus.player` / `EventBus.farm` / `EventBus.world` / `EventBus.ui`：
-  `PlayerProfile.events`、组合根 `farm_events`、`WorldHost.events`、`UiRoot.events`
-  持有同一对象引用；节点连接仍走 `EventBus.<domain>.<signal>`。
-- 天气 / 关系 / 日历已从 Autoload 收口为 `Main` 组合根拥有的服务节点：
-  `WeatherService`、`RelationshipService`、`CalendarService`；
-  对应状态 `WeatherState` / `RelationshipStore` / `CalendarProgress` 仍由 `Main` 持有并注入。
-- 音频也去掉了全局 Autoload：标题页与 `Main` 各自在场景里挂一个 `SceneAudio` 节点，
+  `PlayerProfile.events`、组合根 `farm_events`、`WorldHost.events`、`UiRoot.events` 持有同一对象引用；
+  节点连接仍走 `EventBus.<domain>.<signal>`。
+- 天气 / 关系 / 日历不是 Autoload，而是 `Main` 组合根拥有的服务节点：`WeatherService`、
+  `RelationshipService`、`CalendarService`；对应状态 `WeatherState` / `RelationshipStore` / `CalendarProgress`
+  由 `Main` 持有并注入。
+- 音频没有全局 Autoload：标题页与 `Main` 各自在场景里挂一个 `SceneAudio` 节点，
   世界曲目 / 脚步音由各 `WorldScene` 的导出字段声明。
 - 玩家 / 时钟状态由 `Main` 持有并显式注入：`PlayerProfile`、`GameDateClock`。
-- `Main` 在 `_enter_tree()` 里创建服务并注入依赖，保证早于世界 / UI 子树；
-  核心存档节由 `Main` 显式注册为 `Array[SaveSection]`，场景节点继续用
-  `Persistence.register()` 自注册，`SaveManager` 统一包装成 `SaveSection`。
-- 世界实例缓存与待恢复目标移到 `WorldHost`；`SceneRouter.change_scene_to(host, path, spawn)`
-  只做无状态过渡，不再保存任何世界节点。
-- 详细代码入口：`src/main/main.gd`、`src/main/world_host.gd`、`src/services/*.gd`、
-  `src/core/save_section.gd`、`src/core/persistence.gd`、`src/autoload/save_manager.gd`。
+- `Main` 在 `_enter_tree()` 里创建服务并注入依赖，保证早于世界 / UI 子树；核心存档节由 `Main` 显式注册为
+  `Array[SaveSection]`，场景节点继续用 `Persistence.register()` 自注册，`SaveManager` 统一包装成 `SaveSection`。
+- 世界实例缓存与待恢复目标在 `WorldHost`；`SceneRouter.change_scene_to(host, path, spawn)` 只做无状态过渡。
+- 代码入口：`src/main/main.gd`、`src/main/world_host.gd`、`src/services/*.gd`、`src/core/save_section.gd`、
+  `src/core/persistence.gd`、`src/autoload/save_manager.gd`。
 
 ## 3. 关键设计决策
 
@@ -48,13 +46,25 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 | 数据驱动 | 内容都在 `.tres`，脚本只认 id；静态数据与运行时状态分离 | `database.gd` |
 | UI 模态栈 | `UiRoot` 统一管理暂停与 `close_all()`，避免读档 / 传送残留菜单 | `ui_root.gd` |
 
-## 4. Godot 踩坑
+## 4. Godot 踩坑与引擎事实
+
+踩坑：
 
 - 手写 `.tscn`：导出的节点引用要声明 `node_paths=PackedStringArray(...)`；`%UniqueName` 要设置 `unique_name_in_owner = true`。
 - `godot -s script.gd` 在 autoload 注册前编译脚本；生成器用 `preload()`，依赖 autoload 的工具做成场景运行。
 - Godot 每张画布只允许一个 `CanvasModulate`；天气与昼夜必须由 `WorldLighting` 统一相乘，否则只有一个生效。
 - 子节点 `_ready()` 先于父节点；状态机初始切换用 `call_deferred()`，避免父节点 `@onready` 还是 null。
-- Godot 命令必须能自己退出：统一套 `timeout` 并在末尾带 `--quit-after 3`（脚本解析失败时不会调用 `quit()`，会挂死在主循环）；不要用管道直连，先重定向到文件再 `tail` / `grep`。
+- Godot 命令必须能自己退出：统一套 `timeout` 并在末尾带 `--quit-after 3`（脚本解析失败时不会调用 `quit()`，
+  会挂死在主循环）；不要用管道直连，先重定向到文件再 `tail` / `grep`。
+- `user://` 可能不可写：`SaveManager` / `SceneAudio` 必须静默降级；测试不要依赖持久化。
+- `.godot/` 不入库：新 clone 或新增资源后先 `--import`（`check.sh` 已自动处理）。
+
+引擎事实（4.7.2 实测）：
+
+- `PackedFloat32Array` 传参后原地修改对调用方可见，可直接传入 buffer 做原地叠加。
+- `PackedByteArray.encode_u32 / encode_u16 / encode_s16`、`String.to_ascii_buffer()` 可手写二进制。
+- `AudioStreamWAV` 导入默认 QOA；`--quit-after <n>` 是主循环迭代数；`-s` 脚本的 `_initialize()` 在主循环前同步跑完。
+- `ItemList` 的 focus 样式画在所有条目之上，焦点样式只能画边，填底色会盖住整张列表。
 
 ## 5. 子系统索引
 
@@ -77,3 +87,4 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 - `tools/smoke_test.tscn`：真实场景 + autoload 接线 + 完整玩法链路；检查按域拆在 `tools/smoke/`（世界 / 农场 / 巡游 / 钓鱼），公共断言在 `smoke_base.gd`。
 - `tests/unit/test_assets.gd` / `test_audio.gd`：把美术 / 音频规范写成可执行断言。
 - `tools/screenshot.tscn` / `ui_preview.tscn`：视觉回归预览，不做像素级 diff。
+
