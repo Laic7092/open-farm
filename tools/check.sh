@@ -6,10 +6,20 @@
 #   ./tools/check.sh unit         # 只跑单元测试
 #   ./tools/check.sh smoke        # 只跑冒烟测试
 #
+# 开跑前会先执行 tools/outline.py lint：大文件规范体检，只提示不阻断。
 # 可用 GODOT_BIN 指定 Godot 可执行文件，默认使用仓库根目录下的 ./godot。
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+
+# 大文件规范体检（详见 docs/big_files.md）：只提示不阻断，缺 python3 时跳过。
+if command -v python3 >/dev/null 2>&1; then
+	echo "==> 大文件规范体检（不阻断）"
+	python3 tools/outline.py lint || true
+else
+	echo "提示：未找到 python3，跳过 tools/outline.py lint" >&2
+fi
+
 GODOT_BIN="${GODOT_BIN:-./godot}"
 TARGET="${1:-all}"
 

@@ -41,7 +41,7 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 ## 目录结构
 
 - `src/`：按玩法分层（`autoload` / `services` / `core` / `data` / `player` / `farm` / `npc` / `event` / `shop` / `world` / `ui` / `main`），规则尽量写成可脱离引擎测试的纯静态函数。
-- `scenes/`、`data/`、`assets/`、`tests/unit/`、`tools/`：场景、`.tres` 数据、生成物、单元测试、开发与生成脚本。
+- `scenes/`、`data/`、`assets/`、`tests/unit/`、`tools/`：场景、`.tres` 数据、生成物、单元测试、开发与生成脚本。`tools/smoke/` 是冒烟测试的域检查器，`tools/sample/` 是示例数据生成器的域构建器。
 - `docs/`：跨系统流程与美术/音频规范；`project.godot` 配置 autoload、InputMap、像素渲染与本地化。
 
 ## 架构
@@ -93,4 +93,5 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 | `docs/art_pipeline.md` | 美术生成规范；“Godot 命令必须能自己退出”原文 |
 | `docs/audio_pipeline.md` | 音频合成规范 |
 | `docs/gameplay.md` | 玩家向玩法指南：开局、农场/畜牧、地图/NPC、恋爱、节日、存档 |
+| `docs/big_files.md` | 大文件规范：阈值、阅读 / 修改协议、目录分级与特别注意的文件 |
 | `AGENTS.md` | 给编码 Agent 的最短上手说明 |

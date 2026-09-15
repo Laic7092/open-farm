@@ -72,6 +72,6 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 ## 6. 测试策略
 
 - `tests/unit/`：只测纯逻辑，不加载场景、不模拟输入。
-- `tools/smoke_test.tscn`：真实场景 + autoload 接线 + 完整玩法链路。
+- `tools/smoke_test.tscn`：真实场景 + autoload 接线 + 完整玩法链路；检查按域拆在 `tools/smoke/`（世界 / 农场 / 巡游 / 钓鱼），公共断言在 `smoke_base.gd`。
 - `tests/unit/test_assets.gd` / `test_audio.gd`：把美术 / 音频规范写成可执行断言。
 - `tools/screenshot.tscn` / `ui_preview.tscn`：视觉回归预览，不做像素级 diff。

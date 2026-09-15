@@ -21,6 +21,27 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 
 可用 `GODOT_BIN=/path/to/godot` 指定引擎，`GODOT_TIMEOUT=120` 覆盖默认 60s 超时。
 
+## 大文件怎么读（省上下文）
+
+仓库里有 400~750 行的文件（`tools/art/generate_houses.gd` 754、`src/world/flora_field.gd` 600……），
+整读会吃满上下文，也容易漏掉共享契约。**阈值：文件 ≥400 行 / 函数 ≥80 行先看结构；≥800 / ≥120 行禁止整读。**
+完整规范（阅读协议、修改协议、目录分级、特别注意的文件）见 `docs/big_files.md`。
+历史上两个千行巨头已按该规范拆开：`tools/smoke_test.gd` → `tools/smoke/`，`tools/generate_sample_data.gd` → `tools/sample/`。
+
+```bash
+python3 tools/outline.py map                          # 全仓索引：行数 + 用途（默认只列最大的 25 个，--full 看全部）
+python3 tools/outline.py outline tools/smoke_test.gd --full   # 默认精简，要细节才加 --full
+python3 tools/outline.py lint                         # 大文件体检（--strict 有红线时非 0）
+python3 tools/outline.py outline tools/smoke_test.gd  # 用途 / 段 / 常量 / 函数签名与行号（不打印函数体）
+python3 tools/outline.py sym tools/smoke_test.gd _check_twon    # 只取这一个函数体
+python3 tools/outline.py refs tools/smoke_test.gd _check_mine   # 本文件内：谁调用它 / 它调用谁
+python3 tools/outline.py callers clear src/ tools/ tests/       # 跨文件：谁调用了它（改共享函数前必查）
+python3 tools/outline.py grep register_day_hook src/            # 带行号搜，不用整读
+python3 tools/outline.py outline scenes/world/twon.tscn         # 场景 → 节点树 + 挂的脚本
+```
+
+改动共享函数前先 `refs` / `callers` / `grep` 查清调用方；生成物只改生成器（`data/**/*.tres`、`assets/**`、`.import`）。
+
 ## 铁律
 
 1. **数据驱动 + 静态 / 运行时分离**：内容都在 `res://data/**/*.tres`，脚本只认 id；`XxxData`（`Resource`）↔ `XxxState`（`RefCounted`），规则写进 `XxxGrowth` / `XxxHusbandry` 的纯静态函数。

@@ -13,3 +13,7 @@ reports/
 
 # 构建产物
 target/
+
+# python 工具（tools/outline.py 等）的字节码缓存
+__pycache__/
+*.pyc
