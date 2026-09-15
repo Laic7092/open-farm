@@ -309,7 +309,7 @@ Autoload 只允许保留：
 4. **信号连接泄漏**：Resource 不负责连接；所有连接必须由节点在 `_enter_tree/_exit_tree` 成对管理。
 5. **日结转顺序**：当前仍依赖 `GameDateClock` 上的注册顺序；阶段 C 必须拆成显式 `DayPipeline` 优先级。
 6. **测试隔离**：新 Resource 让 `before_test` 可以 `new` 干净实例；不要再用“重置 5 个单例”作为默认方案。
-7. **文档同步**：改依赖图 / 状态归属必须同步 `docs/architecture.md`、`README.md`、`AGENTS.md`。
+7. **文档同步**：改依赖图 / 状态归属时，同步更新 `docs/architecture.md`、`README.md` / `AGENTS.md` 与相关脚本的 `##` 设计注释。
 
 ---
 
@@ -333,4 +333,4 @@ Autoload 只允许保留：
 - 组合根：`src/main/main.gd`
 - 存档注册：`src/core/persistence.gd`、`src/autoload/save_manager.gd`
 - 纯逻辑：`src/core/text.gd`、`src/shop/shop.gd`、`src/player/player_stats.gd`、`src/player/inventory.gd`
-- 架构文档：`docs/architecture.md` §2.0 / §2.1
+- 组合根与状态注入：`src/main/main.gd` 顶部注释与 `_bind_dependencies()`
