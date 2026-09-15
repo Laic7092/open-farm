@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=3]
+[gd_scene load_steps=36 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -31,6 +31,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/forge.png" id="32_forge"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/flower_stand.png" id="33_flower_stand"]
 [ext_resource type="Script" path="res://src/event/festival_ground.gd" id="34_festival"]
+[ext_resource type="PackedScene" path="res://scenes/shop/shop_counter.tscn" id="40_counter"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
 size = Vector2(16, 16)
@@ -471,6 +472,16 @@ texture = ExtResource("33_flower_stand")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/FestivalGarden"]
 shape = SubResource("RectangleShape2D_tile")
+
+[node name="GeneralStoreCounter" parent="Interactables" instance=ExtResource("40_counter")]
+position = Vector2(432, 512)
+shop_id = &"general_store"
+clerk_id = &"merchant"
+
+[node name="FlowerShopCounter" parent="Interactables" instance=ExtResource("40_counter")]
+position = Vector2(928, 512)
+shop_id = &"flower_shop"
+clerk_id = &"florist"
 
 [node name="SchedulePoints" type="Node2D" parent="."]
 

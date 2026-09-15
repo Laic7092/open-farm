@@ -704,6 +704,15 @@ func _check_twon() -> void:
 		"ChildHome": "res://assets/sprites/props/house_child.png",
 	})
 
+	# 柜台：杂货店与花店各一个；对话只聊天，开店改由柜台负责。
+	var counter_shops: Array[StringName] = []
+	for node: Node in world.find_children("*", "ShopCounter", true, false):
+		var counter := node as ShopCounter
+		if counter != null:
+			counter_shops.append(counter.shop_id)
+	_check(counter_shops.has(&"general_store"), "twon 的杂货店柜台应当存在")
+	_check(counter_shops.has(&"flower_shop"), "twon 的花店柜台应当存在")
+
 	_check_npc_schedule()
 
 

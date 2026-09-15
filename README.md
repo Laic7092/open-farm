@@ -57,6 +57,7 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 | 加牲畜 | `data/animals/` + `data/buildings/` + `data/items/` + `tools/art/generate_animals.gd` |
 | 加野生植被 | `data/flora/` + `tools/art/generate_flora.gd` + `src/world/flora_field.gd` |
 | 加 NPC / 日程 | `tools/art/generate_actors.gd` + `data/npcs/` + `data/dialogue/` + `data/schedules/` + 场景 `SchedulePoint` |
+| 加商店 / 柜台 | `data/shops/*.tres` + `NpcData.shop_id` + 场景里摆 `ShopCounter`（`src/shop/shop_counter.gd`）并填 `shop_id` / `clerk_id` |
 | 加节日 / 事件 | `data/festivals/` + `data/events/` + 地图 `FestivalGround` + `src/event/*_rules.gd` + `src/services/calendar_service.gd` |
 | 加恋爱线 | `NpcData` 的 `romanceable` / `*_dialogue` / 礼物偏好 + 五段对白 + `AffectionRules` + `src/services/relationship_service.gd` |
 | 加地图 | 复制 `scenes/world/twon.tscn` 或 `library.tscn`；地面用 `src/world/*_ground.gd`；放 `SpawnPoint` 并用 `SceneDoor` 互连；同步 `tests/unit/test_world_map.gd` 的 `MAPS` |

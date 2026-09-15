@@ -1,11 +1,11 @@
 class_name Npc
 extends Interactable
-## NPC：可以对话、按日程在场景里走动，商人还会在上班时开店。
+## NPC：可以对话、按日程在场景里走动；商人上班时由柜台（[ShopCounter]）开店。
 ##
 ## 行为数据来自 [NpcData] 与 [NpcSchedule]：
 ## [br]- 到点后走 [NpcNavigator] 算出的格子路径前往 [SchedulePoint]；
 ## [br]- 路上播放行走动画，到达后按 [member ScheduleEntry.facing] 站定；
-## [br]- 商人只在日程的 [code]activity == "shop"[/code] 时才开店；
+## [br]- 商人只在日程的 [code]activity == "shop"[/code] 时才可能在柜台开店（[method is_working]）；
 ## [br]- 交谈 / 送礼的好感度与表白 / 求婚由 [code]RelationshipService[/code] 结算，
 ##   本节点只是它的视图（见 [AffectionRules]）。
 ##
@@ -50,7 +50,6 @@ var affection: int = 0
 ## 当前朝向。
 var facing: Facing.Direction = Facing.Direction.DOWN
 
-var _pending_shop_id: StringName = &""
 var _pending_milestone: Milestone = Milestone.NONE
 var _available: bool = true
 var _schedule: NpcSchedule
@@ -126,8 +125,6 @@ func _ready() -> void:
 	data = Database.get_npc(npc_id)
 	if data != null:
 		prompt_key = &"PROMPT_TALK"
-		if data.is_merchant():
-			prompt_key = &"PROMPT_SHOP"
 		if persistence_id == &"":
 			persistence_id = StringName("npc_%s" % npc_id)
 	else:
@@ -416,7 +413,6 @@ func interact(actor: Node2D) -> void:
 	var milestone := _milestone_for(actor)
 	if milestone != Milestone.NONE:
 		_pending_milestone = milestone
-		_pending_shop_id = &""
 		_face_actor(actor)
 		EventBus.ui.dialogue_requested.emit(_milestone_dialogue(milestone))
 		return
@@ -427,9 +423,7 @@ func interact(actor: Node2D) -> void:
 		return
 
 	_face_actor(actor)
-	# 商人：先把招呼打完，再打开商店（由 dialogue_finished 触发）。
 	_pending_milestone = Milestone.NONE
-	_pending_shop_id = data.shop_id if data.is_merchant() and is_working() else &""
 	EventBus.ui.dialogue_requested.emit(dialogue)
 
 
@@ -545,11 +539,6 @@ func _on_dialogue_finished(_dialogue: DialogueData) -> void:
 		# 只有真的扣掉了信物才结婚，避免对白被跳过时"白嫖"。
 		if _consume_proposal_item():
 			_relationships.marry(npc_id)
-	if _pending_shop_id == &"":
-		return
-	var shop_id: StringName = _pending_shop_id
-	_pending_shop_id = &""
-	EventBus.ui.shop_requested.emit(shop_id)
 
 
 # ---------------------------------------------------------------- 关系 / 可用性
