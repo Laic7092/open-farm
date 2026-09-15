@@ -19,6 +19,12 @@ extends Node2D
 @export var navigation_enabled: bool = true
 ## 本场景水面的类型（见 [enum WaterKind.Kind]）；-1 表示这张地图没有可垂钓的水面。
 @export var water_kind: int = -1
+## 本场景白天播放的 BGM id；由 [SceneAudio] 读取，地图自己声明自己听起来什么样。
+@export var bgm_track: StringName = &"farm"
+## 本场景夜晚播放的 BGM id；空表示夜晚也沿用白天曲。
+@export var bgm_night_track: StringName = &"night"
+## 本场景的脚步音效 id；由 [SceneAudio] 按玩家走过的距离触发。
+@export var footstep_sfx: StringName = &"footstep_grass"
 
 ## 组合根注入的玩家档案；世界节点在进入树前就会收到。
 var player_profile: PlayerProfile

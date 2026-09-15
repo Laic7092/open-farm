@@ -19,6 +19,14 @@ signal close_requested()
 @onready var music_slider: HSlider = %MusicSlider
 @onready var sfx_slider: HSlider = %SfxSlider
 
+## 本场景的音频节点；由 [UiRoot] 注入，独立预览时按分组兜底。
+var _audio: SceneAudio
+
+
+## 由 [UiRoot] 注入本场景的音频节点。
+func bind_audio(audio: SceneAudio) -> void:
+	_audio = audio
+
 
 func _ready() -> void:
 	visible = false
@@ -31,11 +39,20 @@ func _ready() -> void:
 	music_label.text = Text.key(&"MENU_MUSIC")
 	sfx_label.text = Text.key(&"MENU_SFX")
 
+	# 未注入时（单场景预览）退化到按分组找场景音频节点。
+	if _audio == null:
+		_audio = get_tree().get_first_node_in_group(SceneAudio.GROUP) as SceneAudio
+
 	# 先写值再连信号，避免初始化时把设置又存一遍。
-	music_slider.set_value_no_signal(Audio.bgm_volume)
-	sfx_slider.set_value_no_signal(Audio.sfx_volume)
-	music_slider.value_changed.connect(func(value: float) -> void: Audio.set_bgm_volume(value))
-	sfx_slider.value_changed.connect(func(value: float) -> void: Audio.set_sfx_volume(value))
+	if _audio != null:
+		music_slider.set_value_no_signal(_audio.bgm_volume)
+		sfx_slider.set_value_no_signal(_audio.sfx_volume)
+	music_slider.value_changed.connect(func(value: float) -> void:
+		if _audio != null:
+			_audio.set_bgm_volume(value))
+	sfx_slider.value_changed.connect(func(value: float) -> void:
+		if _audio != null:
+			_audio.set_sfx_volume(value))
 
 	resume_button.pressed.connect(func() -> void: close_requested.emit())
 	save_button.pressed.connect(_on_save_pressed)
@@ -47,8 +64,9 @@ func _ready() -> void:
 func open() -> void:
 	visible = true
 	# 面板可能来自更早的设置改动（或读档后），打开时同步一次。
-	music_slider.set_value_no_signal(Audio.bgm_volume)
-	sfx_slider.set_value_no_signal(Audio.sfx_volume)
+	if _audio != null:
+		music_slider.set_value_no_signal(_audio.bgm_volume)
+		sfx_slider.set_value_no_signal(_audio.sfx_volume)
 	resume_button.grab_focus()
 
 

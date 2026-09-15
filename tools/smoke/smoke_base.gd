@@ -169,6 +169,11 @@ func _world_host() -> WorldHost:
 	return get_tree().get_first_node_in_group(WorldHost.GROUP) as WorldHost
 
 
+## 本场景自带的音频节点（见 [SceneAudio]）；[Main] 拥有它，不再是全局 Autoload。
+func _scene_audio() -> SceneAudio:
+	return _main.scene_audio if _main != null else null
+
+
 func _is_transitioning() -> bool:
 	var host := _world_host()
 	return host != null and host.is_transitioning()

@@ -1,19 +1,27 @@
+class_name SceneAudio
 extends Node
-## 音频总管（Autoload：[code]Audio[/code]）。
+## 场景音频节点：属于某个场景自己的 BGM / 音效播放器。
 ##
-## 它只做三件事：把 BGM / 音效播出去、按场景与时间切换曲目、响应全局事件。
-## 所有声音都通过 [EventBus] 的既有信号触发，游戏逻辑里不出现任何播放调用，
-## 于是"加一个音效"不需要改玩法代码，删掉整个音频系统游戏逻辑也照常跑。
-## 世界 id 来自 [signal EventBus.world_entered]，时钟状态由组合根注入，
-## 因此不反向依赖 [SceneRouter] / [GameDateClock] 这类全局单例。
+## 全局 [code]Audio[/code] Autoload 已被删除——声音由场景里的这个节点负责。
+## 一个场景放一个（标题页 / [Main] / 将来任何独立场景），在 [code].tscn[/code]
+## 里用导出字段声明"这个场景听起来是什么样"：
+## [br]- [member bgm_track] / [member autoplay_bgm]：场景自己的曲目；
+## [br]- [member follow_world_bgm]：跟随当前 [WorldScene] 声明的曲目与昼夜；
+## [br]- [member listen_ui_sfx] / [member listen_gameplay_sfx]：订阅哪几类既有事件；
+## [br]- [member drive_footsteps]：玩家移动时按走过的距离触发脚步。
 ##
-## 音频资源同样由脚本生成（见 [code]docs/audio_pipeline.md[/code]），
-## 目录在 [AudioCatalog] 里，运行时按 id 取路径。
+## [b]总线[/b]：仍然只有 [code]Master → BGM / SFX[/code] 两条，第一个实例启动时确保存在；
+## 音量滑杆只改总线，不碰 [member AudioStreamPlayer.volume_db]。设置写在
+## [code]user://audio_settings.cfg[/code]，读不到 / 写不进都静默降级。
 ##
-## [b]总线[/b]：启动时确保 [code]Master → BGM / SFX[/code] 两条总线存在，
-## 音量控制面板只改总线音量，不碰 [member AudioStreamPlayer.volume_db]。
+## [b]为什么不写死世界 → 曲目[/b]：农场 / 小镇 / 夜晚的对应关系属于地图自己，
+## 因此这里只读 [member WorldScene.bgm_track] / [member WorldScene.bgm_night_track] /
+## [member WorldScene.footstep_sfx]，新增地图不需要改音频代码。
 
 const Catalog := preload("res://src/audio/audio_catalog.gd")
+
+## 场景音频节点所在分组；界面找不到注入引用时按它兜底。
+const GROUP: StringName = &"scene_audio"
 const PlayerGroup: StringName = &"player"
 
 ## BGM / SFX 两条总线的名字。
@@ -41,6 +49,21 @@ const NEGATIVE_NOTIFICATIONS: Array[StringName] = [
 ## 音量设置保存在用户目录；读不到或写不进都按默认值继续跑。
 const SETTINGS_PATH: String = "user://audio_settings.cfg"
 
+# ---------------------------------------------------------------- 场景声明
+
+## 不跟随世界时播放的曲目；空表示这个场景没有自己的 BGM。
+@export var bgm_track: StringName = &""
+## 进入树时立刻播放 [member bgm_track]。
+@export var autoplay_bgm: bool = false
+## 跟随当前世界场景声明的曲目，并在世界切换 / 小时变化时刷新。
+@export var follow_world_bgm: bool = false
+## 订阅 [signal EventBus.ui.ui_sound_requested] 及 UI / 存读档类音效。
+@export var listen_ui_sfx: bool = false
+## 订阅农场 / 世界 / 玩家玩法信号。
+@export var listen_gameplay_sfx: bool = false
+## 玩家移动时按走过的距离触发脚步。
+@export var drive_footsteps: bool = false
+
 ## BGM 音量（0 ~ 1）。
 var bgm_volume: float = 0.7
 ## 音效音量（0 ~ 1）。
@@ -55,12 +78,8 @@ var _streams: Dictionary = {}
 var _last_played: Dictionary = {}
 ## 当前 BGM 曲目 id；空表示没在放。
 var _current_bgm: StringName = &""
-## 标题页等"不属于任何世界"的场景，用它压过按世界自动选曲。
-var _bgm_context: StringName = &""
-## 组合根注入的时钟状态；Audio 只读，不推进时间。
+## 组合根注入的时钟状态；本节点只读，不推进时间。
 var _clock: GameDateClock
-## 最近一次 EventBus.world_entered 的世界 id，避免反向查询 SceneRouter。
-var _current_world_id: StringName = &""
 var _bgm_tween: Tween
 var _step_accum: float = 0.0
 var _step_index: int = 0
@@ -71,10 +90,16 @@ var _last_effect_ms: int = 0
 func _ready() -> void:
 	# 菜单 / 对话会把整棵树暂停，音频必须继续走（否则暂停后 BGM 也停了）。
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	add_to_group(GROUP)
 	_ensure_buses()
 	_build_players()
 	_load_settings()
-	_connect_events()
+	_hook_events()
+	set_process(drive_footsteps)
+	if autoplay_bgm and bgm_track != &"":
+		play_bgm(bgm_track)
+	elif follow_world_bgm:
+		_refresh_world_bgm()
 
 
 func _process(delta: float) -> void:
@@ -83,8 +108,20 @@ func _process(delta: float) -> void:
 
 # ---------------------------------------------------------------- 对外接口
 
+## 组合根注入本局时钟状态；只用于判断昼夜与世界曲目。
+func bind_clock(clock: GameDateClock) -> void:
+	_clock = clock
+	# 组合根注入时本节点可能还没进树（Main 的 _enter_tree 早于子节点），
+	# 此时没有世界可读，等 _ready() / world_entered 再刷新。
+	if follow_world_bgm and is_inside_tree():
+		_refresh_world_bgm()
+
+
 ## 播放一首 BGM。[param fade] 为 0 时立即切换。
 func play_bgm(track_id: StringName, fade: float = BGM_FADE) -> void:
+	if track_id == &"":
+		stop_bgm(fade)
+		return
 	if track_id == _current_bgm and _bgm_player.playing:
 		return
 	var stream := _stream(&"bgm", track_id)
@@ -137,27 +174,6 @@ func play_sfx(sound_id: StringName, pitch: float = 1.0, volume_db: float = 0.0) 
 	player.play()
 
 
-## 进入标题页：固定播放标题曲，时钟 / 世界事件不再改它。
-func enter_title() -> void:
-	_current_world_id = &""
-	_bgm_context = Catalog.BGM_TITLE
-	play_bgm(Catalog.BGM_TITLE)
-
-
-## 进入某个世界：交回"按世界 + 时间选曲"。
-func enter_world(world_id: StringName) -> void:
-	_current_world_id = world_id
-	_bgm_context = &""
-	_refresh_bgm(world_id)
-
-
-## 组合根注入本局时钟状态。Audio 只读取其中的时间，不持有 / 不推进时间。
-func bind_clock(clock: GameDateClock) -> void:
-	_clock = clock
-	if _bgm_context == &"" and _current_world_id != &"":
-		_refresh_bgm()
-
-
 ## 设置 BGM 音量（0 ~ 1）。
 func set_bgm_volume(value: float) -> void:
 	bgm_volume = clampf(value, 0.0, 1.0)
@@ -188,21 +204,19 @@ func _start_current_bgm() -> void:
 	_bgm_player.play()
 
 
-func _refresh_bgm(world_id: StringName = &"") -> void:
-	if _bgm_context != &"":
+## 读当前世界场景声明的曲目；没有世界时什么都不做。
+func _refresh_world_bgm() -> void:
+	var world := _current_world()
+	if world == null:
 		return
-	if world_id == &"":
-		world_id = _current_world_id
-	play_bgm(_track_for(world_id))
+	play_bgm(_resolve_track(world.bgm_track, world.bgm_night_track))
 
 
-## 世界 → 白天曲目；夜里换成夜曲。
-func _track_for(world_id: StringName) -> StringName:
-	if _is_night():
-		return Catalog.BGM_NIGHT
-	if world_id in [&"town", &"twon", &"beach", &"library"]:
-		return Catalog.BGM_TOWN
-	return Catalog.BGM_FARM
+## 昼夜决定用白天曲还是夜晚曲；夜晚曲为空时退回白天曲。
+func _resolve_track(day_track: StringName, night_track: StringName) -> StringName:
+	if _is_night() and night_track != &"":
+		return night_track
+	return day_track
 
 
 ## 夜晚：18:00 ~ 次日 06:00（与 [DayNight] 共用同一份定义）。时钟还没注入时按白天算。
@@ -212,12 +226,25 @@ func _is_night() -> bool:
 	return DayNight.is_night(_clock.minute_of_day)
 
 
+## 当前挂载的世界场景；没有则返回 null。
+func _current_world() -> WorldScene:
+	if not is_inside_tree():
+		return null
+	var tree := get_tree()
+	if tree == null:
+		return null
+	var host := tree.get_first_node_in_group(WorldHost.GROUP) as WorldHost
+	if host == null:
+		return null
+	return host.current_world() as WorldScene
+
+
 func _stream(kind: StringName, id: StringName) -> AudioStream:
 	var path := Catalog.bgm_path(id) if kind == &"bgm" else Catalog.sfx_path(id)
 	if _streams.has(path):
 		return _streams[path]
 	if not ResourceLoader.exists(path):
-		push_warning("Audio: 缺少音频 %s（跑一次 ./tools/build_assets.sh）" % path)
+		push_warning("SceneAudio: 缺少音频 %s（跑一次 ./tools/build_assets.sh）" % path)
 		return null
 	var stream := load(path) as AudioStream
 	_streams[path] = stream
@@ -272,46 +299,48 @@ func _connect_once(sig: Signal, callback: Callable) -> void:
 		sig.connect(callback)
 
 
-func _connect_events() -> void:
-	_connect_once(EventBus.world_entered, _on_world_entered)
-	_connect_once(EventBus.hour_changed, _on_hour_changed)
-	_connect_once(EventBus.day_changed, _on_day_changed)
+func _hook_events() -> void:
+	if follow_world_bgm:
+		_connect_once(EventBus.world_entered, _on_world_entered)
+		_connect_once(EventBus.hour_changed, _on_hour_changed)
 
-	_connect_once(EventBus.farm.tool_used, _on_tool_used)
-	_connect_once(EventBus.farm.tile_tilled, _on_tile_tilled)
-	_connect_once(EventBus.farm.tile_watered, _on_tile_watered)
-	_connect_once(EventBus.farm.crop_planted, _on_crop_planted)
-	_connect_once(EventBus.farm.crop_harvested, _on_crop_harvested)
-	_connect_once(EventBus.farm.crop_died, _on_crop_died)
-	_connect_once(EventBus.world.flora_cleared, _on_flora_cleared)
-	_connect_once(EventBus.farm.fish_bite, _on_fish_bite)
-	_connect_once(EventBus.farm.fish_caught, _on_fish_caught)
+	if listen_gameplay_sfx:
+		_connect_once(EventBus.farm.tool_used, _on_tool_used)
+		_connect_once(EventBus.farm.tile_tilled, _on_tile_tilled)
+		_connect_once(EventBus.farm.tile_watered, _on_tile_watered)
+		_connect_once(EventBus.farm.crop_planted, _on_crop_planted)
+		_connect_once(EventBus.farm.crop_harvested, _on_crop_harvested)
+		_connect_once(EventBus.farm.crop_died, _on_crop_died)
+		_connect_once(EventBus.farm.animal_placed, _on_animal_placed)
+		_connect_once(EventBus.farm.animal_fed, _on_animal_fed)
+		_connect_once(EventBus.farm.animal_petted, _on_animal_petted)
+		_connect_once(EventBus.farm.animal_product_collected, _on_animal_product_collected)
+		_connect_once(EventBus.farm.animal_matured, _on_animal_matured)
+		_connect_once(EventBus.farm.fish_cast, _on_fish_cast)
+		_connect_once(EventBus.farm.fish_bite, _on_fish_bite)
+		_connect_once(EventBus.farm.fish_caught, _on_fish_caught)
+		_connect_once(EventBus.world.flora_cleared, _on_flora_cleared)
+		_connect_once(EventBus.player.inventory_full, _on_inventory_full)
+		_connect_once(EventBus.player.stamina_depleted, _on_stamina_depleted)
+		_connect_once(EventBus.day_changed, _on_day_changed)
 
-	_connect_once(EventBus.farm.animal_placed, _on_animal_placed)
-	_connect_once(EventBus.farm.animal_fed, _on_animal_fed)
-	_connect_once(EventBus.farm.animal_petted, _on_animal_petted)
-	_connect_once(EventBus.farm.animal_product_collected, _on_animal_product_collected)
-	_connect_once(EventBus.farm.animal_matured, _on_animal_matured)
-
-	_connect_once(EventBus.ui.transaction_completed, _on_transaction)
-	_connect_once(EventBus.ui.dialogue_line_shown, _on_dialogue_line_shown)
-	_connect_once(EventBus.ui.game_paused_changed, _on_game_paused_changed)
-	_connect_once(EventBus.ui.notification_requested, _on_notification)
-	_connect_once(EventBus.player.inventory_full, _on_inventory_full)
-	_connect_once(EventBus.ui.ui_sound_requested, _on_ui_sound_requested)
-
-	_connect_once(EventBus.save_completed, _on_save_completed)
-	_connect_once(EventBus.load_completed, _on_load_completed)
-	_connect_once(EventBus.player.stamina_depleted, _on_stamina_depleted)
-	_connect_once(EventBus.scene_transition_started, _on_scene_transition_started)
+	if listen_ui_sfx:
+		_connect_once(EventBus.ui.ui_sound_requested, _on_ui_sound_requested)
+		_connect_once(EventBus.ui.transaction_completed, _on_transaction)
+		_connect_once(EventBus.ui.dialogue_line_shown, _on_dialogue_line_shown)
+		_connect_once(EventBus.ui.game_paused_changed, _on_game_paused_changed)
+		_connect_once(EventBus.ui.notification_requested, _on_notification)
+		_connect_once(EventBus.save_completed, _on_save_completed)
+		_connect_once(EventBus.load_completed, _on_load_completed)
+		_connect_once(EventBus.scene_transition_started, _on_scene_transition_started)
 
 
-func _on_world_entered(world_id: StringName) -> void:
-	enter_world(world_id)
+func _on_world_entered(_world_id: StringName) -> void:
+	_refresh_world_bgm()
 
 
 func _on_hour_changed(_hour: int) -> void:
-	_refresh_bgm()
+	_refresh_world_bgm()
 
 
 func _on_day_changed(_date: GameDate) -> void:
@@ -372,6 +401,10 @@ func _on_crop_harvested(_cell: Vector2i, _item_id: StringName, _amount: int) -> 
 
 func _on_flora_cleared(_cell: Vector2i, _flora_id: StringName, _item_id: StringName, _amount: int) -> void:
 	play_sfx(Catalog.SFX_CHOP)
+
+
+func _on_fish_cast() -> void:
+	play_sfx(Catalog.SFX_FISH_CAST, 1.0, -4.0)
 
 
 func _on_fish_bite(_fish_id: StringName) -> void:
@@ -437,7 +470,7 @@ func _on_scene_transition_started(_target: StringName) -> void:
 
 ## 玩家移动时按走过的距离触发脚步，不侵入移动状态机。
 func _update_footsteps(delta: float) -> void:
-	if get_tree().paused:
+	if get_tree() == null or get_tree().paused:
 		return
 	var player := get_tree().get_first_node_in_group(PlayerGroup) as CharacterBody2D
 	if player == null or player.velocity.length() < 8.0:
@@ -449,13 +482,15 @@ func _update_footsteps(delta: float) -> void:
 		return
 	_step_accum = 0.0
 	_step_index += 1
-	var on_path := _footstep_on_path()
-	var id := Catalog.SFX_FOOTSTEP_PATH if on_path else Catalog.SFX_FOOTSTEP_GRASS
-	play_sfx(id, 1.04 if (_step_index % 2) == 0 else 0.96, -6.0)
+	play_sfx(_current_footstep_id(), 1.04 if (_step_index % 2) == 0 else 0.96, -6.0)
 
 
-func _footstep_on_path() -> bool:
-	return _current_world_id in [&"town", &"twon", &"beach", &"mine", &"library"]
+## 脚步音由当前世界场景声明；没有世界时退回草地。
+func _current_footstep_id() -> StringName:
+	var world := _current_world()
+	if world != null and world.footstep_sfx != &"":
+		return world.footstep_sfx
+	return Catalog.SFX_FOOTSTEP_GRASS
 
 
 # ---------------------------------------------------------------- 内部：设置

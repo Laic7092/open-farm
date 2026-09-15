@@ -50,6 +50,13 @@ func bind_services(
 			child.call(&"bind_services", weather, relationships, calendar)
 
 
+## 由 [Main] 注入本场景的音频节点；继续下发给需要音量控制的界面。
+func bind_audio(audio: SceneAudio) -> void:
+	for child: Node in get_children():
+		if child.has_method(&"bind_audio"):
+			child.call(&"bind_audio", audio)
+
+
 func _ready() -> void:
 	# 界面必须能在暂停时继续响应输入（否则暂停后就按不动了）。
 	process_mode = Node.PROCESS_MODE_ALWAYS

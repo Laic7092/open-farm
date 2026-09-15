@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ui_root.tscn" id="2_ui_root"]
 [ext_resource type="Script" path="res://src/main/world_host.gd" id="3_world_host"]
+[ext_resource type="Script" uid="uid://dtud0h1buexqk" path="res://src/audio/scene_audio.gd" id="4_scene_audio"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
@@ -13,3 +14,11 @@ script = ExtResource("3_world_host")
 
 [node name="UiRoot" parent="." instance=ExtResource("2_ui_root")]
 unique_name_in_owner = true
+
+[node name="SceneAudio" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("4_scene_audio")
+follow_world_bgm = true
+listen_ui_sfx = true
+listen_gameplay_sfx = true
+drive_footsteps = true

@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://dcy1t0nxxd2k8" path="res://assets/title/cloud_a.png" id="3_cloud_a"]
 [ext_resource type="Texture2D" uid="uid://coodx0ioctp4c" path="res://assets/title/cloud_b.png" id="4_cloud_b"]
 [ext_resource type="Texture2D" uid="uid://c2ynltnhr8r4a" path="res://assets/title/plate.png" id="5_plate"]
+[ext_resource type="Script" uid="uid://dtud0h1buexqk" path="res://src/audio/scene_audio.gd" id="6_scene_audio"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_plate"]
 content_margin_left = 22.0
@@ -194,3 +195,10 @@ theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 12
 horizontal_alignment = 2
+
+[node name="SceneAudio" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("6_scene_audio")
+bgm_track = &"title"
+autoplay_bgm = true
+listen_ui_sfx = true

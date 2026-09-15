@@ -69,7 +69,7 @@
 | `src/world/` | 黄 | `flora_field.gd` 600 行：格子状态权威 + 存档对象 + 共享 `clear()` |
 | `src/farm/` | 黄 | `farm_grid.gd` 514、`livestock_manager.gd` 339 |
 | `src/npc/` | 黄 | `npc.gd` 582：日程 / 寻路 / 交互混在一起 |
-| `src/autoload/` | 黄 | `audio_manager.gd` 476、`database.gd` 412；Autoload 在 `-s` 脚本里不可用 |
+| `src/autoload/` | 黄 | `database.gd` 412；Autoload 在 `-s` 脚本里不可用 |
 | `src/player/` | 黄 | `player.gd` 473 |
 | `tests/unit/` | 绿偏黄 | 普遍 < 300 行；`test_assets.gd` 402 行是"文档 ↔ 测试"同步点，改美术规范必改它 |
 | `scenes/world/` | 黄 | `twon.tscn` 552、`farm.tscn` 399：节点树，用 `outline` 看 |
@@ -90,7 +90,7 @@
 | `tools/generate_sample_data.gd` + `tools/sample/` | 入口只按依赖顺序调用各域 `build()`（48 行）；它生成 `data/**/*.tres`，手改会被下次重跑覆盖 | 改数据 = 改对应的 `tools/sample/build_*.gd`，再重跑；公共写盘工具在 `sample_base.gd` |
 | `src/world/flora_field.gd` | 状态权威 + 存档 + 被 `FarmInteractor` / 冒烟测试 / 生成器调用 | 改 `clear()` 之类共享方法前 `callers` + `grep` |
 | `src/autoload/database.gd` | 每个数据域要动 10+ 处样板（dir 常量 / 字典 / get / has / require / total / validate_all / reload） | 加数据域时按现有域逐项对齐，别漏 `validate_all` |
-| `src/autoload/audio_manager.gd` | Autoload：`-s` 脚本里不能引用全局名 | 要测就跑场景（`smoke_test.tscn`） |
+| `src/audio/scene_audio.gd` | 场景音频节点：靠导出字段决定订阅哪些事件 / 跟不跟世界曲目 | 改字段前先看 `scenes/main/main.tscn` 与 `scenes/title/title_screen.tscn` 的接线 |
 | `scenes/world/twon.tscn` `scenes/world/farm.tscn` | 节点树 + `parent` 路径，手改易错位 | 先用 `outline` 看层级；改完再 `outline` 复查 |
 | `tests/unit/test_assets.gd` | 美术 / 音频规范的可执行版本 | 改生成器或规范时同步改它 |
 | `reports/**` | 自动生成的测试报告（几百个 HTML），体积噪声 | 已在 `.gitignore`；不要读、不要提交，看控制台或 `.tmp/` 日志就够 |

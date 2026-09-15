@@ -61,7 +61,6 @@ func _ready() -> void:
 	# 对话 / 商店等模态界面可能在切换场景时留下暂停状态。
 	get_tree().paused = false
 
-	Audio.enter_title()
 	_refresh()
 	_focus_default()
 

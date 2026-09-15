@@ -24,7 +24,6 @@ AppTheme="*res://src/autoload/app_theme.gd"
 Database="*res://src/autoload/database.gd"
 SaveManager="*res://src/autoload/save_manager.gd"
 SceneRouter="*res://src/autoload/scene_router.gd"
-Audio="*res://src/autoload/audio_manager.gd"
 
 [display]
 

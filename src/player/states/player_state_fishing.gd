@@ -38,7 +38,7 @@ func enter(_previous: State) -> void:
 	_phase = Phase.CAST
 	_timer = 0.0
 	player.play_animation(&"use")
-	Audio.play_sfx(AudioCatalog.SFX_FISH_CAST, 1.0, -4.0)
+	EventBus.farm.fish_cast.emit()
 	# 体力在抛竿时结算：不管最后钓没钓上来，这一杆都算数。
 	player.interactor.consume_stamina(_rod)
 

@@ -64,7 +64,7 @@ python3 tools/outline.py outline scenes/world/twon.tscn         # 场景 → 节
 
 1. **Godot 命令必须能自己退出**：统一 `timeout 60 … --quit-after 3`；不要用管道直连 Godot，先重定向到文件再 `tail` / `grep`。
 2. **`-s` 脚本里不能用 autoload 全局名**：生成器用 `preload("res://...")`；要测 autoload 就跑场景 `tools/smoke_test.tscn`。
-3. **`user://` 可能不可写**：`SaveManager` / `Audio` 必须静默降级；测试不要依赖持久化。
+3. **`user://` 可能不可写**：`SaveManager` / `SceneAudio` 必须静默降级；测试不要依赖持久化。
 4. **`.godot/` 不入库**：新 clone 或新增资源后先 `--import`（`check.sh` 已自动处理）。
 5. `assets/i18n/strings.csv` 里 `MENU_TITLE` 重复定义，当前生效的是“回到标题”。
 6. 世界场景常驻内存（为保住跨场景农田进度）；地图多起来后要改成“卸载地图 + 状态外置”。

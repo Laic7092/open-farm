@@ -196,15 +196,19 @@ func _check_ui() -> void:
 
 
 func _check_audio() -> void:
-	_check(AudioServer.get_bus_index(&"BGM") >= 0, "应当存在 BGM 总线")
-	_check(AudioServer.get_bus_index(&"SFX") >= 0, "应当存在 SFX 总线")
-	_check_eq(String(Audio.current_bgm()), "farm", "白天进农场应当播放农场 BGM")
+	_check(AudioServer.get_bus_index(SceneAudio.BGM_BUS) >= 0, "应当存在 BGM 总线")
+	_check(AudioServer.get_bus_index(SceneAudio.SFX_BUS) >= 0, "应当存在 SFX 总线")
+	var audio := _scene_audio()
+	_check(audio != null, "主场景应当自带音频节点")
+	if audio == null:
+		return
+	_check_eq(String(audio.current_bgm()), "farm", "白天进农场应当播放农场 BGM")
 
 	# 音量旋钮真的接到总线上。
-	var original: float = Audio.sfx_volume
-	Audio.set_sfx_volume(0.4)
-	_check(is_equal_approx(Audio.sfx_volume, 0.4), "音效音量应当可以调整")
-	Audio.set_sfx_volume(original)
+	var original: float = audio.sfx_volume
+	audio.set_sfx_volume(0.4)
+	_check(is_equal_approx(audio.sfx_volume, 0.4), "音效音量应当可以调整")
+	audio.set_sfx_volume(original)
 
 	# 触发一次真实音效；headless 下听不见，但不应当报错或崩溃。
-	Audio.play_sfx(&"ui_confirm")
+	audio.play_sfx(&"ui_confirm")

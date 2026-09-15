@@ -33,7 +33,7 @@ tools/audio/
 ├── generate_sfx.gd             ← 26 个音效（UI、农活、经济、动物、存档、脚步、系统）
 └── generate_bgm.gd             ← 4 首 BGM（标题 / 农场 / 小镇 / 夜晚）
 
-src/autoload/audio_manager.gd   ← 运行时总管（Autoload：Audio）
+src/audio/scene_audio.gd        ← 场景音频节点（标题页 / Main 各挂一个，见 §5）
 assets/audio/sfx/*.wav          ← 生成物（提交进仓库）
 assets/audio/bgm/*.wav          ← 生成物（提交进仓库）
 tests/unit/test_audio.gd        ← 规范的可执行版本
@@ -98,26 +98,39 @@ timeout 60 ./godot --headless --path . --import
 ```
 
 > **加了新音频怎么办？** 在 `AudioCatalog` 里加 id → 在对应生成器里写配方 →
-> 重跑 `build_assets.sh` → 需要时在 `AudioManager`（Autoload 名 `Audio`）里接一个事件。
+> 重跑 `build_assets.sh` → 需要时在场景里的 `SceneAudio` 接一个事件。
 
 ---
 
 ## 5. 运行时怎么响
 
-`Audio`（`src/autoload/audio_manager.gd`，类 `AudioManager`）是唯一播放出口，它只做三件事：
+音频没有全局 Autoload：**每个需要声音的场景挂一个 `SceneAudio` 节点**
+（`src/audio/scene_audio.gd`），在 `.tscn` 里用导出字段声明自己听起来是什么样。
 
-1. **按场景与时间切 BGM**：世界场景进入时发 `EventBus.world_entered`，
-   `Audio` 缓存世界 id；白天放农场 / 小镇曲、18:00 ~ 次日 06:00 换成夜曲，
-   时间来自 `Main` 注入的 `GameDateClock`（只读）。标题页固定放标题曲。
-2. **订阅既有信号播音效**：翻地、浇水、播种、收获、买卖、对话、存读档、脚步……
-   全部通过 `EventBus` 的现有信号触发，UI 也改发 `ui_sound_requested`，
-   **玩法 / UI 代码里不出现任何 `Audio.play_sfx()` 调用**。
-3. **管理两条总线**：启动时确保 `Master → BGM / SFX` 存在，
-   设置菜单里的两个滑杆只改总线音量，并把设置存到 `user://audio_settings.cfg`。
+| 场景 | 节点 | 声明 |
+| --- | --- | --- |
+| 标题页 | `scenes/title/title_screen.tscn` 的 `SceneAudio` | `bgm_track = "title"`、`autoplay_bgm`、`listen_ui_sfx` |
+| 游戏主场景 | `scenes/main/main.tscn` 的 `SceneAudio` | `follow_world_bgm`、`listen_ui_sfx`、`listen_gameplay_sfx`、`drive_footsteps` |
 
-脚步不是新加的信号，而是运行时按"玩家走过的距离"触发，因此不侵入移动状态机。
-同一个动作触发的"专属音效"之后，紧跟的通用提示音会在 140ms 内被抑制，
-避免"收一次菜响两声"。
+`SceneAudio` 只负责播放：BGM 交叉淡入淡出、音效声部池、脚步、两条总线
+（`Master → BGM / SFX`）与 `user://audio_settings.cfg`。它不写死"哪个世界放哪首"，
+而是读当前 `WorldScene` 的导出字段：
+
+| `WorldScene` 字段 | 作用 |
+| --- | --- |
+| `bgm_track` | 这张地图白天放什么 |
+| `bgm_night_track` | 夜里放什么（18:00 ~ 次日 06:00，与 `DayNight` 同一份定义） |
+| `footstep_sfx` | 这张地图的脚步音（草地 / 石板） |
+
+于是"加一张地图"= 在场景里填字段，音频代码一行不用改；进 / 出地图由
+`EventBus.world_entered` 触发切曲，脚步按"玩家走过的距离"触发，都不侵入移动状态机。
+玩法 / UI 代码照旧只发既有事件（翻地、浇水、收获、买卖、对话、存读档、
+`ui_sound_requested`……），由所在场景的 `SceneAudio` 订阅：标题页订阅 UI 音效，
+主场景订阅玩法 + UI + 存读档 + 场景过渡。同一个动作触发的"专属音效"之后，
+紧跟的通用提示音会在 140ms 内被抑制，避免"收一次菜响两声"。
+
+> 音量滑杆：`PauseMenu` 由 `UiRoot.bind_audio()` 拿到主场景的 `SceneAudio`，
+> 只改 `BGM` / `SFX` 总线音量，并写回 `user://audio_settings.cfg`。
 
 ---
 

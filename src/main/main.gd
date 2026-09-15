@@ -60,6 +60,8 @@ var calendar_service: CalendarService
 var farm_events: FarmEvents = FarmEvents.new()
 ## 世界域事件；优先绑定到 WorldHost.events，找不到宿主时用本对象兜底。
 var world_events: WorldEvents = WorldEvents.new()
+## 本场景自带的音频节点；由 main.tscn 放置，Main 只负责注入时钟与共享引用。
+var scene_audio: SceneAudio
 ## 本局核心存档节；Main 是唯一注册入口，SaveManager 只消费 [SaveSection]。
 var save_sections: Array[SaveSection] = []
 
@@ -153,7 +155,7 @@ func _bind_dependencies() -> void:
 	var ui_root := get_node_or_null(^"UiRoot")
 
 	# EventBus 的领域对象生命周期与 Autoload 一致；状态 / 宿主只持有同一引用。
-	# 不在这里替换实例，避免 Audio 等常驻订阅者连着旧对象收不到事件。
+	# 不在这里替换实例，避免音频 / UI 等常驻订阅者连着旧对象收不到事件。
 	player_profile.events = EventBus.player
 	farm_events = EventBus.farm
 	world_events = EventBus.world
@@ -201,7 +203,10 @@ func _bind_dependencies() -> void:
 		player_profile, clock_state, weather_service, relationship_service
 	)
 
-	Audio.bind_clock(clock_state)
+	# 本场景的音频节点：注入时钟，并把引用转给需要音量滑杆的界面。
+	scene_audio = get_node_or_null(^"SceneAudio") as SceneAudio
+	if scene_audio != null:
+		scene_audio.bind_clock(clock_state)
 
 	# 世界宿主持有缓存与依赖；SceneRouter 不再保存任何世界节点。
 	if host != null:
@@ -213,6 +218,8 @@ func _bind_dependencies() -> void:
 		ui_root.call(&"bind_dependencies", player_profile, clock_state)
 	if ui_root != null and ui_root.has_method(&"bind_services"):
 		ui_root.call(&"bind_services", weather_service, relationship_service, calendar_service)
+	if ui_root != null and scene_audio != null and ui_root.has_method(&"bind_audio"):
+		ui_root.call(&"bind_audio", scene_audio)
 
 
 # ---------------------------------------------------------------- 启动
@@ -237,7 +244,7 @@ func _boot_new_game() -> void:
 	clock_state.reset()
 	weather_service.reroll(clock_state.date.season)
 	calendar_service.reset()
-	# 开局也要让 HUD / Audio 看到完整状态，而不依赖某次日结转。
+	# 开局也要让 HUD / 音频节点看到完整状态，而不依赖某次日结转。
 	clock_state.refresh_observers()
 	world_host.clear_world_cache()
 	await SceneRouter.change_scene_to(world_host, FIRST_WORLD, FIRST_SPAWN)

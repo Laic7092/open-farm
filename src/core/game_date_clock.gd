@@ -194,7 +194,7 @@ func from_dict(data: Dictionary) -> void:
 	refresh_observers()
 
 
-## 广播一次完整状态；读档后由 [Main] 调用以刷新 UI / Audio。
+## 广播一次完整状态；读档后由 [Main] 调用以刷新 UI / 音频节点。
 func refresh_observers() -> void:
 	minute_changed.emit(hour(), minute())
 	hour_changed.emit(hour())

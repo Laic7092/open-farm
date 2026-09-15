@@ -17,7 +17,7 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 
 ## 2. Autoload 与组合根
 
-- Autoload 仍是 `EventBus` `AppTheme` `Database` `SaveManager` `SceneRouter` `Audio`；
+- Autoload 仍是 `EventBus` `AppTheme` `Database` `SaveManager` `SceneRouter`；
   其中 `Database` 只暴露只读 getter 快照，`EventBus` 只保留 10 个跨域时间 / 场景 / 存档信号。
 - 领域事件拆为 `EventBus.player` / `EventBus.farm` / `EventBus.world` / `EventBus.ui`：
   `PlayerProfile.events`、组合根 `farm_events`、`WorldHost.events`、`UiRoot.events`
@@ -25,6 +25,8 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 - 天气 / 关系 / 日历已从 Autoload 收口为 `Main` 组合根拥有的服务节点：
   `WeatherService`、`RelationshipService`、`CalendarService`；
   对应状态 `WeatherState` / `RelationshipStore` / `CalendarProgress` 仍由 `Main` 持有并注入。
+- 音频也去掉了全局 Autoload：标题页与 `Main` 各自在场景里挂一个 `SceneAudio` 节点，
+  世界曲目 / 脚步音由各 `WorldScene` 的导出字段声明。
 - 玩家 / 时钟状态由 `Main` 持有并显式注入：`PlayerProfile`、`GameDateClock`。
 - `Main` 在 `_enter_tree()` 里创建服务并注入依赖，保证早于世界 / UI 子树；
   核心存档节由 `Main` 显式注册为 `Array[SaveSection]`，场景节点继续用
