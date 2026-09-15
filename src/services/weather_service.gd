@@ -7,7 +7,7 @@ extends Node
 ## 的 [DayPipeline] 注册 [constant DayPipeline.PRIORITY_WEATHER] 钩子，
 ## 保证其它系统在响应日结转时读到的 [member current] 已经是当天的天气。
 
-## 天气变化时发出（与 [signal EventBus.weather_changed] 同步）。
+## 天气变化时发出（与 [signal EventBus.world.weather_changed] 同步）。
 signal changed(weather: Weather.Type)
 
 var _rng := RandomNumberGenerator.new()
@@ -75,7 +75,7 @@ func set_weather(weather: Weather.Type) -> void:
 		return
 	_state.current = weather
 	changed.emit(current)
-	EventBus.weather_changed.emit(current)
+	EventBus.world.weather_changed.emit(current)
 
 
 ## 强制重掷今天的天气。
@@ -109,11 +109,11 @@ func from_dict(data: Dictionary) -> void:
 	_state.current = Weather.from_key(str(data.get("current", "sunny")))
 	_state.forecast = Weather.from_key(str(data.get("forecast", "sunny")))
 	changed.emit(current)
-	EventBus.weather_changed.emit(current)
+	EventBus.world.weather_changed.emit(current)
 
 
 func _on_day_rollover(date: GameDate) -> void:
 	_state.current = _state.forecast
 	_state.forecast = roll_for(date.season)
 	changed.emit(current)
-	EventBus.weather_changed.emit(current)
+	EventBus.world.weather_changed.emit(current)

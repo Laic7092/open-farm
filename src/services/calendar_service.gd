@@ -100,14 +100,14 @@ func reload() -> void:
 	refresh()
 
 
-## 重算"今天有哪些节日"并广播 [signal EventBus.festival_day_started]。
+## 重算"今天有哪些节日"并广播 [signal EventBus.world.festival_day_started]。
 ##
 ## 开新档 / 读档 / 日结转后都要调用一次：前两者不会触发日结转钩子，
 ## 但 HUD 的节日横幅必须立刻正确。
 func refresh() -> void:
 	var today := today_festivals()
 	for festival: FestivalData in today:
-		EventBus.festival_day_started.emit(festival.id)
+		EventBus.world.festival_day_started.emit(festival.id)
 
 
 # ---------------------------------------------------------------- 查询
@@ -262,7 +262,7 @@ func attend(festival_id: StringName) -> bool:
 	if not is_active(festival_id):
 		return false
 	if has_attended(festival_id):
-		EventBus.notification_requested.emit(NOTIFY_ALREADY, {
+		EventBus.ui.notification_requested.emit(NOTIFY_ALREADY, {
 			"festival": festival_name(festival_id),
 		})
 		return false
@@ -273,8 +273,8 @@ func attend(festival_id: StringName) -> bool:
 	for npc_id: StringName in entry.npc_ids:
 		if _relationships != null:
 			_relationships.add_affection(npc_id, entry.attendance_affection)
-	EventBus.festival_attended.emit(festival_id, entry.attendance_affection)
-	EventBus.notification_requested.emit(NOTIFY_ATTENDED, {
+	EventBus.world.festival_attended.emit(festival_id, entry.attendance_affection)
+	EventBus.ui.notification_requested.emit(NOTIFY_ATTENDED, {
 		"festival": Text.key(entry.display_name_key),
 		"amount": entry.attendance_affection,
 	})
@@ -309,8 +309,8 @@ func from_dict(data: Dictionary) -> void:
 func _on_day_rollover(date: GameDate) -> void:
 	_today_absolute_day = -1
 	for entry: FestivalData in today_festivals():
-		EventBus.festival_day_started.emit(entry.id)
-		EventBus.notification_requested.emit(NOTIFY_TODAY, {
+		EventBus.world.festival_day_started.emit(entry.id)
+		EventBus.ui.notification_requested.emit(NOTIFY_TODAY, {
 			"festival": Text.key(entry.display_name_key),
 		})
 	var weather := _current_weather()
@@ -356,11 +356,11 @@ func _trigger(entry: EventData, date: GameDate) -> void:
 			_profile.set_flag(entry.set_flag)
 		if entry.grant_money > 0:
 			_profile.earn(entry.grant_money)
-	EventBus.calendar_event_triggered.emit(entry.id)
+	EventBus.world.calendar_event_triggered.emit(entry.id)
 	var message_key: StringName = entry.message_key if entry.message_key != &"" else entry.title_key
-	EventBus.notification_requested.emit(message_key, {"money": entry.grant_money})
+	EventBus.ui.notification_requested.emit(message_key, {"money": entry.grant_money})
 	if entry.dialogue != null and not entry.dialogue.is_empty():
-		EventBus.dialogue_requested.emit(entry.dialogue)
+		EventBus.ui.dialogue_requested.emit(entry.dialogue)
 
 
 ## 是否已经发生过；[member EventData.once] 为 false 时按"同一个游戏年内"判断。

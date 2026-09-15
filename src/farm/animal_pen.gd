@@ -45,7 +45,7 @@ func interact(actor: Node2D) -> void:
 	# 拿着牲畜就放养；否则报一下入住情况。
 	if mgr.introduce(building_id, player):
 		return
-	EventBus.notification_requested.emit(&"NOTIFY_PEN_STATUS", {
+	EventBus.ui.notification_requested.emit(&"NOTIFY_PEN_STATUS", {
 		"building": Text.building_name(Database.get_building(building_id)),
 		"count": mgr.animal_count(building_id),
 		"capacity": capacity(),

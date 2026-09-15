@@ -87,7 +87,6 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 | 文档 | 内容 |
 | --- | --- |
 | `docs/architecture.md` | 跨系统架构速览：分层、组合根、关键决策、Godot 坑与测试策略 |
-| `docs/refactor_handoff.md` | P0 重构现状与后续阶段计划 |
 | `docs/art_pipeline.md` | 美术生成规范；“Godot 命令必须能自己退出”原文 |
 | `docs/audio_pipeline.md` | 音频合成规范 |
 | `docs/gameplay.md` | 玩家向玩法指南：开局、农场/畜牧、地图/NPC、恋爱、节日、存档 |

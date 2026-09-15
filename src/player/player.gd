@@ -113,7 +113,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"tool_prev"):
 		item_bar.prev()
 	elif event.is_action_pressed(&"open_inventory"):
-		EventBus.inventory_toggle_requested.emit()
+		EventBus.ui.inventory_toggle_requested.emit()
 	elif event.is_action_pressed(&"give_gift"):
 		try_give_gift()
 
@@ -147,7 +147,7 @@ func face(direction: Facing.Direction) -> void:
 		return
 	facing = direction
 	sprite.flip_h = Facing.flip_h(facing)
-	EventBus.player_facing_changed.emit(facing)
+	EventBus.player.player_facing_changed.emit(facing)
 
 
 ## 播放 [code]prefix_方向[/code] 形式的动画；同一动画正在播放时不会重头开始。
@@ -201,7 +201,7 @@ func try_interact() -> bool:
 	if target != null:
 		target.interact(self)
 		return true
-	EventBus.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
+	EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
 	return false
 
 
@@ -210,20 +210,20 @@ func try_interact() -> bool:
 ## "最合适"= 对该 NPC 好感收益最高的可赠道具：优先 GIFT 分类，
 ## 其次是 NPC 偏好表里明确提到过的道具。求婚信物永远不会被当作普通礼物送掉。
 func try_give_gift() -> bool:
-	if _clock == null or _clock.paused:
+	if _clock == null:
 		return false
 	var npc := current_interactable() as Npc
 	if npc == null:
-		EventBus.notification_requested.emit(&"NOTIFY_NO_GIFT_TARGET", {})
+		EventBus.ui.notification_requested.emit(&"NOTIFY_NO_GIFT_TARGET", {})
 		return false
 	if not _relationships.can_gift(npc.npc_id):
-		EventBus.notification_requested.emit(
+		EventBus.ui.notification_requested.emit(
 			&"NOTIFY_ALREADY_GIFTED", {"npc": npc.display_name()}
 		)
 		return false
 	var item_id := _pick_gift(npc)
 	if item_id == &"":
-		EventBus.notification_requested.emit(&"NOTIFY_NO_GIFT", {})
+		EventBus.ui.notification_requested.emit(&"NOTIFY_NO_GIFT", {})
 		return false
 	if not inventory.remove(item_id, 1):
 		return false
@@ -324,7 +324,7 @@ func _try_harvest_crop(grid: FarmGrid, cell: Vector2i) -> bool:
 		return false
 	var item_id: StringName = outcome.get("item_id", &"")
 	inventory.add(item_id, amount)
-	EventBus.notification_requested.emit(
+	EventBus.ui.notification_requested.emit(
 		&"NOTIFY_CROP_HARVESTED", {"item": Text.item_name(Database.get_item(item_id)), "count": amount}
 	)
 	return true
@@ -341,7 +341,7 @@ func _try_pick_flora(cell: Vector2i) -> bool:
 		return false
 	var item_id: StringName = outcome.get("item_id", &"")
 	inventory.add(item_id, amount)
-	EventBus.notification_requested.emit(
+	EventBus.ui.notification_requested.emit(
 		&"NOTIFY_FLORA_CLEARED", {"item": Text.item_name(Database.get_item(item_id)), "count": amount}
 	)
 	return true
@@ -352,7 +352,7 @@ func _on_area_entered(area: Area2D) -> void:
 	if interactable == null or _nearby.has(interactable):
 		return
 	_nearby.append(interactable)
-	EventBus.interaction_prompt_changed.emit(interactable.prompt_key)
+	EventBus.ui.interaction_prompt_changed.emit(interactable.prompt_key)
 
 
 func _on_area_exited(area: Area2D) -> void:
@@ -361,7 +361,7 @@ func _on_area_exited(area: Area2D) -> void:
 		return
 	_nearby.erase(interactable)
 	var next := current_interactable()
-	EventBus.interaction_prompt_changed.emit(next.prompt_key if next != null else &"")
+	EventBus.ui.interaction_prompt_changed.emit(next.prompt_key if next != null else &"")
 
 
 func _on_day_rollover(_date: GameDate) -> void:
@@ -371,29 +371,29 @@ func _on_day_rollover(_date: GameDate) -> void:
 
 ## 体力变化后转发给 UI / 音频。
 func _on_stats_changed(current: int, maximum: int) -> void:
-	EventBus.stamina_changed.emit(current, maximum)
+	EventBus.player.stamina_changed.emit(current, maximum)
 
 
 ## 力竭后转发给音频。
 func _on_stats_depleted() -> void:
-	EventBus.stamina_depleted.emit()
+	EventBus.player.stamina_depleted.emit()
 
 
-## 背包内容变化后转发给 UI（物品栏与背包界面都订阅 [signal EventBus.inventory_changed]）。
+## 背包内容变化后转发给 UI（物品栏与背包界面都订阅 [signal EventBus.player.inventory_changed]）。
 func _on_inventory_changed() -> void:
-	EventBus.inventory_changed.emit()
+	EventBus.player.inventory_changed.emit()
 
 
 ## 背包满时转发给音频。
 func _on_inventory_full(item_id: StringName) -> void:
-	EventBus.inventory_full.emit(item_id)
+	EventBus.player.inventory_full.emit(item_id)
 
 
 func _emit_all() -> void:
-	EventBus.stamina_changed.emit(stats.stamina, stats.max_stamina)
-	EventBus.inventory_changed.emit()
-	EventBus.hand_changed.emit(item_bar.selected_item_id(), item_bar.hand_index())
-	EventBus.player_facing_changed.emit(facing)
+	EventBus.player.stamina_changed.emit(stats.stamina, stats.max_stamina)
+	EventBus.player.inventory_changed.emit()
+	EventBus.player.hand_changed.emit(item_bar.selected_item_id(), item_bar.hand_index())
+	EventBus.player.player_facing_changed.emit(facing)
 
 
 ## 保证背包里一定有开局工具（幂等：已有就不再加）。

@@ -91,7 +91,7 @@ func use_tool(tool: ToolData, cell: Vector2i) -> bool:
 		_notify(&"NOTIFY_NOTHING_HAPPENED")
 
 	action_finished.emit(tool.id, cell, success)
-	EventBus.tool_used.emit(tool.id, cell, success)
+	EventBus.farm.tool_used.emit(tool.id, cell, success)
 	return success
 
 
@@ -117,7 +117,7 @@ func _use_tool_on_flora(tool: ToolData, cell: Vector2i) -> bool:
 		_notify(&"NOTIFY_NOTHING_HAPPENED")
 
 	action_finished.emit(tool.id, cell, success)
-	EventBus.tool_used.emit(tool.id, cell, success)
+	EventBus.farm.tool_used.emit(tool.id, cell, success)
 	return true
 
 
@@ -137,7 +137,7 @@ func _grant(outcome: Dictionary) -> void:
 		return
 	if player != null:
 		player.inventory.add(item_id, amount)
-	EventBus.notification_requested.emit(
+	EventBus.ui.notification_requested.emit(
 		&"NOTIFY_FLORA_CLEARED", {"item": Text.item_name(Database.get_item(item_id)), "count": amount}
 	)
 
@@ -152,7 +152,7 @@ func _plant(grid: FarmGrid, cell: Vector2i) -> bool:
 		return false
 
 	player.inventory.remove(seed_id, 1)
-	EventBus.notification_requested.emit(
+	EventBus.ui.notification_requested.emit(
 		&"NOTIFY_PLANTED", {"item": Text.item_name(Database.get_item(seed_id))}
 	)
 	return true
@@ -168,4 +168,4 @@ func _consume_stamina(tool: ToolData) -> void:
 
 
 func _notify(text_key: StringName, args: Dictionary = {}) -> void:
-	EventBus.notification_requested.emit(text_key, args)
+	EventBus.ui.notification_requested.emit(text_key, args)

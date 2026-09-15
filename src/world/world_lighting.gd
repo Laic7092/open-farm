@@ -73,8 +73,8 @@ func _ready() -> void:
 func _enter_tree() -> void:
 	if not EventBus.minute_changed.is_connected(_on_minute_changed):
 		EventBus.minute_changed.connect(_on_minute_changed)
-	if not EventBus.weather_changed.is_connected(_on_weather_changed):
-		EventBus.weather_changed.connect(_on_weather_changed)
+	if not EventBus.world.weather_changed.is_connected(_on_weather_changed):
+		EventBus.world.weather_changed.connect(_on_weather_changed)
 	# 世界场景会被缓存复用，_ready() 一生只跑一次；
 	# 从缓存里重新进图时必须在这里补一次刷新。
 	if is_node_ready():
@@ -84,8 +84,8 @@ func _enter_tree() -> void:
 func _exit_tree() -> void:
 	if EventBus.minute_changed.is_connected(_on_minute_changed):
 		EventBus.minute_changed.disconnect(_on_minute_changed)
-	if EventBus.weather_changed.is_connected(_on_weather_changed):
-		EventBus.weather_changed.disconnect(_on_weather_changed)
+	if EventBus.world.weather_changed.is_connected(_on_weather_changed):
+		EventBus.world.weather_changed.disconnect(_on_weather_changed)
 
 
 ## 当前显示的环境光颜色（白天≈纯白）。供 UI / 测试查询。

@@ -24,7 +24,7 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 ## 铁律
 
 1. **数据驱动 + 静态 / 运行时分离**：内容都在 `res://data/**/*.tres`，脚本只认 id；`XxxData`（`Resource`）↔ `XxxState`（`RefCounted`），规则写进 `XxxGrowth` / `XxxHusbandry` 的纯静态函数。
-2. **EventBus 只声明信号**，不写逻辑；有顺序依赖的日结转走 `GameDateClock.register_day_hook(callable, priority)` / `DayPipeline`，不要依赖信号回调顺序或 Autoload 加载顺序。
+2. **EventBus 全局只保留跨域时间 / 场景 / 存档信号**；玩家 / 农场 / 世界 / UI 信号走 `EventBus.player / farm / world / ui` 领域对象。有顺序依赖的日结转走 `GameDateClock.register_day_hook(callable, priority)` / `DayPipeline`，不要依赖信号回调顺序或 Autoload 加载顺序。
 3. **世界场景会缓存复用**：`_ready()` 一生只跑一次；每次进图逻辑放 `_enter_tree()` / `WorldScene.on_world_enter()`，日结转钩子要在 `_exit_tree()` 注销。
 4. **生成物永不手改**：美术 / 音频 / 字体必须确定性；新增文案或汉字必须重跑 `build_assets.sh`，否则像素字体缺字。
 5. **文档规范要同步测试**：`docs/art_pipeline.md` ↔ `tests/unit/test_assets.gd`，`docs/audio_pipeline.md` ↔ `tests/unit/test_audio.gd`。
@@ -35,7 +35,7 @@ timeout 800 ./tools/build_assets.sh # 重新生成全部 PNG / 字体 / WAV
 - 加内容（作物 / 牲畜 / 植被 / NPC / 节日 / 地图 / 音效 / UI）：先看 `README.md` 的「扩展入口」。
 - 改玩法数值：优先只改 `data/**/*.tres`。
 - 参与日结转：`GameDateClock.register_day_hook(callable, DayPipeline.PRIORITY_*)`，并在 `_exit_tree` 注销。
-- 参与存档：节点实现 `to_dict/from_dict` + `Persistence.register(self, &"id")`；JSON 往返要把 `StringName` 转回。
+- 参与存档：场景节点实现 `to_dict/from_dict` + `Persistence.register(self, &"id")`；核心状态 / 服务在 `Main._bind_dependencies()` 注册 `SaveSection`。JSON 往返要把 `StringName` 转回。
 - 改地图瓦片 / 外观：`src/art/atlas_layout.gd` + `tools/art/generate_terrain.gd`；已发布格子只能往后追加。
 
 ## 坑

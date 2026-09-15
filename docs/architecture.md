@@ -17,21 +17,30 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 
 ## 2. Autoload 与组合根
 
-- 当前 6 个 Autoload：`EventBus` `AppTheme` `Database` `SaveManager` `SceneRouter` `Audio`。
+- Autoload 仍是 `EventBus` `AppTheme` `Database` `SaveManager` `SceneRouter` `Audio`；
+  其中 `Database` 只暴露只读 getter 快照，`EventBus` 只保留 10 个跨域时间 / 场景 / 存档信号。
+- 领域事件拆为 `EventBus.player` / `EventBus.farm` / `EventBus.world` / `EventBus.ui`：
+  `PlayerProfile.events`、组合根 `farm_events`、`WorldHost.events`、`UiRoot.events`
+  持有同一对象引用；节点连接仍走 `EventBus.<domain>.<signal>`。
 - 天气 / 关系 / 日历已从 Autoload 收口为 `Main` 组合根拥有的服务节点：
   `WeatherService`、`RelationshipService`、`CalendarService`；
   对应状态 `WeatherState` / `RelationshipStore` / `CalendarProgress` 仍由 `Main` 持有并注入。
 - 玩家 / 时钟状态由 `Main` 持有并显式注入：`PlayerProfile`、`GameDateClock`。
 - `Main` 在 `_enter_tree()` 里创建服务并注入依赖，保证早于世界 / UI 子树；
-  核心存档参与者通过 `Persistence.register_core*()` 自注册，`SaveManager` 不维护名单。
-- 详细代码入口：`src/main/main.gd`、`src/services/*.gd`、`src/core/persistence.gd`、`src/autoload/save_manager.gd`。
+  核心存档节由 `Main` 显式注册为 `Array[SaveSection]`，场景节点继续用
+  `Persistence.register()` 自注册，`SaveManager` 统一包装成 `SaveSection`。
+- 世界实例缓存与待恢复目标移到 `WorldHost`；`SceneRouter.change_scene_to(host, path, spawn)`
+  只做无状态过渡，不再保存任何世界节点。
+- 详细代码入口：`src/main/main.gd`、`src/main/world_host.gd`、`src/services/*.gd`、
+  `src/core/save_section.gd`、`src/core/persistence.gd`、`src/autoload/save_manager.gd`。
 
 ## 3. 关键设计决策
 
 | 决策 | 要点 | 代码入口 |
 | --- | --- | --- |
 | 存档用 JSON | 避免 `ResourceSaver` 写入脚本路径；显式版本号 + `from_dict` 字段兜底 | `save_manager.gd` |
-| 世界场景换子节点 | `Main` 常驻 `WorldHost` / `UiRoot`，不用 `change_scene_to_file`；`SceneRouter` 缓存地图实例 | `main.gd`、`scene_router.gd` |
+| 世界场景换子节点 | `Main` 常驻 `WorldHost` / `UiRoot`，不用 `change_scene_to_file`；缓存与当前实例在 `WorldHost`，`SceneRouter` 只做无状态过渡 | `main.gd`、`world_host.gd`、`scene_router.gd` |
+| 领域事件 | 全局只留时间 / 场景 / 存档信号；玩家 / 农场 / 世界 / UI 信号挂在由状态或宿主持有的领域对象上 | `event_bus.gd`、`src/events/*.gd` |
 | `_ready()` 一生只跑一次 | 缓存复用场景不重跑 `_ready()`；每次进图逻辑放 `_enter_tree()` / `_exit_tree()` | `world_scene.gd` |
 | 有序日结转 | 不依赖信号回调顺序；`GameDateClock` 委托给 `DayPipeline`，按显式 `priority` 同步执行 | `game_date_clock.gd`、`day_pipeline.gd` |
 | 数据驱动 | 内容都在 `.tres`，脚本只认 id；静态数据与运行时状态分离 | `database.gd` |

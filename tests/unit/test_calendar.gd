@@ -14,7 +14,6 @@ var _calendar: CalendarService
 func before_test() -> void:
 	_profile = PlayerProfile.new()
 	_clock = GameDateClock.new()
-	_clock.set_paused(false)
 	_weather = WeatherService.new()
 	_weather.set_state(WeatherState.new())
 	_relationships = RelationshipService.new()

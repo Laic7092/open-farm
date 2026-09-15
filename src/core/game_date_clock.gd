@@ -43,9 +43,6 @@ var date: GameDate
 var minute_of_day: int = DAY_START_HOUR * MINUTES_PER_HOUR
 ## 时间倍率；>1 加速，<1 减速。
 var time_scale: float = 1.0
-## 暂停时间推进。
-var paused: bool = false
-
 var _accumulator: float = 0.0
 ## 日结转流水线：按显式优先级执行跨天钩子。
 var day_pipeline: DayPipeline = DayPipeline.new()
@@ -59,8 +56,6 @@ func _init() -> void:
 
 ## 每帧推进时间；由 [Main] 在组合根中调用。
 func tick(delta: float) -> void:
-	if paused:
-		return
 	var step: float = seconds_per_game_minute / maxf(time_scale, 0.01)
 	if step <= 0.0:
 		return
@@ -123,11 +118,6 @@ func date_string() -> String:
 ## 设置时间倍率（下限 0.01，避免除零）。
 func set_time_scale(value: float) -> void:
 	time_scale = maxf(value, 0.01)
-
-
-## 设置暂停状态；外部不得直接写 [member paused]。
-func set_paused(value: bool) -> void:
-	paused = value
 
 
 ## 设置当前日期（读档 / 测试用）。

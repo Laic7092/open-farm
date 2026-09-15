@@ -3,9 +3,9 @@ extends GdUnitTestSuite
 
 
 func test_all_expected_crops_are_loaded() -> void:
-	assert_bool(Database.crops.has(&"turnip")).is_true()
-	assert_bool(Database.crops.has(&"potato")).is_true()
-	assert_bool(Database.crops.has(&"tomato")).is_true()
+	assert_bool(Database.crops().has(&"turnip")).is_true()
+	assert_bool(Database.crops().has(&"potato")).is_true()
+	assert_bool(Database.crops().has(&"tomato")).is_true()
 
 
 func test_all_expected_flora_are_loaded() -> void:
@@ -40,7 +40,7 @@ func test_shops_and_npcs_are_loaded() -> void:
 
 ## 新增内容后，每一个 NPC 都要有可解析的名字、对白与动画。
 func test_every_npc_has_name_dialogue_and_frames() -> void:
-	for npc_id: StringName in Database.npcs:
+	for npc_id: StringName in Database.npcs():
 		var npc := Database.get_npc(npc_id)
 		assert_str(String(npc.display_name_key)).override_failure_message(
 			"NPC %s 缺少名字键" % npc_id
@@ -74,14 +74,14 @@ func test_validate_all_reports_no_problems() -> void:
 
 
 func test_every_crop_seed_points_at_a_real_item() -> void:
-	for crop_id: StringName in Database.crops:
+	for crop_id: StringName in Database.crops():
 		var crop := Database.get_crop(crop_id)
 		assert_object(Database.get_item(crop.seed_item_id)).is_not_null()
 		assert_object(Database.get_item(crop.harvest_item_id)).is_not_null()
 
 
 func test_every_seed_item_points_at_a_real_crop() -> void:
-	for item_id: StringName in Database.items:
+	for item_id: StringName in Database.items():
 		var item := Database.get_item(item_id)
 		if item.category != ItemData.Category.SEED:
 			continue
@@ -89,7 +89,7 @@ func test_every_seed_item_points_at_a_real_crop() -> void:
 
 
 func test_every_tool_item_points_at_a_real_tool() -> void:
-	for item_id: StringName in Database.items:
+	for item_id: StringName in Database.items():
 		var item := Database.get_item(item_id)
 		if item.category != ItemData.Category.TOOL:
 			continue
@@ -97,7 +97,7 @@ func test_every_tool_item_points_at_a_real_tool() -> void:
 
 
 func test_shop_stock_only_sells_known_items() -> void:
-	for shop_id: StringName in Database.shops:
+	for shop_id: StringName in Database.shops():
 		var shop := Database.get_shop(shop_id)
 		for entry: ShopStock in shop.stock:
 			assert_object(Database.get_item(entry.item_id)).is_not_null()
@@ -105,7 +105,7 @@ func test_shop_stock_only_sells_known_items() -> void:
 
 ## 野生植被的产出必须指向真实道具，否则砍树时背包会收到一个不存在的 id。
 func test_every_flora_drop_points_at_a_real_item() -> void:
-	for flora_id: StringName in Database.floras:
+	for flora_id: StringName in Database.floras():
 		var data := Database.get_flora(flora_id)
 		if data.drop_item_id == &"":
 			continue
@@ -115,7 +115,7 @@ func test_every_flora_drop_points_at_a_real_item() -> void:
 
 
 func test_npc_shop_references_exist() -> void:
-	for npc_id: StringName in Database.npcs:
+	for npc_id: StringName in Database.npcs():
 		var npc := Database.get_npc(npc_id)
 		if not npc.is_merchant():
 			continue
@@ -123,7 +123,7 @@ func test_npc_shop_references_exist() -> void:
 
 
 func test_npc_dialogue_is_resolvable_in_every_season() -> void:
-	for npc_id: StringName in Database.npcs:
+	for npc_id: StringName in Database.npcs():
 		var npc := Database.get_npc(npc_id)
 		for season: Season.Type in Season.all():
 			var dialogue := npc.dialogue_for_season(season)
@@ -134,7 +134,7 @@ func test_npc_dialogue_is_resolvable_in_every_season() -> void:
 ## 可攻略 NPC 必须配齐表白 / 求婚 / 恋人 / 婚后 / 朋友对白。
 func test_romance_candidates_are_fully_configured() -> void:
 	var found := 0
-	for npc_id: StringName in Database.npcs:
+	for npc_id: StringName in Database.npcs():
 		var npc := Database.get_npc(npc_id)
 		if not npc.romanceable:
 			continue
@@ -172,7 +172,7 @@ func test_child_npcs_are_not_romanceable() -> void:
 
 ## 礼物偏好表里出现的道具必须真实存在。
 func test_romance_gift_preferences_reference_real_items() -> void:
-	for npc_id: StringName in Database.npcs:
+	for npc_id: StringName in Database.npcs():
 		var npc := Database.get_npc(npc_id)
 		_assert_items_exist(npc_id, npc.loved_gifts)
 		_assert_items_exist(npc_id, npc.liked_gifts)
@@ -198,7 +198,7 @@ func test_blue_feather_is_the_proposal_gift() -> void:
 
 ## 每个 NPC 都要有能覆盖全天 24 小时的日程（凌晨靠循环回退到最后一段）。
 func test_every_npc_has_a_full_day_schedule() -> void:
-	for npc_id: StringName in Database.npcs:
+	for npc_id: StringName in Database.npcs():
 		var npc := Database.get_npc(npc_id)
 		assert_object(npc.schedule).override_failure_message(
 			"NPC %s 没有日程" % npc_id
@@ -241,7 +241,7 @@ func test_expected_animals_and_buildings_are_loaded() -> void:
 
 
 func test_every_animal_product_and_feed_points_at_real_items() -> void:
-	for animal_id: StringName in Database.animals:
+	for animal_id: StringName in Database.animals():
 		var animal := Database.get_animal(animal_id)
 		assert_object(Database.get_item(animal.product_item_id)).override_failure_message(
 			"动物 %s 的产出 %s 不存在" % [animal_id, animal.product_item_id]
@@ -252,7 +252,7 @@ func test_every_animal_product_and_feed_points_at_real_items() -> void:
 
 
 func test_every_animal_item_points_at_a_real_animal() -> void:
-	for item_id: StringName in Database.items:
+	for item_id: StringName in Database.items():
 		var item := Database.get_item(item_id)
 		if item.category != ItemData.Category.ANIMAL:
 			continue
@@ -263,9 +263,9 @@ func test_every_animal_item_points_at_a_real_animal() -> void:
 
 func test_every_building_accepts_a_known_species() -> void:
 	var species: Dictionary[StringName, bool] = {}
-	for animal_id: StringName in Database.animals:
+	for animal_id: StringName in Database.animals():
 		species[Database.get_animal(animal_id).species] = true
-	for building_id: StringName in Database.buildings:
+	for building_id: StringName in Database.buildings():
 		var building := Database.get_building(building_id)
 		for value: StringName in building.allowed_species:
 			assert_bool(species.has(value)).override_failure_message(

@@ -66,7 +66,8 @@ func _on_body_entered(body: Node2D) -> void:
 	if not can_interact():
 		return
 	# 刚落地的那一瞬间玩家可能正压在出口上，等切换结束再说。
-	if SceneRouter.is_transitioning():
+	var host := get_tree().get_first_node_in_group(WorldHost.GROUP) as WorldHost
+	if host == null or host.is_transitioning():
 		return
 	_enter_target()
 
@@ -75,5 +76,9 @@ func _enter_target() -> void:
 	if target_scene.is_empty():
 		push_warning("SceneDoor: 未设置 target_scene")
 		return
+	var host := get_tree().get_first_node_in_group(WorldHost.GROUP) as WorldHost
+	if host == null:
+		push_error("SceneDoor: 场景树中没有 WorldHost")
+		return
 	# 这里不 await：传送是"发出去就不用管"的演出，交互本身应当立即结束。
-	SceneRouter.change_scene_to(target_scene, target_spawn_id)
+	SceneRouter.change_scene_to(host, target_scene, target_spawn_id)

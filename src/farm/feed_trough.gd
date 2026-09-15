@@ -24,11 +24,11 @@ func interact(actor: Node2D) -> void:
 		return
 
 	if mgr.hungry_count(owner_pen.building_id) <= 0:
-		EventBus.notification_requested.emit(&"NOTIFY_ANIMALS_CONTENT", {})
+		EventBus.ui.notification_requested.emit(&"NOTIFY_ANIMALS_CONTENT", {})
 		return
 
 	var fed: int = mgr.feed(owner_pen.building_id, player.inventory)
 	if fed > 0:
-		EventBus.notification_requested.emit(&"NOTIFY_ANIMAL_FED", {"count": fed})
+		EventBus.ui.notification_requested.emit(&"NOTIFY_ANIMAL_FED", {"count": fed})
 	else:
-		EventBus.notification_requested.emit(&"NOTIFY_NO_FEED", {})
+		EventBus.ui.notification_requested.emit(&"NOTIFY_NO_FEED", {})

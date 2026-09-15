@@ -20,7 +20,7 @@ func _ready() -> void:
 
 func interact(actor: Node2D) -> void:
 	super.interact(actor)
-	if _clock == null or _clock.paused:
+	if _clock == null:
 		return
-	EventBus.notification_requested.emit(&"NOTIFY_SLEEPING", {})
+	EventBus.ui.notification_requested.emit(&"NOTIFY_SLEEPING", {})
 	_clock.sleep_until_morning()

@@ -24,7 +24,7 @@ var data: ShopData
 ## 依赖（由拥有者注入，不在方法体内按 Autoload 全局名获取）：
 ## [param _wallet] 需实现 has_flag / can_afford / spend / earn / record_shipped；
 ## [param _catalog] 需实现 get_item；
-## [param _events] 需带 transaction_completed 信号。
+## [param _events] 需带 ui.transaction_completed 信号（通常传 EventBus）。
 var _wallet
 var _catalog
 var _events
@@ -107,7 +107,7 @@ func buy(entry: ShopStock, count: int, inventory: Inventory) -> bool:
 		_remaining[entry.item_id] = left - count
 
 	purchased.emit(entry.item_id, count, total)
-	_events.transaction_completed.emit(entry.item_id, count, total, true)
+	_events.ui.transaction_completed.emit(entry.item_id, count, total, true)
 	return true
 
 
@@ -133,7 +133,7 @@ func sell(item_id: StringName, count: int, inventory: Inventory) -> bool:
 	_wallet.record_shipped(count)
 
 	sold.emit(item_id, count, total)
-	_events.transaction_completed.emit(item_id, count, total, false)
+	_events.ui.transaction_completed.emit(item_id, count, total, false)
 	return true
 
 

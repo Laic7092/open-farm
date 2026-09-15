@@ -12,7 +12,6 @@ var _service: RelationshipService
 func before_test() -> void:
 	_profile = PlayerProfile.new()
 	_clock = GameDateClock.new()
-	_clock.set_paused(false)
 	_service = RelationshipService.new()
 	_service.set_state(RelationshipStore.new())
 	_service.bind_dependencies(_profile, _clock)

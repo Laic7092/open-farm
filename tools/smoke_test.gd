@@ -83,15 +83,15 @@ func _process(_delta: float) -> void:
 	# 世界是真的连成一条能走通的路，而不是互不相干的几张地图。
 	match _phase:
 		0:
-			if not SceneRouter.is_transitioning() and _world() != null:
+			if not _is_transitioning() and _world() != null:
 				_phase = 1
 		1:
 			_run_checks()
 			_prepare_persistence_anchor()
 			_phase = 2
-			SceneRouter.change_scene_to(TWON_SCENE, &"from_farm")
+			SceneRouter.change_scene_to(_world_host(), TWON_SCENE, &"from_farm")
 		2:
-			if SceneRouter.is_transitioning():
+			if _is_transitioning():
 				return
 			_check_twon()
 			_record_npc_positions()
@@ -99,40 +99,40 @@ func _process(_delta: float) -> void:
 			_phase = 5
 		# 等几帧，验证 NPC 真的按日程走起来了，再依次巡游其余地图。
 		5:
-			if SceneRouter.is_transitioning():
+			if _is_transitioning():
 				return
 			_twon_wait += 1
 			if _twon_wait < 30:
 				return
 			_check_npcs_moved()
 			_phase = 6
-			SceneRouter.change_scene_to(TOWN_SCENE, &"from_twon")
+			SceneRouter.change_scene_to(_world_host(), TOWN_SCENE, &"from_twon")
 		6:
-			if SceneRouter.is_transitioning():
+			if _is_transitioning():
 				return
 			_check_town()
 			_phase = 7
-			SceneRouter.change_scene_to(BEACH_SCENE, &"from_town")
+			SceneRouter.change_scene_to(_world_host(), BEACH_SCENE, &"from_town")
 		7:
-			if SceneRouter.is_transitioning():
+			if _is_transitioning():
 				return
 			_check_beach()
 			_phase = 8
-			SceneRouter.change_scene_to(MINE_SCENE, &"from_beach")
+			SceneRouter.change_scene_to(_world_host(), MINE_SCENE, &"from_beach")
 		8:
-			if SceneRouter.is_transitioning():
+			if _is_transitioning():
 				return
 			_check_mine()
 			_phase = 9
-			SceneRouter.change_scene_to(LIBRARY_SCENE, &"from_twon")
+			SceneRouter.change_scene_to(_world_host(), LIBRARY_SCENE, &"from_twon")
 		9:
-			if SceneRouter.is_transitioning():
+			if _is_transitioning():
 				return
 			_check_library()
 			_phase = 4
-			SceneRouter.change_scene_to(FARM_SCENE, &"from_twon")
+			SceneRouter.change_scene_to(_world_host(), FARM_SCENE, &"from_twon")
 		4:
-			if SceneRouter.is_transitioning():
+			if _is_transitioning():
 				return
 			_check_farm_state_survived()
 			# 最后一步：不按键，直接站进农场东口，验证"走到地图边缘就换图"。
@@ -140,7 +140,7 @@ func _process(_delta: float) -> void:
 			_edge_wait = 0
 			_walk_into_exit()
 		10:
-			if SceneRouter.is_transitioning():
+			if _is_transitioning():
 				_edge_wait = 0
 				return
 			# 切换结束再多等几帧，避免"传送还没开始就下结论"。
@@ -234,12 +234,12 @@ func _check_calendar() -> void:
 
 
 func _check_database() -> void:
-	_check(Database.crops.size() >= 3, "作物数据应当至少有 3 种")
-	_check(Database.floras.size() >= 7, "野生植被数据应当至少有 7 种")
-	_check(Database.items.size() >= 10, "道具数据应当至少有 10 种")
-	_check(Database.tools.size() >= 6, "工具数据应当至少有 6 种")
-	_check(Database.shops.has(&"general_store"), "应当存在 general_store 商店")
-	_check(Database.npcs.has(&"merchant"), "应当存在 merchant NPC")
+	_check(Database.crops().size() >= 3, "作物数据应当至少有 3 种")
+	_check(Database.floras().size() >= 7, "野生植被数据应当至少有 7 种")
+	_check(Database.items().size() >= 10, "道具数据应当至少有 10 种")
+	_check(Database.tools().size() >= 6, "工具数据应当至少有 6 种")
+	_check(Database.shops().has(&"general_store"), "应当存在 general_store 商店")
+	_check(Database.npcs().has(&"merchant"), "应当存在 merchant NPC")
 	var problems := Database.validate_all()
 	_check(problems.is_empty(), "数据自检不应有问题：%s" % ", ".join(problems))
 
@@ -1055,8 +1055,17 @@ func _check_farm_state_survived() -> void:
 
 # ---------------------------------------------------------------- 工具
 
+func _world_host() -> WorldHost:
+	return get_tree().get_first_node_in_group(WorldHost.GROUP) as WorldHost
+
+
+func _is_transitioning() -> bool:
+	var host := _world_host()
+	return host != null and host.is_transitioning()
+
+
 func _world() -> Node:
-	return SceneRouter.current_world()
+	return _world_host().current_world()
 
 
 func _farm_grid() -> FarmGrid:

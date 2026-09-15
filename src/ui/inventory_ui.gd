@@ -24,7 +24,7 @@ func _ready() -> void:
 	title_label.text = Text.key(&"INVENTORY_TITLE")
 	hint_label.text = Text.key(&"INVENTORY_HINT")
 	_build_slots()
-	EventBus.inventory_changed.connect(refresh)
+	EventBus.player.inventory_changed.connect(refresh)
 
 
 ## 打开界面并刷新内容。

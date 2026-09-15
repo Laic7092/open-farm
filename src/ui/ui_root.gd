@@ -23,6 +23,8 @@ var _clock_state: GameDateClock
 var _weather_service: WeatherService
 var _relationship_service: RelationshipService
 var _calendar_service: CalendarService
+## UI / 交互域事件对象；由 UiRoot 持有，Main 会把它绑定到 EventBus.ui。
+var events: UiEvents = UiEvents.new()
 
 
 ## 由 [Main] 在 UI 子树进入树之前调用；依赖会继续下发给各界面。
@@ -55,10 +57,10 @@ func _ready() -> void:
 	# 组合根注入：界面层仍可使用 EventBus，但商店逻辑依赖由此显式传入。
 	shop_ui.configure(_player_profile, Database, EventBus, _clock_state)
 
-	EventBus.dialogue_requested.connect(_on_dialogue_requested)
-	EventBus.shop_requested.connect(_on_shop_requested)
-	EventBus.inventory_toggle_requested.connect(_on_inventory_toggle)
-	EventBus.pause_menu_toggle_requested.connect(_on_pause_menu_toggle)
+	EventBus.ui.dialogue_requested.connect(_on_dialogue_requested)
+	EventBus.ui.shop_requested.connect(_on_shop_requested)
+	EventBus.ui.inventory_toggle_requested.connect(_on_inventory_toggle)
+	EventBus.ui.pause_menu_toggle_requested.connect(_on_pause_menu_toggle)
 
 	dialogue_box.finished.connect(_on_dialogue_finished)
 	pause_menu.close_requested.connect(func() -> void: _close(pause_menu))
@@ -117,7 +119,7 @@ func _close(modal: Control) -> void:
 func _sync_pause() -> void:
 	var paused := is_modal_open()
 	get_tree().paused = paused
-	EventBus.game_paused_changed.emit(paused)
+	EventBus.ui.game_paused_changed.emit(paused)
 
 
 # ---------------------------------------------------------------- 事件
@@ -137,13 +139,13 @@ func _on_shop_requested(shop_id: StringName) -> void:
 		return
 	_open(shop_ui)
 	shop_ui.open(shop_data)
-	EventBus.shop_opened.emit(shop_data)
+	EventBus.ui.shop_opened.emit(shop_data)
 
 
 func _close_shop() -> void:
 	shop_ui.close()
 	_close(shop_ui)
-	EventBus.shop_closed.emit()
+	EventBus.ui.shop_closed.emit()
 
 
 func _on_inventory_toggle() -> void:

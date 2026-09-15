@@ -153,23 +153,23 @@ func _set_continue_enabled(enabled: bool) -> void:
 
 ## 焦点落到某个按钮上时的移动音效。
 func _on_menu_focus() -> void:
-	EventBus.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
+	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
 
 
 func _on_continue_pressed() -> void:
 	if _continue_slot < 0:
 		return
-	EventBus.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
+	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 	_start_game(Main.BootMode.LOAD_SLOT, _continue_slot)
 
 
 func _on_new_game_pressed() -> void:
-	EventBus.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
+	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 	_start_game(Main.BootMode.NEW_GAME, 0)
 
 
 func _on_language_pressed() -> void:
-	EventBus.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
+	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 	AppTheme.set_locale(_next_locale())
 	_refresh()
 	_focus_default()

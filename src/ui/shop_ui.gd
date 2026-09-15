@@ -57,8 +57,8 @@ func configure(wallet, catalog, events, clock) -> void:
 	_catalog = catalog
 	_events = events
 	_clock = clock
-	if _events != null and not _events.money_changed.is_connected(_on_money_changed):
-		_events.money_changed.connect(_on_money_changed)
+	if _events != null and not _events.player.money_changed.is_connected(_on_money_changed):
+		_events.player.money_changed.connect(_on_money_changed)
 
 
 ## 打开某家商店。
@@ -239,7 +239,7 @@ func _move_cursor(step: int) -> void:
 	list.select(next)
 	list.ensure_current_is_visible()
 	_refresh_info_for_side()
-	EventBus.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
+	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
 
 
 ## 左右切换列表；同一侧时什么也不做。
@@ -251,7 +251,7 @@ func _switch_side(side: ShopSide) -> void:
 	_restore_selection(list, _selected_index(list))
 	_focus_side()
 	_refresh_info_for_side()
-	EventBus.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
+	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
 
 
 ## 把焦点交给当前列表，让金边焦点框落在正确的一侧。
@@ -311,7 +311,7 @@ func _on_transaction(_item_id: StringName, _count: int, _total: int) -> void:
 
 func _on_rejected(reason_key: StringName) -> void:
 	if _events != null:
-		_events.notification_requested.emit(reason_key, {})
+		_events.ui.notification_requested.emit(reason_key, {})
 
 
 func _player_inventory() -> Inventory:

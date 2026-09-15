@@ -143,7 +143,7 @@ func add_affection(npc_id: StringName, amount: int) -> int:
 	state.affection = AffectionRules.clamp_affection(state.affection + amount, maximum)
 	var delta := state.affection - before
 	if delta != 0:
-		EventBus.npc_affection_changed.emit(npc_id, state.affection, delta)
+		EventBus.player.npc_affection_changed.emit(npc_id, state.affection, delta)
 	return delta
 
 
@@ -180,7 +180,7 @@ func give_gift(npc_id: StringName, item_id: StringName) -> int:
 	var state := state_of(npc_id)
 	state.gifted_today = true
 	var gain := add_affection(npc_id, gift_gain(npc_id, item_id))
-	EventBus.npc_gift_given.emit(npc_id, item_id, gain)
+	EventBus.player.npc_gift_given.emit(npc_id, item_id, gain)
 	return gain
 
 
@@ -203,7 +203,7 @@ func confess(npc_id: StringName) -> bool:
 	if not can_confess(npc_id):
 		return false
 	_set_status(npc_id, AffectionRules.Status.DATING)
-	EventBus.notification_requested.emit(&"NOTIFY_CONFESSED", {"npc": npc_name(npc_id)})
+	EventBus.ui.notification_requested.emit(&"NOTIFY_CONFESSED", {"npc": npc_name(npc_id)})
 	return true
 
 
@@ -231,8 +231,8 @@ func marry(npc_id: StringName) -> bool:
 	_store.days_married = 0
 	_store.pregnancy_days_left = AffectionRules.DAYS_UNTIL_CHILD
 	_store.child_born = false
-	EventBus.player_married.emit(npc_id)
-	EventBus.notification_requested.emit(&"NOTIFY_MARRIED", {"npc": npc_name(npc_id)})
+	EventBus.player.player_married.emit(npc_id)
+	EventBus.ui.notification_requested.emit(&"NOTIFY_MARRIED", {"npc": npc_name(npc_id)})
 	return true
 
 
@@ -262,7 +262,7 @@ func _max_affection(npc_id: StringName) -> int:
 
 func _set_status(npc_id: StringName, value: AffectionRules.Status) -> void:
 	state_of(npc_id).status = value
-	EventBus.npc_relationship_changed.emit(npc_id, int(value))
+	EventBus.player.npc_relationship_changed.emit(npc_id, int(value))
 
 
 ## 日结转：清每日标记，并推进"婚后 → 怀孕 → 生子"。
@@ -277,5 +277,5 @@ func _on_day_rollover(date: GameDate) -> void:
 func _birth_child() -> void:
 	if _profile != null:
 		_profile.set_flag(&"child_born")
-	EventBus.child_born.emit(&"our_child")
-	EventBus.notification_requested.emit(&"NOTIFY_CHILD_BORN", {})
+	EventBus.player.child_born.emit(&"our_child")
+	EventBus.ui.notification_requested.emit(&"NOTIFY_CHILD_BORN", {})

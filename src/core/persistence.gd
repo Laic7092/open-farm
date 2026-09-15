@@ -87,6 +87,20 @@ static func core_resources() -> Array[Object]:
 	return result
 
 
+## 用统一存档节包装一个参与者。
+static func section_of(object: Object, core: bool = false) -> SaveSection:
+	return SaveSection.from_object(object, core)
+
+
+## 把一组对象批量包装为存档节。
+static func sections_of(objects: Array[Object], core: bool = false) -> Array[SaveSection]:
+	var result: Array[SaveSection] = []
+	for object: Object in objects:
+		if object != null and is_instance_valid(object):
+			result.append(SaveSection.from_object(object, core))
+	return result
+
+
 ## 读取核心存档节的恢复顺序。
 static func core_order_of(object: Object) -> int:
 	return int(object.get_meta(META_CORE_ORDER, 0))

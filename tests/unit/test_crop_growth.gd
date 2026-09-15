@@ -182,6 +182,6 @@ func test_crop_data_validate_reports_problems() -> void:
 
 
 func test_shipped_crop_data_is_valid() -> void:
-	for crop_id: StringName in Database.crops:
+	for crop_id: StringName in Database.crops():
 		var crop := Database.get_crop(crop_id)
 		assert_array(crop.validate()).is_empty()

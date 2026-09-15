@@ -68,18 +68,18 @@ func interact(actor: Node2D) -> void:
 		if amount > 0:
 			var item_id: StringName = outcome.get("item_id", &"")
 			player.inventory.add(item_id, amount)
-			EventBus.notification_requested.emit(&"NOTIFY_ANIMAL_PRODUCT", {
+			EventBus.ui.notification_requested.emit(&"NOTIFY_ANIMAL_PRODUCT", {
 				"item": Text.item_name(Database.get_item(item_id)), "count": amount,
 			})
 		return
 
 	var gained: int = _manager.pet(_building_id, index)
 	if gained > 0:
-		EventBus.notification_requested.emit(&"NOTIFY_ANIMAL_PETTED", {
+		EventBus.ui.notification_requested.emit(&"NOTIFY_ANIMAL_PETTED", {
 			"animal": Text.animal_name(Database.get_animal(_state.animal_id)), "amount": gained,
 		})
 	else:
-		EventBus.notification_requested.emit(&"NOTIFY_ANIMAL_ALREADY_PETTED", {
+		EventBus.ui.notification_requested.emit(&"NOTIFY_ANIMAL_ALREADY_PETTED", {
 			"animal": Text.animal_name(Database.get_animal(_state.animal_id)),
 		})
 

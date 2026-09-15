@@ -38,7 +38,7 @@ func update(delta: float) -> void:
 	if not _applied and _elapsed >= IMPACT_TIME:
 		_applied = true
 		if _tool == null:
-			EventBus.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
+			EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
 		else:
 			player.interactor.use_tool(_tool, _cell)
 	if _elapsed >= SWING_DURATION:

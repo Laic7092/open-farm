@@ -126,7 +126,7 @@ func test_actor_png_matches_atlas_layout() -> void:
 
 ## NPC 图集必须和玩家同构，否则走路动画会取到空帧。
 func test_npc_png_matches_atlas_layout() -> void:
-	for npc_id: StringName in Database.npcs:
+	for npc_id: StringName in Database.npcs():
 		var path: String = "res://assets/sprites/actors/npc_%s.png" % npc_id
 		var texture := load(path) as Texture2D
 		assert_object(texture).override_failure_message(
@@ -205,7 +205,7 @@ func _silhouette_rows(image: Image) -> Array:
 
 
 func test_crop_png_matches_atlas_layout() -> void:
-	for crop_id: StringName in Database.crops:
+	for crop_id: StringName in Database.crops():
 		var crop := Database.get_crop(crop_id)
 		assert_object(crop.sprite_sheet).override_failure_message(
 			"作物 %s 没有挂生长图" % crop_id
@@ -220,7 +220,7 @@ func test_crop_png_matches_atlas_layout() -> void:
 ##
 ## 列数对不上时 [Flora] 会画出空帧（植株凭空消失），所以这条检查不能省。
 func test_flora_stage_sheets_match_layout() -> void:
-	for flora_id: StringName in Database.floras:
+	for flora_id: StringName in Database.floras():
 		var data := Database.get_flora(flora_id)
 		assert_object(data.sprite_sheet).override_failure_message(
 			"野生植被 %s 没有挂阶段图" % flora_id
@@ -239,7 +239,7 @@ func test_flora_stage_sheets_match_layout() -> void:
 
 ## 牲畜贴图必须挂上、且宽度是固定列数的整数倍。
 func test_animal_sheets_match_layout() -> void:
-	for animal_id: StringName in Database.animals:
+	for animal_id: StringName in Database.animals():
 		var animal := Database.get_animal(animal_id)
 		assert_object(animal.sprite_sheet).override_failure_message(
 			"动物 %s 没有挂贴图" % animal_id
@@ -334,7 +334,7 @@ func test_project_theme_uses_the_pixel_font() -> void:
 # ---------------------------------------------------------------- 数据与贴图
 
 func test_every_item_has_an_icon() -> void:
-	for item_id: StringName in Database.items:
+	for item_id: StringName in Database.items():
 		var item := Database.get_item(item_id)
 		assert_object(item.icon).override_failure_message(
 			"道具 %s 没有图标" % item_id
@@ -342,7 +342,7 @@ func test_every_item_has_an_icon() -> void:
 
 
 func test_every_npc_has_animation_frames() -> void:
-	for npc_id: StringName in Database.npcs:
+	for npc_id: StringName in Database.npcs():
 		var npc := Database.get_npc(npc_id)
 		assert_object(npc.frames).override_failure_message(
 			"NPC %s 没有动画" % npc_id

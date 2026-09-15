@@ -34,7 +34,7 @@ func interact(actor: Node2D) -> void:
 		entries.append(InventorySlot.new(slot.item_id, slot.count))
 
 	if entries.is_empty():
-		EventBus.notification_requested.emit(&"NOTIFY_NOTHING_TO_SHIP", {})
+		EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_TO_SHIP", {})
 		return
 
 	var total: int = 0
@@ -47,12 +47,12 @@ func interact(actor: Node2D) -> void:
 		shipped += entry.count
 
 	if total <= 0:
-		EventBus.notification_requested.emit(&"NOTIFY_NOTHING_TO_SHIP", {})
+		EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_TO_SHIP", {})
 		return
 
 	if _profile != null:
 		_profile.earn(total)
 		_profile.record_shipped(shipped)
-	EventBus.notification_requested.emit(
+	EventBus.ui.notification_requested.emit(
 		&"NOTIFY_SHIPPED", {"count": shipped, "total": total}
 	)

@@ -8,7 +8,7 @@ extends RefCounted
 ##
 ## 工具也不是第二份库存：工具本身就是背包里 [constant ItemData.Category.TOOL]
 ## 类别的道具，只是不会被消耗。物品栏只额外记住"当前手持背包的哪一格"，
-## 供 Q / R 切换。通过 [signal EventBus.hand_changed] 通知 HUD。
+## 供 Q / R 切换。通过 [signal EventBus.player.hand_changed] 通知 HUD。
 
 ## 物品栏显示背包的前多少格。
 const SIZE: int = 12
@@ -134,4 +134,4 @@ func _is_tool_index(index: int) -> bool:
 
 func _emit() -> void:
 	changed.emit(selected_item_id(), hand_index())
-	EventBus.hand_changed.emit(selected_item_id(), hand_index())
+	EventBus.player.hand_changed.emit(selected_item_id(), hand_index())

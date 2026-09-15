@@ -37,7 +37,7 @@ const QUICK_SLOT: int = 0
 ## 标题页场景路径（"回到标题"要知道回到哪）。
 const TITLE_SCENE: String = "res://scenes/title/title_screen.tscn"
 
-@onready var world_host: Node2D = %WorldHost
+@onready var world_host: WorldHost = %WorldHost
 
 ## 本局玩家档案；由 Main 作为组合根持有并注入世界 / UI / 服务。
 var player_profile: PlayerProfile = PlayerProfile.new()
@@ -56,6 +56,12 @@ var weather_service: WeatherService
 var relationship_service: RelationshipService
 ## 日历服务；由 Main 创建为子节点，不再是 Autoload。
 var calendar_service: CalendarService
+## 农场域事件；世界生产节点共享，生命周期跟随本局 Main。
+var farm_events: FarmEvents = FarmEvents.new()
+## 世界域事件；优先绑定到 WorldHost.events，找不到宿主时用本对象兜底。
+var world_events: WorldEvents = WorldEvents.new()
+## 本局核心存档节；Main 是唯一注册入口，SaveManager 只消费 [SaveSection]。
+var save_sections: Array[SaveSection] = []
 
 var _services_created: bool = false
 var _dependencies_bound: bool = false
@@ -69,7 +75,9 @@ static func return_to_title(tree: SceneTree) -> void:
 	if tree == null:
 		return
 	tree.paused = false
-	SceneRouter.clear_world_cache()
+	var host := tree.get_first_node_in_group(WorldHost.GROUP) as WorldHost
+	if host != null:
+		host.clear_world_cache()
 	tree.change_scene_to_file(TITLE_SCENE)
 
 
@@ -83,7 +91,7 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	PointerInput.hide_cursor()
 	player_profile.set_playtime_counting(true)
-	EventBus.pause_menu_toggle_requested.connect(_on_pause_menu_requested)
+	EventBus.ui.pause_menu_toggle_requested.connect(_on_pause_menu_requested)
 
 	if boot_mode == BootMode.LOAD_SLOT and await _boot_from_save():
 		return
@@ -106,7 +114,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"quick_save"):
 		get_viewport().set_input_as_handled()
 		SaveManager.save_game(QUICK_SLOT)
-		EventBus.notification_requested.emit(
+		EventBus.ui.notification_requested.emit(
 			&"NOTIFY_SAVED", {"slot": QUICK_SLOT}
 		)
 	elif event.is_action_pressed(&"quick_load"):
@@ -141,8 +149,32 @@ func _bind_dependencies() -> void:
 		return
 	_dependencies_bound = true
 
+	var host := get_node_or_null(^"WorldHost") as WorldHost
+	var ui_root := get_node_or_null(^"UiRoot")
+
+	# EventBus 的领域对象生命周期与 Autoload 一致；状态 / 宿主只持有同一引用。
+	# 不在这里替换实例，避免 Audio 等常驻订阅者连着旧对象收不到事件。
+	player_profile.events = EventBus.player
+	farm_events = EventBus.farm
+	world_events = EventBus.world
+	if host != null:
+		host.events = EventBus.world
+	if ui_root != null:
+		ui_root.set(&"events", EventBus.ui)
+
 	Persistence.register_core_resource(clock_state, &"GameClock", 10)
 	Persistence.register_core_resource(player_profile, &"GameState", 20)
+
+	# 本局核心存档节由 Main 显式注册；旧 [Persistence] 注册只作为兼容回退。
+	save_sections.clear()
+	save_sections.append(SaveSection.new(clock_state, &"GameClock", 10, true))
+	save_sections.append(SaveSection.new(player_profile, &"GameState", 20, true))
+	save_sections.append(SaveSection.new(weather_service, &"WeatherSystem", 30, true))
+	save_sections.append(SaveSection.new(relationship_service, &"Relationships", 40, true))
+	save_sections.append(SaveSection.new(calendar_service, &"Calendar", 50, true))
+	if host != null:
+		save_sections.append(SaveSection.new(host, &"SceneRouter", 60, true))
+	SaveManager.set_core_sections(save_sections)
 
 	# 时钟信号由 Main 作为 presenter 转发到 EventBus；消费者继续只订阅 EventBus。
 	if not clock_state.minute_changed.is_connected(_on_clock_minute_changed):
@@ -159,7 +191,6 @@ func _bind_dependencies() -> void:
 		player_profile.money_changed.connect(_on_profile_money_changed)
 
 	# 本局服务：状态 Resource 与彼此依赖全部在 Main 显式注入。
-	# 服务节点在各自 _ready() 里注册核心存档节（沿用旧存档键名）。
 	weather_service.bind_dependencies(clock_state, weather_state)
 
 	relationship_service.set_state(relationship_store)
@@ -172,12 +203,12 @@ func _bind_dependencies() -> void:
 
 	Audio.bind_clock(clock_state)
 
-	# 世界路由保存同一份引用，在挂载世界场景前注入给世界根节点。
-	SceneRouter.bind_dependencies(player_profile, clock_state)
-	SceneRouter.bind_services(weather_service, relationship_service, calendar_service)
+	# 世界宿主持有缓存与依赖；SceneRouter 不再保存任何世界节点。
+	if host != null:
+		host.bind_dependencies(player_profile, clock_state)
+		host.bind_services(weather_service, relationship_service, calendar_service)
 
 	# UI 子树也提前拿到同一份依赖。
-	var ui_root := get_node_or_null(^"UiRoot")
 	if ui_root != null and ui_root.has_method(&"bind_dependencies"):
 		ui_root.call(&"bind_dependencies", player_profile, clock_state)
 	if ui_root != null and ui_root.has_method(&"bind_services"):
@@ -192,7 +223,8 @@ func _boot_from_save() -> bool:
 		push_warning("Main: 槽位 %d 没有存档，改为新游戏" % boot_slot)
 		return false
 	# 新游戏 / 读档都要丢掉上一局缓存的世界场景。
-	SceneRouter.clear_world_cache()
+	if world_host != null:
+		world_host.clear_world_cache()
 	if await SaveManager.load_game_and_restore_world(boot_slot):
 		return true
 	push_warning("Main: 读取槽位 %d 失败，改为新游戏" % boot_slot)
@@ -207,15 +239,15 @@ func _boot_new_game() -> void:
 	calendar_service.reset()
 	# 开局也要让 HUD / Audio 看到完整状态，而不依赖某次日结转。
 	clock_state.refresh_observers()
-	SceneRouter.clear_world_cache()
-	await SceneRouter.change_scene_to(FIRST_WORLD, FIRST_SPAWN)
+	world_host.clear_world_cache()
+	await SceneRouter.change_scene_to(world_host, FIRST_WORLD, FIRST_SPAWN)
 
 
 func _quick_load() -> void:
 	if not await SaveManager.load_game_and_restore_world(QUICK_SLOT):
-		EventBus.notification_requested.emit(&"NOTIFY_LOAD_FAILED", {})
+		EventBus.ui.notification_requested.emit(&"NOTIFY_LOAD_FAILED", {})
 		return
-	EventBus.notification_requested.emit(&"NOTIFY_LOADED", {"slot": QUICK_SLOT})
+	EventBus.ui.notification_requested.emit(&"NOTIFY_LOADED", {"slot": QUICK_SLOT})
 
 
 func _on_pause_menu_requested() -> void:
@@ -247,4 +279,4 @@ func _on_clock_year_changed(year: int) -> void:
 
 
 func _on_profile_money_changed(money: int, delta: int) -> void:
-	EventBus.money_changed.emit(money, delta)
+	EventBus.player.money_changed.emit(money, delta)

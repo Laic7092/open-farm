@@ -116,7 +116,7 @@ func _exit_tree() -> void:
 
 
 func _ready() -> void:
-	for flora_id: StringName in Database.floras:
+	for flora_id: StringName in Database.floras():
 		if not allowed_species.is_empty() and not allowed_species.has(flora_id):
 			continue
 		_species.append(Database.get_flora(flora_id))
@@ -197,7 +197,7 @@ func clear(
 	var amount: int = int(outcome.get("amount", 0))
 	var flora_id: StringName = state.flora_id
 	_remove_silently(cell)
-	EventBus.flora_cleared.emit(cell, flora_id, item_id, amount)
+	EventBus.world.flora_cleared.emit(cell, flora_id, item_id, amount)
 	return {"item_id": item_id, "amount": amount, "flora_id": flora_id}
 
 
@@ -258,7 +258,7 @@ func _advance_all(season: Season.Type) -> void:
 		if not bool(result.get(FloraGrowth.KEY_BECAME_SOLID, false)):
 			if bool(result.get(FloraGrowth.KEY_STAGE_CHANGED, false)):
 				_refresh(cell)
-				EventBus.flora_grown.emit(cell, FloraGrowth.stage_of(data, state.days_grown))
+				EventBus.world.flora_grown.emit(cell, FloraGrowth.stage_of(data, state.days_grown))
 			continue
 
 		# 长成实心之前先量一次：假想回到上一阶段，比较可达格数。
@@ -272,7 +272,7 @@ func _advance_all(season: Season.Type) -> void:
 			_refresh(cell)
 			continue
 		_refresh(cell)
-		EventBus.flora_grown.emit(cell, FloraGrowth.stage_of(data, state.days_grown))
+		EventBus.world.flora_grown.emit(cell, FloraGrowth.stage_of(data, state.days_grown))
 
 
 # ---------------------------------------------------------------- 扩散
@@ -331,7 +331,7 @@ func _place_checked(cell: Vector2i, flora_id: StringName) -> bool:
 	if guard and _reachable_count() < before - 1:
 		_remove_silently(cell)
 		return false
-	EventBus.flora_spawned.emit(cell, flora_id)
+	EventBus.world.flora_spawned.emit(cell, flora_id)
 	return true
 
 

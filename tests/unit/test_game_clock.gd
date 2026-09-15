@@ -9,7 +9,6 @@ var _hooks: Array[Callable] = []
 
 func before_test() -> void:
 	_clock = GameDateClock.new()
-	_clock.set_paused(false)
 	_clock.set_time_scale(1.0)
 	_hooks.clear()
 
@@ -176,17 +175,9 @@ func test_day_hooks_only_run_on_rollover() -> void:
 	assert_int(count[0]).is_equal(1)
 
 
-# ---------------------------------------------------------------- 暂停
+# ---------------------------------------------------------------- 帧驱动
 
-func test_paused_clock_does_not_advance() -> void:
-	_clock.set_time(10, 0)
-	_clock.set_paused(true)
-	_clock.tick(10.0)
-	assert_int(_clock.hour()).is_equal(10)
-	assert_int(_clock.minute()).is_equal(0)
-
-
-func test_unpaused_clock_advances_with_process() -> void:
+func test_tick_advances_with_process_like_input() -> void:
 	_clock.set_time(10, 0)
 	_clock.seconds_per_game_minute = 1.0
 	_clock.tick(3.5)

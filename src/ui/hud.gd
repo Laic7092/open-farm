@@ -75,14 +75,14 @@ func _ready() -> void:
 	EventBus.day_changed.connect(_on_day_changed)
 	EventBus.season_changed.connect(func(_season: Season.Type) -> void: _refresh_date())
 	EventBus.year_changed.connect(func(_year: int) -> void: _refresh_date())
-	EventBus.weather_changed.connect(_on_weather_changed)
-	EventBus.festival_day_started.connect(_on_festival_day_started)
-	EventBus.money_changed.connect(_on_money_changed)
-	EventBus.stamina_changed.connect(_on_stamina_changed)
-	EventBus.hand_changed.connect(_on_hand_changed)
-	EventBus.inventory_changed.connect(_on_inventory_changed)
-	EventBus.interaction_prompt_changed.connect(_on_prompt_changed)
-	EventBus.notification_requested.connect(_on_notification)
+	EventBus.world.weather_changed.connect(_on_weather_changed)
+	EventBus.world.festival_day_started.connect(_on_festival_day_started)
+	EventBus.player.money_changed.connect(_on_money_changed)
+	EventBus.player.stamina_changed.connect(_on_stamina_changed)
+	EventBus.player.hand_changed.connect(_on_hand_changed)
+	EventBus.player.inventory_changed.connect(_on_inventory_changed)
+	EventBus.ui.interaction_prompt_changed.connect(_on_prompt_changed)
+	EventBus.ui.notification_requested.connect(_on_notification)
 
 	toast_label.modulate.a = 0.0
 	prompt_label.text = ""

@@ -98,28 +98,28 @@ func _enter_tree() -> void:
 	# 不能放在一生只跑一次的 _ready() 里。
 	if not EventBus.minute_changed.is_connected(_on_minute_changed):
 		EventBus.minute_changed.connect(_on_minute_changed)
-	if not EventBus.dialogue_finished.is_connected(_on_dialogue_finished):
-		EventBus.dialogue_finished.connect(_on_dialogue_finished)
-	if not EventBus.npc_affection_changed.is_connected(_on_npc_affection_changed):
-		EventBus.npc_affection_changed.connect(_on_npc_affection_changed)
+	if not EventBus.ui.dialogue_finished.is_connected(_on_dialogue_finished):
+		EventBus.ui.dialogue_finished.connect(_on_dialogue_finished)
+	if not EventBus.player.npc_affection_changed.is_connected(_on_npc_affection_changed):
+		EventBus.player.npc_affection_changed.connect(_on_npc_affection_changed)
 	if not EventBus.day_changed.is_connected(_on_day_changed):
 		EventBus.day_changed.connect(_on_day_changed)
-	if not EventBus.child_born.is_connected(_on_child_born):
-		EventBus.child_born.connect(_on_child_born)
+	if not EventBus.player.child_born.is_connected(_on_child_born):
+		EventBus.player.child_born.connect(_on_child_born)
 	_refresh_availability()
 
 
 func _exit_tree() -> void:
 	if EventBus.minute_changed.is_connected(_on_minute_changed):
 		EventBus.minute_changed.disconnect(_on_minute_changed)
-	if EventBus.dialogue_finished.is_connected(_on_dialogue_finished):
-		EventBus.dialogue_finished.disconnect(_on_dialogue_finished)
-	if EventBus.npc_affection_changed.is_connected(_on_npc_affection_changed):
-		EventBus.npc_affection_changed.disconnect(_on_npc_affection_changed)
+	if EventBus.ui.dialogue_finished.is_connected(_on_dialogue_finished):
+		EventBus.ui.dialogue_finished.disconnect(_on_dialogue_finished)
+	if EventBus.player.npc_affection_changed.is_connected(_on_npc_affection_changed):
+		EventBus.player.npc_affection_changed.disconnect(_on_npc_affection_changed)
 	if EventBus.day_changed.is_connected(_on_day_changed):
 		EventBus.day_changed.disconnect(_on_day_changed)
-	if EventBus.child_born.is_connected(_on_child_born):
-		EventBus.child_born.disconnect(_on_child_born)
+	if EventBus.player.child_born.is_connected(_on_child_born):
+		EventBus.player.child_born.disconnect(_on_child_born)
 
 
 func _ready() -> void:
@@ -408,7 +408,7 @@ func interact(actor: Node2D) -> void:
 	# 1) 聊天好感每天只结算一次；先结算，里程碑判定用得到最新值。
 	var gained := _relationships.talk(npc_id)
 	if gained > 0:
-		EventBus.notification_requested.emit(
+		EventBus.ui.notification_requested.emit(
 			&"NOTIFY_AFFECTION_GAIN", {"npc": display_name(), "amount": gained}
 		)
 
@@ -418,19 +418,19 @@ func interact(actor: Node2D) -> void:
 		_pending_milestone = milestone
 		_pending_shop_id = &""
 		_face_actor(actor)
-		EventBus.dialogue_requested.emit(_milestone_dialogue(milestone))
+		EventBus.ui.dialogue_requested.emit(_milestone_dialogue(milestone))
 		return
 
 	var dialogue := current_dialogue()
 	if dialogue == null or dialogue.is_empty():
-		EventBus.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
+		EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
 		return
 
 	_face_actor(actor)
 	# 商人：先把招呼打完，再打开商店（由 dialogue_finished 触发）。
 	_pending_milestone = Milestone.NONE
 	_pending_shop_id = data.shop_id if data.is_merchant() and is_working() else &""
-	EventBus.dialogue_requested.emit(dialogue)
+	EventBus.ui.dialogue_requested.emit(dialogue)
 
 
 ## 增加好感度（转发到全局关系系统 [code]RelationshipService[/code]）。
@@ -445,7 +445,7 @@ func receive_gift(item_id: StringName) -> int:
 	if data == null or item_id == &"":
 		return 0
 	if not _relationships.can_gift(npc_id):
-		EventBus.notification_requested.emit(
+		EventBus.ui.notification_requested.emit(
 			&"NOTIFY_ALREADY_GIFTED", {"npc": display_name()}
 		)
 		return 0
@@ -457,7 +457,7 @@ func receive_gift(item_id: StringName) -> int:
 		key = &"NOTIFY_GIFT_LIKED"
 	elif gain < 0:
 		key = &"NOTIFY_GIFT_DISLIKED"
-	EventBus.notification_requested.emit(key, {
+	EventBus.ui.notification_requested.emit(key, {
 		"npc": display_name(),
 		"item": Text.item_name(Database.get_item(item_id)),
 		"amount": gain,
@@ -549,7 +549,7 @@ func _on_dialogue_finished(_dialogue: DialogueData) -> void:
 		return
 	var shop_id: StringName = _pending_shop_id
 	_pending_shop_id = &""
-	EventBus.shop_requested.emit(shop_id)
+	EventBus.ui.shop_requested.emit(shop_id)
 
 
 # ---------------------------------------------------------------- 关系 / 可用性

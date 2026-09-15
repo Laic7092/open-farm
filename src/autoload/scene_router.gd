@@ -1,96 +1,29 @@
 extends Node
-## 场景路由（Autoload：`SceneRouter`）。
+## 场景路由（Autoload：`SceneRouter`），只保留无状态过渡方法。
 ##
-## 负责带淡入淡出的场景切换，并把玩家落到目标场景正确的 [SpawnPoint] 上。
-##
-## [b]为什么出生点用标记节点而不是坐标[/b]：
-## 让逻辑引用"名字"（[code]spawn_id[/code]）而不是"数字"，
-## 这样重排场景布局、调整房间大小都不需要改任何传送代码。
-##
-## [b]为什么世界场景要缓存[/b]：
-## 农田的翻耕 / 作物状态就存在世界场景的节点里。每次传送都重建场景，
-## 会让"种好菜去趟小镇，回来地全荒了"。所以切过的地图保留实例、只是移出场景树，
-## 再回去时直接挂回来，进度自然还在。
-## 代价是常驻内存——地图数量真的多起来时，需要改成
-## "卸载地图 + 把状态外置到存档层"。
+## 世界实例缓存、当前地图与读档待恢复目标全部移到 [WorldHost]；本节点不再
+## 保存任何 [Node] 引用，也不写死节点路径。调用方必须显式传入 [WorldHost]。
 
 ## 玩家所在分组（约定：全局唯一）。
 const PLAYER_GROUP: StringName = &"player"
 ## 出生点所在分组，由 [SpawnPoint] 自动加入。
 const SPAWN_GROUP: StringName = &"spawn_point"
-## 世界场景宿主所在分组，由 [Main] 注册。
+## 世界场景宿主所在分组；与 [WorldHost.GROUP] 保持一致。
 const WORLD_HOST_GROUP: StringName = &"world_host"
-
-## 淡出 / 淡入时长（秒）。
-@export var fade_out_duration: float = 0.25
-@export var fade_in_duration: float = 0.25
-## 遮罩颜色。
-@export var fade_color: Color = Color(0.0, 0.0, 0.0, 1.0)
-
-var _overlay: CanvasLayer
-var _rect: ColorRect
-var _transitioning: bool = false
-
-## 已实例化的世界场景：场景路径 → 节点。
-var _world_cache: Dictionary[String, Node] = {}
-## 当前挂载中的世界场景。
-var _current_world: Node
-## 最近一次落地的出生点，存档时要记下来。
-var _last_spawn_id: StringName = &"default"
-## 读档时记录"存档所在地图"，等世界重建完再消费。
-var _pending_world_path: String = ""
-var _pending_spawn_id: StringName = &"default"
-## 组合根注入的状态；世界场景挂载前用于注入节点。
-var _player_profile: PlayerProfile
-## 组合根注入的时钟；仅用于保存 / 恢复传送期间的暂停状态。
-var _clock: GameDateClock
-## 组合根注入的领域服务；世界场景挂载前一并下发。
-var _weather_service: WeatherService
-var _relationship_service: RelationshipService
-var _calendar_service: CalendarService
-
-
-func _ready() -> void:
-	Persistence.register_core(self, &"SceneRouter", 60)
-	_build_overlay()
-	# 常驻在场景树里，切换场景不会销毁。
-	process_mode = Node.PROCESS_MODE_ALWAYS
-
-
-func _exit_tree() -> void:
-	# 退出时主动释放缓存的世界场景，避免退出期出现一堆"资源仍在使用"的报错。
-	clear_world_cache()
-
-
-## 注入组合根状态；世界场景在进入树前会收到同一份引用。
-func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
-	_player_profile = profile
-	_clock = clock
-
-
-## 注入组合根服务；世界场景在进入树前会一并收到。
-func bind_services(
-	weather: WeatherService,
-	relationships: RelationshipService,
-	calendar: CalendarService
-) -> void:
-	_weather_service = weather
-	_relationship_service = relationships
-	_calendar_service = calendar
-
-
-## 是否正在切换中。
-func is_transitioning() -> bool:
-	return _transitioning
 
 
 ## 切换世界场景并把玩家放到 [param spawn_id] 对应的出生点。
 ##
-## 世界场景会被挂到 [constant WORLD_HOST_GROUP] 组的节点下，
-## 而不是用 [method SceneTree.change_scene_to_file] 顶掉当前场景——
-## 这样 [Main] 与 UI 层始终常驻，不会因为一次传送就被销毁重建。
-func change_scene_to(scene_path: String, spawn_id: StringName = &"default") -> void:
-	if _transitioning:
+## 世界实例、缓存与暂停恢复目标由 [param host] 持有。
+func change_scene_to(
+	host: WorldHost,
+	scene_path: String,
+	spawn_id: StringName = &"default"
+) -> void:
+	if host == null or not is_instance_valid(host):
+		push_error("SceneRouter: 缺少有效的 WorldHost")
+		return
+	if host.is_transitioning():
 		push_warning("SceneRouter: 上一次切换尚未结束，忽略 '%s'" % scene_path)
 		return
 
@@ -99,222 +32,85 @@ func change_scene_to(scene_path: String, spawn_id: StringName = &"default") -> v
 		push_error("SceneRouter: 无法加载场景 '%s'" % scene_path)
 		return
 
-	_transitioning = true
+	host.begin_transition()
 	EventBus.scene_transition_started.emit(spawn_id)
 
-	var was_paused: bool = _clock.paused if _clock != null else false
-	if _clock != null:
-		_clock.set_paused(true)
+	var tree := host.get_tree()
+	if tree == null:
+		host.finish_transition(spawn_id)
+		return
+	# 统一以 SceneTree.paused 作为唯一暂停真值；进出世界时只在这里短暂压栈。
+	var was_paused: bool = tree.paused
+	tree.paused = true
 
-	await _fade_to(1.0, fade_out_duration)
-	await _swap_world(scene_path, packed, spawn_id)
-	_place_player(spawn_id)
-	await _fade_to(0.0, fade_in_duration)
+	await host.fade_to(1.0, host.fade_out_duration)
+	await host.install_world(scene_path, packed, spawn_id)
+	place_player(host, spawn_id)
+	await host.fade_to(0.0, host.fade_in_duration)
 
-	if _clock != null:
-		_clock.set_paused(was_paused)
-	_transitioning = false
+	if is_instance_valid(tree):
+		tree.paused = was_paused
+	host.finish_transition(spawn_id)
 	EventBus.scene_transition_finished.emit(spawn_id)
 
 
 ## 重载当前世界场景（读档 / 重开当天）。
-##
-## 会丢弃缓存里的那份实例，强制走一次完整的 [code]_ready()[/code]。
-func reload_current_scene(spawn_id: StringName = &"default") -> void:
-	var path := current_world_path()
+func reload_current_scene(host: WorldHost, spawn_id: StringName = &"default") -> void:
+	if host == null or not is_instance_valid(host):
+		return
+	var path := host.current_world_path()
 	if path.is_empty():
 		return
-	_discard_world(path)
-	await change_scene_to(path, spawn_id)
+	host.discard_world(path)
+	await change_scene_to(host, path, spawn_id)
 
 
 ## 当前挂载中的世界场景；没有则返回 null。
-func current_world() -> Node:
-	return _current_world if is_instance_valid(_current_world) else null
+func current_world(host: WorldHost) -> Node:
+	return host.current_world() if host != null else null
 
 
 ## 当前世界场景的资源路径。
-func current_world_path() -> String:
-	var world := current_world()
-	return world.scene_file_path if world != null else ""
+func current_world_path(host: WorldHost) -> String:
+	return host.current_world_path() if host != null else ""
 
 
-## 世界场景的宿主节点。
-func world_host() -> Node:
-	var tree := get_tree()
+## 是否正在切换中。
+func is_transitioning(host: WorldHost) -> bool:
+	return host != null and host.is_transitioning()
+
+
+## 按分组查找当前 [WorldHost]；只用于 SaveManager 等没有组合根引用的入口。
+func world_host(tree: SceneTree) -> WorldHost:
 	if tree == null:
 		return null
-	return tree.get_first_node_in_group(WORLD_HOST_GROUP)
+	return tree.get_first_node_in_group(WORLD_HOST_GROUP) as WorldHost
 
 
-## 清空世界缓存。
-##
-## 新游戏或读档到别的地图时调用，避免旧地图带着上一局的进度被复用。
-func clear_world_cache() -> void:
-	for path: String in _world_cache.keys():
-		_discard_world(path)
-	_world_cache.clear()
-	_current_world = null
-
-
-# ---------------------------------------------------------------- 读档
-
-## 读档后把世界恢复到存档记录的那张地图。
-##
-## [SaveManager] 恢复完核心单例后调用；调用方随后还需要
-## [method SaveManager.apply_node_state] 把节点状态灌进新场景。
-func restore_saved_world() -> void:
-	var target_path := _pending_world_path
-	var target_spawn := _pending_spawn_id
-	_pending_world_path = ""
-	_pending_spawn_id = &"default"
-
-	if target_path.is_empty() or target_path == current_world_path():
-		# 同一张地图：复用现有实例，节点状态会被 apply_node_state() 覆盖。
-		_place_player(target_spawn)
-		return
-
-	# 目标地图可能是本局早先缓存的旧实例，先丢掉再按存档重建。
-	_discard_world(target_path)
-	await change_scene_to(target_path, target_spawn)
-
-
-func to_dict() -> Dictionary:
-	return {
-		"world_path": current_world_path(),
-		"spawn_id": String(_last_spawn_id),
-	}
-
-
-func from_dict(data: Dictionary) -> void:
-	_pending_world_path = str(data.get("world_path", ""))
-	_pending_spawn_id = StringName(str(data.get("spawn_id", "default")))
-
-
-# ---------------------------------------------------------------- 内部
-
-func _swap_world(scene_path: String, packed: PackedScene, spawn_id: StringName) -> void:
-	var host := world_host()
+## 把玩家放到 [param spawn_id] 对应的出生点，并记录为最近一次落地。
+func place_player(host: WorldHost, spawn_id: StringName) -> void:
 	if host == null:
-		push_error("SceneRouter: 场景树中没有 world_host 组节点，无法挂载世界")
 		return
-
-	_detach_current_world(host)
-
-	if not _world_cache.has(scene_path):
-		_world_cache[scene_path] = packed.instantiate()
-	_current_world = _world_cache[scene_path]
-	# 世界子节点的 _enter_tree() 会在 add_child() 时立即执行，因此必须在
-	# 挂载前把组合根状态注入场景根；缓存复用也一样。
-	_inject_world_dependencies(_current_world)
-	host.add_child(_current_world)
-
-	# 等两帧，确保新场景的 _ready() 全部跑完、节点进入场景树。
-	await get_tree().process_frame
-	await get_tree().process_frame
-
-	if _current_world.has_method(&"on_world_enter"):
-		_current_world.call(&"on_world_enter", spawn_id)
-
-
-## 把当前世界摘出场景树但保留实例。
-##
-## 必须先 remove_child 再 queue_free：queue_free 要等到帧末才生效，
-## 期间旧玩家仍在 player 分组里，_place_player 会抓到已经作废的节点。
-func _detach_current_world(host: Node) -> void:
-	var world := current_world()
-	if world == null:
-		_current_world = null
+	var tree := host.get_tree()
+	if tree == null:
 		return
-	if world.has_method(&"on_world_exit"):
-		world.call(&"on_world_exit")
-	if world.get_parent() == host:
-		host.remove_child(world)
-	_current_world = null
-
-
-## 把组合根状态注入世界场景；必须发生在 [method Node.add_child] 之前。
-func _inject_world_dependencies(world: Node) -> void:
-	if world != null and world.has_method(&"bind_dependencies"):
-		world.call(&"bind_dependencies", _player_profile, _clock)
-	if world != null and world.has_method(&"bind_services"):
-		world.call(
-			&"bind_services", _weather_service, _relationship_service, _calendar_service
-		)
-
-
-func _discard_world(scene_path: String) -> void:
-	if not _world_cache.has(scene_path):
-		return
-	var world: Node = _world_cache[scene_path]
-	_world_cache.erase(scene_path)
-	if not is_instance_valid(world):
-		return
-	if world == _current_world:
-		_current_world = null
-	var parent := world.get_parent()
-	if parent != null:
-		parent.remove_child(world)
-	world.queue_free()
-
-
-func _build_overlay() -> void:
-	_overlay = CanvasLayer.new()
-	_overlay.name = "ScreenFade"
-	_overlay.layer = 128
-	_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
-
-	_rect = ColorRect.new()
-	_rect.name = "Fade"
-	_rect.color = Color(fade_color.r, fade_color.g, fade_color.b, 0.0)
-	_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	# ColorRect 需要铺满整个视口。
-	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
-	_rect.size = viewport_size
-	_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-
-	_overlay.add_child(_rect)
-	add_child(_overlay)
-	get_viewport().size_changed.connect(_on_viewport_resized)
-
-
-func _on_viewport_resized() -> void:
-	if _rect != null:
-		_rect.size = get_viewport().get_visible_rect().size
-
-
-func _fade_to(alpha: float, duration: float) -> void:
-	if _rect == null:
-		return
-	if duration <= 0.0:
-		_rect.color.a = alpha
-		return
-	var tween := create_tween()
-	tween.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	tween.tween_property(_rect, "color:a", alpha, duration)
-	await tween.finished
-
-
-func _place_player(spawn_id: StringName) -> void:
-	var player := get_tree().get_first_node_in_group(PLAYER_GROUP)
+	var player := tree.get_first_node_in_group(PLAYER_GROUP)
 	if player == null:
 		return
-	var target := _find_spawn_point(spawn_id)
+	var target := _find_spawn_point(tree, spawn_id)
 	if target == null:
 		push_warning("SceneRouter: 场景中没有找到出生点 '%s'" % spawn_id)
 		return
-
-	_last_spawn_id = spawn_id
+	host.set_last_spawn(spawn_id)
 	if player is Node2D:
 		(player as Node2D).global_position = target.global_position
 	if player.has_method(&"face"):
 		player.call(&"face", target.facing)
 
 
-func _find_spawn_point(spawn_id: StringName) -> SpawnPoint:
+func _find_spawn_point(tree: SceneTree, spawn_id: StringName) -> SpawnPoint:
 	var fallback: SpawnPoint = null
-	for node: Node in get_tree().get_nodes_in_group(SPAWN_GROUP):
+	for node: Node in tree.get_nodes_in_group(SPAWN_GROUP):
 		var point := node as SpawnPoint
 		if point == null:
 			continue

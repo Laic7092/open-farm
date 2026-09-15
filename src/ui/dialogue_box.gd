@@ -3,7 +3,7 @@ extends Control
 ## 对话框：逐字显示 + 按键推进。
 ##
 ## 只负责"把 [DialogueData] 演出来"，不理解对话内容、也不决定何时开商店——
-## 那是 [Npc] 监听 [signal EventBus.dialogue_finished] 之后的事。
+## 那是 [Npc] 监听 [signal EventBus.ui.dialogue_finished] 之后的事。
 
 ## 播放结束（无论是正常读完还是被跳过）。
 signal finished(dialogue: DialogueData)
@@ -41,7 +41,7 @@ func open(dialogue: DialogueData) -> void:
 	_dialogue = dialogue
 	_line_index = -1
 	visible = true
-	EventBus.dialogue_started.emit(dialogue)
+	EventBus.ui.dialogue_started.emit(dialogue)
 	_show_next_line()
 
 
@@ -68,7 +68,7 @@ func _show_next_line() -> void:
 	speaker_label.text = Text.key(speaker_key)
 	text_label.text = Text.key(line.text_key)
 	hint_label.text = Text.key(&"DIALOGUE_ADVANCE_HINT")
-	EventBus.dialogue_line_shown.emit()
+	EventBus.ui.dialogue_line_shown.emit()
 	_start_typing()
 
 
@@ -94,5 +94,5 @@ func _close() -> void:
 	var dialogue: DialogueData = _dialogue
 	_dialogue = null
 	visible = false
-	EventBus.dialogue_finished.emit(dialogue)
+	EventBus.ui.dialogue_finished.emit(dialogue)
 	finished.emit(dialogue)

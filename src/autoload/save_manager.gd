@@ -31,6 +31,24 @@ var _pending_node_state: Dictionary = {}
 signal save_finished(slot: int, success: bool)
 signal load_finished(slot: int, success: bool)
 
+## 由 [Main] 显式注册的核心存档节，按 order 升序恢复。
+var _core_sections: Array[SaveSection] = []
+
+
+## 由组合根注入本局核心存档节；替换而不是追加，避免旧 Main 的资源泄漏。
+func set_core_sections(sections: Array[SaveSection]) -> void:
+	_core_sections.clear()
+	for section: SaveSection in sections:
+		if section != null and section.is_valid():
+			_core_sections.append(section)
+
+
+## 当前显式注册的核心存档节副本。
+func core_sections() -> Array[SaveSection]:
+	var result: Array[SaveSection] = []
+	result.assign(_core_sections)
+	return result
+
 
 func _ready() -> void:
 	_ensure_root()
@@ -109,7 +127,9 @@ func load_game(slot: int) -> bool:
 func load_game_and_restore_world(slot: int) -> bool:
 	if not load_game(slot):
 		return false
-	await SceneRouter.restore_saved_world()
+	var host := _world_host()
+	if host != null:
+		await host.restore_saved_world()
 	apply_node_state()
 	return true
 
@@ -124,28 +144,29 @@ func delete_save(slot: int) -> bool:
 ## 收集当前世界的完整存档数据。
 func collect() -> Dictionary:
 	var nodes := {}
-	for node: Node in get_tree().get_nodes_in_group(Persistence.GROUP):
-		var problems := Persistence.validate(node)
+	for section: SaveSection in _scene_sections():
+		var problems := section.validate()
 		if not problems.is_empty():
 			push_error(
-				"SaveManager: 节点 '%s' 不满足存档契约：%s" % [node.name, ", ".join(problems)]
+				"SaveManager: 节点 '%s' 不满足存档契约：%s"
+				% [section.id, ", ".join(problems)]
 			)
 			continue
-		nodes[String(Persistence.id_of(node))] = node.call(&"to_dict")
+		nodes[String(section.id)] = section.to_dict()
 
 	var payload := {
 		"version": SAVE_VERSION,
 		"saved_at": Time.get_datetime_string_from_system(false, true),
 	}
-	for participant: Object in _core_entries():
-		var problems := Persistence.validate(participant)
+	for section: SaveSection in _resolved_core_sections():
+		var problems := section.validate()
 		if not problems.is_empty():
 			push_error(
-				"SaveManager: 核心存档节点 '%s' 不满足契约：%s"
-				% [Persistence.id_of(participant), ", ".join(problems)]
+				"SaveManager: 核心存档节 '%s' 不满足契约：%s"
+				% [section.id, ", ".join(problems)]
 			)
 			continue
-		payload[String(Persistence.id_of(participant))] = participant.call(&"to_dict")
+		payload[String(section.id)] = section.to_dict()
 	payload["nodes"] = nodes
 	return payload
 
@@ -162,19 +183,18 @@ func apply(data: Dictionary) -> bool:
 		)
 		return false
 
-	# 1) 先恢复核心单例：世界节点在 _ready() 时依赖它们。
-	for participant: Object in _core_entries():
-		var problems := Persistence.validate(participant)
+	# 1) 先恢复核心节：世界节点在 _ready() 时依赖它们。
+	for section: SaveSection in _resolved_core_sections():
+		var problems := section.validate()
 		if not problems.is_empty():
 			push_error(
-				"SaveManager: 核心存档节点 '%s' 不满足契约：%s"
-				% [Persistence.id_of(participant), ", ".join(problems)]
+				"SaveManager: 核心存档节 '%s' 不满足契约：%s"
+				% [section.id, ", ".join(problems)]
 			)
 			continue
-		var id := String(Persistence.id_of(participant))
-		var section: Variant = data.get(id, {})
-		if section is Dictionary and not section.is_empty():
-			participant.call(&"from_dict", section)
+		var section_data: Variant = data.get(String(section.id), {})
+		if section_data is Dictionary and not section_data.is_empty():
+			section.from_dict(section_data)
 
 	# 2) 再恢复场景内的持久化节点。
 	var nodes: Variant = data.get("nodes", {})
@@ -183,7 +203,7 @@ func apply(data: Dictionary) -> bool:
 	return true
 
 
-## 把暂存的"场景内节点"存档数据应用到当前场景树。
+## 把暂存的“场景内节点”存档数据应用到当前场景树。
 ##
 ## 读档时调用两次是正常且必要的：一次给已经在树上的旧场景，
 ## 一次给随后按存档重建出来的新场景。重复应用是幂等的。
@@ -191,38 +211,70 @@ func apply_node_state() -> void:
 	if _pending_node_state.is_empty() or not is_inside_tree():
 		return
 	for node: Node in get_tree().get_nodes_in_group(Persistence.GROUP):
-		var key := String(Persistence.id_of(node))
-		if not _pending_node_state.has(key):
+		var section := SaveSection.from_object(node, false)
+		if not _pending_node_state.has(String(section.id)):
 			continue
-		var section: Variant = _pending_node_state[key]
-		if section is Dictionary:
-			node.call(&"from_dict", section)
+		var section_data: Variant = _pending_node_state[String(section.id)]
+		if section_data is Dictionary:
+			section.from_dict(section_data)
 
 
 # ---------------------------------------------------------------- 内部
 
-## 已注册的核心存档节，按 [constant Persistence.META_CORE_ORDER] 升序。
-##
-## 节点核心在各自 [code]_ready()[/code] 里自注册；状态 Resource 由 [Main]
-## 显式注册。[SaveManager] 不维护参与者名单，也不做字符串反射。
-func _core_entries() -> Array[Object]:
-	var participants: Array[Object] = []
+## 显式核心节 + 旧接口注册的 Resource / 核心节点，统一去重、排序。
+func _resolved_core_sections() -> Array[SaveSection]:
+	var result: Array[SaveSection] = []
+	var seen: Dictionary = {}
+	for section: SaveSection in _core_sections:
+		_append_section(result, seen, section)
+	for object: Object in Persistence.core_resources():
+		_append_section(result, seen, SaveSection.from_object(object, true))
 	if is_inside_tree():
 		for node: Node in get_tree().get_nodes_in_group(Persistence.CORE_GROUP):
 			if is_instance_valid(node):
-				participants.append(node)
-	for resource: Object in Persistence.core_resources():
-		participants.append(resource)
-	participants.sort_custom(_sort_core_entries)
-	return participants
+				_append_section(result, seen, SaveSection.from_object(node, true))
+	result.sort_custom(_sort_sections)
+	return result
 
 
-func _sort_core_entries(a: Object, b: Object) -> bool:
-	var order_a := Persistence.core_order_of(a)
-	var order_b := Persistence.core_order_of(b)
-	if order_a == order_b:
-		return String(Persistence.id_of(a)) < String(Persistence.id_of(b))
-	return order_a < order_b
+## 当前场景树里的持久化节点；读取时包装成 [SaveSection]。
+func _scene_sections() -> Array[SaveSection]:
+	var result: Array[SaveSection] = []
+	if not is_inside_tree():
+		return result
+	for node: Node in get_tree().get_nodes_in_group(Persistence.GROUP):
+		if is_instance_valid(node):
+			result.append(SaveSection.from_object(node, false))
+	result.sort_custom(_sort_sections)
+	return result
+
+
+func _append_section(
+	result: Array[SaveSection], seen: Dictionary, section: SaveSection
+) -> void:
+	if section == null or not section.is_valid():
+		return
+	if section.id == &"":
+		section.id = Persistence.id_of(section.target)
+	if section.id == &"":
+		return
+	var key := section.target.get_instance_id()
+	if seen.has(key):
+		return
+	seen[key] = true
+	result.append(section)
+
+
+func _sort_sections(a: SaveSection, b: SaveSection) -> bool:
+	if a.order == b.order:
+		return String(a.id) < String(b.id)
+	return a.order < b.order
+
+
+func _world_host() -> WorldHost:
+	if not is_inside_tree():
+		return null
+	return get_tree().get_first_node_in_group(WorldHost.GROUP) as WorldHost
 
 
 func _ensure_root() -> void:

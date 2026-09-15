@@ -83,19 +83,19 @@ func _capture() -> void:
 # ---------------------------------------------------------------- 打开动作
 
 func _open_inventory() -> void:
-	EventBus.inventory_toggle_requested.emit()
+	EventBus.ui.inventory_toggle_requested.emit()
 
 
 func _open_dialogue() -> void:
-	EventBus.dialogue_requested.emit(Database.get_dialogue(&"merchant_greeting"))
+	EventBus.ui.dialogue_requested.emit(Database.get_dialogue(&"merchant_greeting"))
 
 
 func _open_shop() -> void:
-	EventBus.shop_requested.emit(&"general_store")
+	EventBus.ui.shop_requested.emit(&"general_store")
 
 
 func _open_pause_menu() -> void:
-	EventBus.pause_menu_toggle_requested.emit()
+	EventBus.ui.pause_menu_toggle_requested.emit()
 
 
 func _close_current() -> void:

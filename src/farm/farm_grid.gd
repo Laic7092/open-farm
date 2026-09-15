@@ -161,7 +161,7 @@ func till(cell: Vector2i) -> bool:
 		return false
 	tile.tilled = true
 	_refresh_soil(cell)
-	EventBus.tile_tilled.emit(cell)
+	EventBus.farm.tile_tilled.emit(cell)
 	return true
 
 
@@ -174,7 +174,7 @@ func water(cell: Vector2i) -> bool:
 		return false
 	tile.watered = true
 	_refresh_soil(cell)
-	EventBus.tile_watered.emit(cell)
+	EventBus.farm.tile_watered.emit(cell)
 	return true
 
 
@@ -195,7 +195,7 @@ func plant(cell: Vector2i, seed_item_id: StringName, season: Season.Type) -> boo
 
 	tile.crop = CropState.new(data.id)
 	_spawn_crop_node(cell)
-	EventBus.crop_planted.emit(cell, data.id)
+	EventBus.farm.crop_planted.emit(cell, data.id)
 	return true
 
 
@@ -216,7 +216,7 @@ func harvest(cell: Vector2i) -> Dictionary:
 	if amount <= 0:
 		return {}
 
-	EventBus.crop_harvested.emit(cell, outcome["item_id"], amount)
+	EventBus.farm.crop_harvested.emit(cell, outcome["item_id"], amount)
 	if bool(outcome.get("removed", false)):
 		_remove_crop_node(cell)
 		tile.clear_crop()
@@ -424,11 +424,11 @@ func _advance_crop(
 	var watered: bool = tile.watered or weather_waters
 	var change := CropGrowth.advance(data, tile.crop, watered, date.season)
 	if bool(change.get(CropGrowth.KEY_DIED, false)):
-		EventBus.crop_died.emit(cell)
+		EventBus.farm.crop_died.emit(cell)
 		_refresh_crop(cell)
 		return
 	if bool(change.get(CropGrowth.KEY_STAGE_CHANGED, false)):
-		EventBus.crop_stage_changed.emit(
+		EventBus.farm.crop_stage_changed.emit(
 			cell, CropGrowth.stage_of(data, tile.crop.days_grown)
 		)
 		_refresh_crop(cell)

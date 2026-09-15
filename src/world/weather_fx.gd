@@ -51,8 +51,8 @@ func _ready() -> void:
 
 
 func _enter_tree() -> void:
-	if not EventBus.weather_changed.is_connected(_on_weather_changed):
-		EventBus.weather_changed.connect(_on_weather_changed)
+	if not EventBus.world.weather_changed.is_connected(_on_weather_changed):
+		EventBus.world.weather_changed.connect(_on_weather_changed)
 	if not EventBus.minute_changed.is_connected(_on_minute_changed):
 		EventBus.minute_changed.connect(_on_minute_changed)
 	# 世界场景会缓存复用：_ready() 一生只跑一次，
@@ -62,8 +62,8 @@ func _enter_tree() -> void:
 
 
 func _exit_tree() -> void:
-	if EventBus.weather_changed.is_connected(_on_weather_changed):
-		EventBus.weather_changed.disconnect(_on_weather_changed)
+	if EventBus.world.weather_changed.is_connected(_on_weather_changed):
+		EventBus.world.weather_changed.disconnect(_on_weather_changed)
 	if EventBus.minute_changed.is_connected(_on_minute_changed):
 		EventBus.minute_changed.disconnect(_on_minute_changed)
 

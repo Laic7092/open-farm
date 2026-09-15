@@ -22,17 +22,17 @@ const EVENT_DIR: String = "res://data/events"
 ## 数据装载完成后发出。
 signal reloaded()
 
-var crops: Dictionary[StringName, CropData] = {}
-var animals: Dictionary[StringName, AnimalData] = {}
-var buildings: Dictionary[StringName, BuildingData] = {}
-var floras: Dictionary[StringName, FloraData] = {}
-var items: Dictionary[StringName, ItemData] = {}
-var tools: Dictionary[StringName, ToolData] = {}
-var npcs: Dictionary[StringName, NpcData] = {}
-var shops: Dictionary[StringName, ShopData] = {}
-var dialogues: Dictionary[StringName, DialogueData] = {}
-var festivals: Dictionary[StringName, FestivalData] = {}
-var events: Dictionary[StringName, EventData] = {}
+var _crops: Dictionary[StringName, CropData] = {}
+var _animals: Dictionary[StringName, AnimalData] = {}
+var _buildings: Dictionary[StringName, BuildingData] = {}
+var _floras: Dictionary[StringName, FloraData] = {}
+var _items: Dictionary[StringName, ItemData] = {}
+var _tools: Dictionary[StringName, ToolData] = {}
+var _npcs: Dictionary[StringName, NpcData] = {}
+var _shops: Dictionary[StringName, ShopData] = {}
+var _dialogues: Dictionary[StringName, DialogueData] = {}
+var _festivals: Dictionary[StringName, FestivalData] = {}
+var _events: Dictionary[StringName, EventData] = {}
 
 
 func _ready() -> void:
@@ -41,29 +41,29 @@ func _ready() -> void:
 
 ## 重新扫描全部数据目录。
 func reload() -> void:
-	crops.clear()
-	animals.clear()
-	buildings.clear()
-	floras.clear()
-	items.clear()
-	tools.clear()
-	npcs.clear()
-	shops.clear()
-	dialogues.clear()
-	festivals.clear()
-	events.clear()
+	_crops.clear()
+	_animals.clear()
+	_buildings.clear()
+	_floras.clear()
+	_items.clear()
+	_tools.clear()
+	_npcs.clear()
+	_shops.clear()
+	_dialogues.clear()
+	_festivals.clear()
+	_events.clear()
 
-	_index(CROP_DIR, crops, "CropData")
-	_index(ANIMAL_DIR, animals, "AnimalData")
-	_index(BUILDING_DIR, buildings, "BuildingData")
-	_index(FLORA_DIR, floras, "FloraData")
-	_index(ITEM_DIR, items, "ItemData")
-	_index(TOOL_DIR, tools, "ToolData")
-	_index(NPC_DIR, npcs, "NpcData")
-	_index(SHOP_DIR, shops, "ShopData")
-	_index(DIALOGUE_DIR, dialogues, "DialogueData")
-	_index(FESTIVAL_DIR, festivals, "FestivalData")
-	_index(EVENT_DIR, events, "EventData")
+	_index(CROP_DIR, _crops, "CropData")
+	_index(ANIMAL_DIR, _animals, "AnimalData")
+	_index(BUILDING_DIR, _buildings, "BuildingData")
+	_index(FLORA_DIR, _floras, "FloraData")
+	_index(ITEM_DIR, _items, "ItemData")
+	_index(TOOL_DIR, _tools, "ToolData")
+	_index(NPC_DIR, _npcs, "NpcData")
+	_index(SHOP_DIR, _shops, "ShopData")
+	_index(DIALOGUE_DIR, _dialogues, "DialogueData")
+	_index(FESTIVAL_DIR, _festivals, "FestivalData")
+	_index(EVENT_DIR, _events, "EventData")
 
 	reloaded.emit()
 
@@ -71,54 +71,208 @@ func reload() -> void:
 # ---------------------------------------------------------------- 查询
 
 func get_crop(id: StringName) -> CropData:
-	return crops.get(id) as CropData
+	return _crops.get(id) as CropData
 
 
 func get_animal(id: StringName) -> AnimalData:
-	return animals.get(id) as AnimalData
+	return _animals.get(id) as AnimalData
 
 
 func get_building(id: StringName) -> BuildingData:
-	return buildings.get(id) as BuildingData
+	return _buildings.get(id) as BuildingData
 
 
 func get_flora(id: StringName) -> FloraData:
-	return floras.get(id) as FloraData
+	return _floras.get(id) as FloraData
 
 
 func get_item(id: StringName) -> ItemData:
-	return items.get(id) as ItemData
+	return _items.get(id) as ItemData
 
 
 func get_tool(id: StringName) -> ToolData:
-	return tools.get(id) as ToolData
+	return _tools.get(id) as ToolData
 
 
 func get_npc(id: StringName) -> NpcData:
-	return npcs.get(id) as NpcData
+	return _npcs.get(id) as NpcData
 
 
 func get_shop(id: StringName) -> ShopData:
-	return shops.get(id) as ShopData
+	return _shops.get(id) as ShopData
 
 
 func get_dialogue(id: StringName) -> DialogueData:
-	return dialogues.get(id) as DialogueData
+	return _dialogues.get(id) as DialogueData
 
 
 func get_festival(id: StringName) -> FestivalData:
-	return festivals.get(id) as FestivalData
+	return _festivals.get(id) as FestivalData
 
 
 func get_event(id: StringName) -> EventData:
-	return events.get(id) as EventData
+	return _events.get(id) as EventData
 
+
+## 全部数据桶的只读快照；调用方不应直接迭代内部字典。
+func crops() -> Dictionary:
+	return _crops.duplicate()
+
+
+## [method crops] 的 get_* 别名。
+func get_crops() -> Dictionary:
+	return crops()
+
+
+## 是否存在指定 id 的crop数据。
+func has_crop(id: StringName) -> bool:
+	return _crops.has(id)
+
+
+func animals() -> Dictionary:
+	return _animals.duplicate()
+
+
+## [method animals] 的 get_* 别名。
+func get_animals() -> Dictionary:
+	return animals()
+
+
+## 是否存在指定 id 的animal数据。
+func has_animal(id: StringName) -> bool:
+	return _animals.has(id)
+
+
+func buildings() -> Dictionary:
+	return _buildings.duplicate()
+
+
+## [method buildings] 的 get_* 别名。
+func get_buildings() -> Dictionary:
+	return buildings()
+
+
+## 是否存在指定 id 的building数据。
+func has_building(id: StringName) -> bool:
+	return _buildings.has(id)
+
+
+func floras() -> Dictionary:
+	return _floras.duplicate()
+
+
+## [method floras] 的 get_* 别名。
+func get_floras() -> Dictionary:
+	return floras()
+
+
+## 是否存在指定 id 的flora数据。
+func has_flora(id: StringName) -> bool:
+	return _floras.has(id)
+
+
+func items() -> Dictionary:
+	return _items.duplicate()
+
+
+## [method items] 的 get_* 别名。
+func get_items() -> Dictionary:
+	return items()
+
+
+## 是否存在指定 id 的item数据。
+func has_item(id: StringName) -> bool:
+	return _items.has(id)
+
+
+func tools() -> Dictionary:
+	return _tools.duplicate()
+
+
+## [method tools] 的 get_* 别名。
+func get_tools() -> Dictionary:
+	return tools()
+
+
+## 是否存在指定 id 的tool数据。
+func has_tool(id: StringName) -> bool:
+	return _tools.has(id)
+
+
+func npcs() -> Dictionary:
+	return _npcs.duplicate()
+
+
+## [method npcs] 的 get_* 别名。
+func get_npcs() -> Dictionary:
+	return npcs()
+
+
+## 是否存在指定 id 的npc数据。
+func has_npc(id: StringName) -> bool:
+	return _npcs.has(id)
+
+
+func shops() -> Dictionary:
+	return _shops.duplicate()
+
+
+## [method shops] 的 get_* 别名。
+func get_shops() -> Dictionary:
+	return shops()
+
+
+## 是否存在指定 id 的shop数据。
+func has_shop(id: StringName) -> bool:
+	return _shops.has(id)
+
+
+func dialogues() -> Dictionary:
+	return _dialogues.duplicate()
+
+
+## [method dialogues] 的 get_* 别名。
+func get_dialogues() -> Dictionary:
+	return dialogues()
+
+
+## 是否存在指定 id 的dialogue数据。
+func has_dialogue(id: StringName) -> bool:
+	return _dialogues.has(id)
+
+
+func festivals() -> Dictionary:
+	return _festivals.duplicate()
+
+
+## [method festivals] 的 get_* 别名。
+func get_festivals() -> Dictionary:
+	return festivals()
+
+
+## 是否存在指定 id 的festival数据。
+func has_festival(id: StringName) -> bool:
+	return _festivals.has(id)
+
+
+func events() -> Dictionary:
+	return _events.duplicate()
+
+
+## [method events] 的 get_* 别名。
+func get_events() -> Dictionary:
+	return events()
+
+
+## 是否存在指定 id 的event数据。
+func has_event(id: StringName) -> bool:
+	return _events.has(id)
 
 ## 全部节日，按 id 排序（节日日历要求输出稳定，不依赖字典的迭代顺序）。
 func festival_list() -> Array[FestivalData]:
 	var result: Array[FestivalData] = []
-	for id: StringName in festivals:
-		result.append(festivals[id])
+	for id: StringName in _festivals:
+		result.append(_festivals[id])
 	result.sort_custom(func(a: FestivalData, b: FestivalData) -> bool:
 		return String(a.id) < String(b.id)
 	)
@@ -128,8 +282,8 @@ func festival_list() -> Array[FestivalData]:
 ## 全部事件，按 id 排序。
 func event_list() -> Array[EventData]:
 	var result: Array[EventData] = []
-	for id: StringName in events:
-		result.append(events[id])
+	for id: StringName in _events:
+		result.append(_events[id])
 	result.sort_custom(func(a: EventData, b: EventData) -> bool:
 		return String(a.id) < String(b.id)
 	)
@@ -182,9 +336,9 @@ func require_shop(id: StringName) -> ShopData:
 ## 所有数据资源的总数，便于进度校验与测试。
 func total_count() -> int:
 	return (
-		crops.size() + animals.size() + buildings.size() + floras.size()
-		+ items.size() + tools.size() + npcs.size() + shops.size() + dialogues.size()
-		+ festivals.size() + events.size()
+		_crops.size() + _animals.size() + _buildings.size() + _floras.size()
+		+ _items.size() + _tools.size() + _npcs.size() + _shops.size() + _dialogues.size()
+		+ _festivals.size() + _events.size()
 	)
 
 
@@ -192,8 +346,8 @@ func total_count() -> int:
 func validate_all() -> PackedStringArray:
 	var problems := PackedStringArray()
 	for bucket: Dictionary in [
-		crops, animals, buildings, floras, items, tools, npcs, shops, dialogues,
-		festivals, events
+		_crops, _animals, _buildings, _floras, _items, _tools, _npcs, _shops, _dialogues,
+		_festivals, _events
 	]:
 		for key: StringName in bucket:
 			var resource: Resource = bucket[key]

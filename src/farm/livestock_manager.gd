@@ -129,7 +129,7 @@ func introduce(building_id: StringName, player: Player) -> bool:
 		if not player.inventory.remove(slot.item_id, 1):
 			continue
 		_add_animal(building_id, animal.id)
-		EventBus.notification_requested.emit(&"NOTIFY_ANIMAL_PLACED", {
+		EventBus.ui.notification_requested.emit(&"NOTIFY_ANIMAL_PLACED", {
 			"animal": Text.animal_name(Database.get_animal(animal.id)),
 			"building": Text.building_name(Database.get_building(building_id)),
 		})
@@ -166,7 +166,7 @@ func feed(building_id: StringName, inventory: Inventory) -> int:
 		if data != null and AnimalHusbandry.feed(data, animal_state):
 			fed_count += 1
 	if fed_count > 0:
-		EventBus.animal_fed.emit(building_id, fed_count)
+		EventBus.farm.animal_fed.emit(building_id, fed_count)
 	return fed_count
 
 
@@ -178,7 +178,7 @@ func pet(building_id: StringName, index: int) -> int:
 	var data := Database.get_animal(animal_state.animal_id)
 	var gained: int = AnimalHusbandry.pet(data, animal_state)
 	if gained > 0:
-		EventBus.animal_petted.emit(building_id, animal_state.animal_id, animal_state.affection)
+		EventBus.farm.animal_petted.emit(building_id, animal_state.animal_id, animal_state.affection)
 	return gained
 
 
@@ -194,7 +194,7 @@ func collect(building_id: StringName, index: int) -> Dictionary:
 	var outcome := AnimalHusbandry.apply_collect(data, animal_state, _rng)
 	var amount: int = int(outcome.get("amount", 0))
 	if amount > 0:
-		EventBus.animal_product_collected.emit(
+		EventBus.farm.animal_product_collected.emit(
 			building_id, animal_state.animal_id, outcome["item_id"], amount
 		)
 		_refresh_views(building_id)
@@ -220,7 +220,7 @@ func advance_day(_date: GameDate) -> void:
 				data, animal_state, animal_state.fed_today
 			)
 			if bool(change.get(AnimalHusbandry.KEY_MATURED, false)):
-				EventBus.animal_matured.emit(building_id, animal_state.animal_id)
+				EventBus.farm.animal_matured.emit(building_id, animal_state.animal_id)
 	_refresh_all()
 
 
@@ -270,7 +270,7 @@ func _add_animal(building_id: StringName, animal_id: StringName) -> void:
 	var state := state_for(building_id)
 	state.add(AnimalState.new(animal_id))
 	_spawn_view(building_id, state.animals.size() - 1)
-	EventBus.animal_placed.emit(building_id, animal_id)
+	EventBus.farm.animal_placed.emit(building_id, animal_id)
 
 
 func _view_list(building_id: StringName) -> Array:
