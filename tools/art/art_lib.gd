@@ -88,6 +88,65 @@ static func circle(image: Image, center: Vector2i, radius: int, color: Color) ->
 	ellipse(image, center, Vector2i(radius, radius), color)
 
 
+## 实心三角形（像素中心判定）。3/4 立面的屋顶斜面靠它铺，所以抗锯齿交给描边。
+##
+## [param a] / [param b] / [param c] 是三个顶点（可越界，内部会裁到画布内）。
+static func triangle(
+	image: Image, a: Vector2, b: Vector2, c: Vector2, color: Color
+) -> void:
+	if color.a <= 0.0:
+		return
+	var min_x := clampi(int(floor(minf(a.x, minf(b.x, c.x)))), 0, image.get_width() - 1)
+	var max_x := clampi(int(ceil(maxf(a.x, maxf(b.x, c.x)))), 0, image.get_width() - 1)
+	var min_y := clampi(int(floor(minf(a.y, minf(b.y, c.y)))), 0, image.get_height() - 1)
+	var max_y := clampi(int(ceil(maxf(a.y, maxf(b.y, c.y)))), 0, image.get_height() - 1)
+	var area := (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y)
+	if absf(area) < 0.0001:
+		return
+	for y: int in range(min_y, max_y + 1):
+		for x: int in range(min_x, max_x + 1):
+			var px_x := float(x) + 0.5
+			var px_y := float(y) + 0.5
+			var w0 := ((b.y - c.y) * (px_x - c.x) + (c.x - b.x) * (px_y - c.y)) / area
+			var w1 := ((c.y - a.y) * (px_x - c.x) + (a.x - c.x) * (px_y - c.y)) / area
+			# 容差让共用边的两个三角形不留缝；顶点越界时靠 [method px] 静默裁掉。
+			if w0 >= -0.03 and w1 >= -0.03 and (w0 + w1) <= 1.03:
+				px(image, x, y, color)
+
+
+## 实心四边形（拆成两个三角形，不要求顺序）。
+static func quad(
+	image: Image, a: Vector2, b: Vector2, c: Vector2, d: Vector2, color: Color
+) -> void:
+	triangle(image, a, b, c, color)
+	triangle(image, a, c, d, color)
+
+
+## 任意方向直线（Bresenham）。屋顶斜边 / 瓦垄用得到。
+static func line(image: Image, from: Vector2, to: Vector2, color: Color) -> void:
+	if color.a <= 0.0:
+		return
+	var x0 := int(round(from.x))
+	var y0 := int(round(from.y))
+	var x1 := int(round(to.x))
+	var y1 := int(round(to.y))
+	var dx := absi(x1 - x0)
+	var sx := 1 if x0 < x1 else -1
+	var dy := -absi(y1 - y0)
+	var sy := 1 if y0 < y1 else -1
+	var err := dx + dy
+	while true:
+		px(image, x0, y0, color)
+		if x0 == x1 and y0 == y1:
+			break
+		var e2 := 2 * err
+		if e2 >= dy:
+			err += dy
+			x0 += sx
+		if e2 <= dx:
+			err += dx
+			y0 += sy
+
 ## 两端收一个像素的"胶囊"横条，比矩形更像手绘。
 static func bar(image: Image, x: int, y: int, length: int, color: Color) -> void:
 	h_line(image, x + 1, y, maxi(length - 2, 1), color)

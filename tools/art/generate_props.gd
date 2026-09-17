@@ -20,7 +20,9 @@ func _initialize() -> void:
 	Art.save_png(_house(), DIR.path_join("house.png"))
 	Art.save_png(_barn(), DIR.path_join("barn.png"))
 	Art.save_png(_tree(0), DIR.path_join("tree.png"))
+	Art.save_png(_tree_overlay(0), DIR.path_join("fg_tree.png"))
 	Art.save_png(_tree(1), DIR.path_join("tree_pine.png"))
+	Art.save_png(_tree_overlay(1), DIR.path_join("fg_tree_pine.png"))
 	Art.save_png(_stump(), DIR.path_join("stump.png"))
 	Art.save_png(_rock(16, 16, 0), DIR.path_join("rock.png"))
 	Art.save_png(_rock(32, 24, 1), DIR.path_join("rock_big.png"))
@@ -49,49 +51,73 @@ func _initialize() -> void:
 
 # ---------------------------------------------------------------- 建筑
 
-## 农舍：64×64，屋顶 + 白墙木筋 + 门 + 两扇窗 + 烟囱。
+## 农舍：64×64。3/4 视角：右山墙退后 9×6，前山墙 + 两坡屋顶 + 烟囱；
+## 建筑走 [WorldProp] 的"身后淡出"，不拆前景 overlay。
 func _house() -> Image:
 	var image := Art.new_image(64, 64)
 	Art.ground_shadow(image, 64, 64, 8)
+	# 前山墙房子的 3/4：屋脊从前(27,18)向后(36,12)退，两坡屋顶各占一边。
+	var front_left := Vector2(3, 35)
+	var apex_front := Vector2(27, 22)
+	var apex_back := Vector2(34, 17)
+	var front_right := Vector2(51, 35)
+	var back_left := Vector2(11, 29)
+	var back_right := Vector2(57, 29)
 
-	# 墙体
-	var body := Rect2i(8, 26, 48, 34)
-	Art.rect(image, body, P.WALL)
-	Art.scatter(image, body, P.WALL_DARK, 0.10, 7)
-	Art.rect(image, Rect2i(body.position.x, body.position.y, 2, body.size.y), P.WALL_DARK)
-	Art.h_line(image, body.position.x, body.position.y, body.size.x, P.WALL_LIGHT)
-	# 木筋
-	Art.rect(image, Rect2i(8, 26, 48, 2), P.WOOD_DARK)
-	Art.rect(image, Rect2i(8, 56, 48, 4), P.WOOD_DARK)
-	Art.rect(image, Rect2i(10, 28, 2, 28), P.WOOD_DARK)
-	Art.rect(image, Rect2i(52, 28, 2, 28), P.WOOD_DARK)
+	# 右侧墙：向后上方退 9×6，是这栋房子"转过来"的第一层体积。
+	Art.quad(image, Vector2(48, 36), Vector2(55, 31), Vector2(55, 55), Vector2(48, 60), P.WALL_DARK)
+	Art.v_line(image, 48, 36, 24, P.WALL_DARK.lerp(P.OUTLINE, 0.25))
 
-	# 屋顶：上窄下宽的梯形 + 出檐
-	for row: int in 26:
-		var t := float(row) / 25.0
-		var half := int(round(lerpf(20.0, 32.0, t)))
-		var color: Color = P.ROOF if (row / 4) % 2 == 0 else P.ROOF.lerp(P.ROOF_DARK, 0.35)
-		Art.h_line(image, 32 - half, 2 + row, half * 2, color)
-	Art.rect(image, Rect2i(0, 24, 64, 4), P.ROOF_DARK)
-	Art.h_line(image, 0, 24, 64, P.ROOF_LIGHT)
-	Art.h_line(image, 0, 27, 64, P.ROOF_DARK)
+	# 两坡屋顶：左坡受光、右坡背光。
+	Art.quad(image, front_left, apex_front, apex_back, back_left, P.ROOF)
+	Art.quad(image, front_right, apex_front, apex_back, back_right, P.ROOF.lerp(P.ROOF_DARK, 0.45))
+	# 瓦垄：与檐口平行，从檐边往屋脊推。
+	for t: float in [0.34, 0.67]:
+		Art.line(image, front_left.lerp(apex_front, t), back_left.lerp(apex_back, t), P.ROOF_LIGHT)
+		Art.line(image, front_right.lerp(apex_front, t), back_right.lerp(apex_back, t), P.ROOF_DARK)
+	# 屋脊：从前到后压一道亮边。
+	Art.line(image, apex_front, apex_back, P.ROOF_LIGHT)
+	Art.px(image, int(apex_front.x) + 1, int(apex_front.y), P.ROOF_LIGHT)
 
-	# 烟囱
-	Art.rect(image, Rect2i(44, 2, 8, 16), P.STONE)
-	Art.rect(image, Rect2i(43, 0, 10, 4), P.STONE_DARK)
-	Art.scatter(image, Rect2i(44, 2, 8, 16), P.STONE_DARK, 0.25, 13)
+	# 正面墙 + 前山墙三角，压住屋顶靠近观众的一半。
+	Art.triangle(image, Vector2(6, 36), Vector2(48, 36), Vector2(27, 22), P.WALL)
+	Art.rect(image, Rect2i(6, 36, 42, 24), P.WALL)
+	Art.scatter(image, Rect2i(6, 22, 42, 38), P.WALL_DARK, 0.05, 7)
+	Art.v_line(image, 6, 36, 24, P.WALL_LIGHT)
+	Art.v_line(image, 47, 36, 24, P.WALL_DARK)
 
-	# 门
-	Art.rect(image, Rect2i(26, 38, 14, 22), P.WOOD)
-	Art.frame_rect(image, Rect2i(26, 38, 14, 22), P.WOOD_DARK)
-	Art.v_line(image, 33, 39, 20, P.WOOD_DARK)
-	Art.h_line(image, 27, 40, 12, P.WOOD_LIGHT)
-	Art.px(image, 30, 49, P.COIN)
-	Art.px(image, 36, 49, P.COIN)
+	# 木筋：横梁 + 竖柱 + 山墙中柱与斜撑。
+	Art.rect(image, Rect2i(6, 36, 42, 2), P.WOOD_DARK)
+	Art.rect(image, Rect2i(6, 57, 42, 3), P.WOOD_DARK)
+	for x: int in [11, 19, 35, 43]:
+		Art.v_line(image, x, 38, 19, P.WOOD_DARK)
+	Art.v_line(image, 27, 23, 13, P.WOOD_DARK)
+	for i: int in 10:
+		Art.px(image, 27 - i, 23 + i, P.WOOD_DARK)
+		Art.px(image, 27 + i, 23 + i, P.WOOD_DARK)
 
-	# 窗
-	_window(image, Rect2i(12, 32, 10, 10))
-	_window(image, Rect2i(44, 32, 10, 10))
+	# 檐口：沿前山墙两侧斜边压深色，给屋顶厚度。
+	Art.line(image, front_left, apex_front, P.ROOF_DARK)
+	Art.line(image, apex_front, front_right, P.ROOF_DARK)
+	Art.line(image, Vector2(front_left.x, front_left.y + 1), Vector2(apex_front.x, apex_front.y + 1), P.ROOF_DARK)
+
+	# 烟囱：坐在左坡靠屋脊处。
+	Art.rect(image, Rect2i(18, 12, 7, 14), P.STONE)
+	Art.rect(image, Rect2i(17, 9, 9, 4), P.STONE_DARK)
+	Art.scatter(image, Rect2i(18, 12, 7, 14), P.STONE_DARK, 0.22, 13)
+
+	# 正面门 / 两扇窗；右侧墙补一扇小窗说明侧面也有人住。
+	Art.rect(image, Rect2i(23, 46, 12, 14), P.WOOD)
+	Art.frame_rect(image, Rect2i(23, 46, 12, 14), P.WOOD_DARK)
+	Art.v_line(image, 29, 47, 13, P.WOOD_DARK)
+	Art.h_line(image, 24, 48, 10, P.WOOD_LIGHT)
+	Art.px(image, 26, 53, P.COIN)
+	Art.px(image, 32, 53, P.COIN)
+	_window(image, Rect2i(9, 42, 9, 9))
+	_window(image, Rect2i(37, 42, 9, 9))
+	Art.rect(image, Rect2i(50, 38, 4, 6), P.GLASS_DARK)
+	Art.rect(image, Rect2i(51, 39, 2, 4), P.GLASS)
+	Art.frame_rect(image, Rect2i(50, 38, 4, 6), P.WOOD_DARK)
 
 	Art.outline(image, P.OUTLINE)
 	return image
@@ -105,39 +131,70 @@ func _window(image: Image, area: Rect2i) -> void:
 	Art.v_line(image, area.position.x + area.size.x / 2, area.position.y, area.size.y, P.WOOD_DARK)
 
 
-## 谷仓：64×56，红色屋顶 + 双开大门 + 干草阁楼窗。
+## 谷仓：64×56。与农舍同构的 3/4，但更宽更矮，红顶 + 双开大门 + 干草阁楼窗。
+## 建筑走 [WorldProp] 的"身后淡出"，不拆前景 overlay。
 func _barn() -> Image:
 	var image := Art.new_image(64, 56)
 	Art.ground_shadow(image, 64, 56, 6)
 
-	var body := Rect2i(6, 18, 52, 36)
-	Art.rect(image, body, P.ROOF_DARK.lerp(P.WALL, 0.25))
-	Art.scatter(image, body, P.ROOF_DARK, 0.12, 17)
-	Art.h_line(image, 6, 18, 52, P.ROOF)
+	# 与农舍同源的 3/4 结构，但更宽、更低，红顶 + 干草阁楼窗一眼认得出是谷仓。
+	var front_left := Vector2(3, 29)
+	var apex_front := Vector2(26, 17)
+	var apex_back := Vector2(33, 12)
+	var front_right := Vector2(49, 29)
+	var back_left := Vector2(11, 24)
+	var back_right := Vector2(56, 24)
 
-	# 复折屋顶（gambrel）
-	for row: int in 18:
-		var t := float(row) / 17.0
-		var half := int(round(lerpf(18.0, 32.0, sqrt(t))))
-		var color: Color = P.ROOF if row < 9 else P.ROOF.lerp(P.ROOF_DARK, 0.3)
-		Art.h_line(image, 32 - half, row, half * 2, color)
-	Art.rect(image, Rect2i(0, 16, 64, 3), P.ROOF_DARK)
-	Art.h_line(image, 0, 16, 64, P.ROOF_LIGHT)
+	# 右侧墙
+	Art.quad(image, Vector2(46, 30), Vector2(54, 25), Vector2(54, 47), Vector2(46, 52), P.WALL_DARK)
+	Art.v_line(image, 46, 30, 22, P.WALL_DARK.lerp(P.OUTLINE, 0.3))
 
-	# 大门 + 交叉支撑
-	Art.rect(image, Rect2i(20, 28, 24, 26), P.WOOD)
-	Art.frame_rect(image, Rect2i(20, 28, 24, 26), P.WOOD_DARK)
-	Art.v_line(image, 32, 28, 26, P.WOOD_DARK)
-	for i in 22:
-		Art.px(image, 21 + i, 29 + i, P.WOOD_DARK)
-		Art.px(image, 42 - i, 29 + i, P.WOOD_DARK)
-	Art.h_line(image, 21, 30, 10, P.WOOD_LIGHT)
+	# 双坡屋顶：红瓦，左亮右暗。
+	Art.quad(image, front_left, apex_front, apex_back, back_left, P.ROOF)
+	Art.quad(image, front_right, apex_front, apex_back, back_right, P.ROOF.lerp(P.ROOF_DARK, 0.5))
+	for t: float in [0.34, 0.67]:
+		Art.line(image, front_left.lerp(apex_front, t), back_left.lerp(apex_back, t), P.ROOF_LIGHT)
+		Art.line(image, front_right.lerp(apex_front, t), back_right.lerp(apex_back, t), P.ROOF_DARK)
+	Art.line(image, apex_front, apex_back, P.ROOF_LIGHT)
 
-	# 阁楼窗
-	Art.rect(image, Rect2i(28, 20, 8, 7), P.WOOD_DARK)
-	Art.rect(image, Rect2i(29, 21, 6, 5), P.GLASS_DARK)
-	Art.rect(image, Rect2i(8, 30, 8, 8), P.WOOD_DARK)
-	Art.rect(image, Rect2i(48, 30, 8, 8), P.WOOD_DARK)
+	# 正面墙 + 山墙，压住屋顶近端。
+	Art.triangle(image, Vector2(6, 30), Vector2(46, 30), Vector2(26, 17), P.WALL)
+	Art.rect(image, Rect2i(6, 30, 40, 22), P.WALL)
+	Art.scatter(image, Rect2i(6, 17, 40, 35), P.WALL_DARK, 0.08, 17)
+	Art.v_line(image, 6, 30, 22, P.WALL_LIGHT)
+	Art.v_line(image, 45, 30, 22, P.WALL_DARK)
+
+	# 木筋
+	Art.rect(image, Rect2i(6, 30, 40, 2), P.WOOD_DARK)
+	Art.rect(image, Rect2i(6, 48, 40, 4), P.WOOD_DARK)
+	Art.v_line(image, 26, 18, 12, P.WOOD_DARK)
+	for i: int in 9:
+		Art.px(image, 26 - i, 18 + i, P.WOOD_DARK)
+		Art.px(image, 26 + i, 18 + i, P.WOOD_DARK)
+
+	# 前檐：沿山墙斜边压深色。
+	Art.line(image, front_left, apex_front, P.ROOF_DARK)
+	Art.line(image, apex_front, front_right, P.ROOF_DARK)
+	Art.line(image, Vector2(front_left.x, front_left.y + 1), Vector2(apex_front.x, apex_front.y + 1), P.ROOF_DARK)
+
+	# 干草阁楼窗：开在山墙上，比大门高一层。
+	Art.rect(image, Rect2i(21, 22, 10, 8), P.WOOD_DARK)
+	Art.rect(image, Rect2i(22, 23, 8, 6), P.GLASS_DARK)
+	Art.rect(image, Rect2i(23, 24, 6, 4), P.HAY)
+
+	# 双开大门 + 交叉支撑
+	Art.rect(image, Rect2i(18, 34, 16, 18), P.WOOD)
+	Art.frame_rect(image, Rect2i(18, 34, 16, 18), P.WOOD_DARK)
+	Art.v_line(image, 26, 34, 18, P.WOOD_DARK)
+	for i: int in 16:
+		Art.px(image, 19 + i, 35 + i, P.WOOD_DARK)
+		Art.px(image, 33 - i, 35 + i, P.WOOD_DARK)
+	Art.h_line(image, 19, 36, 6, P.WOOD_LIGHT)
+	# 两侧小窗
+	Art.rect(image, Rect2i(8, 34, 7, 7), P.WOOD_DARK)
+	Art.rect(image, Rect2i(9, 35, 5, 5), P.GLASS_DARK)
+	Art.rect(image, Rect2i(37, 34, 7, 7), P.WOOD_DARK)
+	Art.rect(image, Rect2i(38, 35, 5, 5), P.GLASS_DARK)
 
 	Art.outline(image, P.OUTLINE)
 	return image
@@ -149,40 +206,66 @@ func _barn() -> Image:
 func _tree(variant: int) -> Image:
 	var image := Art.new_image(32, 48)
 	Art.ground_shadow(image, 32, 48, 8)
-
-	# 树干
-	Art.taper(image, Vector2i(16, 30), 16, 6, 9, P.TRUNK)
-	Art.v_line(image, 14, 32, 14, P.TRUNK_DARK)
-	Art.v_line(image, 18, 32, 14, P.WOOD_LIGHT)
-	Art.h_line(image, 12, 45, 9, P.TRUNK_DARK)
-
-	if variant == 1:
-		# 松树：三层越来越小的三角
-		for layer: int in 3:
-			var top: int = 2 + layer * 9
-			var half: int = 12 - layer * 3
-			var height: int = 14
-			for row: int in height:
-				var t := float(row) / float(height - 1)
-				var width := int(round(lerpf(1.0, float(half) * 2.0, t)))
-				var color: Color = P.LEAF_DARK if layer % 2 == 0 else P.LEAF
-				Art.h_line(image, 16 - width / 2, top + row, width, color)
-			Art.h_line(image, 16 - half, top + height - 1, half * 2, P.LEAF_DARK)
-		Art.h_line(image, 11, 8, 4, P.LEAF_LIGHT)
-	else:
-		# 阔叶树：三团错位树冠
-		Art.ellipse(image, Vector2i(11, 20), Vector2i(9, 8), P.LEAF_DARK)
-		Art.ellipse(image, Vector2i(21, 19), Vector2i(9, 8), P.LEAF_DARK)
-		Art.ellipse(image, Vector2i(16, 13), Vector2i(10, 8), P.LEAF_DARK)
-		Art.ellipse(image, Vector2i(11, 20), Vector2i(7, 6), P.LEAF)
-		Art.ellipse(image, Vector2i(21, 19), Vector2i(7, 6), P.LEAF)
-		Art.ellipse(image, Vector2i(16, 13), Vector2i(8, 6), P.LEAF)
-		Art.ellipse(image, Vector2i(14, 10), Vector2i(5, 3), P.LEAF_LIGHT)
-		Art.px(image, 9, 17, P.FRUIT_RED)
-		Art.px(image, 23, 16, P.FRUIT_RED)
-
+	_tree_trunk(image)
+	_tree_canopy(image, variant)
 	Art.outline(image, P.OUTLINE)
 	return image
+
+
+## 只画树冠的前景 overlay：树冠独立成节点后，人能站到树冠下面。
+func _tree_overlay(variant: int) -> Image:
+	var image := Art.new_image(32, 48)
+	_tree_canopy(image, variant)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 树干：基部外扩出根盘，避免树像插在土里的一根棍。
+func _tree_trunk(image: Image) -> void:
+	Art.taper(image, Vector2i(16, 28), 18, 6, 9, P.TRUNK)
+	Art.v_line(image, 13, 30, 16, P.TRUNK_DARK)
+	Art.v_line(image, 19, 30, 16, P.WOOD_LIGHT)
+	# 根盘：左右各探出一像素，贴着地面。
+	Art.h_line(image, 11, 45, 11, P.TRUNK_DARK)
+	Art.px(image, 10, 44, P.TRUNK_DARK)
+	Art.px(image, 21, 44, P.TRUNK_DARK)
+	Art.h_line(image, 12, 46, 9, P.TRUNK)
+
+
+## 树冠（3/4 受光）：暗部偏右下、亮部偏左上，树冠下缘再压一层暗。
+func _tree_canopy(image: Image, variant: int) -> void:
+	if variant == 1:
+		_pine_canopy(image)
+	else:
+		_oak_canopy(image)
+
+
+## 阔叶树：三团错位树冠 + 顶部受光 + 底部阴影。
+func _oak_canopy(image: Image) -> void:
+	Art.ellipse(image, Vector2i(12, 21), Vector2i(9, 8), P.LEAF_DARK)
+	Art.ellipse(image, Vector2i(22, 20), Vector2i(9, 8), P.LEAF_DARK)
+	Art.ellipse(image, Vector2i(17, 15), Vector2i(10, 8), P.LEAF_DARK)
+	Art.ellipse(image, Vector2i(11, 19), Vector2i(8, 7), P.LEAF)
+	Art.ellipse(image, Vector2i(21, 18), Vector2i(8, 7), P.LEAF)
+	Art.ellipse(image, Vector2i(16, 13), Vector2i(9, 7), P.LEAF)
+	Art.ellipse(image, Vector2i(12, 12), Vector2i(6, 4), P.LEAF_LIGHT)
+	Art.ellipse(image, Vector2i(9, 17), Vector2i(4, 3), P.LEAF_LIGHT)
+	Art.ellipse(image, Vector2i(20, 23), Vector2i(7, 3), P.LEAF_DARK.lerp(P.OUTLINE, 0.18))
+	Art.px(image, 9, 18, P.FRUIT_RED)
+	Art.px(image, 24, 17, P.FRUIT_RED)
+
+
+## 松树：三层三角，每层左亮右暗，越往上越小。
+func _pine_canopy(image: Image) -> void:
+	for layer: int in 3:
+		var base: int = 30 - layer * 8
+		var half: int = 11 - layer * 3
+		var apex := Vector2(16, base - 12)
+		Art.triangle(image, apex, Vector2(16 - half, base), Vector2(16 + half, base), P.LEAF)
+		Art.triangle(image, apex, Vector2(16 - half, base), Vector2(16 - half / 3, base), P.LEAF_LIGHT)
+		Art.triangle(image, apex, Vector2(16, base), Vector2(16 + half, base), P.LEAF_DARK)
+		Art.h_line(image, 16 - half, base, half * 2, P.LEAF_DARK)
+	Art.v_line(image, 15, 2, 4, P.LEAF_LIGHT)
 
 
 func _stump() -> Image:

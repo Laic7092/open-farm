@@ -293,19 +293,27 @@ func _path_stone_alt(image: Image, cell: Vector2i) -> void:
 	Art.scatter(image, area, P.GRAVEL_DARK, 0.1, 199)
 
 
-## 岩壁：矿洞与海边崖壁的封边，比 STONE 更暗更粗，带裂纹。
+## 岩壁：矿洞 / 海边的封边。3/4 读法 = 上缘受光 + 檐口阴影 + 向下的层理。
 func _cliff(image: Image, cell: Vector2i) -> void:
 	var area := _cell_rect(cell)
 	var origin := _origin(cell)
 	Art.rect(image, area, P.STONE_DARK)
-	Art.scatter(image, area, P.STONE, 0.22, 211)
+	Art.scatter(image, area, P.STONE, 0.20, 211)
+	# 顶面：一条亮边 + 下一格石色，像能看到崖顶。
 	Art.h_line(image, origin.x, origin.y, Layout.TILE, P.STONE_LIGHT)
-	# 两条错开的裂纹 + 一段层理，避免大片岩石变成纯色块。
-	Art.v_line(image, origin.x + 4, origin.y + 2, 6, P.OUTLINE)
-	Art.v_line(image, origin.x + 11, origin.y + 7, 7, P.OUTLINE)
-	Art.h_line(image, origin.x + 2, origin.y + 12, 5, P.OUTLINE)
-	Art.px(image, origin.x + 7, origin.y + 3, P.STONE_LIGHT)
-	Art.px(image, origin.x + 13, origin.y + 13, P.STONE_LIGHT)
+	Art.h_line(image, origin.x, origin.y + 1, Layout.TILE, P.STONE)
+	# 檐口阴影：把顶面和下面的岩壁分开。
+	Art.h_line(image, origin.x, origin.y + 3, Layout.TILE, P.OUTLINE)
+	# 底部往暗里收，读起来像凹进去的洞壁。
+	Art.h_line(image, origin.x, origin.y + Layout.TILE - 1, Layout.TILE, P.OUTLINE)
+	# 竖向层理 + 两条错开的裂纹，避免大片岩石变成纯色块。
+	for x: int in [4, 9, 13]:
+		Art.v_line(image, origin.x + x, origin.y + 5, 7, P.STONE_DARK)
+		Art.px(image, origin.x + x, origin.y + 5, P.STONE)
+	Art.v_line(image, origin.x + 6, origin.y + 9, 5, P.OUTLINE)
+	Art.v_line(image, origin.x + 11, origin.y + 5, 3, P.OUTLINE)
+	Art.px(image, origin.x + 7, origin.y + 4, P.STONE_LIGHT)
+	Art.px(image, origin.x + 13, origin.y + 12, P.STONE_LIGHT)
 
 
 func _stone(image: Image, cell: Vector2i) -> void:
@@ -516,17 +524,28 @@ func _bush(image: Image, cell: Vector2i) -> void:
 func _fence(image: Image, cell: Vector2i, with_gate: bool) -> void:
 	_grass_base(image, cell, true)
 	var origin := _origin(cell)
+	# 地面投影：栅栏不是贴纸，柱脚要落在草上。
+	Art.h_line(image, origin.x + 1, origin.y + 14, 14, P.GRASS_DARK)
 	if with_gate:
-		Art.rect(image, Rect2i(origin.x + 1, origin.y + 4, 14, 2), P.WOOD_DARK)
-		Art.rect(image, Rect2i(origin.x + 1, origin.y + 10, 14, 2), P.WOOD_DARK)
-		Art.rect(image, Rect2i(origin.x + 3, origin.y + 2, 2, 12), P.WOOD)
+		# 门框：左右立柱 + 两道横档，顶面提亮、正面木色、底面压暗。
+		for x: int in [1, 11]:
+			Art.rect(image, Rect2i(origin.x + x, origin.y + 5, 3, 10), P.WOOD_DARK)
+			Art.h_line(image, origin.x + x, origin.y + 5, 3, P.WOOD_LIGHT)
+			Art.v_line(image, origin.x + x, origin.y + 6, 9, P.WOOD_DARK)
+		for y: int in [5, 11]:
+			Art.rect(image, Rect2i(origin.x + 4, origin.y + y + 1, 7, 1), P.WOOD_DARK)
+			Art.rect(image, Rect2i(origin.x + 4, origin.y + y, 7, 1), P.WOOD_LIGHT)
 		return
-	Art.rect(image, Rect2i(origin.x + 1, origin.y + 4, 14, 2), P.WOOD)
-	Art.rect(image, Rect2i(origin.x + 1, origin.y + 9, 14, 2), P.WOOD)
-	Art.h_line(image, origin.x + 1, origin.y + 4, 14, P.WOOD_LIGHT)
-	Art.rect(image, Rect2i(origin.x + 3, origin.y + 2, 3, 12), P.WOOD_DARK)
-	Art.rect(image, Rect2i(origin.x + 10, origin.y + 2, 3, 12), P.WOOD_DARK)
-	Art.h_line(image, origin.x + 3, origin.y + 2, 3, P.WOOD)
+	# 实心栅栏：两根柱子一前一后，两道横杆各带顶面高光。
+	for post_x: int in [2, 10]:
+		var post: Color = P.WOOD if post_x == 2 else P.WOOD_DARK
+		Art.rect(image, Rect2i(origin.x + post_x, origin.y + 2, 3, 12), post)
+		Art.h_line(image, origin.x + post_x, origin.y + 2, 3, P.WOOD_LIGHT)
+		Art.v_line(image, origin.x + post_x + 2, origin.y + 3, 11, P.WOOD_DARK)
+	for rail_y: int in [5, 10]:
+		Art.rect(image, Rect2i(origin.x + 1, origin.y + rail_y + 1, 14, 2), P.WOOD_DARK)
+		Art.rect(image, Rect2i(origin.x + 1, origin.y + rail_y, 14, 2), P.WOOD)
+		Art.h_line(image, origin.x + 1, origin.y + rail_y, 14, P.WOOD_LIGHT)
 
 
 func _sign(image: Image, cell: Vector2i) -> void:

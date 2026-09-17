@@ -81,6 +81,25 @@
 PNG / `.tres` / `.fnt` 都提交进仓库（CI 与玩家不必跑生成器，也不必装有中文字体），但**永远不要直接编辑**——
 下次生成会覆盖。改画面 = 改 `palette.gd` / `atlas_layout.gd` / 对应 `generate_*.gd`，然后重跑 `build_assets.sh`。
 
+### 2.6 遮挡分层：树冠 overlay / 建筑身后淡出
+
+可通行区域不能被整张图挡住，但「挡」分两种，由 [WorldProp] 按碰撞盒宽度自动分流：
+
+- **窄件（树冠）→ 前景 overlay**：命名固定 `fg_<底图名>.png`，与底图**同目录、同尺寸、
+  同锚点**；`WorldProp` 在 `_ready` 里按约定自动查找，不需要改场景。
+  生成器入口是 `tools/art/generate_props.gd` 的 `_tree_overlay`。
+- **宽实心件（房子 / 柜台）→ 身后淡出**：不拆 overlay，保留正常 Y 排序；
+  `WorldProp._process` 判断玩家是否在它北侧，是则 `modulate.a → behind_alpha`。
+  方向光遮挡仍按完整建筑计算，地面阴影不会跟着淡。
+
+两条硬约束：
+
+1. **底图保持完整**：碰撞盒与 `LightOccluder2D` 都从底图提取，剪影测试也读底图；
+   overlay 只是把悬空部分在角色之上再画一遍，不能反过来「挖空」底图。
+2. **别让大件走 overlay**：overlay 用绝对 Z 画在最上层，只适合「无论玩家在哪一侧
+   都该挡头」的窄件；把整栋房子的屋檐拆成 overlay 会在正面出现「身体在前、头被盖住」。
+   宽件用 `fade_when_behind`，需要逐件关/开时填 `false` / `true`。
+
 ## 3. 怎么跑
 
 ```bash
