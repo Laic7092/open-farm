@@ -147,7 +147,7 @@ timeout 60 ./godot --path . --rendering-driver opengl3 res://tools/screenshot.ts
 
 ## 4. 像素中文字体
 
-`tools/art/generate_font.gd` 现场栅格化：扫描会被显示的文本收集字符 → 用 `TextServer` 在关闭抗锯齿、关闭次像素定位下
+`tools/art/generate_font.gd` 现场栅格化：只扫 `assets/i18n/strings.csv` 的翻译表收集字符 → 用 `TextServer` 在关闭抗锯齿、关闭次像素定位下
 渲染成位图 → 阈值化成「全透明 / 全白」→ 打包成 BMFont（`.fnt` + PNG 图集）。图集外仍需要的字由主题里的 `SystemFont` 兜底。
 源字体按 `FONT_CANDIDATES` 查找，也可用环境变量指定：
 
@@ -156,7 +156,8 @@ OPEN_FARM_FONT_SRC=/path/to/font.ttf timeout 60 ./godot --headless --path . --qu
     -s res://tools/art/generate_font.gd
 ```
 
-> 新增文案后直接重跑 `build_assets.sh`；`test_assets.gd` 会检查翻译表字符是否都在字体子集里。
+> 新增文案必须先登记进 `strings.csv`，再重跑 `build_assets.sh`；`test_assets.gd` 会检查翻译表字符是否都在字体子集里。
+> 字体生成器不再扫 `.gd` / `.tscn` 全文，注释和报错文本不会影响字形子集。
 
 > **已知坑**：BMFont 导入出的 `FontFile` 在 TextServer 侧取不到 ascent，基线会贴在行顶，
 > 表现为所有文字整体上移一个字高（HUD 第一行被裁、标题盖到面板外）。生成器把 `ascent` 折进每个字形的

@@ -18,10 +18,10 @@ extends Control
 ## W / A / S / D 已经并进内置的 ui_* 动作（见 [code]project.godot[/code] 的 InputMap），
 ## 所以菜单直接用 Godot 的焦点导航；存档列表也是按钮，方向键天然可选中。
 
-## 语言选择按钮上显示的本地化名称。
-const LOCALE_NAMES := {
-	"zh_CN": "中文",
-	"en": "English",
+## 语言选择按钮上显示的本地化名称（翻译键）。
+const LOCALE_NAME_KEYS := {
+	"zh_CN": &"LOCALE_NAME_ZH_CN",
+	"en": &"LOCALE_NAME_EN",
 }
 
 ## 每朵云的水平漂移速度（像素/秒），负值向左。
@@ -284,7 +284,10 @@ func _next_locale() -> String:
 
 func _next_locale_name() -> String:
 	var locale := _next_locale()
-	return LOCALE_NAMES.get(locale, locale)
+	var name_key: StringName = LOCALE_NAME_KEYS.get(locale, &"")
+	if name_key == &"":
+		return locale
+	return Text.key(name_key)
 
 # ---------------------------------------------------------------- 云
 

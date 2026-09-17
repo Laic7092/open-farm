@@ -133,6 +133,8 @@ GAME_SUBTITLE,一个用 Godot 4 搭建的农场生活模拟原型,A farming-life
 TITLE_NEW_GAME,开始新游戏,New Game
 TITLE_CONTINUE,继续游戏,Continue
 TITLE_LANGUAGE,语言,Language
+LOCALE_NAME_ZH_CN,中文,中文
+LOCALE_NAME_EN,English,English
 TITLE_QUIT,退出游戏,Quit Game
 TITLE_HINT,方向键选择 · Enter 确认,Arrows to select · Enter to confirm
 TITLE_SAVE_LABEL,存档 {slot},Slot {slot}
