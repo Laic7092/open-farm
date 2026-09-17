@@ -30,6 +30,9 @@ signal tile_state_changed(cell: Vector2i)
 ## 作物节点的父节点。
 @export var crops_root: Node2D
 
+## 装饰节点的父节点（通常是场景里的 Props，参与 Y 排序）。
+@export var decor_root: Node2D
+
 ## 作物场景 [Crop]。
 @export var crop_scene: PackedScene
 
@@ -278,11 +281,7 @@ func paint_ground() -> void:
 	var center_row: int = ground_area.position.y + ground_area.size.y / 2
 
 	for cell: Vector2i in GridUtils.cells_in_area(ground_area.position, ground_area.size):
-		var atlas: Vector2i = _grass_variant(cell)
-		# 东南角的荒地：视觉上把"可耕种区"和"地图边缘"区分开。
-		if cell.x > farmable_area.end.x + 2 and cell.y > center_row + 2:
-			atlas = _wild_variant(cell)
-		ground_layer.set_cell(cell, FarmAtlas.SOURCE_ID, atlas)
+		ground_layer.set_cell(cell, FarmAtlas.SOURCE_ID, _grass_variant(cell))
 
 	# 乡道：与村庄西口的那条路同宽同高，走到地图边缘就是下一条路。
 	GroundPainter.horizontal_road(
@@ -308,21 +307,13 @@ func _grass_variant(cell: Vector2i) -> Vector2i:
 	return GroundPainter.grass_variant(cell)
 
 
-## 荒地：杂草 + 偶尔一块碎石。
-func _wild_variant(cell: Vector2i) -> Vector2i:
-	var roll: int = (cell.x * 7 + cell.y * 11) % 13
-	if roll == 0:
-		return FarmAtlas.PEBBLE
-	if roll < 5:
-		return FarmAtlas.TALL_GRASS
-	return GroundPainter.grass_variant(cell)
-
 
 ## 撒装饰：农田上方一排栅栏（中间留门）、四周点缀花丛、灌木与杂物。
 ##
+## 全部生成成独立 [WorldProp]，Ground 图层只保留地板；
 ## 刻意不用随机数——地图每次生成都应当一模一样，否则每次进场景画面都在跳。
 func paint_decorations() -> void:
-	if ground_layer == null:
+	if decor_root == null:
 		return
 
 	var fence_row: int = farmable_area.position.y - 1
@@ -331,48 +322,62 @@ func paint_decorations() -> void:
 		var cell := Vector2i(farmable_area.position.x + column, fence_row)
 		if cell.x == gate_x:
 			continue
-		ground_layer.set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.FENCE)
+		DecorPainter.spawn(decor_root, cell, &"fence")
 	# 栅栏门两侧的门柱
-	ground_layer.set_cell(Vector2i(gate_x - 1, fence_row), FarmAtlas.SOURCE_ID, FarmAtlas.FENCE_GATE)
-	ground_layer.set_cell(Vector2i(gate_x + 1, fence_row), FarmAtlas.SOURCE_ID, FarmAtlas.FENCE_GATE)
+	DecorPainter.spawn(decor_root, Vector2i(gate_x - 1, fence_row), &"fence_gate")
+	DecorPainter.spawn(decor_root, Vector2i(gate_x + 1, fence_row), &"fence_gate")
 
 	# 家具与作物以外的"农场的痕迹"：院子里的花圃、畜舍旁的草垛木箱、
 	# 荒地里的树桩蘑菇。坐标写死是为了每次进图都一样（见本文件顶部注释）。
-	var decorations := {
+	var decorations := _wild_decorations()
+	decorations.merge({
 		# 农舍院子
-		Vector2i(3, 8): FarmAtlas.FLOWERS,
-		Vector2i(10, 9): FarmAtlas.FLOWER_BED,
-		Vector2i(11, 9): FarmAtlas.FLOWER_BED,
-		Vector2i(13, 7): FarmAtlas.BUSH,
-		Vector2i(13, 12): FarmAtlas.FLOWERS,
-		Vector2i(2, 12): FarmAtlas.FLOWER_RED,
+		Vector2i(3, 8): &"flowers",
+		Vector2i(10, 9): &"flower_bed",
+		Vector2i(11, 9): &"flower_bed",
+		Vector2i(13, 7): &"bush",
+		Vector2i(13, 12): &"flowers",
+		Vector2i(2, 12): &"flower_red",
 		# 畜舍与谷仓旁
-		Vector2i(35, 8): FarmAtlas.HAY,
-		Vector2i(36, 9): FarmAtlas.HAY,
-		Vector2i(35, 10): FarmAtlas.CRATE,
-		Vector2i(31, 6): FarmAtlas.CRATE,
-		Vector2i(38, 11): FarmAtlas.TALL_GRASS,
-		Vector2i(33, 5): FarmAtlas.BUSH,
+		Vector2i(35, 8): &"hay",
+		Vector2i(36, 9): &"hay",
+		Vector2i(35, 10): &"crate",
+		Vector2i(31, 6): &"crate",
+		Vector2i(38, 11): &"tall_grass",
+		Vector2i(33, 5): &"bush",
 		# 水井与乡道边
-		Vector2i(31, 20): FarmAtlas.PEBBLE,
-		Vector2i(33, 22): FarmAtlas.BUSH,
-		Vector2i(29, 12): FarmAtlas.FLOWERS,
-		Vector2i(44, 12): FarmAtlas.TALL_GRASS,
+		Vector2i(31, 20): &"pebble",
+		Vector2i(33, 22): &"bush",
+		Vector2i(29, 12): &"flowers",
+		Vector2i(44, 12): &"tall_grass",
 		# 东南荒地
-		Vector2i(36, 21): FarmAtlas.STUMP_TILE,
-		Vector2i(39, 24): FarmAtlas.MUSHROOM,
-		Vector2i(43, 20): FarmAtlas.TALL_GRASS,
-		Vector2i(41, 27): FarmAtlas.PEBBLE,
-		Vector2i(34, 25): FarmAtlas.WELL_TOP,
-		Vector2i(45, 22): FarmAtlas.BUSH,
-		Vector2i(46, 26): FarmAtlas.MUSHROOM,
+		Vector2i(36, 21): &"stump_tile",
+		Vector2i(39, 24): &"mushroom",
+		Vector2i(43, 20): &"tall_grass",
+		Vector2i(41, 27): &"pebble",
+		Vector2i(34, 25): &"well_top",
+		Vector2i(45, 22): &"bush",
+		Vector2i(46, 26): &"mushroom",
 		# 田边
-		Vector2i(3, 28): FarmAtlas.FLOWERS,
-		Vector2i(26, 28): FarmAtlas.FLOWER_BLUE,
-	}
-	for cell: Vector2i in decorations:
-		if ground_area.has_point(cell):
-			ground_layer.set_cell(cell, FarmAtlas.SOURCE_ID, decorations[cell])
+		Vector2i(3, 28): &"flowers",
+		Vector2i(26, 28): &"flower_blue",
+	}, true)
+	DecorPainter.spawn_many(decor_root, decorations, ground_area)
+
+
+## 荒地表层不再写进地板；用同一套确定性哈希生成杂草 / 卵石摆件。
+func _wild_decorations() -> Dictionary:
+	var result := {}
+	var center_row: int = ground_area.position.y + ground_area.size.y / 2
+	for cell: Vector2i in GridUtils.cells_in_area(ground_area.position, ground_area.size):
+		if cell.x <= farmable_area.end.x + 2 or cell.y <= center_row + 2:
+			continue
+		var roll: int = (cell.x * 7 + cell.y * 11) % 13
+		if roll == 0:
+			result[cell] = &"pebble"
+		elif roll < 5:
+			result[cell] = &"tall_grass"
+	return result
 
 
 # ---------------------------------------------------------------- 序列化

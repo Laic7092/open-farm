@@ -1,12 +1,13 @@
 class_name TileCollision
 extends RefCounted
-## 装饰瓦片的碰撞策略。
+## TileMap 里结构瓦片的碰撞策略。
 ##
-## 规则：绝大多数实体装饰默认挡人；只有牧草这类低矮地被、以及打开的门 /
+## 花、蘑菇、栅栏、牌子等装饰已改由 [DecorPainter] 生成 [WorldProp]，
+## 碰撞写在 `DecorPainter.SOLID_SIZES`；这里只为仍留在 TileMap 里的
+## 崖壁、墙面、门窗以及历史遗留装饰瓦片生成物理层。
+##
+## 规则：绝大多数实心瓦片默认挡人；只有牧草这类低矮地被、以及打开的门 /
 ## 栅栏门这类功能性通道，才显式列进 [constant PASSABLE_TILES]。
-##
-## TileSet 生成器按 [constant SOLID_TILES] 写物理层，运行时 TileMapLayer
-## 会自动把对应格子变成静态障碍。
 
 ## 生成 TileSet 碰撞多边形的实心装饰 / 建筑瓦片。
 const SOLID_TILES: Array[Vector2i] = [

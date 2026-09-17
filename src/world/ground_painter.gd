@@ -1,6 +1,9 @@
 class_name GroundPainter
 extends RefCounted
-## 户外地图铺地的公共手法：草地、主路、小径、水面与点缀。
+## 户外地图铺地的公共手法：草地、主路、小径与水面。
+##
+## 装饰摆件不再写进这里，统一由 [DecorPainter] 生成透明 [WorldProp]；
+## Ground 图层只回答"脚下是什么地板"。
 ##
 ## [b]为什么抽出来[/b]：世界要"连成一片"，前提是每张地图的路长得一样、
 ## 在边缘接得上。如果每张地图各写一份铺地代码，"农场东口的路"和
@@ -102,18 +105,6 @@ static func water(layer: TileMapLayer, area: Rect2i, shore_rows: int = 1) -> voi
 			var cell := Vector2i(area.position.x + x, area.position.y + row)
 			var atlas: Vector2i = FarmAtlas.WATER_EDGE if row == 0 else FarmAtlas.SHALLOW_WATER
 			layer.set_cell(cell, FarmAtlas.SOURCE_ID, atlas)
-
-
-## 按表撒装饰：[code]{ Vector2i 格子: Vector2i 图集坐标 }[/code]。
-## 越界或落在 [param skip] 里的格子自动跳过，于是表格可以写得宽松一些。
-static func decorate(
-	layer: TileMapLayer, tiles: Dictionary, area: Rect2i, skip: Array[Vector2i] = []
-) -> void:
-	for cell: Variant in tiles:
-		var at: Vector2i = cell
-		if not area.has_point(at) or skip.has(at):
-			continue
-		layer.set_cell(at, FarmAtlas.SOURCE_ID, tiles[at])
 
 
 # ---------------------------------------------------------------- 内部

@@ -18,7 +18,7 @@
 | 生成器 | 产出 |
 | --- | --- |
 | `generate_font.gd` | 像素中文字体（`.fnt` + PNG 子集） |
-| `generate_terrain.gd` | 地形图集 `tileset_farm.png` |
+| `generate_terrain.gd` | 地形图集 `tileset_farm.png` + 透明装饰 `assets/sprites/decor/*.png` |
 | `generate_props.gd` | 建筑 / 家具 / 树木（一物一图） |
 | `generate_houses.gd` | NPC 住宅：每个职业一栋，体量与屋顶各画各的 |
 | `generate_actors.gd` | 玩家与 NPC（共用一套角色画法） |
@@ -81,16 +81,21 @@
 PNG / `.tres` / `.fnt` 都提交进仓库（CI 与玩家不必跑生成器，也不必装有中文字体），但**永远不要直接编辑**——
 下次生成会覆盖。改画面 = 改 `palette.gd` / `atlas_layout.gd` / 对应 `generate_*.gd`，然后重跑 `build_assets.sh`。
 
-### 2.6 遮挡：实心摆件身后淡出
+### 2.6 遮挡：建筑身后淡出
 
 可通行区域不能被整张贴图挡住。采用「身后淡出」一起处理，不再做局部 overlay：
 
-- 只对**实心**摆件生效（`WorldProp.passable == false`）：`WorldProp._process` 判断玩家
-  是否落在它的纵向投影内、且在它北侧（身后），是则 `modulate.a → behind_alpha`，
-  离开恢复。
+- 只对 **`building` 组里的实心建筑**生效（`WorldProp.BUILDING_GROUP` 且
+  `passable == false`）：`WorldProp._process` 判断玩家是否落在它的纵向投影内、
+  且在它北侧（身后），是则 `modulate.a → behind_alpha`，离开恢复。
+- 建筑以外的高实心件（树 / 栅栏 / 柜台 / 石头）暂时不淡出，避免小件在玩家经过时
+  频繁闪动；开放范围后续再按视觉反馈扩。
 - 保留正常 Y 排序：正面时玩家完整在前；身后被贴图挡住时才透出来。
 - 碰撞盒与 `LightOccluder2D` 都按完整底图计算，地面阴影不会跟着淡。
-- 逐件微调：`fade_when_behind` 可关；`behind_alpha` / `fade_speed` 控制深度与速度。
+- 建筑逐件微调：`fade_when_behind` 可关；`behind_alpha` / `fade_speed` 控制深度与速度。
+
+场景里的建筑节点要带 `groups=["building"]`；`WorldProp._ready()` 只给组内实心件
+注册 `_process`。
 
 早期版本给树冠 / 屋檐做过 `fg_<名字>.png` 前景 overlay，但局部遮挡会出现
 「身体在前、头被盖住」的割裂感，已整体移除；现在没有 `fg_` 素材与约定。
@@ -103,10 +108,16 @@ PNG / `.tres` / `.fnt` 都提交进仓库（CI 与玩家不必跑生成器，也
   会按贴图底部自动生成脚印碰撞盒。只有牧草这类低矮摆件才设 `passable = true`。
 - `FloraData.passable = false` 为默认值，且 `solid_from_stage` 默认从 `0`
   开始。树、石头一落地就挡路；杂草 / 野花 / 蘑菇等低矮地被显式 `passable = true`。
-- TileSet 的装饰瓦片按 [code]src/world/tile_collision.gd[/code] 写碰撞：
-  [code]SOLID_TILES[/code] 生成满格物理碰撞；
-  [code]TALL_GRASS[/code] / 花 / 蘑菇 / 卵石 / 打开的栅栏门 / 门洞列在
-  [code]PASSABLE_TILES[/code]，保持无碰撞。
+- 地面 [code]TileMapLayer[/code] 只画地板（草 / 路 / 水 / 沙 / 石 / 木）。
+  花、蘑菇、栅栏、牌子这类装饰不再写进地板图层，改由
+  [code]src/world/decor_painter.gd[/code] 生成透明 [WorldProp]；
+  这样每一件装饰都能参与 Y 排序和独立碰撞；身后淡出只留给 `building` 组建筑。
+- 仍留在 TileMap 里的建筑 / 崖壁等结构瓦片，按
+  [code]src/world/tile_collision.gd[/code] 写碰撞：
+  [code]SOLID_TILES[/code] 生成满格物理碰撞；栅栏门 / 门洞等
+  [code]PASSABLE_TILES[/code] 保持无碰撞。
+- 装饰贴图由 `generate_terrain.gd` 从同一套像素画函数导出到
+  `assets/sprites/decor/*.png`，不带草底 / 沙底，摆在任何地板上都不会露底色。
 - 规范由 `tests/unit/test_world_prop.gd`、`test_flora_growth.gd` 与
   `test_assets.gd` 的可执行断言守住。
 

@@ -37,11 +37,12 @@ camera_limits = Rect2(0, 0, 640, 416)
 default_spawn_id = &"from_town"
 water_kind = 1
 
-[node name="Ground" type="TileMapLayer" parent="."]
+[node name="Ground" type="TileMapLayer" parent="." node_paths=PackedStringArray("decor_root")]
 z_index = -20
 tile_set = ExtResource("2_tileset")
 script = ExtResource("8_ground")
 ground_area = Rect2i(0, 0, 40, 26)
+decor_root = NodePath("../Props")
 
 [node name="FloraField" type="Node2D" parent="." node_paths=PackedStringArray("ground_layer", "flora_root")]
 script = ExtResource("10_flora_field")
@@ -65,7 +66,7 @@ bounds = Rect2(8, 8, 624, 400)
 [node name="Props" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="Hut" type="Sprite2D" parent="Props"]
+[node name="Hut" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(96, 72)
 texture = ExtResource("20_house")
 script = ExtResource("9_prop")

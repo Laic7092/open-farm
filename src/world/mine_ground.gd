@@ -13,6 +13,9 @@ extends TileMapLayer
 		if is_inside_tree():
 			paint()
 
+## 装饰节点的父节点（通常是 Props，参与 Y 排序）。
+@export var decor_root: Node2D
+
 
 func _ready() -> void:
 	paint()
@@ -58,21 +61,21 @@ func paint() -> void:
 		self, origin.x + 33, origin.x + 43, origin.y + 6, 0, GroundPainter.Style.DIRT
 	)
 
-	# 点缀：矿脉碎屑与几块裸岩（两种都自带砾石底，不会在洞里露出绿块）。
-	GroundPainter.decorate(
-		self,
+	# 点缀：矿脉碎屑改成透明摆件；裸岩本身是地板材质，直接写进 Ground。
+	DecorPainter.spawn_many(
+		decor_root,
 		{
-			Vector2i(origin.x + 6, origin.y + 8): FarmAtlas.GRAVEL_ORE,
-			Vector2i(origin.x + 12, origin.y + 22): FarmAtlas.GRAVEL_ORE,
-			Vector2i(origin.x + 20, origin.y + 9): FarmAtlas.GRAVEL_ORE,
-			Vector2i(origin.x + 26, origin.y + 21): FarmAtlas.GRAVEL_ORE,
-			Vector2i(origin.x + 40, origin.y + 12): FarmAtlas.GRAVEL_ORE,
-			Vector2i(origin.x + 42, origin.y + 24): FarmAtlas.GRAVEL_ORE,
-			Vector2i(origin.x + 16, origin.y + 18): FarmAtlas.GRAVEL_ORE,
-			Vector2i(origin.x + 38, origin.y + 18): FarmAtlas.GRAVEL_ORE,
-			Vector2i(origin.x + 8, origin.y + 20): FarmAtlas.STONE,
-			Vector2i(origin.x + 24, origin.y + 5): FarmAtlas.STONE,
+			Vector2i(origin.x + 6, origin.y + 8): &"gravel_ore",
+			Vector2i(origin.x + 12, origin.y + 22): &"gravel_ore",
+			Vector2i(origin.x + 20, origin.y + 9): &"gravel_ore",
+			Vector2i(origin.x + 26, origin.y + 21): &"gravel_ore",
+			Vector2i(origin.x + 40, origin.y + 12): &"gravel_ore",
+			Vector2i(origin.x + 42, origin.y + 24): &"gravel_ore",
+			Vector2i(origin.x + 16, origin.y + 18): &"gravel_ore",
+			Vector2i(origin.x + 38, origin.y + 18): &"gravel_ore",
 		},
 		ground_area
 	)
+	set_cell(Vector2i(origin.x + 8, origin.y + 20), FarmAtlas.SOURCE_ID, FarmAtlas.STONE)
+	set_cell(Vector2i(origin.x + 24, origin.y + 5), FarmAtlas.SOURCE_ID, FarmAtlas.STONE)
 	GroundPainter.transitions(self, ground_area)

@@ -10,6 +10,7 @@ extends GdUnitTestSuite
 const Layout := preload("res://src/art/atlas_layout.gd")
 const Palette := preload("res://src/art/palette.gd")
 const TileCollision := preload("res://src/world/tile_collision.gd")
+const Decor := preload("res://src/world/decor_painter.gd")
 
 const STRINGS_CSV: String = "res://assets/i18n/strings.csv"
 const PIXEL_FONT: String = "res://assets/fonts/pixel_cjk.fnt"
@@ -262,6 +263,29 @@ func test_title_backdrop_matches_viewport() -> void:
 		return
 	assert_int(texture.get_width()).is_equal(Layout.TITLE_VIEWPORT.x)
 	assert_int(texture.get_height()).is_equal(Layout.TITLE_VIEWPORT.y)
+
+
+## Ground 不再画装饰；每个装饰 id 都应有 16×16 透明贴图，且被 DecorPainter 登记。
+func test_decor_sprites_match_layout() -> void:
+	assert_int(Decor.TEXTURES.size()).override_failure_message(
+		"DecorPainter 的贴图表与 AtlasLayout.DECOR_SPRITES 数量不一致"
+	).is_equal(Layout.DECOR_SPRITES.size())
+	for name: String in Layout.DECOR_SPRITES:
+		var id := StringName(name)
+		assert_bool(Decor.TEXTURES.has(id)).override_failure_message(
+			"DecorPainter 缺少装饰 id %s" % name
+		).is_true()
+		var path: String = Layout.DECOR_DIR.path_join("%s.png" % name)
+		var texture := load(path) as Texture2D
+		assert_object(texture).override_failure_message("缺少装饰贴图 %s" % path).is_not_null()
+		if texture == null:
+			continue
+		assert_int(texture.get_width()).override_failure_message(
+			"装饰贴图 %s 宽度应为一格" % path
+		).is_equal(Layout.DECOR_SPRITE_SIZE.x)
+		assert_int(texture.get_height()).override_failure_message(
+			"装饰贴图 %s 高度应为一格" % path
+		).is_equal(Layout.DECOR_SPRITE_SIZE.y)
 
 
 ## 实心装饰瓦片必须有物理碰撞；牧草等可穿过瓦片必须没有。

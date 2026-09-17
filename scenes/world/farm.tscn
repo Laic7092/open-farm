@@ -59,11 +59,12 @@ tile_set = ExtResource("2_tileset")
 [node name="Crops" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="FarmGrid" type="Node2D" parent="." node_paths=PackedStringArray("ground_layer", "soil_layer", "crops_root")]
+[node name="FarmGrid" type="Node2D" parent="." node_paths=PackedStringArray("ground_layer", "soil_layer", "crops_root", "decor_root")]
 script = ExtResource("3_farm_grid")
 ground_layer = NodePath("../Ground")
 soil_layer = NodePath("../Soil")
 crops_root = NodePath("../Crops")
+decor_root = NodePath("../Props")
 crop_scene = ExtResource("4_crop")
 farmable_area = Rect2i(4, 18, 24, 10)
 ground_area = Rect2i(0, 0, 48, 30)
@@ -90,7 +91,7 @@ bounds = Rect2(8, 8, 752, 464)
 [node name="Props" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="House" type="Sprite2D" parent="Props"]
+[node name="House" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(100, 66)
 texture = ExtResource("20_house")
 script = ExtResource("12_prop")
@@ -124,7 +125,7 @@ position = Vector2(724, 192)
 texture = ExtResource("32_mailbox")
 script = ExtResource("12_prop")
 
-[node name="Barn" type="Sprite2D" parent="Props"]
+[node name="Barn" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(600, 76)
 texture = ExtResource("21_barn")
 script = ExtResource("12_prop")

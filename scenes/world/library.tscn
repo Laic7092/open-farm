@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://src/world/scene_door.gd" id="6_door"]
 [ext_resource type="PackedScene" path="res://scenes/npc/npc.tscn" id="7_npc"]
 [ext_resource type="Script" path="res://src/world/interior_ground.gd" id="8_ground"]
+[ext_resource type="Script" path="res://src/world/interior_walls.gd" id="9_walls"]
 [ext_resource type="Script" path="res://src/world/world_prop.gd" id="9_prop"]
 [ext_resource type="Script" path="res://src/npc/schedule_point.gd" id="10_schedpoint"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/bookshelf.png" id="20_bookshelf"]
@@ -27,10 +28,17 @@ camera_limits = Rect2(0, 0, 384, 256)
 default_spawn_id = &"from_twon"
 weather_effects = false
 
-[node name="Ground" type="TileMapLayer" parent="."]
+[node name="Ground" type="TileMapLayer" parent="." node_paths=PackedStringArray("decor_root")]
 z_index = -20
 tile_set = ExtResource("2_tileset")
 script = ExtResource("8_ground")
+ground_area = Rect2i(0, 0, 24, 16)
+decor_root = NodePath("../Props")
+
+[node name="Walls" type="TileMapLayer" parent="."]
+z_index = -15
+tile_set = ExtResource("2_tileset")
+script = ExtResource("9_walls")
 ground_area = Rect2i(0, 0, 24, 16)
 wall_rows = 3
 

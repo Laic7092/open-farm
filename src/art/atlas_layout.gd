@@ -21,6 +21,21 @@ const TILE: int = 16
 
 ## [code]assets/sprites/tileset_farm.png[/code]
 const TILESET_PATH: String = "res://assets/sprites/tileset_farm.png"
+## 从地形图集抽出的独立装饰贴图目录。
+##
+## Ground TileMap 只画地板；花、蘑菇、栅栏这类摆件由
+## [code]DecorPainter[/code] 生成 [WorldProp] / [Sprite2D]，
+## 贴图就从这个目录读取。
+const DECOR_DIR: String = "res://assets/sprites/decor"
+## 装饰贴图的统一格子尺寸。
+const DECOR_SPRITE_SIZE := Vector2i(TILE, TILE)
+## 全部装饰 id；生成器与 [code]DecorPainter[/code] 共同引用这一份名单。
+const DECOR_SPRITES: Array[String] = [
+	"flowers", "flower_red", "flower_blue", "flower_bed",
+	"bush", "tall_grass", "mushroom", "pebble",
+	"sand_pebble", "gravel_ore", "stump_tile", "hay",
+	"crate", "well_top", "fence", "fence_gate", "sign",
+]
 const TILESET_COLUMNS: int = 8
 const TILESET_ROWS: int = 15
 const TILESET_SIZE := Vector2i(TILE * TILESET_COLUMNS, TILE * TILESET_ROWS)

@@ -14,6 +14,9 @@ extends TileMapLayer
 		if is_inside_tree():
 			paint()
 
+## 装饰节点的父节点（通常是 Props，参与 Y 排序）。
+@export var decor_root: Node2D
+
 
 func _ready() -> void:
 	paint()
@@ -52,27 +55,24 @@ func paint() -> void:
 	)
 
 	# 花园：四垄花圃，垄间留草道，边上一片野花——花店门口的那片地。
+	# 花圃本体是独立摆件，Ground 只保留脚下的草地。
 	for row: int in 4:
 		for column: int in 10:
 			# 中间那条支路要从花园里穿过去，留给它一格宽的位置。
 			if column >= 3 and column <= 5:
 				continue
+			var cell := Vector2i(origin.x + 61 + column, center_row + 7 + row * 2)
 			if row % 2 == 1:
 				# 垄间是草地，只在两头点缀野花。
 				if column == 1 or column == 8:
-					set_cell(
-						Vector2i(origin.x + 61 + column, center_row + 7 + row * 2),
-						FarmAtlas.SOURCE_ID,
-						FarmAtlas.FLOWERS
-					)
+					DecorPainter.spawn(decor_root, cell, &"flowers")
 				continue
-			var cell := Vector2i(origin.x + 61 + column, center_row + 7 + row * 2)
-			var atlas: Vector2i = FarmAtlas.FLOWER_BED
+			var decor_id: StringName = &"flower_bed"
 			if (column * 3 + row) % 7 == 0:
-				atlas = FarmAtlas.FLOWERS
+				decor_id = &"flowers"
 			elif (column + row) % 5 == 0:
-				atlas = FarmAtlas.FLOWER_RED
-			set_cell(cell, FarmAtlas.SOURCE_ID, atlas)
+				decor_id = &"flower_red"
+			DecorPainter.spawn(decor_root, cell, decor_id)
 
 	# 牧场：谷仓前踩秃的土场，只在边上掺一点碎石路。
 	for cell: Vector2i in GridUtils.cells_in_area(
@@ -81,25 +81,25 @@ func paint() -> void:
 		set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.DIRT)
 
 	# 零散点缀：灌木、卵石与踩秃的草。
-	GroundPainter.decorate(
-		self,
+	DecorPainter.spawn_many(
+		decor_root,
 		{
-			Vector2i(origin.x + 6, center_row - 3): FarmAtlas.FLOWER_BED,
-			Vector2i(origin.x + 7, center_row - 3): FarmAtlas.FLOWER_BED,
-			Vector2i(origin.x + 88, center_row - 3): FarmAtlas.FLOWER_BED,
-			Vector2i(origin.x + 89, center_row - 3): FarmAtlas.FLOWER_BED,
-			Vector2i(origin.x + 20, center_row + 2): FarmAtlas.BUSH,
-			Vector2i(origin.x + 52, center_row + 2): FarmAtlas.BUSH,
-			Vector2i(origin.x + 92, center_row + 4): FarmAtlas.BUSH,
-			Vector2i(origin.x + 30, center_row + 10): FarmAtlas.TALL_GRASS,
-			Vector2i(origin.x + 18, center_row + 18): FarmAtlas.TALL_GRASS,
-			Vector2i(origin.x + 56, center_row + 18): FarmAtlas.PEBBLE,
-			Vector2i(origin.x + 70, center_row + 20): FarmAtlas.MUSHROOM,
-			Vector2i(origin.x + 88, center_row + 20): FarmAtlas.PEBBLE,
-			Vector2i(origin.x + 32, center_row + 16): FarmAtlas.FLOWERS,
-			Vector2i(origin.x + 48, center_row + 14): FarmAtlas.FLOWER_RED,
-			Vector2i(origin.x + 12, center_row + 22): FarmAtlas.STUMP_TILE,
-			Vector2i(origin.x + 84, center_row + 22): FarmAtlas.BUSH,
+			Vector2i(origin.x + 6, center_row - 3): &"flower_bed",
+			Vector2i(origin.x + 7, center_row - 3): &"flower_bed",
+			Vector2i(origin.x + 88, center_row - 3): &"flower_bed",
+			Vector2i(origin.x + 89, center_row - 3): &"flower_bed",
+			Vector2i(origin.x + 20, center_row + 2): &"bush",
+			Vector2i(origin.x + 52, center_row + 2): &"bush",
+			Vector2i(origin.x + 92, center_row + 4): &"bush",
+			Vector2i(origin.x + 30, center_row + 10): &"tall_grass",
+			Vector2i(origin.x + 18, center_row + 18): &"tall_grass",
+			Vector2i(origin.x + 56, center_row + 18): &"pebble",
+			Vector2i(origin.x + 70, center_row + 20): &"mushroom",
+			Vector2i(origin.x + 88, center_row + 20): &"pebble",
+			Vector2i(origin.x + 32, center_row + 16): &"flowers",
+			Vector2i(origin.x + 48, center_row + 14): &"flower_red",
+			Vector2i(origin.x + 12, center_row + 22): &"stump_tile",
+			Vector2i(origin.x + 84, center_row + 22): &"bush",
 		},
 		ground_area
 	)

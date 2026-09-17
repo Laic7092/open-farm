@@ -46,11 +46,12 @@ camera_limits = Rect2(0, 0, 1536, 960)
 default_spawn_id = &"from_farm"
 water_kind = 0
 
-[node name="Ground" type="TileMapLayer" parent="."]
+[node name="Ground" type="TileMapLayer" parent="." node_paths=PackedStringArray("decor_root")]
 z_index = -20
 tile_set = ExtResource("2_tileset")
 script = ExtResource("8_ground")
 ground_area = Rect2i(0, 0, 96, 60)
+decor_root = NodePath("../Props")
 
 [node name="FloraField" type="Node2D" parent="." node_paths=PackedStringArray("ground_layer", "flora_root")]
 script = ExtResource("10_flora_field")
@@ -74,7 +75,7 @@ bounds = Rect2(8, 8, 1520, 944)
 [node name="Props" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="Forge" type="Sprite2D" parent="Props"]
+[node name="Forge" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(240, 424)
 texture = ExtResource("36_house_blacksmith")
 script = ExtResource("9_prop")
@@ -95,7 +96,7 @@ script = ExtResource("9_prop")
 light_radius = 60.0
 light_offset = Vector2(0, -6)
 
-[node name="GeneralStore" type="Sprite2D" parent="Props"]
+[node name="GeneralStore" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(432, 424)
 texture = ExtResource("20_house")
 script = ExtResource("9_prop")
@@ -112,7 +113,7 @@ position = Vector2(352, 472)
 texture = ExtResource("28_pot")
 script = ExtResource("9_prop")
 
-[node name="TownHall" type="Sprite2D" parent="Props"]
+[node name="TownHall" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(672, 424)
 texture = ExtResource("35_house_mayor")
 script = ExtResource("9_prop")
@@ -129,7 +130,7 @@ position = Vector2(592, 476)
 texture = ExtResource("28_pot")
 script = ExtResource("9_prop")
 
-[node name="FlowerShop" type="Sprite2D" parent="Props"]
+[node name="FlowerShop" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(928, 424)
 texture = ExtResource("37_house_florist")
 script = ExtResource("9_prop")
@@ -148,7 +149,7 @@ position = Vector2(976, 476)
 texture = ExtResource("28_pot")
 script = ExtResource("9_prop")
 
-[node name="Library" type="Sprite2D" parent="Props"]
+[node name="Library" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(1200, 424)
 texture = ExtResource("38_house_librarian")
 script = ExtResource("9_prop")
@@ -167,7 +168,7 @@ position = Vector2(1252, 476)
 texture = ExtResource("27_sign")
 script = ExtResource("9_prop")
 
-[node name="ChildHome" type="Sprite2D" parent="Props"]
+[node name="ChildHome" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(1392, 424)
 texture = ExtResource("39_house_child")
 script = ExtResource("9_prop")
@@ -198,7 +199,7 @@ script = ExtResource("9_prop")
 solid_size = Vector2(20, 10)
 solid_offset = Vector2(0, 12)
 
-[node name="Barn" type="Sprite2D" parent="Props"]
+[node name="Barn" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(1264, 672)
 texture = ExtResource("21_barn")
 script = ExtResource("9_prop")

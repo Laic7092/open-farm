@@ -14,6 +14,9 @@ extends TileMapLayer
 		if is_inside_tree():
 			paint()
 
+## 装饰节点的父节点（通常是 Props，参与 Y 排序）。
+@export var decor_root: Node2D
+
 
 func _ready() -> void:
 	paint()
@@ -59,20 +62,20 @@ func paint() -> void:
 				set_cell(Vector2i(x, y), FarmAtlas.SOURCE_ID, FarmAtlas.WOOD)
 
 	# 零散点缀：沙滩上是卵石与贝壳，草坡上才是花与草。
-	# （花 / 草这些瓦片自带草底，铺到沙上会露出绿方块，所以分开放。）
-	GroundPainter.decorate(
-		self,
+	# 贴图透明，摆到沙上再也不会露出绿方块。
+	DecorPainter.spawn_many(
+		decor_root,
 		{
-			Vector2i(origin.x + 4, origin.y + 8): FarmAtlas.SAND_PEBBLE,
-			Vector2i(origin.x + 32, origin.y + 10): FarmAtlas.SAND_PEBBLE,
-			Vector2i(origin.x + 8, origin.y + 17): FarmAtlas.SAND_PEBBLE,
-			Vector2i(origin.x + 26, origin.y + 18): FarmAtlas.SAND_PEBBLE,
-			Vector2i(origin.x + 34, origin.y + 15): FarmAtlas.SAND_PEBBLE,
-			Vector2i(origin.x + 12, origin.y + 11): FarmAtlas.SAND_PEBBLE,
-			Vector2i(origin.x + 10, origin.y + 2): FarmAtlas.FLOWERS,
-			Vector2i(origin.x + 26, origin.y + 2): FarmAtlas.FLOWERS,
-			Vector2i(origin.x + 16, origin.y + 3): FarmAtlas.TALL_GRASS,
-			Vector2i(origin.x + 6, origin.y + 1): FarmAtlas.BUSH,
+			Vector2i(origin.x + 4, origin.y + 8): &"sand_pebble",
+			Vector2i(origin.x + 32, origin.y + 10): &"sand_pebble",
+			Vector2i(origin.x + 8, origin.y + 17): &"sand_pebble",
+			Vector2i(origin.x + 26, origin.y + 18): &"sand_pebble",
+			Vector2i(origin.x + 34, origin.y + 15): &"sand_pebble",
+			Vector2i(origin.x + 12, origin.y + 11): &"sand_pebble",
+			Vector2i(origin.x + 10, origin.y + 2): &"flowers",
+			Vector2i(origin.x + 26, origin.y + 2): &"flowers",
+			Vector2i(origin.x + 16, origin.y + 3): &"tall_grass",
+			Vector2i(origin.x + 6, origin.y + 1): &"bush",
 		},
 		ground_area
 	)

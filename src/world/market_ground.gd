@@ -17,6 +17,9 @@ extends TileMapLayer
 		if is_inside_tree():
 			paint()
 
+## 装饰节点的父节点（通常是 Props，参与 Y 排序）。
+@export var decor_root: Node2D
+
 
 func _ready() -> void:
 	paint()
@@ -43,22 +46,22 @@ func paint() -> void:
 	GroundPainter.water(self, Rect2i(origin.x + 4, center_row + 6, 7, 4), 2)
 
 	# 街道两侧的点缀：花圃、灌木与踩秃的草。
-	GroundPainter.decorate(
-		self,
+	DecorPainter.spawn_many(
+		decor_root,
 		{
-			Vector2i(origin.x + 6, center_row - 2): FarmAtlas.FLOWER_BED,
-			Vector2i(origin.x + 7, center_row - 2): FarmAtlas.FLOWER_BED,
-			Vector2i(origin.x + 33, center_row - 2): FarmAtlas.FLOWER_BED,
-			Vector2i(origin.x + 34, center_row - 2): FarmAtlas.FLOWER_BED,
-			Vector2i(origin.x + 2, center_row + 2): FarmAtlas.BUSH,
-			Vector2i(origin.x + 37, center_row + 3): FarmAtlas.BUSH,
-			Vector2i(origin.x + 31, center_row + 5): FarmAtlas.TALL_GRASS,
-			Vector2i(origin.x + 12, center_row + 5): FarmAtlas.TALL_GRASS,
-			Vector2i(origin.x + 20, center_row + 7): FarmAtlas.FLOWERS,
-			Vector2i(origin.x + 14, center_row + 8): FarmAtlas.FLOWER_RED,
-			Vector2i(origin.x + 27, center_row + 2): FarmAtlas.PEBBLE,
-			Vector2i(origin.x + 3, center_row - 4): FarmAtlas.PEBBLE,
-			Vector2i(origin.x + 36, center_row - 3): FarmAtlas.STUMP_TILE,
+			Vector2i(origin.x + 6, center_row - 2): &"flower_bed",
+			Vector2i(origin.x + 7, center_row - 2): &"flower_bed",
+			Vector2i(origin.x + 33, center_row - 2): &"flower_bed",
+			Vector2i(origin.x + 34, center_row - 2): &"flower_bed",
+			Vector2i(origin.x + 2, center_row + 2): &"bush",
+			Vector2i(origin.x + 37, center_row + 3): &"bush",
+			Vector2i(origin.x + 31, center_row + 5): &"tall_grass",
+			Vector2i(origin.x + 12, center_row + 5): &"tall_grass",
+			Vector2i(origin.x + 20, center_row + 7): &"flowers",
+			Vector2i(origin.x + 14, center_row + 8): &"flower_red",
+			Vector2i(origin.x + 27, center_row + 2): &"pebble",
+			Vector2i(origin.x + 3, center_row - 4): &"pebble",
+			Vector2i(origin.x + 36, center_row - 3): &"stump_tile",
 		},
 		ground_area
 	)

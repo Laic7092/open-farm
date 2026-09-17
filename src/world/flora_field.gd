@@ -405,7 +405,12 @@ func _too_close_to_same(cell: Vector2i, flora_id: StringName, spacing: int) -> b
 
 
 ## 房子、水井、手摆的实心道具都在 layer 1 上，一次形状查询就能排除。
+##
+## 透明装饰（花、蘑菇、栅栏）不都有碰撞，所以额外查一遍 [constant DecorPainter.GROUP]：
+## 摆件占住的格子一律不许再长野生植被。
 func _blocked_by_prop(cell: Vector2i) -> bool:
+	if _has_decor(cell):
+		return true
 	var world := get_world_2d()
 	if world == null:
 		return false
@@ -418,6 +423,17 @@ func _blocked_by_prop(cell: Vector2i) -> bool:
 	params.collide_with_areas = false
 	params.collide_with_bodies = true
 	return not world.direct_space_state.intersect_shape(params, 1).is_empty()
+
+
+## 这一格是否被 [DecorPainter] 生成的透明摆件占用。
+func _has_decor(cell: Vector2i) -> bool:
+	var tree := get_tree()
+	if tree == null:
+		return false
+	for node: Node in tree.get_nodes_in_group(DecorPainter.GROUP):
+		if Vector2i(node.get_meta(DecorPainter.CELL_META, Vector2i(-32768, -32768))) == cell:
+			return true
+	return false
 
 
 ## 出生点与门（以及其它 [Interactable]）附近留出空地，免得把门口堵死。

@@ -31,11 +31,12 @@ camera_limits = Rect2(0, 0, 768, 480)
 default_spawn_id = &"from_beach"
 weather_effects = false
 
-[node name="Ground" type="TileMapLayer" parent="."]
+[node name="Ground" type="TileMapLayer" parent="." node_paths=PackedStringArray("decor_root")]
 z_index = -20
 tile_set = ExtResource("2_tileset")
 script = ExtResource("8_ground")
 ground_area = Rect2i(0, 0, 48, 30)
+decor_root = NodePath("../Props")
 
 [node name="FloraField" type="Node2D" parent="." node_paths=PackedStringArray("ground_layer", "flora_root")]
 script = ExtResource("10_flora_field")
@@ -60,7 +61,7 @@ bounds = Rect2(8, 8, 752, 464)
 [node name="Props" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="Camp" type="Sprite2D" parent="Props"]
+[node name="Camp" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(656, 96)
 texture = ExtResource("20_house")
 script = ExtResource("9_prop")

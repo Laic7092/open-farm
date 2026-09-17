@@ -5,7 +5,7 @@ extends Sprite2D
 ## 贴图直接在 [code].tscn[/code] 里指定（[code]assets/sprites/props/*.png[/code]），
 ## 本脚本负责三件按需生成的东西：
 ## [br]- [b]静态碰撞体[/b]：让房子和树能真的挡住玩家；
-## [br]- [b]身后淡出[/b]：玩家绕到北侧、贴图正要挡住人时整张淡出，离开恢复；
+## [br]- [b]身后淡出[/b]：暂时只给 [constant BUILDING_GROUP] 里的建筑用；玩家绕到北侧、贴图正要挡住人时整张淡出，离开恢复；
 ## [br]- [b]夜晚点光源[/b]：给了 [member light_radius] 的路灯 / 窗灯自动发光。
 ##
 ## 之所以用脚本生成而不是在场景里手写：
@@ -31,14 +31,17 @@ extends Sprite2D
 ## 深夜时的亮度倍率。加色光很容易过曝，默认留一点余量。
 @export var light_energy: float = 0.65
 
-## 玩家走到身后时是否把整张图淡出。所有实心摆件（房子 / 树 / 柜台）默认开启；
-## 个别家具不希望淡出时，在场景里关掉这一项即可。
+## 玩家走到身后时是否把整张图淡出。只在 [constant BUILDING_GROUP] 组内生效：
+## 树木 / 栅栏 / 柜台 / 石头等暂时不淡出，建筑默认开启，个别建筑不想要时关掉即可。
 @export var fade_when_behind: bool = true
 ## 玩家在身后时保留的不透明度。太低会连"这里有栋房子"都看不出来。
 @export_range(0.05, 1.0, 0.05) var behind_alpha: float = 0.42
 ## 淡出 / 淡入速度（不透明度 / 秒）。
 @export var fade_speed: float = 5.0
 
+## 只有这个组里的实心建筑（房子 / 谷仓 / 商店）才会身后淡出。
+## 暂时不开放给树木 / 栅栏 / 柜台 / 石头，避免小件频繁闪动。
+const BUILDING_GROUP: StringName = &"building"
 ## 玩家分组；与 [constant Player.GROUP] 一致。写成字面量避免 world 层反向依赖 player 层。
 const FADE_PLAYER_GROUP: StringName = &"player"
 ## 玩家横向只要在"碰撞盒半宽 + 这个余量"内就算走到身后。
@@ -160,7 +163,7 @@ func _build_occluders() -> void:
 		add_child(occluder)
 
 
-## 玩家走到摆件身后时把整张图淡出，离开再淡入。
+## 玩家走到建筑身后时把整张图淡出，离开再淡入。
 ##
 ## 摆件仍按正常 Y 排序，所以正面时玩家完整在前；只有玩家贴到它的北侧、
 ## 贴图正要挡住人时才降不透明度。碰撞与 [LightOccluder2D] 都按完整底图计算，
@@ -178,9 +181,15 @@ func _process(delta: float) -> void:
 	modulate = tint
 
 
-## 只有实心摆件需要淡出；显式 passable 的低矮装饰不处理。
+## 只有 [constant BUILDING_GROUP] 里的实心摆件需要淡出；
+## 其余摆件与显式 passable 的低矮装饰都不处理。
 func _should_fade_behind() -> bool:
-	return fade_when_behind and texture != null and _effective_solid_size() != Vector2.ZERO
+	return (
+		fade_when_behind
+		and is_in_group(BUILDING_GROUP)
+		and texture != null
+		and _effective_solid_size() != Vector2.ZERO
+	)
 
 
 ## 玩家是否正好在这个摆件的纵向投影内、且落在它的北侧（身后）。

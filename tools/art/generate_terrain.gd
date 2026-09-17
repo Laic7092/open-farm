@@ -1,6 +1,8 @@
 extends SceneTree
 ## 地形图集生成器 → [code]assets/sprites/tileset_farm.png[/code]
 ##
+## 同时从同一套装饰画法导出 [code]assets/sprites/decor/*.png[/code]，
+## 供 [code]DecorPainter[/code] 生成独立摆件；透明底，不带草 / 沙 / 砾石底色。
 ## 8 列 × 15 行、每格 16×16，坐标全部来自 [AtlasLayout]。
 ## 第 0 行的 8 格是骨架阶段就存在的坐标，[b]永远不能改[/b]——
 ## 已铺好的场景与旧存档都引用它们；新素材一律往后追加。
@@ -83,8 +85,83 @@ func _initialize() -> void:
 	_grass_meadow(image, Layout.GRASS_MEADOW)
 
 	Art.save_png(image, Layout.TILESET_PATH)
+	_write_decor_sprites()
 	print("地形图集生成完成（%d 格）" % (Layout.TILESET_COLUMNS * Layout.TILESET_ROWS))
 	quit()
+
+
+## 把装饰瓦片的像素画重新导出一遍，但不要草底 / 沙底 / 砾石底，
+## 让它们能作为透明 [WorldProp] 摆在任意地板上。
+func _write_decor_sprites() -> void:
+	_save_decor("flowers", _decor_flowers(P.FLOWER_PINK, P.FLOWER_YELLOW, P.FLOWER_WHITE))
+	_save_decor("flower_red", _decor_flowers(P.FLOWER_RED, P.FLOWER_RED, P.FLOWER_YELLOW))
+	_save_decor("flower_blue", _decor_flowers(P.FLOWER_BLUE, P.FLOWER_WHITE, P.FLOWER_BLUE))
+
+	var image := Art.new_image(Layout.TILE, Layout.TILE)
+	_flower_bed(image, Vector2i.ZERO)
+	_save_decor("flower_bed", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_bush(image, Vector2i.ZERO, true)
+	_save_decor("bush", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_tall_grass(image, Vector2i.ZERO, true)
+	_save_decor("tall_grass", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_mushroom(image, Vector2i.ZERO, true)
+	_save_decor("mushroom", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_pebbles(image, Vector2i.ZERO, true)
+	_save_decor("pebble", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_sand_pebble(image, Vector2i.ZERO, true)
+	_save_decor("sand_pebble", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_gravel_ore(image, Vector2i.ZERO, true)
+	_save_decor("gravel_ore", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_stump_tile(image, Vector2i.ZERO, true)
+	_save_decor("stump_tile", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_hay(image, Vector2i.ZERO, true)
+	_save_decor("hay", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_crate(image, Vector2i.ZERO, true)
+	_save_decor("crate", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_well_top(image, Vector2i.ZERO, true)
+	_save_decor("well_top", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_fence(image, Vector2i.ZERO, false, true)
+	_save_decor("fence", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_fence(image, Vector2i.ZERO, true, true)
+	_save_decor("fence_gate", image)
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_sign(image, Vector2i.ZERO, true)
+	_save_decor("sign", image)
+
+
+func _save_decor(name: String, image: Image) -> void:
+	Art.save_png(image, Layout.DECOR_DIR.path_join("%s.png" % name))
+
+
+func _decor_flowers(color_a: Color, color_b: Color, color_c: Color) -> Image:
+	var image := Art.new_image(Layout.TILE, Layout.TILE)
+	_flowers(image, Vector2i.ZERO, [color_a, color_b, color_c], true)
+	return image
 
 
 # ---------------------------------------------------------------- 通用地面
@@ -475,8 +552,9 @@ func _side_blade(image: Image, origin: Vector2i, index: int, seed: int, side: in
 
 # ---------------------------------------------------------------- 植被与装饰
 
-func _flowers(image: Image, cell: Vector2i, colors: Array) -> void:
-	_grass_base(image, cell, true)
+func _flowers(image: Image, cell: Vector2i, colors: Array, bare: bool = false) -> void:
+	if not bare:
+		_grass_base(image, cell, true)
 	var origin := _origin(cell)
 	var spots: Array[Vector2i] = [Vector2i(3, 4), Vector2i(10, 3), Vector2i(6, 10)]
 	for index: int in spots.size():
@@ -493,11 +571,12 @@ func _flower(image: Image, at: Vector2i, color: Color) -> void:
 	Art.px(image, at.x, at.y + 2, P.LEAF_DARK)
 
 
-func _tall_grass(image: Image, cell: Vector2i) -> void:
+func _tall_grass(image: Image, cell: Vector2i, bare: bool = false) -> void:
 	var area := _cell_rect(cell)
 	var origin := _origin(cell)
-	Art.rect(image, area, P.GRASS.lerp(P.GRASS_DARK, 0.5))
-	Art.scatter(image, area, P.GRASS_DARK, 0.2, 101)
+	if not bare:
+		Art.rect(image, area, P.GRASS.lerp(P.GRASS_DARK, 0.5))
+		Art.scatter(image, area, P.GRASS_DARK, 0.2, 101)
 	for blade: Vector2i in [
 		Vector2i(2, 12), Vector2i(4, 10), Vector2i(6, 13), Vector2i(9, 11), Vector2i(12, 13)
 	]:
@@ -507,8 +586,9 @@ func _tall_grass(image: Image, cell: Vector2i) -> void:
 		Art.px(image, at.x + 1, at.y - 7, P.LEAF_LIGHT)
 
 
-func _bush(image: Image, cell: Vector2i) -> void:
-	_grass_base(image, cell, false)
+func _bush(image: Image, cell: Vector2i, bare: bool = false) -> void:
+	if not bare:
+		_grass_base(image, cell, false)
 	var origin := _origin(cell)
 	# 三块错位的椭圆拼出灌木轮廓，比一整块方形自然。
 	Art.ellipse(image, origin + Vector2i(6, 10), Vector2i(5, 4), P.LEAF_DARK)
@@ -521,11 +601,13 @@ func _bush(image: Image, cell: Vector2i) -> void:
 	Art.px(image, origin.x + 11, origin.y + 8, P.FLOWER_WHITE)
 
 
-func _fence(image: Image, cell: Vector2i, with_gate: bool) -> void:
-	_grass_base(image, cell, true)
+func _fence(image: Image, cell: Vector2i, with_gate: bool, bare: bool = false) -> void:
+	if not bare:
+		_grass_base(image, cell, true)
 	var origin := _origin(cell)
 	# 地面投影：栅栏不是贴纸，柱脚要落在草上。
-	Art.h_line(image, origin.x + 1, origin.y + 14, 14, P.GRASS_DARK)
+	if not bare:
+		Art.h_line(image, origin.x + 1, origin.y + 14, 14, P.GRASS_DARK)
 	if with_gate:
 		# 门框：左右立柱 + 两道横档，顶面提亮、正面木色、底面压暗。
 		for x: int in [1, 11]:
@@ -548,8 +630,9 @@ func _fence(image: Image, cell: Vector2i, with_gate: bool) -> void:
 		Art.h_line(image, origin.x + 1, origin.y + rail_y, 14, P.WOOD_LIGHT)
 
 
-func _sign(image: Image, cell: Vector2i) -> void:
-	_grass_base(image, cell, true)
+func _sign(image: Image, cell: Vector2i, bare: bool = false) -> void:
+	if not bare:
+		_grass_base(image, cell, true)
 	var origin := _origin(cell)
 	Art.rect(image, Rect2i(origin.x + 7, origin.y + 8, 2, 7), P.WOOD_DARK)
 	Art.rect(image, Rect2i(origin.x + 2, origin.y + 3, 12, 8), P.WOOD)
@@ -558,8 +641,9 @@ func _sign(image: Image, cell: Vector2i) -> void:
 	Art.h_line(image, origin.x + 4, origin.y + 8, 5, P.WOOD_DARK)
 
 
-func _mushroom(image: Image, cell: Vector2i) -> void:
-	_grass_base(image, cell, false)
+func _mushroom(image: Image, cell: Vector2i, bare: bool = false) -> void:
+	if not bare:
+		_grass_base(image, cell, false)
 	var origin := _origin(cell)
 	for at: Vector2i in [Vector2i(4, 10), Vector2i(10, 12)]:
 		var p := origin + at
@@ -570,11 +654,12 @@ func _mushroom(image: Image, cell: Vector2i) -> void:
 
 
 ## 沙地上的点缀：几颗卵石与一枚贝壳。底色是沙，不是草。
-func _sand_pebble(image: Image, cell: Vector2i) -> void:
+func _sand_pebble(image: Image, cell: Vector2i, bare: bool = false) -> void:
 	var area := _cell_rect(cell)
 	var origin := _origin(cell)
-	Art.rect(image, area, P.SAND)
-	Art.scatter(image, area, P.SAND_DARK, 0.16, 223)
+	if not bare:
+		Art.rect(image, area, P.SAND)
+		Art.scatter(image, area, P.SAND_DARK, 0.16, 223)
 	Art.ellipse(image, origin + Vector2i(5, 9), Vector2i(3, 2), P.STONE_DARK)
 	Art.ellipse(image, origin + Vector2i(5, 8), Vector2i(2, 1), P.STONE)
 	Art.ellipse(image, origin + Vector2i(11, 5), Vector2i(2, 1), P.SAND_DARK)
@@ -586,11 +671,12 @@ func _sand_pebble(image: Image, cell: Vector2i) -> void:
 
 
 ## 砾石上的点缀：矿脉碎屑，给矿洞一点"这里挖得出东西"的暗示。
-func _gravel_ore(image: Image, cell: Vector2i) -> void:
+func _gravel_ore(image: Image, cell: Vector2i, bare: bool = false) -> void:
 	var area := _cell_rect(cell)
 	var origin := _origin(cell)
-	Art.rect(image, area, P.GRAVEL)
-	Art.scatter(image, area, P.GRAVEL_DARK, 0.26, 227)
+	if not bare:
+		Art.rect(image, area, P.GRAVEL)
+		Art.scatter(image, area, P.GRAVEL_DARK, 0.26, 227)
 	for at: Vector2i in [Vector2i(4, 5), Vector2i(9, 11), Vector2i(12, 3)]:
 		Art.rect(image, Rect2i(origin.x + at.x, origin.y + at.y, 2, 2), P.COIN_DARK)
 		Art.px(image, origin.x + at.x, origin.y + at.y, P.COIN)
@@ -598,8 +684,9 @@ func _gravel_ore(image: Image, cell: Vector2i) -> void:
 	Art.px(image, origin.x + 13, origin.y + 8, P.STONE_LIGHT)
 
 
-func _pebbles(image: Image, cell: Vector2i) -> void:
-	_grass_base(image, cell, true)
+func _pebbles(image: Image, cell: Vector2i, bare: bool = false) -> void:
+	if not bare:
+		_grass_base(image, cell, true)
 	var origin := _origin(cell)
 	for at: Vector2i in [Vector2i(3, 5), Vector2i(10, 5), Vector2i(6, 11)]:
 		var p := origin + at
@@ -608,8 +695,9 @@ func _pebbles(image: Image, cell: Vector2i) -> void:
 		Art.px(image, p.x + 1, p.y + 1, P.STONE_DARK)
 
 
-func _stump_tile(image: Image, cell: Vector2i) -> void:
-	_grass_base(image, cell, false)
+func _stump_tile(image: Image, cell: Vector2i, bare: bool = false) -> void:
+	if not bare:
+		_grass_base(image, cell, false)
 	var origin := _origin(cell)
 	var center := origin + Vector2i(8, 9)
 	Art.ellipse(image, center, Vector2i(5, 4), P.TRUNK_DARK)
@@ -617,16 +705,18 @@ func _stump_tile(image: Image, cell: Vector2i) -> void:
 	Art.ellipse(image, center - Vector2i(0, 1), Vector2i(2, 1), P.WOOD_LIGHT)
 
 
-func _hay(image: Image, cell: Vector2i) -> void:
-	_grass_base(image, cell, true)
+func _hay(image: Image, cell: Vector2i, bare: bool = false) -> void:
+	if not bare:
+		_grass_base(image, cell, true)
 	var origin := _origin(cell)
 	Art.rect(image, Rect2i(origin.x + 2, origin.y + 5, 12, 7), P.FLOWER_YELLOW)
 	Art.frame_rect(image, Rect2i(origin.x + 2, origin.y + 5, 12, 7), P.COIN_DARK)
 	Art.h_line(image, origin.x + 2, origin.y + 8, 12, P.COIN_DARK)
 
 
-func _crate(image: Image, cell: Vector2i) -> void:
-	_grass_base(image, cell, false)
+func _crate(image: Image, cell: Vector2i, bare: bool = false) -> void:
+	if not bare:
+		_grass_base(image, cell, false)
 	var origin := _origin(cell)
 	Art.rect(image, Rect2i(origin.x + 2, origin.y + 4, 12, 10), P.WOOD)
 	Art.frame_rect(image, Rect2i(origin.x + 2, origin.y + 4, 12, 10), P.WOOD_DARK)
@@ -635,8 +725,9 @@ func _crate(image: Image, cell: Vector2i) -> void:
 	Art.v_line(image, origin.x + 7, origin.y + 5, 8, P.WOOD_DARK)
 
 
-func _well_top(image: Image, cell: Vector2i) -> void:
-	_grass_base(image, cell, true)
+func _well_top(image: Image, cell: Vector2i, bare: bool = false) -> void:
+	if not bare:
+		_grass_base(image, cell, true)
 	var origin := _origin(cell)
 	Art.ellipse(image, origin + Vector2i(8, 9), Vector2i(7, 5), P.STONE_DARK)
 	Art.ellipse(image, origin + Vector2i(8, 8), Vector2i(6, 4), P.STONE)
