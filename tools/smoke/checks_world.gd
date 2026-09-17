@@ -112,10 +112,21 @@ func _check_day_night() -> void:
 	var lights := world.find_children("*", "PointLight2D", true, false)
 	_check(not lights.is_empty(), "带 light_radius 的路灯应当生成 PointLight2D")
 
+	var sun := world.find_child("Sun", true, false) as DirectionalLight2D
+	_check(sun != null, "WorldLighting 应当挂载方向光")
+	if sun != null:
+		_check(sun.shadow_enabled, "方向光应当开启阴影")
+	_check(
+		not world.find_children("*", "LightOccluder2D", true, false).is_empty(),
+		"实体摆件应当生成 LightOccluder2D"
+	)
+
 	_clock.set_time(12, 0)
 	var noon_tint := lighting.tint_color()
 	var noon_energy := _max_light_energy(world)
 	_check(noon_energy <= 0.01, "正午路灯应当熄灭（实际 %.2f）" % noon_energy)
+	if sun != null:
+		_check(sun.energy > 0.1, "正午方向光应当点亮（实际 %.2f）" % sun.energy)
 
 	_clock.set_time(23, 0)
 	var night_tint := lighting.tint_color()
@@ -127,6 +138,8 @@ func _check_day_night() -> void:
 	)
 	_check(night_tint.b > night_tint.r, "夜里环境光应当偏冷")
 	_check(night_energy > 0.5, "深夜路灯应当点亮（实际 %.2f）" % night_energy)
+	if sun != null:
+		_check(sun.energy <= 0.001, "夜里方向光应当熄灭（实际 %.2f）" % sun.energy)
 
 	# 后面的检查依赖"早上 06:00"这个起点，把时间还回去。
 	_clock.set_time(GameDateClock.DAY_START_HOUR, 0)

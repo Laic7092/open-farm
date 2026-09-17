@@ -64,4 +64,4 @@ script = ExtResource("8_fishing")
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0
-zoom = Vector2(1.25, 1.25)
+zoom = Vector2(1, 1)

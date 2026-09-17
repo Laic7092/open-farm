@@ -75,3 +75,4 @@ func paint() -> void:
 		},
 		ground_area
 	)
+	GroundPainter.transitions(self, ground_area)

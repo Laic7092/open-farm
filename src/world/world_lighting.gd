@@ -23,6 +23,8 @@ const WEATHER_TINTS := {
 
 ## 雷暴闪光叠加到环境光上的颜色。
 const FLASH_COLOR := Color(1.6, 1.6, 1.7)
+## 方向光的最大能量；太高会把白天洗白，太低则影子看不见。
+const SUN_MAX_ENERGY: float = 0.22
 ## 雷暴两次闪光之间的间隔（秒）。
 const FLASH_INTERVAL: float = 4.0
 
@@ -33,6 +35,7 @@ var flash_strength: float = 0.0:
 		_refresh_tint()
 
 var _tint: CanvasModulate
+var _sun: DirectionalLight2D
 var _flash_timer: Timer
 var _flash_tween: Tween
 ## 组合根注入的时钟；只读分钟数计算环境光。
@@ -60,6 +63,18 @@ func _ready() -> void:
 	_tint = CanvasModulate.new()
 	_tint.name = "Tint"
 	add_child(_tint)
+
+	_sun = DirectionalLight2D.new()
+	_sun.name = "Sun"
+	_sun.color = ArtPalette.SUNLIGHT
+	_sun.energy = 0.0
+	_sun.shadow_enabled = true
+	_sun.shadow_color = Color(0.0, 0.0, 0.0, 0.28)
+	_sun.shadow_filter = Light2D.SHADOW_FILTER_PCF5
+	_sun.shadow_filter_smooth = 2.0
+	_sun.range_z_min = -4096
+	_sun.range_z_max = 4096
+	add_child(_sun)
 
 	_flash_timer = Timer.new()
 	_flash_timer.name = "Flash"
@@ -115,6 +130,7 @@ func _refresh_tint() -> void:
 		color = color.lerp(FLASH_COLOR, flash_strength)
 	_tint.color = color
 	_refresh_lights()
+	_refresh_sun()
 
 
 ## 按昼夜曲线统一调节所有发光摆件的亮度。
@@ -129,6 +145,17 @@ func _refresh_lights() -> void:
 	for node: Node in tree.get_nodes_in_group(WorldProp.NIGHT_LIGHT_GROUP):
 		if node is WorldProp:
 			(node as WorldProp).apply_night_energy(energy)
+
+
+## 按时间调整方向光：日出到日落逐渐增强，正午最强，夜晚关闭。
+## 影子本身由 [WorldProp] 挂上的 [LightOccluder2D] 投出，这里只控制光源。
+func _refresh_sun() -> void:
+	if _sun == null:
+		return
+	var minute := _clock.minute_of_day if _clock != null else GameDateClock.DAY_START_HOUR * 60
+	_sun.energy = SUN_MAX_ENERGY * DayNight.sun_energy(minute)
+	_sun.rotation_degrees = DayNight.sun_rotation_degrees(minute)
+	_sun.visible = _sun.energy > 0.001
 
 
 func _refresh_storm() -> void:

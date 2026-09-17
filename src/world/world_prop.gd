@@ -29,6 +29,11 @@ extends Sprite2D
 ## 所有发光摆件都在这个组里，由 [WorldLighting] 统一调节亮度。
 const NIGHT_LIGHT_GROUP: StringName = &"night_lights"
 
+## 从贴图 alpha 提取遮挡多边形的简化容差；越大轮廓越粗、越省节点。
+const OCCLUDER_EPSILON: float = 1.0
+## 同一张贴图只提取一次遮挡多边形，房子 / 树重复摆放时复用。
+static var _occluder_cache: Dictionary = {}
+
 ## 所有灯共用同一张径向渐变，避免每个摆件各建一份。
 static var _light_texture: GradientTexture2D
 
@@ -38,6 +43,7 @@ var _light: PointLight2D
 func _ready() -> void:
 	if solid_size != Vector2.ZERO:
 		add_child(_build_body())
+		_build_occluders()
 	_build_light()
 
 
@@ -55,6 +61,44 @@ func _build_body() -> StaticBody2D:
 	shape.shape = rectangle
 	body.add_child(shape)
 	return body
+
+
+## 从贴图 alpha 自动提取轮廓，挂成 [LightOccluder2D]。
+##
+## 这样房子的屋顶、树冠这些"看起来有体积"的部分才能真正挡住方向光。
+## 多边形按贴图资源路径缓存，同一棵树摆十次也只解析一次 alpha。
+func _build_occluders() -> void:
+	if texture == null:
+		return
+	var image := texture.get_image()
+	if image == null or image.is_empty():
+		return
+	var key: String = texture.resource_path
+	if key.is_empty():
+		key = str(texture.get_instance_id())
+	var polygons: Array = _occluder_cache.get(key, [])
+	if polygons.is_empty():
+		var bitmap := BitMap.new()
+		bitmap.create_from_image_alpha(image, 0.5)
+		polygons = bitmap.opaque_to_polygons(
+			Rect2i(Vector2i.ZERO, image.get_size()), OCCLUDER_EPSILON
+		)
+		_occluder_cache[key] = polygons
+	if polygons.is_empty():
+		return
+	var origin := offset
+	if centered:
+		origin += Vector2(-float(image.get_width()) * 0.5, -float(image.get_height()) * 0.5)
+	for points: PackedVector2Array in polygons:
+		var transformed := PackedVector2Array()
+		for point: Vector2 in points:
+			transformed.append(point + origin)
+		var occluder := LightOccluder2D.new()
+		var polygon := OccluderPolygon2D.new()
+		polygon.polygon = transformed
+		occluder.occluder = polygon
+		occluder.occluder_light_mask = 1
+		add_child(occluder)
 
 
 ## 按 [param factor]（0~1）调节灯光亮度；由 [WorldLighting] 在时间推进时调用。

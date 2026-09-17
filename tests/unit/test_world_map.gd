@@ -18,6 +18,7 @@ const TOWN: String = "res://scenes/world/town.tscn"
 const BEACH: String = "res://scenes/world/beach.tscn"
 const MINE: String = "res://scenes/world/mine.tscn"
 const LIBRARY: String = "res://scenes/world/library.tscn"
+const PLAYER: String = "res://scenes/player/player.tscn"
 
 ## 世界里的全部地图。新增地图时这里必须一起加，否则可达性检查形同虚设。
 const MAPS: Array[String] = [FARM, TWON, TOWN, BEACH, MINE, LIBRARY]
@@ -127,6 +128,50 @@ func test_the_road_has_exactly_two_ends() -> void:
 	assert_int(_road_exit_count(TOWN)).override_failure_message("集市两头都该有路").is_equal(2)
 	assert_int(_road_exit_count(MINE)).override_failure_message("矿洞是洞口进，不该有乡道出口").is_equal(0)
 	assert_int(_road_exit_count(LIBRARY)).override_failure_message("室内地图不该有乡道出口").is_equal(0)
+
+
+## 乡道横向接得上，纵向也不能因为"路缘起伏"被挤成一线或胀成五格。
+func test_road_wobble_keeps_road_two_to_four_wide() -> void:
+	var widths: Dictionary = {}
+	for index: int in range(200):
+		for salt: int in [0, 2]:
+			var span := GroundPainter.road_span(1, index, salt)
+			var width: int = span.y - span.x + 1
+			widths[width] = true
+			assert_bool(width >= 2 and width <= 4).override_failure_message(
+				"道路在 index=%d salt=%d 变成 %d 格宽" % [index, salt, width]
+			).is_true()
+			assert_bool(span.x <= 0 and span.y >= 0).override_failure_message(
+				"道路 offset 范围 %s 把中心线挤掉了" % span
+			).is_true()
+	assert_bool(widths.has(2) and widths.has(3) and widths.has(4)).override_failure_message(
+		"路缘没有同时出现 2/3/4 格宽，起伏频率异常：%s" % widths.keys()
+	).is_true()
+	assert_that(GroundPainter.road_span(0, 0, 0)).is_equal(Vector2i.ZERO)
+
+
+## 像素风游戏必须避免相机非整数缩放：窗口的整数倍放大之上再叠 1.25×，
+## 瓦片边缘会出现不均匀的 1px 抖动。这里把相机缩放钉在整数。
+func test_player_camera_zoom_is_integer() -> void:
+	var scene := load(PLAYER) as PackedScene
+	assert_object(scene).override_failure_message("无法加载玩家场景").is_not_null()
+	if scene == null:
+		return
+	var player := scene.instantiate()
+	var camera := player.get_node_or_null("Camera2D") as Camera2D
+	assert_object(camera).override_failure_message("玩家场景缺少 Camera2D").is_not_null()
+	if camera != null:
+		assert_float(camera.zoom.x).override_failure_message(
+			"相机 zoom.x=%.2f 不是整数" % camera.zoom.x
+		).is_equal(floorf(camera.zoom.x))
+		assert_float(camera.zoom.y).override_failure_message(
+			"相机 zoom.y=%.2f 不是整数" % camera.zoom.y
+		).is_equal(floorf(camera.zoom.y))
+		assert_float(camera.zoom.x).override_failure_message("相机 zoom 应保持等比").is_equal(
+			camera.zoom.y
+		)
+		assert_bool(camera.zoom.x >= 1.0).override_failure_message("相机 zoom 不应小于 1").is_true()
+	player.free()
 
 
 # ---------------------------------------------------------------- 内部

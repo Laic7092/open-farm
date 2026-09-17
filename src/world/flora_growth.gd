@@ -22,6 +22,10 @@ const KEY_BECAME_SOLID: StringName = &"became_solid"
 const NATURAL_GROUND: Array[Vector2i] = [
 	FarmAtlas.GRASS,
 	FarmAtlas.GRASS_ALT,
+	FarmAtlas.GRASS_LUSH,
+	FarmAtlas.GRASS_DRY,
+	FarmAtlas.GRASS_DAPPLED,
+	FarmAtlas.GRASS_MEADOW,
 	FarmAtlas.TALL_GRASS,
 	FarmAtlas.PEBBLE,
 	FarmAtlas.DIRT,
@@ -32,7 +36,12 @@ const NATURAL_GROUND: Array[Vector2i] = [
 
 ## 这块地表是不是"自然的"（能长东西）。
 static func is_natural_ground(atlas: Vector2i) -> bool:
-	return NATURAL_GROUND.has(atlas)
+	if NATURAL_GROUND.has(atlas):
+		return true
+	return (
+		FarmAtlas.is_transition_of(FarmAtlas.Surface.SAND, atlas)
+		or FarmAtlas.is_transition_of(FarmAtlas.Surface.DIRT, atlas)
+	)
 
 
 ## 成熟所需要的总有效生长天数。

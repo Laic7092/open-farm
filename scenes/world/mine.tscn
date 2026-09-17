@@ -183,5 +183,5 @@ y_sort_enabled = true
 position = Vector2(160, 288)
 npc_id = &"miner"
 
-[node name="Player" parent="." instance=ExtResource("4_player")]
+[node name="Player" parent="Props" instance=ExtResource("4_player")]
 position = Vector2(64, 248)

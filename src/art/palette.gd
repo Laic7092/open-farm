@@ -187,6 +187,8 @@ const CLOUD := Color8(246, 248, 250)
 const CLOUD_DARK := Color8(206, 214, 226)
 const SUN := Color8(252, 226, 120)
 const SUN_CORE := Color8(255, 248, 200)
+## 2D 方向光颜色：比太阳图标更淡，只负责加色与投影。
+const SUNLIGHT := Color8(255, 244, 214)
 const MOON := Color8(238, 238, 210)
 const RAIN := Color8(168, 200, 236)
 const SNOW := Color8(244, 248, 252)

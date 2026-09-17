@@ -79,13 +79,13 @@ func _run() -> void:
 		await _capture("shot_%02d" % index)
 
 	if capture_town:
-		SceneRouter.change_scene_to(TOWN_SCENE, &"from_twon")
+		SceneRouter.change_scene_to(_world_host(), TOWN_SCENE, &"from_twon")
 		if not await _wait_world():
 			return
 		await _capture("town")
 
 	if capture_twon:
-		SceneRouter.change_scene_to(TWON_SCENE, &"from_farm")
+		SceneRouter.change_scene_to(_world_host(), TWON_SCENE, &"from_farm")
 		if not await _wait_world():
 			return
 		await _capture("twon")
@@ -104,7 +104,7 @@ func _run() -> void:
 
 ## 切到某张地图并截一张图；等待超时时返回 false。
 func _capture_world(path: String, spawn_id: StringName, name: String) -> bool:
-	SceneRouter.change_scene_to(path, spawn_id)
+	SceneRouter.change_scene_to(_world_host(), path, spawn_id)
 	if not await _wait_world():
 		return false
 	await _capture(name)
@@ -114,7 +114,8 @@ func _capture_world(path: String, spawn_id: StringName, name: String) -> bool:
 ## 等世界加载完成（含淡入淡出）；超时返回 false 并让流程结束。
 func _wait_world() -> bool:
 	var guard: int = 0
-	while SceneRouter.is_transitioning() or SceneRouter.current_world() == null:
+	while SceneRouter.is_transitioning(_world_host()) \
+			or SceneRouter.current_world(_world_host()) == null:
 		guard += 1
 		if guard > MAX_FRAMES:
 			push_error("Screenshot: 等待世界加载超时")
@@ -123,6 +124,11 @@ func _wait_world() -> bool:
 		await get_tree().process_frame
 	await _wait_frames(SETTLE_FRAMES)
 	return true
+
+
+## 当前 [WorldHost]；由 main.tscn 实例化后加入 world_host 分组。
+func _world_host() -> WorldHost:
+	return SceneRouter.world_host(get_tree())
 
 
 func _wait_frames(count: int) -> void:

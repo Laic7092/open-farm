@@ -43,7 +43,8 @@ func _process(_delta: float) -> void:
 		return
 
 	if not _world_ready:
-		if SceneRouter.is_transitioning() or SceneRouter.current_world() == null:
+		if SceneRouter.is_transitioning(_world_host()) \
+			or SceneRouter.current_world(_world_host()) == null:
 			return
 		_world_ready = true
 		_next()
@@ -104,3 +105,8 @@ func _close_current() -> void:
 		ui.close_all()
 	else:
 		get_tree().paused = false
+
+
+## 当前 [WorldHost]；由 main.tscn 实例化后加入 world_host 分组。
+func _world_host() -> WorldHost:
+	return SceneRouter.world_host(get_tree())

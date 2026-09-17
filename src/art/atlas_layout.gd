@@ -22,7 +22,7 @@ const TILE: int = 16
 ## [code]assets/sprites/tileset_farm.png[/code]
 const TILESET_PATH: String = "res://assets/sprites/tileset_farm.png"
 const TILESET_COLUMNS: int = 8
-const TILESET_ROWS: int = 6
+const TILESET_ROWS: int = 15
 const TILESET_SIZE := Vector2i(TILE * TILESET_COLUMNS, TILE * TILESET_ROWS)
 
 # 第 0 行：骨架阶段就存在的 8 格。坐标永不改变，旧场景 / 存档不受影响。
@@ -78,6 +78,34 @@ const CLIFF := Vector2i(2, 4)
 # "自带正确底色"的点缀，而不是让地图作者去记"哪种地面不能用哪些瓦片"。
 const SAND_PEBBLE := Vector2i(0, 5)
 const GRAVEL_ORE := Vector2i(1, 5)
+
+# ---------------------------------------------------------------- 地表过渡与变体
+#
+# 16 向「草缘」过渡：一块 4×4 的瓦片矩阵，按 4 邻边是否是草地编码成 mask。
+# 生成器把基底材质画好后，再按 mask 在对应边压上参差的草缘；
+# GroundPainter.transitions() 在铺完地后按同样的规则替换边界格。
+#
+# 追加在最后几段行，不回改第 0~5 行：坐标是场景与存档的隐式契约。
+const TRANSITION_N: int = 1
+const TRANSITION_E: int = 2
+const TRANSITION_S: int = 4
+const TRANSITION_W: int = 8
+
+const PATH_TRANSITION_BLOCK := Vector2i(0, 6)
+const STONE_TRANSITION_BLOCK := Vector2i(4, 6)
+const SAND_TRANSITION_BLOCK := Vector2i(0, 10)
+const DIRT_TRANSITION_BLOCK := Vector2i(4, 10)
+
+## 过渡块内的第 [param mask] 格（mask 0~15，位含义见 TRANSITION_N/E/S/W）。
+static func transition_cell(block: Vector2i, mask: int) -> Vector2i:
+	return block + Vector2i(mask & 0b0011, (mask >> 2) & 0b0011)
+
+## 草地变体：用低频噪声按「片」选，而不是相邻格交替，地图里才会出现
+## 大块明暗与色相变化；再加一层高频细节决定单片里的具体形态。
+const GRASS_LUSH := Vector2i(0, 14)
+const GRASS_DRY := Vector2i(1, 14)
+const GRASS_DAPPLED := Vector2i(2, 14)
+const GRASS_MEADOW := Vector2i(3, 14)
 
 # ---------------------------------------------------------------- 作物图集
 

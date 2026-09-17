@@ -282,7 +282,14 @@ func test_tileset_contains_every_declared_tile() -> void:
 		Layout.WINDOW, Layout.DOORWAY, Layout.FENCE_GATE, Layout.FLOWER_BED,
 		Layout.FLOWER_RED, Layout.FLOWER_BLUE, Layout.MUSHROOM, Layout.PEBBLE,
 		Layout.STUMP_TILE, Layout.HAY, Layout.CRATE, Layout.WELL_TOP,
+		Layout.GRASS_LUSH, Layout.GRASS_DRY, Layout.GRASS_DAPPLED, Layout.GRASS_MEADOW,
 	]
+	for block: Vector2i in [
+		Layout.PATH_TRANSITION_BLOCK, Layout.STONE_TRANSITION_BLOCK,
+		Layout.SAND_TRANSITION_BLOCK, Layout.DIRT_TRANSITION_BLOCK,
+	]:
+		for mask: int in 16:
+			declared.append(Layout.transition_cell(block, mask))
 	for cell: Vector2i in declared:
 		assert_bool(source.has_tile(cell)).override_failure_message(
 			"TileSet 缺少瓦片 %s" % cell

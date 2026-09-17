@@ -257,5 +257,5 @@ road_exit = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToBeach"]
 shape = SubResource("RectangleShape2D_tile")
 
-[node name="Player" parent="." instance=ExtResource("4_player")]
+[node name="Player" parent="Props" instance=ExtResource("4_player")]
 position = Vector2(40, 216)

@@ -88,6 +88,7 @@ script = ExtResource("5_bounds")
 bounds = Rect2(8, 8, 752, 464)
 
 [node name="Props" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="House" type="Sprite2D" parent="Props"]
 position = Vector2(100, 66)
@@ -397,5 +398,5 @@ position = Vector2(164, 132)
 npc_id = &"our_child"
 required_flag = &"child_born"
 
-[node name="Player" parent="." instance=ExtResource("6_player")]
+[node name="Player" parent="Props" instance=ExtResource("6_player")]
 position = Vector2(100, 120)

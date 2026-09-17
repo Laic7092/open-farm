@@ -32,6 +32,10 @@ const KEYS: Array[Dictionary] = [
 const NIGHT_START_MINUTE: int = 18 * 60
 const NIGHT_END_MINUTE: int = 6 * 60
 
+## 日出 / 日落时刻；方向光只在这个窗口内工作。
+const SUNRISE_MINUTE: int = 6 * 60
+const SUNSET_MINUTE: int = 18 * 60
+
 ## 路灯开始亮 / 全亮 / 开始灭 / 全灭的时刻。
 const LAMP_ON_MINUTE: int = 17 * 60
 const LAMP_FULL_MINUTE: int = 19 * 60
@@ -55,6 +59,28 @@ static func ambient_color(minute_of_day: int) -> Color:
 		var weight := float(minute - start) / float(end - start)
 		return (current["color"] as Color).lerp(following["color"] as Color, weight)
 	return KEYS[0]["color"]
+
+
+## 方向光的强度倍率（0 = 全灭，1 = 正午最强）。
+##
+## 用正弦曲线把日出到日落压成一座拱桥：清晨 / 傍晚接近 0，正午为 1。
+static func sun_energy(minute_of_day: int) -> float:
+	var minute := wrapi(minute_of_day, 0, MINUTES_PER_DAY)
+	if minute <= SUNRISE_MINUTE or minute >= SUNSET_MINUTE:
+		return 0.0
+	var t := inverse_lerp(float(SUNRISE_MINUTE), float(SUNSET_MINUTE), float(minute))
+	return sin(PI * t)
+
+
+## 方向光的旋转角度：从日出时的东侧一路扫到日落时的西侧。
+## 夜晚没有方向光，返回值与太阳不可见的事实无关，仅供插值连续。
+static func sun_rotation_degrees(minute_of_day: int) -> float:
+	var minute := wrapi(minute_of_day, 0, MINUTES_PER_DAY)
+	# 夜晚没有方向光，角度停在最后一次日落（西侧），保证插值连续。
+	if minute < SUNRISE_MINUTE or minute > SUNSET_MINUTE:
+		return 25.0
+	var t := inverse_lerp(float(SUNRISE_MINUTE), float(SUNSET_MINUTE), float(minute))
+	return lerpf(-25.0, 25.0, t)
 
 
 ## 路灯 / 窗灯的亮度倍率（0 = 全灭，1 = 全亮）。

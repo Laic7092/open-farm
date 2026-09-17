@@ -299,12 +299,13 @@ func paint_ground() -> void:
 		ground_layer.set_cell(Vector2i(6, y), FarmAtlas.SOURCE_ID, FarmAtlas.PATH_STONE)
 		ground_layer.set_cell(Vector2i(7, y), FarmAtlas.SOURCE_ID, FarmAtlas.PATH_STONE)
 
+	GroundPainter.transitions(ground_layer, ground_area)
 
-## 草地明暗：两种草皮按坐标交错，避免一整块纯色看起来像贴图没加载。
+
+## 草地明暗：与 [GroundPainter.grass_variant] 共用同一套低频噪声，
+## 农场与其它地图的草地不会在拼接处出现两种选片规则。
 func _grass_variant(cell: Vector2i) -> Vector2i:
-	if (cell.x * 3 + cell.y * 5) % 7 < 3:
-		return FarmAtlas.GRASS_ALT
-	return FarmAtlas.GRASS
+	return GroundPainter.grass_variant(cell)
 
 
 ## 荒地：杂草 + 偶尔一块碎石。
@@ -314,7 +315,7 @@ func _wild_variant(cell: Vector2i) -> Vector2i:
 		return FarmAtlas.PEBBLE
 	if roll < 5:
 		return FarmAtlas.TALL_GRASS
-	return FarmAtlas.GRASS_ALT
+	return GroundPainter.grass_variant(cell)
 
 
 ## 撒装饰：农田上方一排栅栏（中间留门）、四周点缀花丛、灌木与杂物。
@@ -512,3 +513,5 @@ func flora_blocks(cell: Vector2i) -> bool:
 func _on_day_rollover(date: GameDate) -> void:
 	var waters: bool = _weather.waters_crops() if _weather != null else false
 	advance_day(date, waters)
+
+	GroundPainter.transitions(ground_layer, ground_area)

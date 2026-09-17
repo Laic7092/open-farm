@@ -1,7 +1,7 @@
 extends SceneTree
 ## 地形图集生成器 → [code]assets/sprites/tileset_farm.png[/code]
 ##
-## 8 列 × 4 行、每格 16×16，坐标全部来自 [AtlasLayout]。
+## 8 列 × 15 行、每格 16×16，坐标全部来自 [AtlasLayout]。
 ## 第 0 行的 8 格是骨架阶段就存在的坐标，[b]永远不能改[/b]——
 ## 已铺好的场景与旧存档都引用它们；新素材一律往后追加。
 ##
@@ -13,6 +13,9 @@ extends SceneTree
 const Art := preload("res://tools/art/art_lib.gd")
 const Layout := preload("res://src/art/atlas_layout.gd")
 const P := preload("res://src/art/palette.gd")
+
+## 过渡瓦片的基底材质。
+enum Surface { PATH, STONE, SAND, DIRT }
 
 
 func _initialize() -> void:
@@ -67,6 +70,18 @@ func _initialize() -> void:
 	_sand_pebble(image, Layout.SAND_PEBBLE)
 	_gravel_ore(image, Layout.GRAVEL_ORE)
 
+	# ---- 第 6~13 行：16 向草缘过渡块（每种基底 4×4）
+	_transition_block(image, Layout.PATH_TRANSITION_BLOCK, Surface.PATH)
+	_transition_block(image, Layout.STONE_TRANSITION_BLOCK, Surface.STONE)
+	_transition_block(image, Layout.SAND_TRANSITION_BLOCK, Surface.SAND)
+	_transition_block(image, Layout.DIRT_TRANSITION_BLOCK, Surface.DIRT)
+
+	# ---- 第 14 行：草地变体
+	_grass_lush(image, Layout.GRASS_LUSH)
+	_grass_dry(image, Layout.GRASS_DRY)
+	_grass_dappled(image, Layout.GRASS_DAPPLED)
+	_grass_meadow(image, Layout.GRASS_MEADOW)
+
 	Art.save_png(image, Layout.TILESET_PATH)
 	print("地形图集生成完成（%d 格）" % (Layout.TILESET_COLUMNS * Layout.TILESET_ROWS))
 	quit()
@@ -102,6 +117,60 @@ func _grass(image: Image, cell: Vector2i, alternate: bool) -> void:
 		Art.px(image, at.x, at.y, P.GRASS_LIGHT)
 		Art.px(image, at.x + 1, at.y, P.GRASS_LIGHT)
 		Art.px(image, at.x + 1, at.y - 1, P.GRASS_LIGHT)
+
+
+## 低矮茂密的草皮：更暗、草簇更多，用来做低频明暗片里的「暗片」。
+func _grass_lush(image: Image, cell: Vector2i) -> void:
+	var area := _cell_rect(cell)
+	var origin := _origin(cell)
+	var seed: int = cell.x * 17 + cell.y * 29
+	Art.rect(image, area, P.GRASS.lerp(P.GRASS_DARK, 0.18))
+	Art.scatter(image, area, P.GRASS_DARK, 0.26, seed)
+	for at: Vector2i in [Vector2i(2, 4), Vector2i(6, 9), Vector2i(11, 5), Vector2i(13, 12)]:
+		var p := origin + at
+		Art.v_line(image, p.x, p.y - 3, 4, P.LEAF_DARK)
+		Art.px(image, p.x, p.y - 4, P.LEAF)
+		Art.px(image, p.x + 1, p.y - 4, P.GRASS_LIGHT)
+
+
+## 发干的草皮：掺一点沙色，做低频明暗片里的「亮片」。
+func _grass_dry(image: Image, cell: Vector2i) -> void:
+	var area := _cell_rect(cell)
+	var origin := _origin(cell)
+	var seed: int = cell.x * 31 + cell.y * 7
+	Art.rect(image, area, P.GRASS.lerp(P.SAND_DARK, 0.34))
+	Art.scatter(image, area, P.SAND_DARK, 0.16, seed)
+	Art.scatter(image, area, P.GRASS_LIGHT, 0.10, seed + 5)
+	for at: Vector2i in [Vector2i(3, 6), Vector2i(9, 4), Vector2i(12, 11)]:
+		var p := origin + at
+		Art.px(image, p.x, p.y, P.PATH_LIGHT)
+		Art.px(image, p.x + 1, p.y - 1, P.PATH_LIGHT)
+
+
+## 斑驳草皮：在普通草上撒浅色小片，制造被云影 / 踩踏打破的色块。
+func _grass_dappled(image: Image, cell: Vector2i) -> void:
+	var area := _cell_rect(cell)
+	var origin := _origin(cell)
+	var seed: int = cell.x * 13 + cell.y * 23
+	Art.rect(image, area, P.GRASS)
+	Art.scatter(image, area, P.GRASS_DARK, 0.10, seed + 3)
+	Art.scatter(image, area, P.GRASS_LIGHT, 0.26, seed)
+	for at: Vector2i in [Vector2i(2, 3), Vector2i(7, 8), Vector2i(12, 5)]:
+		Art.h_line(image, origin.x + at.x, origin.y + at.y, 3, P.GRASS_LIGHT)
+
+
+## 带小野花的草甸，稀疏点缀，不喧宾夺主。
+func _grass_meadow(image: Image, cell: Vector2i) -> void:
+	var area := _cell_rect(cell)
+	var origin := _origin(cell)
+	var seed: int = cell.x * 19 + cell.y * 11
+	Art.rect(image, area, P.GRASS.lerp(P.GRASS_DARK, 0.06))
+	Art.scatter(image, area, P.GRASS_LIGHT, 0.12, seed)
+	for at: Vector2i in [Vector2i(4, 6), Vector2i(11, 9)]:
+		var p := origin + at
+		Art.px(image, p.x, p.y - 1, P.FLOWER_WHITE)
+		Art.px(image, p.x, p.y, P.FLOWER_YELLOW)
+		Art.px(image, p.x, p.y + 1, P.LEAF_DARK)
 
 
 func _path(image: Image, cell: Vector2i) -> void:
@@ -276,6 +345,124 @@ func _path_stone(image: Image, cell: Vector2i) -> void:
 		Art.h_line(image, origin.x + stone.x, origin.y + stone.y, 6, P.STONE_LIGHT)
 		Art.v_line(image, origin.x + stone.x, origin.y + stone.y, 6, P.STONE_LIGHT)
 		Art.px(image, origin.x + stone.x + 5, origin.y + stone.y + 5, P.GRAVEL_DARK)
+
+
+# ---------------------------------------------------------------- 过渡瓦片
+
+## 画一块 4×4 的过渡矩阵：每个 mask 先把基底材质完整画一遍，
+## 再按 mask 在对应边压上参差的草缘。
+func _transition_block(image: Image, block: Vector2i, surface: int) -> void:
+	for mask: int in 16:
+		var cell := Layout.transition_cell(block, mask)
+		_base_material(image, cell, surface)
+		if mask != 0:
+			_grass_fringe(image, cell, mask)
+
+
+## 过渡瓦片的底色 = 对应的普通地表。
+func _base_material(image: Image, cell: Vector2i, surface: int) -> void:
+	if surface == Surface.PATH:
+		_path(image, cell)
+	elif surface == Surface.STONE:
+		_path_stone(image, cell)
+	elif surface == Surface.SAND:
+		_sand(image, cell)
+	else:
+		_dirt(image, cell)
+
+
+## 在 [param mask] 指定的边压草缘；草缘厚度 2~4px 且沿边参差。
+func _grass_fringe(image: Image, cell: Vector2i, mask: int) -> void:
+	var origin := _origin(cell)
+	var seed: int = cell.x * 73 + cell.y * 131
+	if (mask & Layout.TRANSITION_N) != 0:
+		_draw_fringe(image, origin, seed, 0)
+	if (mask & Layout.TRANSITION_E) != 0:
+		_draw_fringe(image, origin, seed, 1)
+	if (mask & Layout.TRANSITION_S) != 0:
+		_draw_fringe(image, origin, seed, 2)
+	if (mask & Layout.TRANSITION_W) != 0:
+		_draw_fringe(image, origin, seed, 3)
+	_draw_blades(image, origin, seed, mask)
+
+
+## [param side]：0=N / 1=E / 2=S / 3=W。
+func _draw_fringe(image: Image, origin: Vector2i, seed: int, side: int) -> void:
+	for i: int in Layout.TILE:
+		var thickness := _fringe_thickness(origin, i, side, seed)
+		for d: int in thickness:
+			var at := _fringe_cell(origin, i, d, side)
+			# 靠内一像素压深色，草缘与铺地之间有一条「根线」，边缘才不发灰。
+			Art.px(image, at.x, at.y, P.GRASS_DARK if d == thickness - 1 else P.GRASS)
+	# 草缘内侧再补一像素浅色，让厚度有起伏。
+	var lip := _fringe_cell(origin, 4, 0, side)
+	Art.px(image, lip.x, lip.y, P.GRASS_LIGHT)
+	lip = _fringe_cell(origin, 11, 0, side)
+	Art.px(image, lip.x, lip.y, P.GRASS_LIGHT)
+
+
+## 草缘厚度：2~4px，由坐标哈希决定，保证确定性。
+func _fringe_thickness(origin: Vector2i, index: int, side: int, seed: int) -> int:
+	var a: int = origin.x + index
+	var b: int = origin.y
+	if side == 1:
+		a = origin.y + index
+		b = origin.x + 1
+	elif side == 2:
+		b = origin.y + 2
+	elif side == 3:
+		a = origin.y + index
+		b = origin.x + 3
+	return 2 + int(Art.noise(a, b, seed) * 3.0)
+
+
+## 侧边上的第 [param d] 像素（d=0 最靠外）。
+func _fringe_cell(origin: Vector2i, index: int, d: int, side: int) -> Vector2i:
+	if side == 0:
+		return origin + Vector2i(index, d)
+	if side == 1:
+		return origin + Vector2i(Layout.TILE - 1 - d, index)
+	if side == 2:
+		return origin + Vector2i(index, Layout.TILE - 1 - d)
+	return origin + Vector2i(d, index)
+
+
+## 从草缘向铺地伸出几根草叶；用 1~2px 的短线，避免变成锯齿。
+func _draw_blades(image: Image, origin: Vector2i, seed: int, mask: int) -> void:
+	for k: int in 3:
+		var index := 2 + int((seed + k * 7) % 12)
+		if (mask & Layout.TRANSITION_N) != 0:
+			_side_blade(image, origin, index, seed, 0, k)
+		if (mask & Layout.TRANSITION_E) != 0:
+			_side_blade(image, origin, index, seed, 1, k)
+		if (mask & Layout.TRANSITION_S) != 0:
+			_side_blade(image, origin, index, seed, 2, k)
+		if (mask & Layout.TRANSITION_W) != 0:
+			_side_blade(image, origin, index, seed, 3, k)
+
+
+func _side_blade(image: Image, origin: Vector2i, index: int, seed: int, side: int, k: int) -> void:
+	var thickness := _fringe_thickness(origin, index, side, seed)
+	var length := 2 + int(Art.noise(origin.x + k, origin.y + side, seed + 61) * 2.0)
+	var color: Color = P.LEAF if k % 2 == 0 else P.LEAF_DARK
+	if side == 0:
+		Art.v_line(image, origin.x + index, origin.y + thickness, length, color)
+		Art.px(image, origin.x + index, origin.y + thickness + length, P.LEAF_LIGHT)
+	elif side == 1:
+		Art.h_line(
+			image, origin.x + Layout.TILE - 1 - thickness - length,
+			origin.y + index, length, color
+		)
+		Art.px(image, origin.x + Layout.TILE - 1 - thickness - length, origin.y + index, P.LEAF_LIGHT)
+	elif side == 2:
+		Art.v_line(
+			image, origin.x + index,
+			origin.y + Layout.TILE - 1 - thickness - length, length, color
+		)
+		Art.px(image, origin.x + index, origin.y + Layout.TILE - 1 - thickness - length, P.LEAF_LIGHT)
+	else:
+		Art.h_line(image, origin.x + thickness, origin.y + index, length, color)
+		Art.px(image, origin.x + thickness + length, origin.y + index, P.LEAF_LIGHT)
 
 
 # ---------------------------------------------------------------- 植被与装饰

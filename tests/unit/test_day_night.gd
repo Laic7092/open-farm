@@ -74,3 +74,23 @@ func test_night_boundaries() -> void:
 func test_sun_is_hidden_at_night() -> void:
 	assert_bool(DayNight.sun_visible(12 * 60)).is_true()
 	assert_bool(DayNight.sun_visible(23 * 60)).is_false()
+
+func test_sun_energy_peaks_at_noon_and_dies_at_night() -> void:
+	assert_float(DayNight.sun_energy(12 * 60)).is_equal_approx(1.0, 0.001)
+	assert_float(DayNight.sun_energy(0)).is_equal(0.0)
+	assert_float(DayNight.sun_energy(23 * 60)).is_equal(0.0)
+	var morning := DayNight.sun_energy(8 * 60)
+	var evening := DayNight.sun_energy(16 * 60)
+	assert_float(morning).is_greater(0.0)
+	assert_float(morning).is_less(1.0)
+	assert_float(evening).is_greater(0.0)
+	assert_float(evening).is_less(1.0)
+
+
+func test_sun_rotation_sweeps_from_east_to_west() -> void:
+	assert_float(DayNight.sun_rotation_degrees(6 * 60)).is_equal_approx(-25.0, 0.001)
+	assert_float(DayNight.sun_rotation_degrees(12 * 60)).is_equal_approx(0.0, 0.001)
+	assert_float(DayNight.sun_rotation_degrees(18 * 60)).is_equal_approx(25.0, 0.001)
+	# 夜晚没有太阳，但返回值必须连续地停在日落那一侧。
+	assert_float(DayNight.sun_rotation_degrees(0)).is_equal_approx(25.0, 0.001)
+	assert_float(DayNight.sun_rotation_degrees(23 * 60)).is_equal_approx(25.0, 0.001)

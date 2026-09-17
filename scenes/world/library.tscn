@@ -41,6 +41,7 @@ script = ExtResource("3_bounds")
 bounds = Rect2(8, 8, 368, 240)
 
 [node name="Props" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="Shelf1" type="Sprite2D" parent="Props"]
 position = Vector2(48, 80)
@@ -160,5 +161,5 @@ point_id = &"shelves"
 position = Vector2(192, 192)
 npc_id = &"librarian"
 
-[node name="Player" parent="." instance=ExtResource("4_player")]
+[node name="Player" parent="Props" instance=ExtResource("4_player")]
 position = Vector2(192, 224)
