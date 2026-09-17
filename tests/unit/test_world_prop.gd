@@ -1,8 +1,8 @@
 extends GdUnitTestSuite
-## [WorldProp] 的遮挡分层：窄件走前景 overlay，宽实心件走"身后淡出"。
+## [WorldProp] 的身后淡出：所有实心摆件（房子 / 树 / 柜台）通用。
 ##
-## 只测纯几何判定，不把节点挂进场景树——挂进去会真的建碰撞 / overlay / 注册
-## _process，反而把"这条规则是否成立"和"节点能不能跑"混在一起。
+## 只测纯几何判定，不把节点挂进场景树——挂进去会真的建碰撞 / 注册 _process，
+## 反而把"这条规则是否成立"和"节点能不能跑"混在一起。
 
 const HOUSE_TEXTURE: String = "res://assets/sprites/props/house.png"
 
@@ -16,17 +16,20 @@ func _prop(solid: Vector2) -> WorldProp:
 	return prop
 
 
-## 宽度决定分流：房子 / 柜台走淡出，树 / 石头仍走 overlay。
-func test_solid_width_decides_between_overlay_and_fade() -> void:
+## 实心就淡出：房子和树都走同一条路，可穿过的装饰不处理。
+func test_all_solid_props_fade_behind() -> void:
 	var house := _prop(Vector2(58, 14))
 	assert_bool(house._should_fade_behind()).is_true()
 	var tree := _prop(Vector2(18, 8))
-	assert_bool(tree._should_fade_behind()).is_false()
+	assert_bool(tree._should_fade_behind()).is_true()
+	var decoration := _prop(Vector2.ZERO)
+	assert_bool(decoration._should_fade_behind()).is_false()
 	house.free()
 	tree.free()
+	decoration.free()
 
 
-## 只有玩家落在纵向投影内、且在建筑北侧时才算"走到身后"。
+## 只有玩家落在纵向投影内、且在摆件北侧时才算"走到身后"。
 func test_player_behind_within_footprint_fades() -> void:
 	var house := _prop(Vector2(58, 14))
 	var player := Node2D.new()

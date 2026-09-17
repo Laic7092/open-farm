@@ -20,9 +20,7 @@ func _initialize() -> void:
 	Art.save_png(_house(), DIR.path_join("house.png"))
 	Art.save_png(_barn(), DIR.path_join("barn.png"))
 	Art.save_png(_tree(0), DIR.path_join("tree.png"))
-	Art.save_png(_tree_overlay(0), DIR.path_join("fg_tree.png"))
 	Art.save_png(_tree(1), DIR.path_join("tree_pine.png"))
-	Art.save_png(_tree_overlay(1), DIR.path_join("fg_tree_pine.png"))
 	Art.save_png(_stump(), DIR.path_join("stump.png"))
 	Art.save_png(_rock(16, 16, 0), DIR.path_join("rock.png"))
 	Art.save_png(_rock(32, 24, 1), DIR.path_join("rock_big.png"))
@@ -52,7 +50,7 @@ func _initialize() -> void:
 # ---------------------------------------------------------------- 建筑
 
 ## 农舍：64×64。3/4 视角：右山墙退后 9×6，前山墙 + 两坡屋顶 + 烟囱；
-## 建筑走 [WorldProp] 的"身后淡出"，不拆前景 overlay。
+## 建筑走 [WorldProp] 的"身后淡出"，不做局部遮挡。
 func _house() -> Image:
 	var image := Art.new_image(64, 64)
 	Art.ground_shadow(image, 64, 64, 8)
@@ -132,7 +130,7 @@ func _window(image: Image, area: Rect2i) -> void:
 
 
 ## 谷仓：64×56。与农舍同构的 3/4，但更宽更矮，红顶 + 双开大门 + 干草阁楼窗。
-## 建筑走 [WorldProp] 的"身后淡出"，不拆前景 overlay。
+## 建筑走 [WorldProp] 的"身后淡出"，不做局部遮挡。
 func _barn() -> Image:
 	var image := Art.new_image(64, 56)
 	Art.ground_shadow(image, 64, 56, 6)
@@ -207,14 +205,6 @@ func _tree(variant: int) -> Image:
 	var image := Art.new_image(32, 48)
 	Art.ground_shadow(image, 32, 48, 8)
 	_tree_trunk(image)
-	_tree_canopy(image, variant)
-	Art.outline(image, P.OUTLINE)
-	return image
-
-
-## 只画树冠的前景 overlay：树冠独立成节点后，人能站到树冠下面。
-func _tree_overlay(variant: int) -> Image:
-	var image := Art.new_image(32, 48)
 	_tree_canopy(image, variant)
 	Art.outline(image, P.OUTLINE)
 	return image

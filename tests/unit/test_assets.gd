@@ -187,27 +187,6 @@ func test_npc_houses_are_distinct() -> void:
 			).is_greater_equal(SILHOUETTE_MIN_DIFFERENT_ROWS)
 
 
-## 走前景 overlay 的窄件（树冠）必须有同尺寸的 [code]fg_<名字>.png[/code]，
-## [WorldProp] 才能按约定自动挂上去；尺寸不一致会在场景里错位。
-## 建筑 / 柜台改走"身后淡出"，不再拆 overlay，所以不在此列。
-func test_foreground_overlays_match_their_base() -> void:
-	var names: Array[String] = ["tree", "tree_pine"]
-	for name: String in names:
-		var base := load("res://assets/sprites/props/%s.png" % name) as Texture2D
-		var overlay := load("res://assets/sprites/props/fg_%s.png" % name) as Texture2D
-		assert_object(base).is_not_null()
-		assert_object(overlay).override_failure_message(
-			"%s 缺少前景 overlay fg_%s.png" % [name, name]
-		).is_not_null()
-		if base == null or overlay == null:
-			continue
-		assert_int(overlay.get_width()).override_failure_message(
-			"fg_%s.png 宽度与底图不一致" % name
-		).is_equal(base.get_width())
-		assert_int(overlay.get_height()).override_failure_message(
-			"fg_%s.png 高度与底图不一致" % name
-		).is_equal(base.get_height())
-
 ## 剪影指纹：每行的 (最左, 最右, 不透明像素数)。
 ## 外形相同、只是换了颜色时，两栋房子的指纹会逐行相同。
 func _silhouette_rows(image: Image) -> Array:

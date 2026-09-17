@@ -5,8 +5,7 @@ extends Sprite2D
 ## 贴图直接在 [code].tscn[/code] 里指定（[code]assets/sprites/props/*.png[/code]），
 ## 本脚本负责三件按需生成的东西：
 ## [br]- [b]静态碰撞体[/b]：让房子和树能真的挡住玩家；
-## [br]- [b]前景 overlay[/b]：树冠这类"该压在人上面"的窄件；
-## [br]- [b]身后淡出[/b]：玩家走到建筑身后时整张图变半透明，不挡人；
+## [br]- [b]身后淡出[/b]：玩家绕到北侧、贴图正要挡住人时整张淡出，离开恢复；
 ## [br]- [b]夜晚点光源[/b]：给了 [member light_radius] 的路灯 / 窗灯自动发光。
 ##
 ## 之所以用脚本生成而不是在场景里手写：
@@ -28,23 +27,9 @@ extends Sprite2D
 ## 深夜时的亮度倍率。加色光很容易过曝，默认留一点余量。
 @export var light_energy: float = 0.65
 
-## 前景 overlay：树冠这类"天然就该压在人头上"的窄件。
-##
-## 留空时按约定自动查找同目录的 [code]fg_<文件名>.png[/code]
-## （[code]tree.png[/code] → [code]fg_tree.png[/code]），
-## 找到才建子节点；躯干仍按 Y 排序，于是人能站到树冠下。
-## 建筑 / 柜台这类宽实心件走 [member fade_when_behind]，不要设 overlay。
-@export var foreground_texture: Texture2D
-## 自动查找前景 overlay 时使用的文件名前缀。
-const FOREGROUND_PREFIX: String = "fg_"
-## 前景 overlay 的绝对 Z：压过 z_index 为 0 的玩家与摆件。
-const FOREGROUND_Z: int = 1
-
-## 玩家走到身后时是否把整张图淡出。宽实心件（房子 / 柜台）默认开启；
-## 窄件（树 / 石头）宽度不到 [member fade_min_width]，仍走前景 overlay。
+## 玩家走到身后时是否把整张图淡出。所有实心摆件（房子 / 树 / 柜台）默认开启；
+## 个别家具不希望淡出时，在场景里关掉这一项即可。
 @export var fade_when_behind: bool = true
-## 触发淡出的最小碰撞盒宽度：树 18、岩石 26、房子 40+。
-@export var fade_min_width: float = 40.0
 ## 玩家在身后时保留的不透明度。太低会连"这里有栋房子"都看不出来。
 @export_range(0.05, 1.0, 0.05) var behind_alpha: float = 0.42
 ## 淡出 / 淡入速度（不透明度 / 秒）。
@@ -63,14 +48,10 @@ const OCCLUDER_EPSILON: float = 1.0
 ## 同一张贴图只提取一次遮挡多边形，房子 / 树重复摆放时复用。
 static var _occluder_cache: Dictionary = {}
 
-## 同一张底图只解析一次"有没有 fg_ 兄弟贴图"，避免每个实例都查文件系统。
-static var _foreground_cache: Dictionary = {}
-
 ## 所有灯共用同一张径向渐变，避免每个摆件各建一份。
 static var _light_texture: GradientTexture2D
 
 var _light: PointLight2D
-var _foreground: Sprite2D
 var _player: Node2D
 var _fade_active: bool = false
 
@@ -80,10 +61,7 @@ func _ready() -> void:
 		add_child(_build_body())
 		_build_occluders()
 	_fade_active = _should_fade_behind()
-	# 建筑不拆 overlay，改由 _process 在玩家走到身后时整张淡出。
 	set_process(_fade_active)
-	if not _fade_active:
-		_build_foreground()
 	_build_light()
 
 
@@ -141,11 +119,11 @@ func _build_occluders() -> void:
 		add_child(occluder)
 
 
-## 玩家走到建筑身后时把整张图淡出，离开再淡入。
+## 玩家走到摆件身后时把整张图淡出，离开再淡入。
 ##
-## 与前景 overlay 二选一：overlay 适合树冠这种"天然就该压在人头上"的窄件；
-## 房子 / 柜台这种大实心件如果也永远压在人头上，就会变成"身体在前、头被盖住"。
-## 淡出则保留正常的 Y 排序，只在人真的躲到建筑北侧、被挡住时才让人透过来。
+## 摆件仍按正常 Y 排序，所以正面时玩家完整在前；只有玩家贴到它的北侧、
+## 贴图正要挡住人时才降不透明度。碰撞与 [LightOccluder2D] 都按完整底图计算，
+## 所以地面阴影不会跟着淡。
 func _process(delta: float) -> void:
 	if not _fade_active:
 		return
@@ -159,11 +137,9 @@ func _process(delta: float) -> void:
 	modulate = tint
 
 
-## 这个摆件是否走"身后淡出"而不是前景 overlay。
+## 只有实心摆件需要淡出；花、草、小鸡这类可穿过的装饰不处理。
 func _should_fade_behind() -> bool:
-	if not fade_when_behind or texture == null:
-		return false
-	return solid_size.x >= fade_min_width
+	return fade_when_behind and texture != null and solid_size != Vector2.ZERO
 
 
 ## 玩家是否正好在这个摆件的纵向投影内、且落在它的北侧（身后）。
@@ -179,47 +155,6 @@ func _player_is_behind() -> bool:
 		return false
 	var half_width: float = solid_size.x * 0.5 + FADE_X_MARGIN
 	return absf(_player.global_position.x - global_position.x) <= half_width
-
-## 建前景 overlay：一张与底图同尺寸、同锚点的贴图，用绝对 Z 画在角色之上。
-##
-## 拆分的是"遮挡关系"而不是"构图"：底图仍是完整的一张（[LightOccluder2D]
-## 也从它提取完整剪影），overlay 只是把树冠 / 屋檐在最后再画一遍，
-## 保证玩家从南侧走进树冠下时不会被躯干挡住、也不会盖住树冠。
-func _build_foreground() -> void:
-	var overlay := _resolve_foreground()
-	if overlay == null:
-		return
-	_foreground = Sprite2D.new()
-	_foreground.name = "Foreground"
-	_foreground.texture = overlay
-	_foreground.centered = centered
-	_foreground.offset = offset
-	_foreground.flip_h = flip_h
-	_foreground.flip_v = flip_v
-	# z_as_relative = false：不受父节点 Y 排序影响，始终压过 z_index 0 的角色。
-	_foreground.z_as_relative = false
-	_foreground.z_index = FOREGROUND_Z
-	add_child(_foreground)
-
-
-## 解析前景贴图：显式指定优先，否则按 [constant FOREGROUND_PREFIX] 约定查找。
-func _resolve_foreground() -> Texture2D:
-	if foreground_texture != null:
-		return foreground_texture
-	if texture == null or texture.resource_path.is_empty():
-		return null
-	var path: String = texture.resource_path
-	if not path.ends_with(".png"):
-		return null
-	var overlay_path: String = path.get_base_dir().path_join(
-		FOREGROUND_PREFIX + path.get_file()
-	)
-	if not _foreground_cache.has(overlay_path):
-		var resolved: Texture2D = null
-		if ResourceLoader.exists(overlay_path):
-			resolved = load(overlay_path) as Texture2D
-		_foreground_cache[overlay_path] = resolved
-	return _foreground_cache[overlay_path] as Texture2D
 
 
 ## 按 [param factor]（0~1）调节灯光亮度；由 [WorldLighting] 在时间推进时调用。
