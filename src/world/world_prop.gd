@@ -3,8 +3,9 @@ extends Sprite2D
 ## 场景摆件：房子、树、水井这类"站在地图上的东西"。
 ##
 ## 贴图直接在 [code].tscn[/code] 里指定（[code]assets/sprites/props/*.png[/code]），
-## 本脚本负责三件按需生成的东西：
+## 本脚本负责四件按需生成的东西：
 ## [br]- [b]静态碰撞体[/b]：让房子和树能真的挡住玩家；
+## [br]- [b]脚下假影子[/b]：Godot 2D 的方向阴影永远无限长，实心件改用软椭圆假影子；
 ## [br]- [b]身后淡出[/b]：暂时只给 [constant BUILDING_GROUP] 里的建筑用；玩家绕到北侧、贴图正要挡住人时整张淡出，离开恢复；
 ## [br]- [b]夜晚点光源[/b]：给了 [member light_radius] 的路灯 / 窗灯自动发光。
 ##
@@ -58,6 +59,17 @@ const AUTO_SOLID_BOTTOM_INSET: float = 1.0
 ## 所有发光摆件都在这个组里，由 [WorldLighting] 统一调节亮度。
 const NIGHT_LIGHT_GROUP: StringName = &"night_lights"
 
+## 假影子黑度。
+const SHADOW_ALPHA: float = 0.28
+## 假影子相对脚印的偏移；固定右下，匹配全项目“左上受光”。
+const SHADOW_OFFSET: Vector2 = Vector2(2.0, 3.0)
+## 假影子相对脚印的放大倍率；太贴边会显得脏。
+const SHADOW_SCALE: float = 1.35
+## 假影子纹理边长（像素）。
+const SHADOW_TEXTURE_SIZE: int = 64
+## 假影子只用一张软椭圆纹理，所有实心件复用。
+static var _shadow_texture: GradientTexture2D
+
 ## 从贴图 alpha 提取遮挡多边形的简化容差；越大轮廓越粗、越省节点。
 const OCCLUDER_EPSILON: float = 1.0
 ## 同一张贴图只提取一次遮挡多边形，房子 / 树重复摆放时复用。
@@ -75,6 +87,7 @@ func _ready() -> void:
 	if _effective_solid_size() != Vector2.ZERO:
 		add_child(_build_body())
 		_build_occluders()
+		add_child(_build_drop_shadow())
 	_fade_active = _should_fade_behind()
 	set_process(_fade_active)
 	_build_light()
@@ -127,7 +140,8 @@ func _effective_solid_offset() -> Vector2:
 
 ## 从贴图 alpha 自动提取轮廓，挂成 [LightOccluder2D]。
 ##
-## 这样房子的屋顶、树冠这些"看起来有体积"的部分才能真正挡住方向光。
+## 当前 [DirectionalLight2D] 已关闭 2D 阴影、脚下投影由假影子负责；
+## 保留 occluder 是为了以后做 SDF 或局部点光源阴影时不用再补数据。
 ## 多边形按贴图资源路径缓存，同一棵树摆十次也只解析一次 alpha。
 func _build_occluders() -> void:
 	if texture == null:
@@ -161,6 +175,44 @@ func _build_occluders() -> void:
 		occluder.occluder = polygon
 		occluder.occluder_light_mask = 1
 		add_child(occluder)
+
+
+## 脚下软椭圆假影子：Godot 2D 的方向阴影永远无限长，像素风改用固定偏移的假影子。
+func _build_drop_shadow() -> Sprite2D:
+	var shadow := Sprite2D.new()
+	shadow.name = "DropShadow"
+	shadow.texture = _shadow_texture_resource()
+	shadow.position = _effective_solid_offset() + SHADOW_OFFSET
+	var footprint := _effective_solid_size()
+	var target := Vector2(
+		maxf(footprint.x * SHADOW_SCALE, 12.0),
+		maxf(footprint.y * SHADOW_SCALE, 6.0)
+	)
+	shadow.scale = target / float(SHADOW_TEXTURE_SIZE)
+	shadow.modulate = Color(0.0, 0.0, 0.0, SHADOW_ALPHA)
+	# 假影子不参与 2D 光照，否则 ADD 光会把它重新打亮。
+	shadow.light_mask = 0
+	shadow.show_behind_parent = true
+	return shadow
+
+
+## 软椭圆影子纹理：中心不透明、边缘渐隐；所有实心件共用一份。
+static func _shadow_texture_resource() -> GradientTexture2D:
+	if _shadow_texture != null:
+		return _shadow_texture
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(1.0, 1.0, 1.0, 1.0))
+	gradient.set_color(1, Color(1.0, 1.0, 1.0, 0.0))
+	gradient.add_point(0.55, Color(1.0, 1.0, 1.0, 0.85))
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(1.0, 0.5)
+	texture.width = SHADOW_TEXTURE_SIZE
+	texture.height = SHADOW_TEXTURE_SIZE
+	_shadow_texture = texture
+	return _shadow_texture
 
 
 ## 玩家走到建筑身后时把整张图淡出，离开再淡入。

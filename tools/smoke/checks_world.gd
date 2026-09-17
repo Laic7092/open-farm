@@ -115,7 +115,7 @@ func _check_day_night() -> void:
 	var sun := world.find_child("Sun", true, false) as DirectionalLight2D
 	_check(sun != null, "WorldLighting 应当挂载方向光")
 	if sun != null:
-		_check(sun.shadow_enabled, "方向光应当开启阴影")
+		_check(not sun.shadow_enabled, "方向光不应开启无限长阴影")
 	_check(
 		not world.find_children("*", "LightOccluder2D", true, false).is_empty(),
 		"实体摆件应当生成 LightOccluder2D"

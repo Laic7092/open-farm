@@ -91,7 +91,8 @@ PNG / `.tres` / `.fnt` 都提交进仓库（CI 与玩家不必跑生成器，也
 - 建筑以外的高实心件（树 / 栅栏 / 柜台 / 石头）暂时不淡出，避免小件在玩家经过时
   频繁闪动；开放范围后续再按视觉反馈扩。
 - 保留正常 Y 排序：正面时玩家完整在前；身后被贴图挡住时才透出来。
-- 碰撞盒与 `LightOccluder2D` 都按完整底图计算，地面阴影不会跟着淡。
+- 脚下影子由 `WorldProp` 的软椭圆假影子画：Godot 2D 的 `DirectionalLight2D`
+  阴影永远无限长（官方限制），所以方向光只做平行光、不开阴影。
 - 建筑逐件微调：`fade_when_behind` 可关；`behind_alpha` / `fade_speed` 控制深度与速度。
 
 场景里的建筑节点要带 `groups=["building"]`；`WorldProp._ready()` 只给组内实心件

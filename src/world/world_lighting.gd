@@ -68,10 +68,9 @@ func _ready() -> void:
 	_sun.name = "Sun"
 	_sun.color = ArtPalette.SUNLIGHT
 	_sun.energy = 0.0
-	_sun.shadow_enabled = true
-	_sun.shadow_color = Color(0.0, 0.0, 0.0, 0.28)
-	_sun.shadow_filter = Light2D.SHADOW_FILTER_PCF5
-	_sun.shadow_filter_smooth = 2.0
+	# Godot 2D 的 DirectionalLight2D 阴影永远无限长（官方限制），
+	# 关掉它，影子改由 WorldProp 的假影子画。
+	_sun.shadow_enabled = false
 	_sun.range_z_min = -4096
 	_sun.range_z_max = 4096
 	add_child(_sun)

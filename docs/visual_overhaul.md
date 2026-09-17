@@ -72,8 +72,9 @@
   （`WorldProp.passable == false`），且玩家落在它的纵向投影内、在它北侧（身后）；
   横向允许「碰撞盒半宽 + 10px」。
 - 行为：`_process` 把 `modulate.a` 平滑推向 `behind_alpha`（默认 0.42），离开恢复。
-- 边界：碰撞盒与 `LightOccluder2D` 仍按完整底图提取，所以地面阴影不跟着淡；
-  正面时摆件照常 Y 排序，玩家完整在前。
+- 阴影：Godot 2D 的 `DirectionalLight2D` 阴影永远无限长，所以方向光只做平行光、
+  不开阴影；脚下投影改由 `WorldProp` 的软椭圆假影子画，正面时摆件照常 Y 排序，
+  玩家完整在前。
 - 范围：暂时只开放给建筑；树 / 栅栏 / 柜台 / 石头不淡出，避免小件频繁闪动。
 - 建筑逐件开关：`fade_when_behind`；手感：`behind_alpha` / `fade_speed`。
 
