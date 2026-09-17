@@ -85,7 +85,7 @@ PNG / `.tres` / `.fnt` 都提交进仓库（CI 与玩家不必跑生成器，也
 
 可通行区域不能被整张贴图挡住。采用「身后淡出」一起处理，不再做局部 overlay：
 
-- 只对**实心**摆件生效（`solid_size != Vector2.ZERO`）：`WorldProp._process` 判断玩家
+- 只对**实心**摆件生效（`WorldProp.passable == false`）：`WorldProp._process` 判断玩家
   是否落在它的纵向投影内、且在它北侧（身后），是则 `modulate.a → behind_alpha`，
   离开恢复。
 - 保留正常 Y 排序：正面时玩家完整在前；身后被贴图挡住时才透出来。
@@ -94,6 +94,21 @@ PNG / `.tres` / `.fnt` 都提交进仓库（CI 与玩家不必跑生成器，也
 
 早期版本给树冠 / 屋檐做过 `fg_<名字>.png` 前景 overlay，但局部遮挡会出现
 「身体在前、头被盖住」的割裂感，已整体移除；现在没有 `fg_` 素材与约定。
+
+### 2.7 默认实心，牧草才可穿过
+
+世界里的实体默认应当挡路，可穿过是显式例外：
+
+- `WorldProp.passable = false` 为默认值；没有填 `solid_size` 时，`WorldProp`
+  会按贴图底部自动生成脚印碰撞盒。只有牧草这类低矮摆件才设 `passable = true`。
+- `FloraData.passable = false` 为默认值，且 `solid_from_stage` 默认从 `0`
+  开始。树、石头一落地就挡路；杂草 / 野花 / 蘑菇等低矮地被显式 `passable = true`。
+- TileSet 的装饰瓦片按 [code]src/world/tile_collision.gd[/code] 写碰撞：
+  [code]SOLID_TILES[/code] 生成满格物理碰撞；
+  [code]TALL_GRASS[/code] / 花 / 蘑菇 / 卵石 / 打开的栅栏门 / 门洞列在
+  [code]PASSABLE_TILES[/code]，保持无碰撞。
+- 规范由 `tests/unit/test_world_prop.gd`、`test_flora_growth.gd` 与
+  `test_assets.gd` 的可执行断言守住。
 
 ## 3. 怎么跑
 

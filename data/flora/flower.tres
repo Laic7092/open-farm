@@ -13,6 +13,7 @@ spawn_weight = Array[int]([5, 4, 2, 0])
 rain_bonus = 2
 max_per_world = 25
 initial_weight = 4
+passable = true
 grows_on_farmland = true
 pickable_by_hand = true
 drop_item_id = &"flower"

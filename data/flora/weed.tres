@@ -12,6 +12,7 @@ spawn_weight = Array[int]([7, 8, 5, 0])
 rain_bonus = 3
 max_per_world = 60
 initial_weight = 6
+passable = true
 grows_on_farmland = true
 drop_item_id = &"fiber"
 drop_chance = 0.7

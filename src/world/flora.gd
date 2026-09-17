@@ -5,8 +5,8 @@ extends Sprite2D
 ## 和 [Crop] 一样只是 [FloraState] 的"视图"：自己不保存任何游戏状态，
 ## 由 [FloraField] 在状态变化后调用 [method refresh] 同步画面。
 ##
-## [b]碰撞体是动态加挂的[/b]：树苗可以走过去，长成树之后才挡人。
-## 这也是"更真实的世界"的一部分——刚冒出来的树不该立刻变成障碍。
+## [b]碰撞体是动态加挂的[/b]：默认一落地就挡人；牧草这类
+## 显式 `passable` 的低矮地被才允许穿过去。
 
 ## 变成实心时用的碰撞层级，与 [WorldProp] / [WorldBounds] 一致。
 const SOLID_LAYER: int = 1

@@ -69,8 +69,11 @@ static func is_mature(data: FloraData, days_grown: int) -> bool:
 
 
 ## 当前阶段是否已经挡住去路。
+##
+## [member FloraData.passable] 是唯一显式可穿过标记：牧草这类低矮地被
+## 即使配置了阶段也不会生成碰撞体。
 static func is_solid(data: FloraData, days_grown: int) -> bool:
-	if data == null or data.solid_from_stage < 0:
+	if data == null or data.passable or data.solid_from_stage < 0:
 		return false
 	return stage_of(data, days_grown) >= data.solid_from_stage
 

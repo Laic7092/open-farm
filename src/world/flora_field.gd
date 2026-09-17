@@ -325,7 +325,7 @@ func _generate_initial() -> void:
 ## 播下一株；如果它一落地就挡路，还要确认没有把地图切成两半。
 func _place_checked(cell: Vector2i, flora_id: StringName) -> bool:
 	var data := Database.get_flora(flora_id)
-	var guard: bool = data != null and data.solid_from_stage == 0
+	var guard: bool = data != null and not data.passable and data.solid_from_stage == 0
 	var before: int = _reachable_count() if guard else 0
 	_place(cell, flora_id)
 	if guard and _reachable_count() < before - 1:

@@ -67,7 +67,7 @@
 
 [WorldProp] 只保留一种遮挡机制，**无需改任何场景坐标**：
 
-- 判定：摆件是实心的（`solid_size != Vector2.ZERO`）且玩家落在它的纵向投影内、
+- 判定：摆件是实心的（`WorldProp.passable == false`）且玩家落在它的纵向投影内、
   在它北侧（身后）；横向允许「碰撞盒半宽 + 10px」。
 - 行为：`_process` 把 `modulate.a` 平滑推向 `behind_alpha`（默认 0.42），离开恢复。
 - 边界：碰撞盒与 `LightOccluder2D` 仍按完整底图提取，所以地面阴影不跟着淡；

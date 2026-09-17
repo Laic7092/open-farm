@@ -15,6 +15,7 @@ extends SceneTree
 
 const Layout := preload("res://src/art/atlas_layout.gd")
 const Palette := preload("res://src/art/palette.gd")
+const TileCollision := preload("res://src/world/tile_collision.gd")
 
 const ACTOR_DIR: String = "res://assets/sprites/actors"
 const UI_DIR: String = "res://assets/ui"
@@ -63,8 +64,33 @@ func _build_tileset() -> void:
 
 	var tileset := TileSet.new()
 	tileset.tile_size = Vector2i(Layout.TILE, Layout.TILE)
+	tileset.add_physics_layer()
+	tileset.set_physics_layer_collision_layer(0, 1)
+	tileset.set_physics_layer_collision_mask(0, 0)
 	tileset.add_source(source, 0)
+	_apply_tile_collisions(source)
 	_save(tileset, TILESET_PATH)
+
+
+## 给实心装饰瓦片写满格碰撞；牧草等可穿过瓦片保持无碰撞。
+func _apply_tile_collisions(source: TileSetAtlasSource) -> void:
+	var half := float(Layout.TILE) * 0.5
+	var points := PackedVector2Array([
+		Vector2(-half, -half),
+		Vector2(half, -half),
+		Vector2(half, half),
+		Vector2(-half, half),
+	])
+	for row: int in Layout.TILESET_ROWS:
+		for column: int in Layout.TILESET_COLUMNS:
+			var atlas := Vector2i(column, row)
+			if not TileCollision.is_solid(atlas):
+				continue
+			var data := source.get_tile_data(atlas, 0)
+			if data == null:
+				continue
+			data.set_collision_polygons_count(0, 1)
+			data.set_collision_polygon_points(0, 0, points)
 
 
 # ---------------------------------------------------------------- SpriteFrames

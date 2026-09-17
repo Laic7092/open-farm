@@ -12,6 +12,7 @@ spawn_weight = Array[int]([0, 1, 4, 0])
 rain_bonus = 6
 max_per_world = 12
 min_spacing = 1
+passable = true
 pickable_by_hand = true
 drop_item_id = &"mushroom"
 sprite_sheet = ExtResource("2_bxqrw")

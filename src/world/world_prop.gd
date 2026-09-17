@@ -13,9 +13,13 @@ extends Sprite2D
 ## 把"可通行区域"当成参数写清楚，比在每个场景里试坐标可靠得多。
 ## 灯光同理——场景里只填半径，亮度曲线由 [WorldLighting] 统一给。
 
-## 碰撞盒尺寸；[code]Vector2.ZERO[/code] 表示这个摆件可以穿过去（花、草、小鸡）。
+## 是否允许穿过。默认 false：绝大多数摆件都应当挡住玩家；
+## 只有牧草这类显式标记的低矮装饰才设为 true。
+@export var passable: bool = false
+## 碰撞盒尺寸；留空（[code]Vector2.ZERO[/code]）时按贴图底部自动生成脚印碰撞盒。
 @export var solid_size: Vector2 = Vector2.ZERO
 ## 碰撞盒相对精灵中心的偏移。房子这类"下实上虚"的图形通常填一个正数（往下）。
+## 仅当显式填写 [member solid_size] 时生效；自动脚印会自己算偏移。
 @export var solid_offset: Vector2 = Vector2.ZERO
 
 ## 夜晚点光源半径（世界像素）；0 表示这个摆件不发光。
@@ -40,6 +44,14 @@ const FADE_PLAYER_GROUP: StringName = &"player"
 ## 玩家横向只要在"碰撞盒半宽 + 这个余量"内就算走到身后。
 const FADE_X_MARGIN: float = 10.0
 
+## 自动脚印碰撞盒的宽度比例 / 上下限与高度（像素）。
+const AUTO_SOLID_WIDTH_RATIO: float = 0.5
+const AUTO_SOLID_MIN_WIDTH: float = 6.0
+const AUTO_SOLID_MAX_WIDTH: float = 16.0
+const AUTO_SOLID_HEIGHT: float = 4.0
+## 自动碰撞盒底边距贴图底部的内缩量。
+const AUTO_SOLID_BOTTOM_INSET: float = 1.0
+
 ## 所有发光摆件都在这个组里，由 [WorldLighting] 统一调节亮度。
 const NIGHT_LIGHT_GROUP: StringName = &"night_lights"
 
@@ -57,7 +69,7 @@ var _fade_active: bool = false
 
 
 func _ready() -> void:
-	if solid_size != Vector2.ZERO:
+	if _effective_solid_size() != Vector2.ZERO:
 		add_child(_build_body())
 		_build_occluders()
 	_fade_active = _should_fade_behind()
@@ -71,14 +83,43 @@ func _build_body() -> StaticBody2D:
 	# 与 [WorldBounds] 同一层：玩家与 NPC 都靠 layer 1 判定障碍。
 	body.collision_layer = 1
 	body.collision_mask = 0
-	body.position = solid_offset
+	body.position = _effective_solid_offset()
 
 	var shape := CollisionShape2D.new()
 	var rectangle := RectangleShape2D.new()
-	rectangle.size = solid_size
+	rectangle.size = _effective_solid_size()
 	shape.shape = rectangle
 	body.add_child(shape)
 	return body
+
+
+## 实际使用的碰撞盒尺寸：显式 [member solid_size] 优先，否则按贴图底部自动生成脚印。
+func _effective_solid_size() -> Vector2:
+	if passable:
+		return Vector2.ZERO
+	if solid_size != Vector2.ZERO:
+		return solid_size
+	if texture == null:
+		return Vector2.ZERO
+	var width := clampf(
+		float(texture.get_width()) * AUTO_SOLID_WIDTH_RATIO,
+		AUTO_SOLID_MIN_WIDTH,
+		AUTO_SOLID_MAX_WIDTH
+	)
+	return Vector2(width, AUTO_SOLID_HEIGHT)
+
+
+## 实际使用的碰撞盒偏移；没有显式 [member solid_size] 时按贴图底部对齐脚印。
+func _effective_solid_offset() -> Vector2:
+	if solid_size != Vector2.ZERO:
+		return solid_offset
+	var size := _effective_solid_size()
+	if size == Vector2.ZERO or texture == null:
+		return solid_offset
+	return Vector2(
+		0.0,
+		float(texture.get_height()) * 0.5 - AUTO_SOLID_BOTTOM_INSET - size.y * 0.5
+	)
 
 
 ## 从贴图 alpha 自动提取轮廓，挂成 [LightOccluder2D]。
@@ -137,9 +178,9 @@ func _process(delta: float) -> void:
 	modulate = tint
 
 
-## 只有实心摆件需要淡出；花、草、小鸡这类可穿过的装饰不处理。
+## 只有实心摆件需要淡出；显式 passable 的低矮装饰不处理。
 func _should_fade_behind() -> bool:
-	return fade_when_behind and texture != null and solid_size != Vector2.ZERO
+	return fade_when_behind and texture != null and _effective_solid_size() != Vector2.ZERO
 
 
 ## 玩家是否正好在这个摆件的纵向投影内、且落在它的北侧（身后）。
@@ -149,11 +190,12 @@ func _player_is_behind() -> bool:
 	var top_y: float = global_position.y + offset.y
 	if centered:
 		top_y -= float(texture.get_height()) * 0.5
-	var front_y: float = global_position.y + solid_offset.y
+	var footprint := _effective_solid_size()
+	var front_y: float = global_position.y + _effective_solid_offset().y
 	var player_y: float = _player.global_position.y
 	if player_y < top_y or player_y > front_y:
 		return false
-	var half_width: float = solid_size.x * 0.5 + FADE_X_MARGIN
+	var half_width: float = footprint.x * 0.5 + FADE_X_MARGIN
 	return absf(_player.global_position.x - global_position.x) <= half_width
 
 

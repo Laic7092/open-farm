@@ -16,17 +16,31 @@ func _prop(solid: Vector2) -> WorldProp:
 	return prop
 
 
-## 实心就淡出：房子和树都走同一条路，可穿过的装饰不处理。
+## 实心就淡出：房子和树都走同一条路，显式 passable 的装饰不处理。
 func test_all_solid_props_fade_behind() -> void:
 	var house := _prop(Vector2(58, 14))
 	assert_bool(house._should_fade_behind()).is_true()
 	var tree := _prop(Vector2(18, 8))
 	assert_bool(tree._should_fade_behind()).is_true()
 	var decoration := _prop(Vector2.ZERO)
+	decoration.passable = true
 	assert_bool(decoration._should_fade_behind()).is_false()
 	house.free()
 	tree.free()
 	decoration.free()
+
+
+## 没有显式 solid_size 时，默认按贴图自动生成脚印，不能继续被当成可穿过。
+func test_unconfigured_props_are_solid_by_default() -> void:
+	var prop := WorldProp.new()
+	prop.texture = load(HOUSE_TEXTURE)
+	assert_bool(prop.passable).is_false()
+	assert_bool(prop._effective_solid_size() != Vector2.ZERO).is_true()
+	assert_bool(prop._should_fade_behind()).is_true()
+	prop.passable = true
+	assert_bool(prop._effective_solid_size() == Vector2.ZERO).is_true()
+	assert_bool(prop._should_fade_behind()).is_false()
+	prop.free()
 
 
 ## 只有玩家落在纵向投影内、且在摆件北侧时才算"走到身后"。

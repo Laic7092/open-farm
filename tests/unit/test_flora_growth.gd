@@ -26,6 +26,7 @@ func before_test() -> void:
 	_weed = FloraData.new()
 	_weed.id = &"test_weed"
 	_weed.kind = FloraData.Kind.WEED
+	_weed.passable = true
 	_weed.days_per_stage = [1]
 	_weed.spawn_weight = [7, 8, 5, 0]
 	_weed.rain_bonus = 3
@@ -100,6 +101,14 @@ func test_advance_grows_and_reports_stage_change() -> void:
 	assert_int(state.days_grown).is_equal(1)
 	assert_bool(result[FloraGrowth.KEY_STAGE_CHANGED]).is_true()
 	assert_bool(result[FloraGrowth.KEY_MATURED]).is_false()
+
+
+## 默认数据一落地就实心；牧草这类 passable 数据永远不实心。
+func test_passable_flora_is_never_solid() -> void:
+	var default_data := FloraData.new()
+	assert_bool(FloraGrowth.is_solid(default_data, 0)).is_true()
+	assert_bool(FloraGrowth.is_solid(_weed, 0)).is_false()
+	assert_bool(FloraGrowth.is_solid(_weed, 999)).is_false()
 
 
 ## 长到"挡路"的那一天要单独报出来，[FloraField] 靠它决定何时做连通性守卫。

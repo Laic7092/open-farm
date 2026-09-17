@@ -9,6 +9,7 @@ extends GdUnitTestSuite
 
 const Layout := preload("res://src/art/atlas_layout.gd")
 const Palette := preload("res://src/art/palette.gd")
+const TileCollision := preload("res://src/world/tile_collision.gd")
 
 const STRINGS_CSV: String = "res://assets/i18n/strings.csv"
 const PIXEL_FONT: String = "res://assets/fonts/pixel_cjk.fnt"
@@ -261,6 +262,40 @@ func test_title_backdrop_matches_viewport() -> void:
 		return
 	assert_int(texture.get_width()).is_equal(Layout.TITLE_VIEWPORT.x)
 	assert_int(texture.get_height()).is_equal(Layout.TITLE_VIEWPORT.y)
+
+
+## 实心装饰瓦片必须有物理碰撞；牧草等可穿过瓦片必须没有。
+func test_solid_decor_tiles_have_collision() -> void:
+	var tileset := load(TILESET_PATH) as TileSet
+	assert_object(tileset).is_not_null()
+	if tileset == null:
+		return
+	assert_int(tileset.get_physics_layers_count()).is_equal(1)
+	assert_int(tileset.get_physics_layer_collision_layer(0)).is_equal(1)
+	var source := tileset.get_source(0) as TileSetAtlasSource
+	assert_object(source).is_not_null()
+	if source == null:
+		return
+	for atlas: Vector2i in TileCollision.SOLID_TILES:
+		var data := source.get_tile_data(atlas, 0)
+		assert_object(data).override_failure_message(
+			"实心装饰瓦片 %s 没有 TileData" % atlas
+		).is_not_null()
+		if data == null:
+			continue
+		assert_int(data.get_collision_polygons_count(0)).override_failure_message(
+			"实心装饰瓦片 %s 没有碰撞多边形" % atlas
+		).is_greater(0)
+	for atlas: Vector2i in TileCollision.PASSABLE_TILES:
+		var data := source.get_tile_data(atlas, 0)
+		assert_object(data).override_failure_message(
+			"可穿过瓦片 %s 没有 TileData" % atlas
+		).is_not_null()
+		if data == null:
+			continue
+		assert_int(data.get_collision_polygons_count(0)).override_failure_message(
+			"可穿过瓦片 %s 不应有碰撞多边形" % atlas
+		).is_equal(0)
 
 
 ## 图集排版表声明的格子必须都在 TileSet 里——否则脚本铺地时会画到空处。

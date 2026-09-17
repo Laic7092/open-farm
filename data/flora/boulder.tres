@@ -12,7 +12,6 @@ spawn_weight = Array[int]([1, 1, 1, 0])
 max_per_world = 5
 min_spacing = 3
 initial_weight = 1
-solid_from_stage = 0
 solid_size = Vector2(24, 10)
 solid_offset = Vector2(0, 6)
 tool_kind = 4

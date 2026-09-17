@@ -14,7 +14,6 @@ rain_bonus = 1
 max_per_world = 12
 min_spacing = 3
 initial_weight = 5
-solid_from_stage = 2
 solid_offset = Vector2(0, 6)
 tool_kind = 3
 stamina_cost = 3

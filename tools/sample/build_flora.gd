@@ -8,14 +8,13 @@ extends "res://tools/sample/sample_base.gd"
 ## [br]- [code]initial_weight[/code] 是新地图开局播种的权重（树多、草少）
 ## [br]- [code]days_per_stage[/code] 为空 = 不生长（石头就是这样"不会变"的）
 func build() -> void:
-	# 阔叶树：8 天从树苗长到成树，成树开始挡路（前两个阶段能穿过去）。
+	# 阔叶树：8 天从树苗长到成树；默认从第 0 阶段就挡路。
 	_flora(&"tree_oak", &"FLORA_TREE_OAK", FloraData.Kind.TREE, [2, 3, 3], {
 		"spawn_weight": [5, 5, 3, 0],
 		"rain_bonus": 1,
 		"initial_weight": 5,
 		"max_per_world": 12,
 		"min_spacing": 3,
-		"solid_from_stage": 2,
 		"solid_size": Vector2(10, 8),
 		"solid_offset": Vector2(0, 6),
 		"tool_kind": ToolData.Kind.AXE,
@@ -24,13 +23,12 @@ func build() -> void:
 		"drop_amount": Vector2i(2, 3),
 	})
 
-	# 松树：慢一点、冬季也在长，是冬天唯一会变高变大的东西。
+	# 松树：慢一点、冬季也在长，是冬天唯一会变高变大的东西；默认从第 0 阶段挡路。
 	_flora(&"tree_pine", &"FLORA_TREE_PINE", FloraData.Kind.TREE, [3, 3, 3], {
 		"spawn_weight": [3, 3, 3, 1],
 		"initial_weight": 4,
 		"max_per_world": 10,
 		"min_spacing": 3,
-		"solid_from_stage": 2,
 		"solid_size": Vector2(10, 8),
 		"solid_offset": Vector2(0, 6),
 		"tool_kind": ToolData.Kind.AXE,
@@ -39,8 +37,9 @@ func build() -> void:
 		"drop_amount": Vector2i(2, 3),
 	})
 
-	# 杂草：一天就长成，会侵占农田空地——"早上起来田里长草"就是它。
+	# 牧草 / 杂草：一天就长成，会侵占农田空地；低矮地被显式可穿过。
 	_flora(&"weed", &"FLORA_WEED", FloraData.Kind.WEED, [1], {
+		"passable": true,
 		"spawn_weight": [7, 8, 5, 0],
 		"rain_bonus": 3,
 		"initial_weight": 6,
@@ -83,8 +82,9 @@ func build() -> void:
 		"drop_amount": Vector2i(2, 3),
 	})
 
-	# 野花：两天开花，可以徒手采。
+	# 野花：两天开花，可以徒手采；低矮地被显式可穿过。
 	_flora(&"flower", &"FLORA_FLOWER", FloraData.Kind.FLOWER, [1, 1], {
+		"passable": true,
 		"spawn_weight": [5, 4, 2, 0],
 		"rain_bonus": 2,
 		"initial_weight": 4,
@@ -98,8 +98,9 @@ func build() -> void:
 		"drop_chance": 0.8,
 	})
 
-	# 蘑菇：不生长，秋天雨后一夜之间冒出来，徒手采。
+	# 蘑菇：不生长，秋天雨后一夜之间冒出来，徒手采；低矮地被显式可穿过。
 	_flora(&"mushroom", &"FLORA_MUSHROOM", FloraData.Kind.MUSHROOM, [], {
+		"passable": true,
 		"spawn_weight": [0, 1, 4, 0],
 		"rain_bonus": 6,
 		"max_per_world": 12,

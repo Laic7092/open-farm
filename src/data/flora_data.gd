@@ -49,8 +49,12 @@ enum Kind {
 ## "之后每天还会冒出什么"可以分别调：树在开局该多一点，而杂草该天天冒。
 @export_range(0, 50) var initial_weight: int = 0
 
+## 是否允许穿过。默认 false：绝大多数野生植被都应当挡路；
+## 只有牧草这类低矮地被才显式设为 true。
+@export var passable: bool = false
 ## 从第几个阶段开始有碰撞体；-1 表示永远可以穿过去。
-@export_range(-1, 8) var solid_from_stage: int = -1
+## 默认 0：一落地就挡路；需要“长大才挡路”的物种再往后调。
+@export_range(-1, 8) var solid_from_stage: int = 0
 @export var solid_size: Vector2 = Vector2(10, 8)
 @export var solid_offset: Vector2 = Vector2(0, 20)
 
