@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## 美术资源规范的可执行版本。
 ##
-## [code]docs/art_pipeline.md[/code] 里写的规则如果只停留在文档里就没人遵守，
+## [code]docs/generated_assets.md[/code] 里写的规则如果只停留在文档里就没人遵守，
 ## 所以这里把每一条都变成断言：
 ## [br]- 生成物存在、尺寸与 [AtlasLayout] 一致（改了排版忘了重新生成会红）
 ## [br]- 像素中文字体覆盖了翻译表里的每一个字（新文案变成方块会红）

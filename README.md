@@ -1,23 +1,24 @@
 # open-farm · 牧场物语复刻
 
 用 **Godot 4.7.2** 制作的 2D 俯视角像素农场生活模拟：农场 / 畜牧 / 钓鱼、NPC 与好感度恋爱、节日与事件、
-多张地图、UI、存档、本地化与自动化测试均已打通。
-**美术、字体、BGM、音效全部由脚本生成**，仓库不放手工二进制素材。
+多张地图、UI、存档与本地化均已打通。**美术、字体、BGM、音效全部由脚本生成**，仓库不放手工二进制素材。
 
 ## 快速开始
 
 ```bash
 ./godot --path .                        # 运行游戏
 ./godot --path . -e                     # 用编辑器打开
-timeout 800 ./tools/check.sh            # 导入缓存 + 单元测试 + 冒烟测试（提交前必跑）
+timeout 800 ./tools/check.sh            # 大文件体检 + 单元测试 + 冒烟测试（提交前必跑）
 timeout 800 ./tools/check.sh unit       # 只跑单元测试
 timeout 800 ./tools/check.sh smoke      # 只跑冒烟测试
 timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 ```
 
-`GODOT_BIN=/path/to/godot` 可指定引擎，`GODOT_TIMEOUT=120` 可覆盖默认 60s 命令超时。
+`GODOT_BIN=/path/to/godot` 指定引擎，`GODOT_TIMEOUT=120` 覆盖默认 60s 命令超时。
 
 ## 操作
+
+纯键盘，鼠标隐藏；菜单 / 商店 / 标题页可用方向键或 `WASD` 导航，回车 / 空格 / `E` 确认，`Esc` 返回。
 
 | 按键 | 功能 |
 | --- | --- |
@@ -27,43 +28,33 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 | `Q` / `R` | 切换手持工具 |
 | `G` | 给面前 NPC 送礼物 |
 | `Tab` / `I` | 背包 |
-| `Esc` | 系统菜单 |
+| `Esc` | 系统菜单（商店内 `A` / `D` 切换买卖列表） |
 | `F5` / `F9` | 快捷存档 / 读档（当前这一局） |
 
-纯键盘操作，鼠标隐藏：菜单、商店、标题页均可用方向键或 `WASD` 导航，回车 / 空格 / `E` 确认，
-`Esc` 返回；商店内 `A` / `D` 切换购买与卖出列表。
+## 怎么玩
 
-## 目录结构
+出生在农舍门口，核心循环：翻地 → 浇水 → 播种 → 收获 → 放进出货箱换钱 → 买种子 / 牲畜 / 升级。
+`E` 进屋睡觉推进到第二天；日结转结算天气、作物 / 牲畜成长、NPC 日程、节日与事件，并自动存档。
+开局整片农场长满树 / 石 / 杂草，先拿对应工具开荒；`Q` / `R` 换工具。
 
-- `src/`：按玩法分层（`autoload` / `services` / `core` / `data` / `player` / `farm` / `npc` / `event` / `shop` / `world` / `ui` / `main`），规则尽量写成可脱离引擎测试的纯静态函数。
-- `scenes/`、`data/`、`assets/`、`tests/unit/`、`tools/`：场景、`.tres` 数据、生成物、单元测试、开发与生成脚本；`tools/smoke/` 是冒烟域检查器，`tools/sample/` 是示例数据域构建器。
-- `docs/`：跨系统流程与美术 / 音频规范；`project.godot` 配置 autoload、InputMap、像素渲染与本地化。
+- **农场 / 畜牧**：农田清出后耕种；去杂货店买鸡 / 牛与干草，回畜舍 `E` 放养、喂饲料槽；成年后定期产出，`E` 收取、每天首次 `E` 抚摸加好感。
+- **钓鱼**：水边持竿按住 `空格` 蓄力抛竿 → 等咬钩 → 按住收线、把钩子压在鱼身上完成拉扯；每竿耗 1 体力。水域 / 季节 / 天气 / 时刻决定鱼种。
+- **地图 / NPC**：地图链 `农场 → 村庄 → 集市 → 海滩 → 矿洞`，村庄另通往图书馆、林道、草坡，另有室内 `home`；走到边缘即换图。NPC 按日程走动，商店要老板站到柜台后才开。
+- **好感 / 恋爱**：交谈与送对礼加好感（50 点 = 1 心）；表白 / 求婚 / 婚后等的具体阈值见 `data/npcs/*.tres`。
+- **节日 / 事件**：节日当天 NPC 去会场，HUD 显示「今日节日」，到场 `E` 参加加好感；日期与奖励见 `data/festivals/`、`data/events/`。
+
+存档：每个槽位 = 一局，无上限；`F5` / `F9` 快捷存读，日结自动存档，换局回标题页。
 
 ## 扩展入口
 
-数值与外观优先只改 `data/**/*.tres`；新增汉字或文案后必须重跑 `build_assets.sh`。
+内容都在 `data/**/*.tres`，脚本只认 id：加一个域先看同名目录与 `tools/art/generate_<域>.gd`，改完重跑 `build_assets.sh`。
+真正容易漏的是跨文件接线：
 
-| 任务 | 主要入口 |
-| --- | --- |
-| 加作物 | `data/crops/` + `data/items/` + `data/shops/*.tres` + `tools/art/generate_crops.gd` + `assets/i18n/content.csv` |
-| 加牲畜 | `data/animals/` + `data/buildings/` + `data/items/` + `tools/art/generate_animals.gd` |
-| 加鱼种 | `data/fish/` + `data/items/` + `tools/art/generate_items.gd` + `assets/i18n/content.csv` |
-| 加野生植被 | `data/flora/` + `tools/art/generate_flora.gd` + `src/world/flora_field.gd` |
-| 加 NPC / 日程 | `tools/art/generate_actors.gd` + `data/npcs/` + `data/dialogue/` + `data/schedules/` + 场景 `SchedulePoint` |
-| 加商店 / 柜台 | `data/shops/*.tres` + `NpcData.shop_id` + 场景摆 `ShopCounter`（`src/shop/shop_counter.gd`）并填 `shop_id` / `clerk_id` |
-| 加节日 / 事件 | `data/festivals/` + `data/events/` + 地图 `FestivalGround` + `src/event/*_rules.gd` + `src/services/calendar_service.gd` |
-| 加恋爱线 | `NpcData` 的 `romanceable` / `*_dialogue` / 礼物偏好 + 五段对白 + `AffectionRules` + `src/services/relationship_service.gd` |
-| 加地图 | 复制 `scenes/world/twon.tscn` 或 `library.tscn`；地面用 `src/world/*_ground.gd`；放 `SpawnPoint` 并用 `SceneDoor` 互连；同步 `tests/unit/test_world_map.gd` 的 `MAPS` |
-| 加水域 / 改岸线 | `src/world/water_layout.gd` 登记形状（`src/world/water_shape.gd` 造曲线）+ `tools/art/generate_water.gd` 烘贴图 + `src/world/water_field.gd` 显示 / 碰撞 / 波光 |
-| 加音效 / BGM | `src/audio/audio_catalog.gd` + `tools/audio/generate_*.gd` + 场景里的 `SceneAudio`（`src/audio/scene_audio.gd`）|
-| 改 UI | `src/ui/*.gd` + `scenes/ui/*.tscn` + `src/ui/ui_root.gd` |
-| 参与存档 | 节点实现 `to_dict/from_dict`，并 `Persistence.register(self, &"id")`；JSON 往返后 `StringName` 要转回。槽位无上限，手动与日结自动存档都走 `SaveManager.save_current()` |
-
-## 测试
-
-- `./tools/check.sh` = gdUnit4 单元测试 + `tools/smoke_test.tscn` 端到端冒烟测试。
-- 规范测试：`tests/unit/test_assets.gd`、`tests/unit/test_audio.gd`；视觉回归：`tools/screenshot.tscn`、`tools/ui_preview.tscn`。
-- 单元测试与冒烟测试的分工见 [architecture §6](docs/architecture.md#6-测试策略)。
+- 新道具同时进 `data/items/`；要上架再改 `data/shops/`。
+- 新文案 / 汉字进 `assets/i18n/*.csv`，否则像素字体缺字。
+- 加地图要互连 `SceneDoor` / `SpawnPoint`，并同步 `tests/unit/test_world_map.gd` 的 `MAPS`。
+- 参与存档：`to_dict` / `from_dict` + `Persistence.register(self, &"id")`，JSON 往返把 `StringName` 转回，统一走 `SaveManager.save_current()`。
+- 数值与外观优先只改 `.tres`，不动脚本。
 
 ## 已知限制
 
@@ -71,19 +62,31 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 - 世界场景切过后常驻内存；地图继续增加后需改成「按需卸载 + 状态外置」。
 - 水域有碰撞（`WaterField` 的 `CollisionPolygon2D`，玩家与 NPC 都下不去水）；NPC 只走固定时刻表，不会互相避让；事件只在日结转时判定。
 - 恋爱是满足条件自动推进的里程碑；牲畜不会死亡或繁殖。
-- 钓鱼有蓄力抛竿与拉扯小游戏（按住 / 松开 `空格` 控制钩子深度），但落点距离不影响能钓到的水域；鱼仍只按水域 / 季节 / 天气 / 时段筛选，蓄力只放大难钓鱼的权重。
-- 鱼线是逐帧算出的下垂折线（`FishingRules.cast_arc` / `line_curve`），不是 Physics2D 绳索：不会绕障碍物，也不会垂到景深遮档后面。
-- 偿还顺序见 [docs/roadmap.md](docs/roadmap.md)；单点设计原因看代码中的 `##` 注释。
+- 钓鱼有蓄力抛竿与拉扯小游戏，但落点距离不影响能钓到的水域；鱼线是逐帧算出的下垂折线，不是 Physics2D 绳索。
+- 偿还顺序见下面「下一步」；单点设计原因看代码中的 `##` 注释。
+
+## 下一步
+
+排序原则：**补深度 → 扩内容 → 还债 → 产品化**——先把已有循环做厚（料理 / 食谱、工具升级、钓鱼扩展、
+牲畜繁殖与品质），再铺广度（图鉴、委托板、节日小游戏），之后还底座债（场景卸载、事件实时触发），
+最后产品化（Web 试玩、Steam）。详细里程碑：
+
+| 版本 | 主题 | 关键交付 |
+| --- | --- | --- |
+| v0.4 | 循环深度 | 料理 + 食谱、工具升级 + 矿石、钓鱼扩展、牲畜繁殖 / 品质 |
+| v0.5 | 内容广度 | 每季 6 种作物、博物馆图鉴、委托板、商店扩容 |
+| v0.6 | 叙事 | 好感度心事件、分支对话、节日小游戏、长期村庄目标 |
+| v0.7 | 底座 | 场景卸载、事件实时触发（多存档槽与水碰撞已完成） |
+| v0.8 | 产品化 | Web 试玩版、手柄、可访问性、数据校验 lint |
+| v1.0 | 完整一年 | 数值平衡、教程、成就、Steam 发行 |
+
+若只做一件事：先做 **v0.4 的料理 + 工具升级**——它把已有作物 / 牲畜 / 鱼 / 矿石串成经济闭环，单位投入回报最高。
+新系统必须延续 [architecture](docs/architecture.md) 与 [AGENTS.md](AGENTS.md) 的架构约定。
 
 ## 文档地图
 
 | 文档 | 内容 |
 | --- | --- |
-| [docs/architecture.md](docs/architecture.md) | 分层、组合根、关键决策、Godot 坑与引擎事实、子系统索引、测试策略 |
-| [docs/gameplay.md](docs/gameplay.md) | 玩家向玩法指南：开局、农场 / 畜牧、地图 / NPC、恋爱、节日、存档 |
-| [docs/art_pipeline.md](docs/art_pipeline.md) | 美术生成规范：调色板 / 图集坐标 / 确定性 / 字体 / 强制测试 |
-| [docs/audio_pipeline.md](docs/audio_pipeline.md) | 音频合成规范：格式 / 原语 / 循环 / 场景接线 / 强制测试 |
-| [docs/big_files.md](docs/big_files.md) | 大文件规范：阈值、阅读 / 修改协议、特别注意的文件 |
-| [docs/roadmap.md](docs/roadmap.md) | 未来方向：循环深度、内容广度、技术债、平台化与里程碑 |
+| [docs/architecture.md](docs/architecture.md) | 分层、组合根、关键决策、Godot 坑与引擎事实、测试、大文件阅读协议 |
+| [docs/generated_assets.md](docs/generated_assets.md) | 生成物规范（美术 / 音频 / 视觉方向）：调色板 / 图集 / 确定性 / 字体 / 合成 / 强制测试 |
 | [AGENTS.md](AGENTS.md) | 给编码 Agent 的最短上手说明 |
-

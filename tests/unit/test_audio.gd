@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## 音频资源规范的可执行版本（对应 [code]docs/audio_pipeline.md[/code]）。
+## 音频资源规范的可执行版本（对应 [code]docs/generated_assets.md[/code]）。
 ##
 ## 和 [code]test_assets.gd[/code] 同样的思路：把"音频也必须由脚本生成"写成断言——
 ## [br]- 目录里声明的每个 id 都有对应 WAV（漏生成会红）

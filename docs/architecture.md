@@ -32,21 +32,19 @@ UI        只订阅 EventBus，从不反向调用玩法代码
   `Array[SaveSection]`，场景节点继续用 `Persistence.register()` 自注册，`SaveManager` 统一包装成 `SaveSection`。
   日结自动存档是 `Main` 注册的最高优先级日结转钩子，跑在所有模拟钩子之后。
 - 世界实例缓存与待恢复目标在 `WorldHost`；`SceneRouter.change_scene_to(host, path, spawn)` 只做无状态过渡。
-- 代码入口：`src/main/main.gd`、`src/main/world_host.gd`、`src/services/*.gd`、`src/core/save_section.gd`、
-  `src/core/persistence.gd`、`src/core/save_slots.gd`、`src/autoload/save_manager.gd`。
 
 ## 3. 关键设计决策
 
-| 决策 | 要点 | 代码入口 |
-| --- | --- | --- |
-| 存档用 JSON，槽位无上限 | 避免 `ResourceSaver` 写入脚本路径；槽位号进文件名，目录扫描即槽位列表；显式版本号 + `from_dict` 字段兜底 | `save_manager.gd` |
-| 世界场景换子节点 | `Main` 常驻 `WorldHost` / `UiRoot`，不用 `change_scene_to_file`；缓存与当前实例在 `WorldHost`，`SceneRouter` 只做无状态过渡 | `main.gd`、`world_host.gd`、`scene_router.gd` |
-| 领域事件 | 全局只留时间 / 场景 / 存档信号；玩家 / 农场 / 世界 / UI 信号挂在由状态或宿主持有的领域对象上 | `event_bus.gd`、`src/events/*.gd` |
-| `_ready()` 一生只跑一次 | 缓存复用场景不重跑 `_ready()`；每次进图逻辑放 `_enter_tree()` / `_exit_tree()` | `world_scene.gd` |
-| 有序日结转 | 不依赖信号回调顺序；`GameDateClock` 委托给 `DayPipeline`，按显式 `priority` 同步执行 | `game_date_clock.gd`、`day_pipeline.gd` |
-| 数据驱动 | 内容都在 `.tres`，脚本只认 id；静态数据与运行时状态分离 | `database.gd` |
-| 文案按域拆 CSV | `assets/i18n/` 下按域分 `ui.csv` / `content.csv` / `dialogue.csv`；每个 CSV 导入出的 `.translation` 必须登记进 `project.godot` 的 `locale/translations`（`--import` 不会自动加），字库扫整个目录 | `assets/i18n/`、`tests/unit/test_i18n.gd` |
-| UI 模态栈 | `UiRoot` 统一管理暂停与 `close_all()`，避免读档 / 传送残留菜单 | `ui_root.gd` |
+| 决策 | 要点 |
+| --- | --- |
+| 存档用 JSON，槽位无上限 | 避免 `ResourceSaver` 写入脚本路径；槽位号进文件名，目录扫描即槽位列表；显式版本号 + `from_dict` 字段兜底 |
+| 世界场景换子节点 | `Main` 常驻 `WorldHost` / `UiRoot`，不用 `change_scene_to_file`；缓存与当前实例在 `WorldHost`，`SceneRouter` 只做无状态过渡 |
+| 领域事件 | 全局只留时间 / 场景 / 存档信号；玩家 / 农场 / 世界 / UI 信号挂在由状态或宿主持有的领域对象上 |
+| `_ready()` 一生只跑一次 | 缓存复用场景不重跑 `_ready()`；每次进图逻辑放 `_enter_tree()` / `_exit_tree()` |
+| 有序日结转 | 不依赖信号回调顺序；`GameDateClock` 委托给 `DayPipeline`，按显式 `priority` 同步执行 |
+| 数据驱动 | 内容都在 `.tres`，脚本只认 id；静态数据与运行时状态分离 |
+| 文案按域拆 CSV | `assets/i18n/` 下按域分 `ui.csv` / `content.csv` / `dialogue.csv`；每个 CSV 导入出的 `.translation` 必须登记进 `project.godot` 的 `locale/translations`（`--import` 不会自动加），字库扫整个目录 |
+| UI 模态栈 | `UiRoot` 统一管理暂停与 `close_all()`，避免读档 / 传送残留菜单 |
 
 ## 4. Godot 踩坑与引擎事实
 
@@ -68,27 +66,49 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 - `AudioStreamWAV` 导入默认 QOA；`--quit-after <n>` 是主循环迭代数；`-s` 脚本的 `_initialize()` 在主循环前同步跑完。
 - `ItemList` 的 focus 样式画在所有条目之上，焦点样式只能画边，填底色会盖住整张列表。
 
-## 5. 子系统索引
+## 5. 测试
 
-“怎么加内容”见 [README 的扩展入口](../README.md#扩展入口)；下表只负责理解现有子系统。
+两层自动化 + 一层人工预览：
 
-| 子系统 | 代码入口 | 先看什么 |
+| 层 | 入口 | 规模 | 管什么 |
+| --- | --- | --- | --- |
+| 单元 | `tests/unit/test_*.gd` | 35 套件 / 440 用例 | 纯逻辑与数据契约：不加载场景、不模拟输入 |
+| 冒烟 | `tools/smoke_test.tscn` + `tools/smoke/` | 320 项检查 | 真实场景 + autoload 接线 + 完整玩法链路 |
+| 视觉 | `tools/screenshot.tscn`、`tools/ui_preview.tscn` | — | 出图人工看，不做像素 diff |
+
+- 规范即测试：`test_assets.gd` / `test_audio.gd` / `test_i18n.gd` 把美术 / 音频 / 本地化规范写成断言；地图增删同步 `test_world_map.gd` 的 `MAPS`。
+- 颗粒度：单元测试细到「一条断言一个行为边界」，很多是遍历 `Database` 全量数据的数据驱动契约测试；冒烟细到「一条玩法链路一个 `_check*` 函数」。
+- 跑法统一走 `./tools/check.sh [unit|smoke]`。
+- **输出约定**：跑测试的 Godot 输出一律重定向到 `.tmp/check/*.log`，控制台只留统计与失败明细（`tools/summarize_tests.py` 解析 gdUnit4 的 JUnit 报告，冒烟只 grep `SMOKE` 行）。新增测试入口也要照此收口，不逐条回显 `PASSED`。
+
+## 6. 大文件与阅读协议
+
+> 三句核心：≥400 行的文件先看结构、不整读；改共享函数前先查调用方；生成物只改生成器。
+> 阈值可执行：`python3 tools/outline.py lint`（`--strict` 有红线时非 0）。
+
+| 对象 | 黄线：先看结构 | 红线：禁止整读 |
 | --- | --- | --- |
-| 野生植被 | `src/world/flora_field.gd`、`flora_growth.gd` | 状态在 `Dictionary`；日结转生长 + 进图补算；`allowed_species` 控制物种 |
-| NPC 日程 / 寻路 | `src/npc/npc.gd`、`npc_navigator.gd`、`src/core/grid_pathfinder.gd` | 日程返回“当前生效段”；可通行性来自物理查询并按格缓存 |
-| 昼夜光照 | `src/world/day_night.gd`、`world_lighting.gd` | 分钟到环境光的静态曲线；灯由 `WorldProp.light_radius` 生成 |
-| 好感度 / 恋爱 | `src/services/relationship_service.gd`、`src/npc/affection_rules.gd`、`src/npc/marriage_rules.gd` | 跨场景状态集中在 `RelationshipStore`；规则纯静态；孩子用 `required_flag` 门控 |
-| 节日 / 事件 | `src/services/calendar_service.gd`、`festival_rules.gd`、`event_rules.gd` | 节日与事件是两类数据；规则纯静态；事件只在日结转按显式事实输入判定 |
-| 天气 | `src/services/weather_service.gd`、`src/core/weather.gd`、`src/core/weather_state.gd` | 状态在 `WeatherState`；服务注册最高优先级日结转，先掷天气再让日历 / 农场读取 |
-| 世界连接 | `src/autoload/scene_router.gd`、`src/world/scene_door.gd`、`ground_painter.gd` | 链式地图；`auto_enter` / `road_exit`；乡道压纵向中线由 `test_world_map.gd` 守 |
-| 畜舍 | `src/farm/livestock_manager.gd`、`animal_husbandry.gd` | 与 `FarmGrid` 同构：状态字典、视图可重建、规则纯静态 |
-| 钓鱼 | `src/farm/fishing_rules.gd`、`fishing_fight.gd`、`src/ui/fishing_ui.gd`、`src/world/fishing_bobber.gd` | 抛竿 / 抽取 / 抛投弧线与鱼线几何都是纯静态；拉扯小游戏是注入 RNG 的 `RefCounted`；浮标与鱼线只把纯函数结果画出来 |
-| 存档 / 多存档槽 | `src/autoload/save_manager.gd`、`src/core/save_slots.gd`、`src/core/save_section.gd` | 槽位 = 目录里的 `slot_<n>.json`；`current_slot` 记本局；日结自动存档是 `Main` 的最高优先级日结钩子 |
+| 文件 | 400 行 | 800 行 |
+| 函数 | 80 行 | 120 行 |
 
-## 6. 测试策略
+- **定位**：`map`（索引）/ `grep`（搜词）/ `outline`（文件结构）/ `sym`（单函数）/ `refs` `callers`（调用关系）；
+  完整子命令见 `python3 tools/outline.py --help`。
+- **动手前**：共享函数先 `callers` + `grep`；生成物改生成器后重跑 `build_assets.sh`；场景改完用 `outline` 复查父路径。
+- **收尾**：规则 / 数据 → `check.sh unit`；交互 / 场景 → `check.sh smoke`；全量 → `check.sh`。
+- **别制造新的大文件**：新文件顶部写 `##` 说明；单函数 ≤ 80 行；入口型大文件在顶部 `##` 写「调度地图」。
+  出现「3 个以上分节 / 要滚动找函数 / 一个文件因两件不相关的事被改」就按规则 / 状态 / 视图 / 数据拆分。
 
-- `tests/unit/`：只测纯逻辑，不加载场景、不模拟输入。
-- `tools/smoke_test.tscn`：真实场景 + autoload 接线 + 完整玩法链路；检查按域拆在 `tools/smoke/`（世界 / 农场 / 巡游 / 钓鱼），公共断言在 `smoke_base.gd`。
-- `tests/unit/test_assets.gd` / `test_audio.gd` / `test_i18n.gd`：把美术 / 音频 / 本地化规范写成可执行断言。
-- `tools/screenshot.tscn` / `ui_preview.tscn`：视觉回归预览，不做像素级 diff。
+**特别注意的文件**：
+
+| 文件 | 为什么 | 姿势 |
+| --- | --- | --- |
+| `tools/smoke_test.gd` + `tools/smoke/` | 根脚本只留生命周期与相位机，域检查器继承 `smoke_base.gd` | 加农场检查 → 根 `_run_checks()`；别的图 → 对应相位；公共工具加在 `smoke_base.gd` |
+| `tools/generate_sample_data.gd` + `tools/sample/` | 入口按依赖顺序调用各域 `build()`，生成 `data/**/*.tres` | 改数据 = 改 `tools/sample/build_*.gd` 再重跑 |
+| `src/world/flora_field.gd` | 状态权威 + 存档 + 被交互 / 冒烟 / 生成器调用 | 改 `clear()` 之类共享方法前先 `callers` + `grep` |
+| `src/autoload/database.gd` | 每个数据域要动 10+ 处样板 | 加域时逐项对齐，别漏 `validate_all` |
+| `src/audio/scene_audio.gd` | 靠导出字段决定订阅哪些事件 / 跟不跟世界曲目 | 改字段前先看 `main.tscn` 与 `title_screen.tscn` 的接线 |
+| `scenes/world/twon.tscn` `farm.tscn` | 节点树 + `parent` 路径手改易错位 | 先用 `outline` 看层级，改完复查 |
+| `reports/**` | gdUnit4 报告（几百个 HTML） | 已 gitignore；不要读、不要提交 |
+
+豁免：`addons/**` 与生成物（`assets/**`、`reports/**`、`.godot/**`、`target/**`）不适用本文。
 

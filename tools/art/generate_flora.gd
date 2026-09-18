@@ -8,7 +8,7 @@ extends SceneTree
 ## 树苗 → 小树 → 成树 → 老树是[b]同一套参数化画法[/b]逐级放大，
 ## 而不是四张各画各的图：这样调整"树的形状"只用改一处。
 ##
-## 规范（见 docs/art_pipeline.md）：颜色只来自调色板、坐标只来自 AtlasLayout、
+## 规范（见 docs/generated_assets.md）：颜色只来自调色板、坐标只来自 AtlasLayout、
 ## 禁止 RandomNumberGenerator（质感一律用 [method ArtLib.noise] 的坐标哈希），
 ## 保证连跑两次得到逐像素相同的结果。
 ##

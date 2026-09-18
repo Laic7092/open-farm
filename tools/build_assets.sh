@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 一键重新生成全部美术、音频与字体资源，并刷新 Godot 导入缓存。
 #
-# 规范（详见 docs/art_pipeline.md 与 docs/audio_pipeline.md）：
+# 规范（详见 docs/generated_assets.md）：
 #   仓库里不放手工二进制素材，所有 PNG / 字体 / WAV 都由 tools/ 下的脚本生成。
 #   本脚本是唯一的编排入口，顺序不可随意调换：
 #     1. 生成 PNG / .fnt / WAV（此时还没有 .import）

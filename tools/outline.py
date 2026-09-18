@@ -22,7 +22,7 @@
   --json  输出 JSON，方便再加工
 
 支持 .gd / .tscn / .tres / .sh / .py / .md。默认扫描 tools/ 与 src/。
-约定见 docs/big_files.md。
+约定见 docs/architecture.md §6。
 """
 from __future__ import annotations
 
@@ -647,6 +647,14 @@ def cmd_lint(args):
                     hugef.append((path, f["name"], f["line"], f["length"]))
                 elif f["length"] >= 80:
                     longf.append((path, f["name"], f["line"], f["length"]))
+    if args.quiet:
+        print(
+            "大文件体检（不阻断）：红线 %d / 黄线 %d 文件，超长 %d / 红线 %d 函数，缺说明 %d"
+            % (len(red), len(yellow), len(longf), len(hugef), len(nodoc))
+        )
+        if args.strict and (red or hugef):
+            return 1
+        return 0
     print("大文件体检 · 阈值：文件 400（黄）/ 800（红）行，函数 80（黄）/ 120（红）行")
     print("范围：%s（默认跳过 addons/ .godot/ reports/）" % ", ".join(roots))
     print()
@@ -738,6 +746,7 @@ def main(argv):
     s = sub.add_parser("lint", parents=[common], help="大文件规范体检")
     s.add_argument("paths", nargs="*", default=["tools", "src", "tests"])
     s.add_argument("--strict", action="store_true", help="有红线时退出码非 0")
+    s.add_argument("--quiet", action="store_true", help="只打印汇总一行")
     s.set_defaults(fn=cmd_lint)
 
     s = sub.add_parser("grep", parents=[common], help="带行号搜索，不整读")
