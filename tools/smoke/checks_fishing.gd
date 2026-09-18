@@ -60,8 +60,7 @@ func _start_fishing_check() -> void:
 	_fishing_before = _fish_count(player)
 	_fishing_frames = 0
 	_fish_bit = false
-	_fish_reeled = false
-	# 固定随机源，让咬钩时间在 CI 里可复现。
+	# 固定随机源，让咬钩时间与整场拉扯在 CI 里可复现。
 	player.fishing_rng.seed = 20240601
 	if not EventBus.farm.fish_bite.is_connected(_on_smoke_fish_bite):
 		EventBus.farm.fish_bite.connect(_on_smoke_fish_bite)
@@ -80,21 +79,19 @@ func _advance_fishing_check() -> bool:
 		_fishing_state = null
 		return true
 	_fishing_frames += 1
-	if _fishing_frames > 900:
+	if _fishing_frames > 3600:
 		_fail("钓鱼时序超时：%d 帧仍未收竿" % _fishing_frames)
 		_fishing_state = null
 		return true
 
-	# 咬钩信号是在状态 update 里发的；这里模拟"看到提示立刻按空格"。
-	if _fish_bit and not _fish_reeled:
-		_fish_reeled = true
-		var event := InputEventAction.new()
-		event.action = &"use_tool"
-		event.pressed = true
-		_fishing_state.handle_input(event)
+	# 拉扯小游戏里模拟“鱼往哪游就往哪收线”，直到上岸。
+	var fishing := _fishing_state as PlayerStateFishing
+	if fishing != null and fishing.phase() == PlayerStateFishing.Phase.FIGHT:
+		_fish_bit = true
+		_drive_reel(fishing)
 
 	if player.state_machine.current_state != _fishing_state:
-		_check(_fish_bit, "等待过程中应当收到咬钩信号")
+		_check(_fish_bit, "等待过程中应当进入拉扯小游戏")
 		_check(
 			_fish_count(player) > _fishing_before,
 			"收竿之后背包里应当多一条鱼（%d → %d）"
@@ -103,6 +100,20 @@ func _advance_fishing_check() -> bool:
 		_fishing_state = null
 		return true
 	return false
+
+
+## 钩子沉在鱼下方就收线，否则松手——和真人“把钩子压在鱼身上”一个意思。
+func _drive_reel(fishing: PlayerStateFishing) -> void:
+	var fight := fishing.fight()
+	if fight == null:
+		return
+	var want := fight.fish_pos() < fight.hook_pos()
+	if want == fishing.reeling():
+		return
+	var event := InputEventAction.new()
+	event.action = &"use_tool"
+	event.pressed = want
+	fishing.handle_input(event)
 
 
 func _on_smoke_fish_bite(_fish_id: StringName) -> void:

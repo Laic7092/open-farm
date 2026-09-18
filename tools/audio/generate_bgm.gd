@@ -22,6 +22,7 @@ func _initialize() -> void:
 	Synth.write_wav(Catalog.bgm_path(Catalog.BGM_FARM), _farm(), true)
 	Synth.write_wav(Catalog.bgm_path(Catalog.BGM_TOWN), _town(), true)
 	Synth.write_wav(Catalog.bgm_path(Catalog.BGM_NIGHT), _night(), true)
+	Synth.write_wav(Catalog.bgm_path(Catalog.BGM_FISHING), _fishing(), true)
 	print("BGM 生成完成 → ", Catalog.BGM_DIR)
 	quit()
 
@@ -188,6 +189,51 @@ func _night() -> PackedFloat32Array:
 	)
 	# 一点夜色虫鸣。
 	_shaker_beats(buf, beat, beats, 4.0, 0.05)
+	return _finish(buf, beat, beats)
+
+
+## 钓鱼：G 大调，68 BPM，I–vi–IV–V，无鼓、只有水波似的琶音。
+##
+## 抛竿后接管世界曲目（见 [SceneAudio] 的钓鱼 BGM 覆盖），
+## 所以它比自己单独听时要更安静、少打击，避免拉锯时抢注意力。
+func _fishing() -> PackedFloat32Array:
+	var bpm := 68.0
+	var beats := 32
+	var beat := 60.0 / bpm
+	var buf := _start(beat, beats)
+
+	var chords := [
+		[55.0, 59.0, 62.0],  # G
+		[52.0, 55.0, 59.0],  # Em
+		[48.0, 52.0, 55.0],  # C
+		[50.0, 54.0, 57.0],  # D
+	]
+	Synth.chord_sequence(buf, 0.0, beat, chords, 8.0, Synth.Wave.TRIANGLE, 0.085, 0.06, 0.5)
+	Synth.melody(
+		buf, 0.0, beat,
+		[[31.0, 8.0], [28.0, 8.0], [24.0, 8.0], [26.0, 8.0]],
+		Synth.Wave.SINE, 0.30, 0.02, 0.35
+	)
+	# 缓慢琶音：每个和弦 8 个四分音符，像一圈圈散开的水纹。
+	for i in chords.size():
+		_arp_beats(buf, float(i) * 8.0 * beat, beat, chords[i], 8.0, Synth.Wave.SINE, 0.075, 1.0)
+	# 若隐若现的高音旋律。
+	Synth.melody(
+		buf, 0.0, beat,
+		[
+			[74.0, 2.0], [78.0, 1.0], [81.0, 1.0],
+			[79.0, 4.0],
+			[76.0, 2.0], [74.0, 1.0], [71.0, 1.0],
+			[74.0, 4.0],
+			[72.0, 2.0], [76.0, 1.0], [79.0, 1.0],
+			[78.0, 4.0],
+			[74.0, 2.0], [71.0, 2.0],
+			[74.0, 4.0],
+		],
+		Synth.Wave.TRIANGLE, 0.15, 0.03, 0.3
+	)
+	# 只留极稀的沙锤当水声。
+	_shaker_beats(buf, beat, beats, 4.0, 0.04)
 	return _finish(buf, beat, beats)
 
 

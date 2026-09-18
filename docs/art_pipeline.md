@@ -19,14 +19,14 @@
 | --- | --- |
 | `generate_font.gd` | 像素中文字体（`.fnt` + PNG 子集） |
 | `generate_terrain.gd` | 地形图集 `tileset_farm.png` + 透明装饰 `assets/sprites/decor/*.png` |
-| `generate_props.gd` | 建筑 / 家具 / 树木（一物一图） |
+| `generate_props.gd` | 建筑 / 家具 / 树木 / 水面浮标（一物一图） |
 | `generate_houses.gd` | NPC 住宅：每个职业一栋，体量与屋顶各画各的 |
 | `generate_actors.gd` | 玩家与 NPC（共用一套角色画法） |
 | `generate_crops.gd` | 每种作物一张生长图 |
 | `generate_animals.gd` | 每种牲畜一张状态表（幼崽 / 成年 / 可收） |
 | `generate_flora.gd` | 每种野生植被一张阶段表（树 / 草 / 石） |
 | `generate_items.gd` | 道具图标 |
-| `generate_ui.gd` | UI 九宫格与图标 |
+| `generate_ui.gd` | UI 九宫格、图标与钓鱼拉扯小游戏的槽 / 标记 |
 | `generate_title.gd` | 标题页背景与云 |
 | `generate_weather.gd` | 天气粒子贴图 |
 

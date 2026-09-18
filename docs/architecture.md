@@ -82,6 +82,7 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 | 天气 | `src/services/weather_service.gd`、`src/core/weather.gd`、`src/core/weather_state.gd` | 状态在 `WeatherState`；服务注册最高优先级日结转，先掷天气再让日历 / 农场读取 |
 | 世界连接 | `src/autoload/scene_router.gd`、`src/world/scene_door.gd`、`ground_painter.gd` | 链式地图；`auto_enter` / `road_exit`；乡道压纵向中线由 `test_world_map.gd` 守 |
 | 畜舍 | `src/farm/livestock_manager.gd`、`animal_husbandry.gd` | 与 `FarmGrid` 同构：状态字典、视图可重建、规则纯静态 |
+| 钓鱼 | `src/farm/fishing_rules.gd`、`fishing_fight.gd`、`src/ui/fishing_ui.gd`、`src/world/fishing_bobber.gd` | 抛竿 / 抽取 / 抛投弧线与鱼线几何都是纯静态；拉扯小游戏是注入 RNG 的 `RefCounted`；浮标与鱼线只把纯函数结果画出来 |
 | 存档 / 多存档槽 | `src/autoload/save_manager.gd`、`src/core/save_slots.gd`、`src/core/save_section.gd` | 槽位 = 目录里的 `slot_<n>.json`；`current_slot` 记本局；日结自动存档是 `Main` 的最高优先级日结钩子 |
 
 ## 6. 测试策略

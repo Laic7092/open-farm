@@ -37,10 +37,10 @@ NOTIFY_CROP_HARVESTED,收获了 {item} ×{count},Harvested {item} x{count}
 NOTIFY_FESTIVAL_ALREADY,今年已经参加过{festival}了,Already joined the {festival} this year
 NOTIFY_FESTIVAL_ATTENDED,参加了{festival}，大家的好感 +{amount},Joined the {festival}! Everyone +{amount} affection
 NOTIFY_FESTIVAL_TODAY,今天是{festival}！,Today is the {festival}!
-NOTIFY_FISH_BITE,咬钩了！再按一次空格收竿,It is biting! Press Space again
+NOTIFY_FISH_BITE,咬钩了！按住空格收线，别让鱼跑掉,It is biting! Hold Space to reel it in
 NOTIFY_FISH_CANCELLED,收竿了,Reeled in
 NOTIFY_FISH_CAUGHT,钓到了 {item}（{size} 厘米）,Caught {item} ({size} cm)
-NOTIFY_FISH_ESCAPED,鱼跑掉了……,The fish got away...
+NOTIFY_FISH_ESCAPED,线绷断了，鱼跑掉了……,The line snapped and the fish got away...
 NOTIFY_FLORA_BLOCKED,这里长着东西，得先清理,Something is growing here
 NOTIFY_FLORA_CLEARED,采到了 {item} ×{count},Gathered {item} x{count}
 NOTIFY_GIFT_DISLIKED,{npc} 好像不太喜欢{item}……好感 {amount},{npc} does not like the {item}... {amount} affection
@@ -105,6 +105,10 @@ TITLE_SAVE_EMPTY,暂无存档,No save data
 TITLE_SAVE_HINT,Enter 读取 · Delete 删除 · Esc 返回,Enter load · Delete remove · Esc back
 TITLE_SAVE_LABEL,存档 {slot},Slot {slot}
 TITLE_SAVE_TITLE,选择存档,Select Save
+UI_FISHING_CATCH,钓到了 {item}（{size} 厘米）,Caught {item} ({size} cm)
+UI_FISHING_CHARGE,蓄力,Charge
+UI_FISHING_PROGRESS,上钩,Catch
+UI_FISHING_TENSION,张力,Tension
 WEATHER_CLOUDY,阴,Cloudy
 WEATHER_RAINY,雨,Rainy
 WEATHER_SNOWY,雪,Snowy

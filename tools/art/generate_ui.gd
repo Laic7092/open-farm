@@ -37,6 +37,12 @@ func _initialize() -> void:
 	Art.save_png(_icon_coin(), DIR.path_join("icon_coin.png"))
 	Art.save_png(_icon_stamina(), DIR.path_join("icon_stamina.png"))
 	Art.save_png(_icon_clock(), DIR.path_join("icon_clock.png"))
+	# 钓鱼拉扯小游戏：水槽 / 判定区 / 鱼 / 钩子 / 张力条。
+	Art.save_png(_fish_track(), DIR.path_join("fish_track.png"))
+	Art.save_png(_fish_zone(), DIR.path_join("fish_zone.png"))
+	Art.save_png(_fish_marker(), DIR.path_join("fish_marker.png"))
+	Art.save_png(_hook_marker(), DIR.path_join("hook_marker.png"))
+	Art.save_png(_bar(P.FLOWER_RED), DIR.path_join("bar_tension.png"))
 
 	var weather := {
 		"sunny": _weather_sunny,
@@ -135,6 +141,58 @@ func _bar(color: Color) -> Image:
 	Art.h_line(image, 1, size.y - 2, size.x - 2, P.shade(color, -0.25))
 	for corner: Vector2i in [Vector2i(0, 0), Vector2i(size.x - 1, 0), Vector2i(0, size.y - 1), Vector2i(size.x - 1, size.y - 1)]:
 		Art.px(image, corner.x, corner.y, Color(0, 0, 0, 0))
+	return image
+
+
+# ---------------------------------------------------------------- 钓鱼小游戏
+
+## 水槽背景：深色竖槽 + 四等分刻度，作为拉扯小游戏的深度轴。
+func _fish_track() -> Image:
+	var size := Layout.UI_FISH_TRACK_SIZE
+	var image := Art.new_image(size.x, size.y)
+	Art.rect(image, Rect2i(0, 0, size.x, size.y), P.UI_PANEL_DARK)
+	Art.vertical_gradient(
+		image, Rect2i(1, 1, size.x - 2, size.y - 2), P.UI_PANEL, P.UI_PANEL_DARK, size.y - 2
+	)
+	Art.frame_rect(image, Rect2i(0, 0, size.x, size.y), P.UI_BORDER)
+	# 刻度：帮玩家判断鱼在深水的哪一层。
+	for i: int in [1, 2, 3]:
+		Art.h_line(image, 3, size.y * i / 4, size.x - 6, P.UI_BORDER.lerp(P.UI_PANEL_DARK, 0.45))
+	return image
+
+
+## 判定区：跟着鱼移动的浅色带，提示“钩子压在这里”。
+func _fish_zone() -> Image:
+	var size := Layout.UI_FISH_ZONE_SIZE
+	var image := Art.new_image(size.x, size.y)
+	Art.rect(image, Rect2i(0, 0, size.x, size.y), Color(P.WATER_LIGHT, 0.28))
+	Art.h_line(image, 0, 0, size.x, P.WATER_LIGHT)
+	Art.h_line(image, 0, size.y - 1, size.x, P.WATER_LIGHT)
+	Art.v_line(image, 0, 0, size.y, P.WATER_LIGHT)
+	Art.v_line(image, size.x - 1, 0, size.y, P.WATER_LIGHT)
+	return image
+
+
+## 鱼标记：一条向右游的小鱼剪影。
+func _fish_marker() -> Image:
+	var size := Layout.UI_FISH_MARK_SIZE
+	var image := Art.new_image(size.x, size.y)
+	Art.ellipse(image, Vector2i(7, 5), Vector2i(4, 3), P.WATER_DARK)
+	Art.ellipse(image, Vector2i(7, 5), Vector2i(3, 2), P.WATER)
+	Art.triangle(image, Vector2(0.0, 5.0), Vector2(3.0, 2.0), Vector2(3.0, 8.0), P.WATER_DARK)
+	Art.px(image, 9, 4, P.WHITE)
+	Art.outline(image)
+	return image
+
+
+## 钩子标记：红白浮标 + 一点水花。
+func _hook_marker() -> Image:
+	var size := Layout.UI_HOOK_MARK_SIZE
+	var image := Art.new_image(size.x, size.y)
+	Art.circle(image, Vector2i(4, 4), 3, P.FLOWER_RED)
+	Art.circle(image, Vector2i(4, 3), 2, P.WHITE)
+	Art.px(image, 4, 6, P.FLOWER_RED)
+	Art.outline(image)
 	return image
 
 

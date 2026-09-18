@@ -68,10 +68,17 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://assets/sprites/props/trough.png",
 	"res://assets/sprites/weather/rain_drop.png",
 	"res://assets/sprites/weather/snow_flake.png",
+	"res://assets/sprites/props/bobber.png",
+	"res://assets/sprites/props/ripple.png",
 	"res://assets/ui/panel.png",
 	"res://assets/ui/button_normal.png",
 	"res://assets/ui/slot.png",
 	"res://assets/ui/weather_sunny.png",
+	"res://assets/ui/fish_track.png",
+	"res://assets/ui/fish_zone.png",
+	"res://assets/ui/fish_marker.png",
+	"res://assets/ui/hook_marker.png",
+	"res://assets/ui/bar_tension.png",
 	"res://assets/title/backdrop.png",
 	"res://assets/title/cloud_a.png",
 	"res://assets/title/plate.png",
@@ -475,3 +482,28 @@ func _font_chain_contains_pixel(font: Font) -> bool:
 		if fallback != null and fallback.resource_path == PIXEL_FONT:
 			return true
 	return false
+
+
+## 钓鱼的 UI 与浮标尺寸必须与 [AtlasLayout] 一致：
+## [code]FishingUi[/code] 按这些尺寸摆放判定区与标记，[code]FishingBobber[/code] 直接贴图。
+func test_fishing_art_matches_atlas_layout() -> void:
+	var expected := {
+		"res://assets/ui/fish_track.png": Layout.UI_FISH_TRACK_SIZE,
+		"res://assets/ui/fish_zone.png": Layout.UI_FISH_ZONE_SIZE,
+		"res://assets/ui/fish_marker.png": Layout.UI_FISH_MARK_SIZE,
+		"res://assets/ui/hook_marker.png": Layout.UI_HOOK_MARK_SIZE,
+		"res://assets/sprites/props/bobber.png": Layout.BOBBER_SIZE,
+		"res://assets/sprites/props/ripple.png": Layout.RIPPLE_SIZE,
+	}
+	for path: String in expected:
+		var texture := load(path) as Texture2D
+		assert_object(texture).override_failure_message("缺少 %s" % path).is_not_null()
+		if texture == null:
+			continue
+		var size: Vector2i = expected[path]
+		assert_int(texture.get_width()).override_failure_message(
+			"%s 宽度应为 %d" % [path, size.x]
+		).is_equal(size.x)
+		assert_int(texture.get_height()).override_failure_message(
+			"%s 高度应为 %d" % [path, size.y]
+		).is_equal(size.y)

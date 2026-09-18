@@ -78,6 +78,8 @@ var _streams: Dictionary = {}
 var _last_played: Dictionary = {}
 ## 当前 BGM 曲目 id；空表示没在放。
 var _current_bgm: StringName = &""
+## 临时接管的 BGM（如钓鱼）；非空时 [method _refresh_world_bgm] 不会抢回去。
+var _bgm_override: StringName = &""
 ## 组合根注入的时钟状态；本节点只读，不推进时间。
 var _clock: GameDateClock
 var _bgm_tween: Tween
@@ -193,6 +195,25 @@ func current_bgm() -> StringName:
 	return _current_bgm
 
 
+## 临时接管 BGM（例：抛竿后切钓鱼曲）；同一次接管只记一次，重复调用不重放。
+func push_bgm_override(track_id: StringName) -> void:
+	if track_id == &"" or track_id == _bgm_override:
+		return
+	_bgm_override = track_id
+	play_bgm(track_id)
+
+
+## 结束临时接管，还原世界声明的曲目。
+func pop_bgm_override() -> void:
+	if _bgm_override == &"":
+		return
+	_bgm_override = &""
+	if follow_world_bgm:
+		_refresh_world_bgm()
+	else:
+		play_bgm(bgm_track)
+
+
 # ---------------------------------------------------------------- 内部：播放
 
 func _start_current_bgm() -> void:
@@ -206,6 +227,9 @@ func _start_current_bgm() -> void:
 
 ## 读当前世界场景声明的曲目；没有世界时什么都不做。
 func _refresh_world_bgm() -> void:
+	# 钓鱼等临时接管期间不要用世界曲目抢回 BGM。
+	if _bgm_override != &"":
+		return
 	var world := _current_world()
 	if world == null:
 		return
@@ -318,6 +342,8 @@ func _hook_events() -> void:
 		_connect_once(EventBus.farm.animal_matured, _on_animal_matured)
 		_connect_once(EventBus.farm.fish_cast, _on_fish_cast)
 		_connect_once(EventBus.farm.fish_bite, _on_fish_bite)
+		_connect_once(EventBus.farm.fish_reel_tick, _on_fish_reel_tick)
+		_connect_once(EventBus.farm.fish_ended, _on_fish_ended)
 		_connect_once(EventBus.farm.fish_caught, _on_fish_caught)
 		_connect_once(EventBus.world.flora_cleared, _on_flora_cleared)
 		_connect_once(EventBus.player.inventory_full, _on_inventory_full)
@@ -403,12 +429,24 @@ func _on_flora_cleared(_cell: Vector2i, _flora_id: StringName, _item_id: StringN
 	play_sfx(Catalog.SFX_CHOP)
 
 
-func _on_fish_cast() -> void:
+func _on_fish_cast(power: float, _distance: float) -> void:
+	# 蓄力越满，出力声越尖；同时用钓鱼曲接管世界 BGM。
+	play_sfx(Catalog.SFX_FISH_CHARGE, 0.88 + 0.35 * clampf(power, 0.0, 1.0), -5.0)
 	play_sfx(Catalog.SFX_FISH_CAST, 1.0, -4.0)
+	push_bgm_override(Catalog.BGM_FISHING)
 
 
 func _on_fish_bite(_fish_id: StringName) -> void:
 	play_sfx(Catalog.SFX_FISH_BITE)
+	play_sfx(Catalog.SFX_FISH_FIGHT, 1.0, -7.0)
+
+
+func _on_fish_reel_tick() -> void:
+	play_sfx(Catalog.SFX_FISH_REEL, 1.0, -10.0)
+
+
+func _on_fish_ended() -> void:
+	pop_bgm_override()
 
 
 func _on_fish_caught(_fish_id: StringName, _item_id: StringName, _size_cm: int) -> void:
@@ -441,6 +479,10 @@ func _on_game_paused_changed(paused: bool) -> void:
 
 
 func _on_notification(text_key: StringName, _args: Dictionary) -> void:
+	# 断线有专属音效，不再叠通用失败音。
+	if text_key == &"NOTIFY_FISH_ESCAPED":
+		play_sfx(Catalog.SFX_FISH_LINE_BREAK)
+		return
 	# 专属音效刚响过就不再叠一层通用提示音。
 	if Time.get_ticks_msec() - _last_effect_ms < NOTIFY_SUPPRESS_MS:
 		return

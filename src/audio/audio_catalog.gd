@@ -31,9 +31,11 @@ const BGM_FARM := &"farm"
 const BGM_TOWN := &"town"
 ## 夜间（任何地图）：稀疏、安静的小调。
 const BGM_NIGHT := &"night"
+## 钓鱼：放缓的池塘小调，抛竿后接管世界曲目。
+const BGM_FISHING := &"fishing"
 
 ## 全部 BGM 曲目（顺序 = 生成顺序）。
-const BGM_TRACKS: Array[StringName] = [BGM_TITLE, BGM_FARM, BGM_TOWN, BGM_NIGHT]
+const BGM_TRACKS: Array[StringName] = [BGM_TITLE, BGM_FARM, BGM_TOWN, BGM_NIGHT, BGM_FISHING]
 
 # ---------------------------------------------------------------- 音效
 
@@ -66,6 +68,10 @@ const SFX_MORNING := &"morning"
 const SFX_FISH_CAST := &"fish_cast"
 const SFX_FISH_BITE := &"fish_bite"
 const SFX_FISH_CATCH := &"fish_catch"
+const SFX_FISH_CHARGE := &"fish_charge"
+const SFX_FISH_FIGHT := &"fish_fight"
+const SFX_FISH_REEL := &"fish_reel"
+const SFX_FISH_LINE_BREAK := &"fish_line_break"
 
 ## 全部音效（顺序 = 生成顺序）。
 const SFX_ALL: Array[StringName] = [
@@ -98,6 +104,10 @@ const SFX_ALL: Array[StringName] = [
 	SFX_FISH_CAST,
 	SFX_FISH_BITE,
 	SFX_FISH_CATCH,
+	SFX_FISH_CHARGE,
+	SFX_FISH_FIGHT,
+	SFX_FISH_REEL,
+	SFX_FISH_LINE_BREAK,
 ]
 
 

@@ -13,6 +13,7 @@ extends CanvasLayer
 @onready var inventory_ui: InventoryUi = %InventoryUi
 @onready var shop_ui: ShopUi = %ShopUi
 @onready var pause_menu: PauseMenu = %PauseMenu
+@onready var fishing_ui: FishingUi = %FishingUi
 
 var _modals: Array[Control] = []
 ## 组合根注入的玩家档案；转发给 Hud / ShopUi。

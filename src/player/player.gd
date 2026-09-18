@@ -64,6 +64,7 @@ func bind_services(
 @onready var state_machine: StateMachine = %StateMachine
 @onready var interaction_area: Area2D = %InteractionArea
 @onready var interactor: FarmInteractor = %FarmInteractor
+@onready var fishing_bobber: FishingBobber = %FishingBobber
 @onready var camera: Camera2D = $Camera2D
 
 
@@ -190,6 +191,21 @@ func wants_fishing() -> bool:
 ## 面前那一格的水域类型；不是水返回 -1。
 func fishing_water_kind() -> int:
 	return interactor.water_kind_at(target_cell())
+
+
+## 抛竿落点的世界坐标；[param distance] 为离玩家几格（1 = 面前那一格）。
+func fishing_target_position(distance: float) -> Vector2:
+	var base := GridUtils.cell_to_world(target_cell())
+	var overshoot := Vector2(facing_vector()) \
+		* (maxf(distance, 1.0) - 1.0) * float(GridUtils.TILE_SIZE)
+	return base + overshoot
+
+
+## 竿尖的世界坐标（鱼线的起点）。
+##
+## 只是一个跟着朝向走的近似点：抛竿时“手抬到哪”、鱼线就从哪开始。
+func rod_tip_position() -> Vector2:
+	return global_position + Vector2(facing_vector()) * 9.0 + Vector2(0.0, -9.0)
 
 
 ## 此刻能否下竿（手持钓竿 + 面前是水）。

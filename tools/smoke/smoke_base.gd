@@ -52,7 +52,6 @@ var _fishing_state: State
 var _fishing_before: int = 0
 var _fishing_frames: int = 0
 var _fish_bit: bool = false
-var _fish_reeled: bool = false
 
 
 ## 把根节点持有的运行时引用（组合根 / 时钟 / 天气……）与本 Report 分给本检查器。

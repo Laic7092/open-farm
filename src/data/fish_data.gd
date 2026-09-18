@@ -27,7 +27,7 @@ extends Resource
 
 ## 抽取权重：越大越常见；0 表示不会出现。
 @export_range(0, 999) var weight: int = 10
-## 搏斗难度 1~5：只影响收竿窗口长度。
+## 搏斗难度 1~5：拉扯小游戏里鱼游得更快、判定区更窄。
 @export_range(1, 5) var difficulty: int = 1
 ## 体长范围（厘米），仅用于展示。
 @export var size_cm: Vector2i = Vector2i(20, 40)

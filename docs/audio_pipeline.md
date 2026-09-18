@@ -11,7 +11,7 @@
 | `src/audio/scene_audio.gd` | 场景音频节点（标题页 / Main 各挂一个，见 §4） |
 | `tools/audio/synth.gd` | 合成基座：波形 / 包络 / 噪声 / 滑音 / 鼓组 / WAV 写出 |
 | `tools/audio/generate_sfx.gd` | 音效配方（UI、农活、经济、动物、钓鱼、存档、脚步、系统） |
-| `tools/audio/generate_bgm.gd` | BGM 配方（标题 / 农场 / 小镇 / 夜晚） |
+| `tools/audio/generate_bgm.gd` | BGM 配方（标题 / 农场 / 小镇 / 夜晚 / 钓鱼） |
 | `assets/audio/{sfx,bgm}/*.wav` | 生成物（提交进仓库） |
 | `tests/unit/test_audio.gd` | 规范的可执行版本 |
 
@@ -84,6 +84,14 @@ timeout 60 ./godot --headless --path . --import
 玩法 / UI 只发既有事件（翻地、浇水、收获、买卖、对话、存读档、`ui_sound_requested`……），由所在场景的 `SceneAudio` 订阅；
 同一动作的「专属音效」后，紧跟的通用提示音在 140ms 内被抑制，避免「收一次菜响两声」。
 音量滑杆由 `UiRoot.bind_audio()` 把主场景的 `SceneAudio` 交给 `PauseMenu`，只改 `BGM` / `SFX` 总线音量并写回设置文件。
+
+### 4.1 临时接管 BGM（钓鱼）
+
+钓鱼需要一段专属曲目（`BGM_FISHING`），但它不是地图属性，所以 `SceneAudio` 提供
+`push_bgm_override(track_id)` / `pop_bgm_override()` 一对接口：抛竿（`fish_cast`）时接管，
+一次垂钓结束（`fish_ended`）时还原世界声明的曲目。接管期间 `_refresh_world_bgm()` 会直接返回，
+于是小时变化 / 进图不会把钓鱼曲抢回去。拉扯中的收线节拍（`fish_reel_tick`）反复触发 `fish_reel`，
+断线（`NOTIFY_FISH_ESCAPED`）单独走 `fish_line_break`。
 
 ## 5. 规范如何被强制
 

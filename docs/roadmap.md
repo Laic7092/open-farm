@@ -27,7 +27,7 @@
 | --- | --- | --- | --- |
 | 料理 / 食谱 | 无，全仓 grep 零命中 | 作物 / 畜产品 / 鱼互为原料；回复与短时增益 | `data/recipes/`、`src/farm/cooking_rules.gd`、农舍灶台 |
 | 工具升级 | `ToolData.tier` 字段已预留但无人写入 | 矿石 → 铁匠 → 铜/铁/金锄头、水壶容量、钓竿等级 | `src/data/tool_data.gd`、`data/tools/`、`data/items/`、铁匠 NPC |
-| 钓鱼 | “等咬钩 → 按一次”；`fishing_rules.gd` 仅有咬钩延时 / 窗口 | 拉扯小游戏（判定写成纯函数以保住可测性）、鱼饵、鱼竿等级、体长记录 | `src/farm/fishing_rules.gd`、玩家钓鱼状态 |
+| 钓鱼 | 蓄力抛竿 + 拉扯小游戏已落地（`fishing_fight.gd` 纯函数 + `fishing_ui.gd`）；鱼饵 / 鱼竿升级 / 体长记录仍缺 | 鱼饵、钓鱼等级、体长记录与图鉴 | `src/farm/fishing_rules.gd`、`src/farm/fishing_fight.gd`、玩家钓鱼状态 |
 | 牲畜 | 2 种（鸡 / 牛）；不死亡、不繁殖；好感不产物品质 | 繁殖（怀孕 → 幼崽）、老年 / 死亡、好感影响星级、放牧省干草 | `src/farm/animal_husbandry.gd`、`data/animals/` |
 | 作物 | 3 种；无品质 / 肥料 / 温室 | 星级品质、肥料、连作枯萎、温室、每季 5~8 种、果树 | `src/farm/crop_growth.gd`、`data/crops/`、`tools/art/generate_crops.gd` |
 | 出货 | `shipping_bin.gd` 一次性全卖 | 逐件投放 + 隔天结算（注释已写明接口不变即可替换） | `src/world/shipping_bin.gd` |

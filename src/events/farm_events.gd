@@ -32,9 +32,13 @@ building_id: StringName, animal_id: StringName, item_id: StringName, amount: int
 )
 ## 牲畜长大成年。
 signal animal_matured(building_id: StringName, animal_id: StringName)
-## 抛竿（开始一次垂钓）。
-signal fish_cast()
-## 有鱼咬钩（收竿窗口开始）。
+## 抛竿（开始一次垂钓）；[param power] 为蓄力（0~1），[param distance] 为落点距离（格）。
+signal fish_cast(power: float, distance: float)
+## 有鱼咬钩（拉扯小游戏开始）。
 signal fish_bite(fish_id: StringName)
+## 拉扯中小游戏正在收线的一个节拍（用于连续收线音效）。
+signal fish_reel_tick()
+## 一次垂钓结束（无论上鱼 / 跑鱼 / 提前收竿）。
+signal fish_ended()
 ## 成功钓上一条鱼；[param size_cm] 为体长。
 signal fish_caught(fish_id: StringName, item_id: StringName, size_cm: int)

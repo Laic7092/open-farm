@@ -44,6 +44,10 @@ func _initialize() -> void:
 		Catalog.SFX_FISH_CAST: _fish_cast,
 		Catalog.SFX_FISH_BITE: _fish_bite,
 		Catalog.SFX_FISH_CATCH: _fish_catch,
+		Catalog.SFX_FISH_CHARGE: _fish_charge,
+		Catalog.SFX_FISH_FIGHT: _fish_fight,
+		Catalog.SFX_FISH_REEL: _fish_reel,
+		Catalog.SFX_FISH_LINE_BREAK: _fish_line_break,
 	}
 
 	for id: StringName in Catalog.SFX_ALL:
@@ -339,4 +343,42 @@ func _fish_catch() -> PackedFloat32Array:
 	Synth.tone(buf, 0.1, 0.16, 988.0, 0.5, Synth.Wave.TRIANGLE, 0.003, 0.05)
 	Synth.tone(buf, 0.2, 0.34, 1319.0, 0.5, Synth.Wave.TRIANGLE, 0.003, 0.12)
 	Synth.normalize(buf, 0.75)
+	return buf
+
+
+## 抛秆出力：一声随蓄力上冲的破空——运行时按蓄力拉高音高。
+func _fish_charge() -> PackedFloat32Array:
+	var buf := Synth.new_buffer(0.3)
+	Synth.sweep(buf, 0.0, 0.26, 360.0, 1320.0, 0.5, Synth.Wave.TRIANGLE, 0.006, 0.06)
+	Synth.noise_burst(buf, 0.0, 0.24, 0.35, 9.0, 907, 3600.0, 0.02, 0.08)
+	Synth.normalize(buf, 0.68)
+	return buf
+
+
+## 咬钩开拉：一记绷紧的低音，提示“现在是拼手速的时候了”。
+func _fish_fight() -> PackedFloat32Array:
+	var buf := Synth.new_buffer(0.34)
+	Synth.sweep(buf, 0.0, 0.18, 300.0, 180.0, 0.5, Synth.Wave.SQUARE, 0.002, 0.05, 0.35)
+	Synth.tone(buf, 0.02, 0.26, 148.0, 0.35, Synth.Wave.TRIANGLE, 0.003, 0.1, 0.5, 8.0)
+	Synth.noise_burst(buf, 0.0, 0.08, 0.3, 30.0, 911, 2400.0)
+	Synth.normalize(buf, 0.7)
+	return buf
+
+
+## 收线：一声短促的绞盘棘轮，拉扯时反复触发。
+func _fish_reel() -> PackedFloat32Array:
+	var buf := Synth.new_buffer(0.1)
+	Synth.tone(buf, 0.0, 0.05, 880.0, 0.4, Synth.Wave.PULSE, 0.001, 0.02, 0.2, 24.0)
+	Synth.noise_burst(buf, 0.0, 0.05, 0.45, 60.0, 919, 5200.0)
+	Synth.normalize(buf, 0.5)
+	return buf
+
+
+## 断线：一记炸裂的“啪”再接一段下坠。
+func _fish_line_break() -> PackedFloat32Array:
+	var buf := Synth.new_buffer(0.45)
+	Synth.noise_burst(buf, 0.0, 0.07, 1.0, 40.0, 929, 8000.0, 0.0005, 0.02)
+	Synth.sweep(buf, 0.03, 0.32, 620.0, 110.0, 0.45, Synth.Wave.TRIANGLE, 0.004, 0.14)
+	Synth.noise_burst(buf, 0.08, 0.2, 0.25, 12.0, 931, 1400.0, 0.01, 0.08)
+	Synth.normalize(buf, 0.8)
 	return buf

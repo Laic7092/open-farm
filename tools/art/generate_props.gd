@@ -11,6 +11,7 @@ extends SceneTree
 ## [/codeblock]
 
 const Art := preload("res://tools/art/art_lib.gd")
+const Layout := preload("res://src/art/atlas_layout.gd")
 const P := preload("res://src/art/palette.gd")
 
 const DIR: String = "res://assets/sprites/props"
@@ -43,6 +44,9 @@ func _initialize() -> void:
 	Art.save_png(_counter(), DIR.path_join("counter.png"))
 	Art.save_png(_forge(), DIR.path_join("forge.png"))
 	Art.save_png(_flower_stand(), DIR.path_join("flower_stand.png"))
+	# 钓鱼：水面浮标与水花。
+	Art.save_png(_bobber(), DIR.path_join("bobber.png"))
+	Art.save_png(_ripple(), DIR.path_join("ripple.png"))
 	print("场景道具生成完成 → ", DIR)
 	quit()
 
@@ -584,4 +588,28 @@ func _flower_stand() -> Image:
 			Art.rect(image, Rect2i(x, y + 7, 7, 4), P.FRUIT_ORANGE)
 			Art.h_line(image, x, y + 7, 7, P.ROOF_LIGHT)
 	Art.outline(image, P.OUTLINE)
+	return image
+
+
+# ---------------------------------------------------------------- 钓鱼
+
+## 水面浮标：上红下白的圆漂，抛出后靠 [FishingBobber] 做上下浮动。
+func _bobber() -> Image:
+	var size := Layout.BOBBER_SIZE
+	var image := Art.new_image(size.x, size.y)
+	Art.circle(image, Vector2i(4, 4), 3, P.FLOWER_RED)
+	Art.circle(image, Vector2i(4, 3), 2, P.WHITE)
+	Art.px(image, 4, 2, P.WHITE)
+	Art.outline(image)
+	return image
+
+
+## 入水水花：一圈半透明泡沫环，靠缩放做扩散。
+func _ripple() -> Image:
+	var size := Layout.RIPPLE_SIZE
+	var image := Art.new_image(size.x, size.y)
+	Art.ellipse(image, Vector2i(8, 8), Vector2i(7, 4), Color(P.WATER_FOAM, 0.55))
+	Art.ellipse(image, Vector2i(8, 8), Vector2i(5, 3), Color(0.0, 0.0, 0.0, 0.0))
+	Art.ellipse(image, Vector2i(8, 8), Vector2i(6, 3), Color(P.WATER_LIGHT, 0.4))
+	Art.ellipse(image, Vector2i(8, 8), Vector2i(5, 2), Color(0.0, 0.0, 0.0, 0.0))
 	return image

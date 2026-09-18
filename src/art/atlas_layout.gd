@@ -209,6 +209,21 @@ const UI_BUTTON_SIZE := Vector2i(20, 20)
 const UI_BAR_SIZE := Vector2i(8, 8)
 const UI_ICON_SIZE := Vector2i(12, 12)
 
+# ---------------------------------------------------------------- 钓鱼小游戏
+
+## 拉扯小游戏的竖直水槽与标记尺寸（生成器 [code]generate_ui.gd[/code]，
+## 运行时 [code]src/ui/fishing_ui.gd[/code]）。
+const UI_FISH_TRACK_SIZE := Vector2i(18, 88)
+const UI_FISH_ZONE_SIZE := Vector2i(18, 14)
+const UI_FISH_MARK_SIZE := Vector2i(12, 10)
+const UI_HOOK_MARK_SIZE := Vector2i(8, 8)
+
+# ---------------------------------------------------------------- 世界浮标
+
+## [code]assets/sprites/props/bobber.png[/code] / [code]ripple.png[/code]。
+const BOBBER_SIZE := Vector2i(8, 8)
+const RIPPLE_SIZE := Vector2i(16, 16)
+
 # ---------------------------------------------------------------- 标题页
 
 ## 标题背景按逻辑分辨率 1:1 生成，正好铺满 640×360 的视口。
