@@ -22,7 +22,7 @@
   --json  输出 JSON，方便再加工
 
 支持 .gd / .tscn / .tres / .sh / .py / .md。默认扫描 tools/ 与 src/。
-约定见 docs/architecture.md §6。
+约定见 AGENTS.md。
 """
 from __future__ import annotations
 

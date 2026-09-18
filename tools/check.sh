@@ -7,7 +7,7 @@
 #   ./tools/check.sh smoke        # 只跑冒烟测试
 #
 # 输出约定：控制台只留每步一行结论与失败明细，完整 Godot 输出写进
-# .tmp/check/*.log——逐条 PASSED 会刷出上千行，污染上下文（详见 docs/architecture.md §5）。
+# .tmp/check/*.log——逐条 PASSED 会刷出上千行，污染上下文（详见 AGENTS.md）。
 # 开跑前会先执行 tools/outline.py lint：大文件规范体检，只提示不阻断。
 # 可用 GODOT_BIN 指定 Godot 可执行文件，默认使用仓库根目录下的 ./godot。
 set -euo pipefail
@@ -17,7 +17,7 @@ cd "$(dirname "$0")/.."
 LOG_DIR=".tmp/check"
 mkdir -p "$LOG_DIR"
 
-# 大文件规范体检（详见 docs/architecture.md §6）：只提示不阻断，缺 python3 时跳过。
+# 大文件规范体检（详见 AGENTS.md）：只提示不阻断，缺 python3 时跳过。
 if command -v python3 >/dev/null 2>&1; then
 	python3 tools/outline.py lint --quiet || true
 else

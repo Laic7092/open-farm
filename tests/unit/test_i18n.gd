@@ -2,7 +2,7 @@ extends GdUnitTestSuite
 ## i18n 规范的可执行版本。
 ##
 ## 文案按域拆成 [code]ui / content / dialogue[/code] 三个 CSV（见
-## [code]docs/architecture.md[/code]），拆开之后最容易漏的东西全在这里兜底：
+## [code]AGENTS.md[/code]），拆开之后最容易漏的东西全在这里兜底：
 ## [br]- 每个 CSV 都要登记进 [code]project.godot[/code]（漏登记 = 整片文案变回 key）；
 ## [br]- 三个 CSV 之间不能有重复键（重复时结果取决于加载顺序）；
 ## [br]- 每行都必须"键 + 全部 locale"，值里的逗号不加引号会静默截断；

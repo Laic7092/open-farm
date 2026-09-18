@@ -31,7 +31,7 @@ const SHALLOW_WATER := AtlasLayout.SHALLOW_WATER
 ## 这一格图集坐标是否属于水面（深水 / 水岸 / 浅滩）。
 ##
 ## [b]注意[/b]：水已经不在 [code]Ground[/code] 图层里了（见 [WaterField] 与
-## [code]docs/generated_assets.md[/code] §2.5），这里只用来描述图集里的水瓦片，
+## [code]AGENTS.md[/code]），这里只用来描述图集里的水瓦片，
 ## "面前是不是水"改由 [code]WaterField.is_water(cell)[/code] 答。
 static func is_water(atlas: Vector2i) -> bool:
 	return atlas == WATER or atlas == WATER_EDGE or atlas == SHALLOW_WATER

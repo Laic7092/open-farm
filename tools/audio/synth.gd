@@ -1,7 +1,7 @@
 extends RefCounted
 ## 音频合成基座：生成器用它把音符、噪点与包络拼成采样缓冲，再落盘成 WAV。
 ##
-## [b]为什么音频也由代码生成[/b]：和美术同样的理由（见 [code]docs/generated_assets.md[/code]）——
+## [b]为什么音频也由代码生成[/b]：和美术同样的理由（见 [code]AGENTS.md[/code]）——
 ## 仓库里不放来源不明、无法审查、无法微调的二进制音频；改一个音符或音色就是改一行代码。
 ##
 ## [b]确定性[/b]：所有噪声都来自 [method noise_at] 的位置哈希，而不是 [RandomNumberGenerator]。

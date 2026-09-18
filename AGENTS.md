@@ -1,41 +1,39 @@
 # AGENTS.md — open-farm 编码 Agent 上手说明
 
-> 本页只讲 Agent 必须遵守的约束；命令、操作、扩展入口看 `README.md`，数值与规则以 `docs/` 为准。
+> 只写代码 / 测试 / 配置里读不出来的约束与坑。其余指向源头：玩法 `README.md`，
+> 数值 `data/**/*.tres`，规则 `tests/`，单点设计读脚本顶部 `##`，历史 `git log`。
 
-## 速览
+## 铁律（测试兜不住，靠自觉）
 
-- **项目**：Godot **4.7.2** 的 2D 俯视角像素农场模拟；仓库根自带 `./godot`（已 gitignore）。
-- **入口**：`scenes/title/title_screen.tscn` → `scenes/main/main.tscn`；`WorldHost` 换地图，`UiRoot` 常驻。
-- **命令**：见 `README.md`「快速开始」；提交前必跑 `./tools/check.sh`（控制台只回统计与失败明细，完整日志在 `.tmp/check/`）。
-- **风格**：注释、文档、提交信息用中文；GDScript 用 Tab 缩进 + 类型标注 + `##` 文档注释，`StringName` 写 `&"..."`。
-- **设计原因**：跨系统看 `docs/architecture.md`；单点原因优先读相关脚本顶部的 `##` 注释。
-
-## 铁律
-
-1. **数据驱动 + 静态 / 运行时分离**：内容都在 `res://data/**/*.tres`，脚本只认 id；`XxxData`（`Resource`）
-   ↔ `XxxState`（`RefCounted`），规则写进 `XxxGrowth` / `XxxHusbandry` 这类纯静态函数。
-2. **事件分层**：`EventBus` 全局只留跨域时间 / 场景 / 存档信号；玩家 / 农场 / 世界 / UI 信号走
-   `EventBus.player / farm / world / ui` 领域对象。有顺序依赖的日结转走
-   `GameDateClock.register_day_hook(callable, priority)`，不依赖信号回调顺序或 Autoload 加载顺序。
-3. **世界场景缓存复用**：`_ready()` 一生只跑一次；每次进图逻辑放 `_enter_tree()` / `WorldScene.on_world_enter()`，
-   日结转钩子在 `_exit_tree()` 注销。
-4. **生成物永不手改**：美术 / 音频 / 字体必须确定性；新增文案或汉字必须重跑 `build_assets.sh`。
-5. **规范与测试同步**：`docs/generated_assets.md` ↔ `tests/unit/test_assets.gd` / `test_audio.gd`；
-   地图增删同步 `tests/unit/test_world_map.gd` 的 `MAPS`。
-6. **测试输出收口**：新增测试入口必须把 Godot 输出重定向到日志，控制台只回统计与失败明细；
-   约定见 `docs/architecture.md` §5。
+1. **只加数据，不改结构**：内容进 `res://data/**/*.tres`，脚本只认 id；`XxxData`（`Resource`）↔ `XxxState`（`RefCounted`），规则写成纯静态函数。
+2. **不再新增 Autoload**：全局只留跨域时间 / 场景 / 存档信号，领域信号走 `EventBus.player/farm/world/ui`；其余状态与服务挂 `Main` 组合根注入。
+3. **日结转按显式顺序**：`GameDateClock.register_day_hook(callable, DayPipeline.PRIORITY_*)`，在 `_exit_tree` 注销；不依赖信号回调顺序。
+4. **缓存复用的世界场景不重跑 `_ready()`**：每次进图逻辑放 `_enter_tree()` / `WorldScene.on_world_enter()`。
+5. **生成物只改生成器**：`assets/**` 永不手改，改 `tools/` 后重跑 `./tools/build_assets.sh`；确定性判据是连跑两次 `git status` 干净。
+6. **测试输出收口**：Godot 输出重定向到 `.tmp/check/*.log`，控制台只回统计与失败明细。
 
 ## 任务路由
 
 | 任务 | 入口 |
 | --- | --- |
-| 加内容（作物 / 牲畜 / 植被 / 鱼种 / NPC / 节日 / 地图 / 音效 / UI） | `README.md`「扩展入口」 |
-| 改玩法数值 | 优先只改 `data/**/*.tres` |
-| 参与日结转 | `GameDateClock.register_day_hook(callable, DayPipeline.PRIORITY_*)`，并在 `_exit_tree` 注销 |
-| 参与存档 | `to_dict` / `from_dict` + `Persistence.register(self, &"id")`；核心状态 / 服务在 `Main._bind_dependencies()` 注册 `SaveSection`；JSON 往返把 `StringName` 转回；槽位无上限，统一走 `SaveManager.save_current()` |
-| 大文件怎么读 / 怎么改 | `docs/architecture.md` §6；先 `python3 tools/outline.py map` 定位 |
-| Godot 命令与引擎坑 | `docs/architecture.md` §4 |
+| 加内容 | 同名 `data/<域>/` + `tools/art/generate_<域>.gd`，重跑 `build_assets.sh` |
+| 加道具 / 上架 | `data/items/` / `data/shops/` |
+| 加文案 / 汉字 | `assets/i18n/*.csv` |
+| 加地图 | `SceneDoor` / `SpawnPoint` + `test_world_map.gd` 的 `MAPS` |
+| 改数值 | `data/**/*.tres` |
+| 读 / 改大文件 | `python3 tools/outline.py map / outline / sym / callers` |
 
-## 提交
+## Godot 坑（4.7.2 实测，代码里没有）
 
-`feat: …` / `fix: …` / `chore: …` 单行中文摘要。生成物（PNG / WAV / 字体 / `.import` / `.translation`）与代码一起提交。
+- 命令必须自己能退出：套 `timeout` + 末尾 `--quit-after 3`；输出先重定向到文件再 `grep`。
+- `-s script.gd` 在 autoload 注册前编译：只能用 `preload()`，依赖 autoload 的工具做成场景。
+- 手写 `.tscn`：导出节点引用要 `node_paths=PackedStringArray(...)`，`%UniqueName` 要 `unique_name_in_owner = true`。
+- 每张画布只允许一个 `CanvasModulate`；子节点 `_ready()` 先于父节点，初始状态切换用 `call_deferred()`。
+- `user://` 可能不可写，存档 / 音频要静默降级；`.godot/` 不入库，新 clone 先 `--import`。
+- `PackedFloat32Array` 传参可原地改；`PackedByteArray.encode_u32/_u16/_s16` 可手写二进制；`AudioStreamWAV` 默认 QOA；`ItemList` focus 样式只能画边。
+
+## 测试 / 大文件 / 提交
+
+- 跑 `./tools/check.sh [unit|smoke]`；规范断言在 `tests/unit/test_{assets,audio,i18n,world_map}.gd`。
+- 大文件阈值 400 / 800（文件）、80 / 120（函数），`python3 tools/outline.py lint`；改共享函数前先 `callers`。
+- 提交 `feat:` / `fix:` / `chore:` 单行中文；生成物与代码一起提交。
