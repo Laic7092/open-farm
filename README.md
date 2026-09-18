@@ -45,9 +45,9 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 
 | 任务 | 主要入口 |
 | --- | --- |
-| 加作物 | `data/crops/` + `data/items/` + `data/shops/*.tres` + `tools/art/generate_crops.gd` + `strings.csv` |
+| 加作物 | `data/crops/` + `data/items/` + `data/shops/*.tres` + `tools/art/generate_crops.gd` + `assets/i18n/content.csv` |
 | 加牲畜 | `data/animals/` + `data/buildings/` + `data/items/` + `tools/art/generate_animals.gd` |
-| 加鱼种 | `data/fish/` + `data/items/` + `tools/art/generate_items.gd` + `strings.csv` |
+| 加鱼种 | `data/fish/` + `data/items/` + `tools/art/generate_items.gd` + `assets/i18n/content.csv` |
 | 加野生植被 | `data/flora/` + `tools/art/generate_flora.gd` + `src/world/flora_field.gd` |
 | 加 NPC / 日程 | `tools/art/generate_actors.gd` + `data/npcs/` + `data/dialogue/` + `data/schedules/` + 场景 `SchedulePoint` |
 | 加商店 / 柜台 | `data/shops/*.tres` + `NpcData.shop_id` + 场景摆 `ShopCounter`（`src/shop/shop_counter.gd`）并填 `shop_id` / `clerk_id` |

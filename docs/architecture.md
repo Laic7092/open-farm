@@ -45,6 +45,7 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 | `_ready()` 一生只跑一次 | 缓存复用场景不重跑 `_ready()`；每次进图逻辑放 `_enter_tree()` / `_exit_tree()` | `world_scene.gd` |
 | 有序日结转 | 不依赖信号回调顺序；`GameDateClock` 委托给 `DayPipeline`，按显式 `priority` 同步执行 | `game_date_clock.gd`、`day_pipeline.gd` |
 | 数据驱动 | 内容都在 `.tres`，脚本只认 id；静态数据与运行时状态分离 | `database.gd` |
+| 文案按域拆 CSV | `assets/i18n/` 下按域分 `ui.csv` / `content.csv` / `dialogue.csv`；每个 CSV 导入出的 `.translation` 必须登记进 `project.godot` 的 `locale/translations`（`--import` 不会自动加），字库扫整个目录 | `assets/i18n/`、`tests/unit/test_i18n.gd` |
 | UI 模态栈 | `UiRoot` 统一管理暂停与 `close_all()`，避免读档 / 传送残留菜单 | `ui_root.gd` |
 
 ## 4. Godot 踩坑与引擎事实
@@ -87,6 +88,6 @@ UI        只订阅 EventBus，从不反向调用玩法代码
 
 - `tests/unit/`：只测纯逻辑，不加载场景、不模拟输入。
 - `tools/smoke_test.tscn`：真实场景 + autoload 接线 + 完整玩法链路；检查按域拆在 `tools/smoke/`（世界 / 农场 / 巡游 / 钓鱼），公共断言在 `smoke_base.gd`。
-- `tests/unit/test_assets.gd` / `test_audio.gd`：把美术 / 音频规范写成可执行断言。
+- `tests/unit/test_assets.gd` / `test_audio.gd` / `test_i18n.gd`：把美术 / 音频 / 本地化规范写成可执行断言。
 - `tools/screenshot.tscn` / `ui_preview.tscn`：视觉回归预览，不做像素级 diff。
 

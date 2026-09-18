@@ -148,7 +148,7 @@ give_gift={
 
 [internationalization]
 
-locale/translations=PackedStringArray("res://assets/i18n/strings.zh_CN.translation", "res://assets/i18n/strings.en.translation")
+locale/translations=PackedStringArray("res://assets/i18n/content.zh_CN.translation", "res://assets/i18n/content.en.translation", "res://assets/i18n/dialogue.zh_CN.translation", "res://assets/i18n/dialogue.en.translation", "res://assets/i18n/ui.zh_CN.translation", "res://assets/i18n/ui.en.translation")
 locale/fallback="zh_CN"
 
 [layer_names]

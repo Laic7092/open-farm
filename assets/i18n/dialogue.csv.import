@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://c4dioekla5q8o"
+
+[deps]
+
+files=["res://assets/i18n/dialogue.zh_CN.translation", "res://assets/i18n/dialogue.en.translation"]
+
+source_file="res://assets/i18n/dialogue.csv"
+dest_files=["res://assets/i18n/dialogue.zh_CN.translation", "res://assets/i18n/dialogue.en.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

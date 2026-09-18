@@ -1,0 +1,77 @@
+keys,zh_CN,en
+ANIMAL_CHICKEN,鸡,Chicken
+ANIMAL_COW,奶牛,Cow
+BUILDING_BARN,牛舍,Barn
+BUILDING_COOP,鸡舍,Coop
+CROP_POTATO,土豆,Potato
+CROP_TOMATO,番茄,Tomato
+CROP_TURNIP,萝卜,Turnip
+EVENT_FIRST_SNOW,初雪落下了，冬天到了。农场也安静下来。,The first snow fell. Winter has come.
+EVENT_HARVEST_BLESSING,镇公所送来了丰收的谢礼 {money}G,The town hall sent {money}G for the good harvest
+EVENT_LIBRARIAN_VISIT,书雅带了几本书来，想和你聊聊。,Shuyai brought some books and wants to talk.
+EVENT_MAYOR_SUBSIDY,村长送来了夏季补助 {money}G,The mayor sent a {money}G summer grant
+EVENT_TRAVELER_VISIT,一位旅人路过农场，留下 {money}G 谢礼,A traveler passed the farm and left {money}G
+FESTIVAL_FIREWORKS,烟花大会,Fireworks Night
+FESTIVAL_FLOWER,花祭,Flower Festival
+FESTIVAL_HARVEST,收获祭,Harvest Festival
+FESTIVAL_NEW_YEAR,新年祭,New Year Festival
+FESTIVAL_STARRY_NIGHT,星夜祭,Starry Night Festival
+FLORA_BOULDER,巨石,Boulder
+FLORA_FLOWER,野花,Wildflower
+FLORA_MUSHROOM,蘑菇,Mushroom
+FLORA_ROCK,石头,Rock
+FLORA_TREE_OAK,阔叶树,Oak Tree
+FLORA_TREE_PINE,松树,Pine Tree
+FLORA_WEED,杂草,Weed
+ITEM_AXE,斧头,Axe
+ITEM_BLUE_FEATHER,蓝色羽毛,Blue Feather
+ITEM_BLUE_FEATHER_DESC,传说中用来求婚的信物，送给心爱的人。,A legendary token used to propose to your beloved.
+ITEM_CARP,鲤鱼,Carp
+ITEM_CATFISH,鲶鱼,Catfish
+ITEM_CHICKEN,鸡,Chicken
+ITEM_COW,奶牛,Cow
+ITEM_CRUCIAN,鲫鱼,Crucian Carp
+ITEM_EGG,鸡蛋,Egg
+ITEM_FIBER,纤维,Fiber
+ITEM_FISHING_ROD,钓竿,Fishing Rod
+ITEM_FLOWER,野花,Wildflower
+ITEM_GOLDEN_CARP,金鲤,Golden Carp
+ITEM_HAY,干草,Hay
+ITEM_HOE,锄头,Hoe
+ITEM_MACKEREL,鲭鱼,Mackerel
+ITEM_MILK,牛奶,Milk
+ITEM_MUSHROOM,蘑菇,Mushroom
+ITEM_OCTOPUS,章鱼,Octopus
+ITEM_PICKAXE,镐子,Pickaxe
+ITEM_POTATO,土豆,Potato
+ITEM_POTATO_SEED,土豆种子,Potato Seeds
+ITEM_SARDINE,沙丁鱼,Sardine
+ITEM_SEA_BREAM,鲷鱼,Sea Bream
+ITEM_SEED_BAG,种子袋,Seed Bag
+ITEM_SICKLE,镰刀,Sickle
+ITEM_SQUID,鱿鱼,Squid
+ITEM_STONE,石材,Stone
+ITEM_TOMATO,番茄,Tomato
+ITEM_TOMATO_SEED,番茄种子,Tomato Seeds
+ITEM_TUNA,金枪鱼,Tuna
+ITEM_TURNIP,萝卜,Turnip
+ITEM_TURNIP_SEED,萝卜种子,Turnip Seeds
+ITEM_WATERING_CAN,洒水壶,Watering Can
+ITEM_WOOD,木材,Wood
+NPC_BLACKSMITH,铁匠,Blacksmith
+NPC_CHILD,小满,May
+NPC_FISHER,渔夫,Fisher
+NPC_FLORIST,花婆婆,Florist
+NPC_LIBRARIAN,书雅,Librarian
+NPC_MAYOR,村长,Mayor
+NPC_MERCHANT,杂货店老板,Store Owner
+NPC_MINER,矿工,Miner
+NPC_OUR_CHILD,宝宝,Little One
+SHOP_FLOWER_SHOP,花店,Flower Shop
+SHOP_GENERAL_STORE,杂货店,General Store
+TOOL_AXE_DESC,砍倒树木，得到木材。,Chops trees down for wood.
+TOOL_FISHING_ROD_DESC,对着水面按空格抛竿，咬钩时再按一次收竿,Pull it out at the water and reel in on the bite
+TOOL_HOE_DESC,用来翻地，把草地变成可耕种的土地。,Tills grass into farmable soil.
+TOOL_PICKAXE_DESC,砸碎石头，得到石材。,Smashes rocks for stone.
+TOOL_SICKLE_DESC,清除枯死的作物，也可以割草。,Clears withered crops and cuts weeds.
+TOOL_WATERING_CAN_DESC,给作物浇水，作物才会生长。,Waters crops so they keep growing.

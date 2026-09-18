@@ -8,7 +8,7 @@ extends SceneTree
 ## 产出是纯像素的、可 diff 的、且不依赖运行环境有没有中文字体。
 ##
 ## [b]为什么只收子集[/b]：全量 CJK 有 2 万多个字形，图集要几十 MB。
-## 这里只扫 [code]assets/i18n/strings.csv[/code] 的翻译表，只收集真正会被显示的
+## 这里只扫 [code]assets/i18n[/code] 下全部 [code]*.csv[/code] 的翻译表，只收集真正会被显示的
 ## 字符（通常几百个）。不再扫 [code].gd[/code] / [code].tscn[/code] 全文，
 ## 避免注释与报错文本污染字形子集；新增文案必须先登记进翻译表，再重跑一次。
 ## [code]tests/unit/test_assets.gd[/code] 会检查翻译表有没有漏字。
@@ -32,7 +32,7 @@ const PADDING: int = 1
 const OUTPUT_FNT: String = "res://assets/fonts/pixel_cjk.fnt"
 const OUTPUT_PNG: String = "res://assets/fonts/pixel_cjk.png"
 
-## 收集字符时只扫翻译表；所有会显示的文本都必须先登记进 strings.csv。
+## 收集字符时只扫翻译表；所有会显示的文本都必须先登记进 assets/i18n/*.csv。
 const SCAN_DIRS: Array[String] = [
 	"res://assets/i18n",
 ]

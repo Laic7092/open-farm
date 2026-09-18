@@ -12,7 +12,7 @@ const Palette := preload("res://src/art/palette.gd")
 const TileCollision := preload("res://src/world/tile_collision.gd")
 const Decor := preload("res://src/world/decor_painter.gd")
 
-const STRINGS_CSV: String = "res://assets/i18n/strings.csv"
+const I18N_DIR: String = "res://assets/i18n"
 const PIXEL_FONT: String = "res://assets/fonts/pixel_cjk.fnt"
 const THEME_PATH: String = "res://assets/themes/game_theme.tres"
 const TILESET_PATH: String = "res://assets/tilesets/farm_tileset.tres"
@@ -433,19 +433,28 @@ func test_palette_is_usable() -> void:
 
 # ---------------------------------------------------------------- 内部
 
-## 翻译表里出现过的所有字符（去掉表头、逗号与换行）。
+## 翻译表里出现过的所有字符（去掉表头、引号、逗号与换行）。
+##
+## 文案按域拆成多个 CSV（[code]ui / content / dialogue[/code]），这里遍历整个目录，
+## 拆分不影响字形子集的收集。
 func _characters_in_strings() -> Array[int]:
 	var seen: Dictionary[int, bool] = {}
-	var file := FileAccess.open(STRINGS_CSV, FileAccess.READ)
-	if file == null:
+	var dir := DirAccess.open(I18N_DIR)
+	if dir == null:
 		return []
-	var text := file.get_as_text()
-	file.close()
-	for index: int in text.length():
-		var code: int = text.unicode_at(index)
-		if code < 0x20:
+	for file_name: String in dir.get_files():
+		if file_name.get_extension().to_lower() != "csv":
 			continue
-		seen[code] = true
+		var file := FileAccess.open(I18N_DIR.path_join(file_name), FileAccess.READ)
+		if file == null:
+			continue
+		var text := file.get_as_text()
+		file.close()
+		for index: int in text.length():
+			var code: int = text.unicode_at(index)
+			if code < 0x20:
+				continue
+			seen[code] = true
 	var codes: Array[int] = []
 	for code: int in seen:
 		codes.append(code)
