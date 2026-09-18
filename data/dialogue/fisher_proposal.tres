@@ -1,20 +1,21 @@
 [gd_resource type="Resource" script_class="DialogueData" format=3]
 
-[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_yyyms"]
-[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_l6jdh"]
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_l6jdh"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_7r58k"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_54dp6"]
 
-[sub_resource type="Resource" id="Resource_7r58k"]
-script = ExtResource("1_yyyms")
+[sub_resource type="Resource" id="Resource_p83ql"]
+script = ExtResource("1_l6jdh")
 speaker_key = &"NPC_FISHER"
 text_key = &"DIALOGUE_FISHER_PROPOSAL_1"
 
-[sub_resource type="Resource" id="Resource_54dp6"]
-script = ExtResource("1_yyyms")
+[sub_resource type="Resource" id="Resource_lnsp3"]
+script = ExtResource("1_l6jdh")
 speaker_key = &"NPC_FISHER"
 text_key = &"DIALOGUE_FISHER_PROPOSAL_2"
 
 [resource]
-script = ExtResource("2_l6jdh")
+script = ExtResource("3_54dp6")
 id = &"fisher_proposal"
 speaker_key = &"NPC_FISHER"
-lines = Array[ExtResource("1_yyyms")]([SubResource("Resource_7r58k"), SubResource("Resource_54dp6")])
+lines = Array[ExtResource("1_l6jdh")]([SubResource("Resource_p83ql"), SubResource("Resource_lnsp3")])

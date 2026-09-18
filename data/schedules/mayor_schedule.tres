@@ -1,38 +1,38 @@
 [gd_resource type="Resource" script_class="NpcSchedule" format=3]
 
-[ext_resource type="Script" path="res://src/npc/npc_schedule.gd" id="1_sched"]
-[ext_resource type="Script" path="res://src/npc/schedule_entry.gd" id="2_entry"]
+[ext_resource type="Script" path="res://src/npc/schedule_entry.gd" id="1_gdvwq"]
+[ext_resource type="Script" path="res://src/npc/npc_schedule.gd" id="2_6cx6g"]
 
-[sub_resource type="Resource" id="Resource_morning_hall"]
-script = ExtResource("2_entry")
+[sub_resource type="Resource" id="Resource_or8ci"]
+script = ExtResource("1_gdvwq")
 start_minute = 360
 location_id = &"town_hall"
 activity = &"work"
 
-[sub_resource type="Resource" id="Resource_morning_walk"]
-script = ExtResource("2_entry")
+[sub_resource type="Resource" id="Resource_wcwxb"]
+script = ExtResource("1_gdvwq")
 start_minute = 600
 location_id = &"plaza"
 activity = &"stroll"
 
-[sub_resource type="Resource" id="Resource_noon_hall"]
-script = ExtResource("2_entry")
+[sub_resource type="Resource" id="Resource_00rhk"]
+script = ExtResource("1_gdvwq")
 start_minute = 720
 location_id = &"town_hall"
 activity = &"work"
 
-[sub_resource type="Resource" id="Resource_evening_walk"]
-script = ExtResource("2_entry")
+[sub_resource type="Resource" id="Resource_o7ofe"]
+script = ExtResource("1_gdvwq")
 start_minute = 1020
 location_id = &"plaza"
 activity = &"stroll"
 
-[sub_resource type="Resource" id="Resource_night_hall"]
-script = ExtResource("2_entry")
+[sub_resource type="Resource" id="Resource_u5hay"]
+script = ExtResource("1_gdvwq")
 start_minute = 1200
 location_id = &"town_hall"
 activity = &"rest"
 
 [resource]
-script = ExtResource("1_sched")
-entries = Array[ExtResource("2_entry")]([SubResource("Resource_morning_hall"), SubResource("Resource_morning_walk"), SubResource("Resource_noon_hall"), SubResource("Resource_evening_walk"), SubResource("Resource_night_hall")])
+script = ExtResource("2_6cx6g")
+entries = Array[ExtResource("1_gdvwq")]([SubResource("Resource_or8ci"), SubResource("Resource_wcwxb"), SubResource("Resource_00rhk"), SubResource("Resource_o7ofe"), SubResource("Resource_u5hay")])

@@ -1,20 +1,21 @@
 [gd_resource type="Resource" script_class="DialogueData" format=3]
 
-[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_3q8m0"]
-[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_ckowq"]
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_ckowq"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_qt3tl"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_msg8w"]
 
-[sub_resource type="Resource" id="Resource_qt3tl"]
-script = ExtResource("1_3q8m0")
+[sub_resource type="Resource" id="Resource_2uyu4"]
+script = ExtResource("1_ckowq")
 speaker_key = &"NPC_FLORIST"
 text_key = &"DIALOGUE_FLORIST_CONFESSION_1"
 
-[sub_resource type="Resource" id="Resource_msg8w"]
-script = ExtResource("1_3q8m0")
+[sub_resource type="Resource" id="Resource_5bgwy"]
+script = ExtResource("1_ckowq")
 speaker_key = &"NPC_FLORIST"
 text_key = &"DIALOGUE_FLORIST_CONFESSION_2"
 
 [resource]
-script = ExtResource("2_ckowq")
+script = ExtResource("3_msg8w")
 id = &"florist_confession"
 speaker_key = &"NPC_FLORIST"
-lines = Array[ExtResource("1_3q8m0")]([SubResource("Resource_qt3tl"), SubResource("Resource_msg8w")])
+lines = Array[ExtResource("1_ckowq")]([SubResource("Resource_2uyu4"), SubResource("Resource_5bgwy")])

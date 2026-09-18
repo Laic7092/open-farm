@@ -1,20 +1,21 @@
 [gd_resource type="Resource" script_class="DialogueData" format=3]
 
-[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_8jurt"]
-[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_dufv6"]
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_dufv6"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_hpj81"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_5ny6x"]
 
-[sub_resource type="Resource" id="Resource_hpj81"]
-script = ExtResource("1_8jurt")
+[sub_resource type="Resource" id="Resource_557ib"]
+script = ExtResource("1_dufv6")
 speaker_key = &"NPC_CHILD"
 text_key = &"DIALOGUE_FESTIVAL_FIREWORKS_1"
 
-[sub_resource type="Resource" id="Resource_5ny6x"]
-script = ExtResource("1_8jurt")
+[sub_resource type="Resource" id="Resource_0ijxk"]
+script = ExtResource("1_dufv6")
 speaker_key = &"NPC_CHILD"
 text_key = &"DIALOGUE_FESTIVAL_FIREWORKS_2"
 
 [resource]
-script = ExtResource("2_dufv6")
+script = ExtResource("3_5ny6x")
 id = &"festival_fireworks"
 speaker_key = &"NPC_CHILD"
-lines = Array[ExtResource("1_8jurt")]([SubResource("Resource_hpj81"), SubResource("Resource_5ny6x")])
+lines = Array[ExtResource("1_dufv6")]([SubResource("Resource_557ib"), SubResource("Resource_0ijxk")])

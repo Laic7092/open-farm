@@ -17,32 +17,27 @@ next_line = 2
 
 [sub_resource type="Resource" id="Resource_i56y1"]
 script = ExtResource("1_jd3qf")
-speaker_key = &"NPC_BLACKSMITH"
 text_key = &"DIALOGUE_BLACKSMITH_GREETING"
 choices = Array[ExtResource("2_fhcgl")]([SubResource("Resource_qt0yb"), SubResource("Resource_vyewt")])
 
 [sub_resource type="Resource" id="Resource_28bf8"]
 script = ExtResource("1_jd3qf")
-speaker_key = &"NPC_BLACKSMITH"
 text_key = &"DIALOGUE_BLACKSMITH_FLIRT_REPLY"
 emotion = 1
 next_line = 3
 
 [sub_resource type="Resource" id="Resource_s4rth"]
 script = ExtResource("1_jd3qf")
-speaker_key = &"NPC_BLACKSMITH"
 text_key = &"DIALOGUE_BLACKSMITH_WORK_REPLY"
 next_line = 3
 
 [sub_resource type="Resource" id="Resource_08dak"]
 script = ExtResource("1_jd3qf")
-speaker_key = &"NPC_BLACKSMITH"
 text_key = &"DIALOGUE_BLACKSMITH_TIP"
 next_line = 4
 
 [sub_resource type="Resource" id="Resource_24sfr"]
 script = ExtResource("1_jd3qf")
-speaker_key = &"NPC_BLACKSMITH"
 text_key = &"DIALOGUE_BLACKSMITH_SEASON"
 next_line = -2
 

@@ -1,38 +1,38 @@
 [gd_resource type="Resource" script_class="NpcSchedule" format=3]
 
-[ext_resource type="Script" path="res://src/npc/npc_schedule.gd" id="1_sched"]
-[ext_resource type="Script" path="res://src/npc/schedule_entry.gd" id="2_entry"]
+[ext_resource type="Script" path="res://src/npc/schedule_entry.gd" id="1_xhdwi"]
+[ext_resource type="Script" path="res://src/npc/npc_schedule.gd" id="2_sfm3k"]
 
-[sub_resource type="Resource" id="Resource_open_store"]
-script = ExtResource("2_entry")
+[sub_resource type="Resource" id="Resource_0jkbw"]
+script = ExtResource("1_xhdwi")
 start_minute = 360
 location_id = &"store"
 activity = &"shop"
 
-[sub_resource type="Resource" id="Resource_lunch"]
-script = ExtResource("2_entry")
+[sub_resource type="Resource" id="Resource_ltavu"]
+script = ExtResource("1_xhdwi")
 start_minute = 720
 location_id = &"plaza"
 activity = &"stroll"
 
-[sub_resource type="Resource" id="Resource_back_to_store"]
-script = ExtResource("2_entry")
+[sub_resource type="Resource" id="Resource_bnsra"]
+script = ExtResource("1_xhdwi")
 start_minute = 780
 location_id = &"store"
 activity = &"shop"
 
-[sub_resource type="Resource" id="Resource_evening"]
-script = ExtResource("2_entry")
+[sub_resource type="Resource" id="Resource_nvvn7"]
+script = ExtResource("1_xhdwi")
 start_minute = 1080
 location_id = &"barn"
 activity = &"stroll"
 
-[sub_resource type="Resource" id="Resource_close_store"]
-script = ExtResource("2_entry")
+[sub_resource type="Resource" id="Resource_d1hjd"]
+script = ExtResource("1_xhdwi")
 start_minute = 1320
 location_id = &"store"
 activity = &"rest"
 
 [resource]
-script = ExtResource("1_sched")
-entries = Array[ExtResource("2_entry")]([SubResource("Resource_open_store"), SubResource("Resource_lunch"), SubResource("Resource_back_to_store"), SubResource("Resource_evening"), SubResource("Resource_close_store")])
+script = ExtResource("2_sfm3k")
+entries = Array[ExtResource("1_xhdwi")]([SubResource("Resource_0jkbw"), SubResource("Resource_ltavu"), SubResource("Resource_bnsra"), SubResource("Resource_nvvn7"), SubResource("Resource_d1hjd")])

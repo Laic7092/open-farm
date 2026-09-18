@@ -1,25 +1,43 @@
 [gd_resource type="Resource" script_class="DialogueData" format=3]
 
-[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_mbfsq"]
-[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_di4ba"]
-
-[sub_resource type="Resource" id="Resource_31y6i"]
-script = ExtResource("1_mbfsq")
-speaker_key = &"NPC_MINER"
-text_key = &"DIALOGUE_MINER_GREETING"
-
-[sub_resource type="Resource" id="Resource_sn2sb"]
-script = ExtResource("1_mbfsq")
-speaker_key = &"NPC_MINER"
-text_key = &"DIALOGUE_MINER_TIP"
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_di4ba"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_31y6i"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_sn2sb"]
 
 [sub_resource type="Resource" id="Resource_ybk7m"]
-script = ExtResource("1_mbfsq")
-speaker_key = &"NPC_MINER"
+script = ExtResource("2_31y6i")
+text_key = &"DIALOGUE_MINER_CHOICE_CAVE"
+next_line = 1
+set_flag = &"heard_cave_rumor"
+
+[sub_resource type="Resource" id="Resource_ojlim"]
+script = ExtResource("2_31y6i")
+text_key = &"DIALOGUE_MINER_CHOICE_SMALLTALK"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_mf6rj"]
+script = ExtResource("1_di4ba")
+text_key = &"DIALOGUE_MINER_GREETING"
+choices = Array[ExtResource("2_31y6i")]([SubResource("Resource_ybk7m"), SubResource("Resource_ojlim")])
+
+[sub_resource type="Resource" id="Resource_2thpn"]
+script = ExtResource("1_di4ba")
+text_key = &"DIALOGUE_MINER_CAVE_REPLY"
+emotion = 4
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_hjf7p"]
+script = ExtResource("1_di4ba")
+text_key = &"DIALOGUE_MINER_TIP"
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_p5ndn"]
+script = ExtResource("1_di4ba")
 text_key = &"DIALOGUE_MINER_SEASON"
+next_line = -2
 
 [resource]
-script = ExtResource("2_di4ba")
+script = ExtResource("3_sn2sb")
 id = &"miner_greeting"
 speaker_key = &"NPC_MINER"
-lines = Array[ExtResource("1_mbfsq")]([SubResource("Resource_31y6i"), SubResource("Resource_sn2sb"), SubResource("Resource_ybk7m")])
+lines = Array[ExtResource("1_di4ba")]([SubResource("Resource_mf6rj"), SubResource("Resource_2thpn"), SubResource("Resource_hjf7p"), SubResource("Resource_p5ndn")])

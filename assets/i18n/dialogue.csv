@@ -14,6 +14,8 @@ DIALOGUE_BLACKSMITH_PROPOSAL_2,好。往后我打的每样东西，都有你一�
 DIALOGUE_BLACKSMITH_SEASON,天冷了，铁也硬得快，干活得趁热。,Cold mornings make the iron bite faster.
 DIALOGUE_BLACKSMITH_TIP,斧头和镐子要常磨，砍树砸石头才不费劲。,Keep your axe and pickaxe sharp.
 DIALOGUE_BLACKSMITH_WORK_REPLY,还行，庄稼人趁手就够用了。,Steady enough. Folks need what lasts.
+DIALOGUE_CHILD_CHOICE_PLAY,好啊，一起去玩！,Sure! Let us go play!
+DIALOGUE_CHILD_CHOICE_TIP,今天学到了什么？,What did you learn today?
 DIALOGUE_CHILD_GREETING,你就是新来的农场主吗？,Are you the new farmer?
 DIALOGUE_CHILD_PLAY,等会儿一起去广场玩吧！,Let's play at the plaza later!
 DIALOGUE_CHILD_TIP,我妈妈说，浇水的时候要轻轻的。,My mom says water the crops gently.
@@ -28,6 +30,9 @@ DIALOGUE_FESTIVAL_NEW_YEAR_1,新年好！今年也请多关照。,Happy new year
 DIALOGUE_FESTIVAL_NEW_YEAR_2,广场上摆好了酒，大家就等你来了。,The drinks are out on the plaza. Everyone is waiting.
 DIALOGUE_FESTIVAL_STARRY_1,今晚的星星特别亮，许个愿吧。,The stars are bright tonight. Make a wish.
 DIALOGUE_FESTIVAL_STARRY_2,听说在星夜祭许的愿，一定会实现。,They say wishes made at the starry night come true.
+DIALOGUE_FISHER_CATCH_REPLY,浪大，鱼都往深处躲，篓子还空着。,Rough waves. The fish went deep and my basket is empty.
+DIALOGUE_FISHER_CHOICE_CATCH,今天收获如何？,A good catch today?
+DIALOGUE_FISHER_CHOICE_STORY,海上有什么故事吗？,Any tales from the sea?
 DIALOGUE_FISHER_CONFESSION_1,我在海上漂了半辈子，头回这么想靠岸。,I have sailed half my life and never wanted to dock like this.
 DIALOGUE_FISHER_CONFESSION_2,你要是不嫌弃，我想把船停在你心里。,If you will have me I would anchor my boat in your heart.
 DIALOGUE_FISHER_FRIEND,今天的浪不大，要不要跟我出海？,Calm water today. Want to sail with me?
@@ -37,17 +42,26 @@ DIALOGUE_FISHER_MARRIED,回来啦，鱼我收拾好了，你歇着。,You are ba
 DIALOGUE_FISHER_PROPOSAL_1,这蓝羽毛……你从哪儿弄来的？,This blue feather... where did you get it?
 DIALOGUE_FISHER_PROPOSAL_2,我收下了。往后风里雨里，都有我。,I accept. Through wind and rain you have me.
 DIALOGUE_FISHER_SEASON,冬天鱼都往深水里躲喽。,In winter the fish hide in deep water.
+DIALOGUE_FISHER_STORY_REPLY,有一回我见过比船还大的影子，到现在也说不清是啥。,Once I saw a shadow bigger than the boat. I still cannot say what it was.
 DIALOGUE_FISHER_TIP,退潮的时候，沙滩上能捡到不少好东西。,At low tide the beach gives up its treasures.
+DIALOGUE_FLORIST_CHOICE_KINDS,都种了些什么花？,What kinds do you grow?
+DIALOGUE_FLORIST_CHOICE_PRAISE,这些花真好看。,These flowers are lovely.
 DIALOGUE_FLORIST_CLOSING,花儿谢了就不好看了，常来啊。,Come back before they wilt.
 DIALOGUE_FLORIST_CONFESSION_1,老太婆我看人很准，你是个好孩子。,I read people well and you are a good soul.
 DIALOGUE_FLORIST_CONFESSION_2,要是你不嫌弃……那就一起过日子吧。,If you do not mind... let us share our days.
 DIALOGUE_FLORIST_FRIEND,来，这朵最好看的，算婆婆送你的。,Here. The prettiest one is my gift to you.
 DIALOGUE_FLORIST_GREETING,来挑几朵花吧，刚剪下来的。,Freshly cut flowers for you.
+DIALOGUE_FLORIST_KINDS_REPLY,春天有郁金香，夏天有向日葵，秋天就数菊花最精神。,Tulips in spring. Sunflowers in summer. Chrysanthemums rule the fall.
 DIALOGUE_FLORIST_LOVER,花开得好，是因为有人在等它开呢。,Flowers bloom because someone waits for them.
 DIALOGUE_FLORIST_MARRIED,家里有你在，比满园的花都热闹。,With you at home the whole garden feels warmer.
+DIALOGUE_FLORIST_PRAISE_REPLY,嘴真甜！这朵拿着，送人也行。,Sweet talker! Take this one and gift it if you like.
 DIALOGUE_FLORIST_PROPOSAL_1,哎呀，这羽毛……你当真？,Oh my. This feather... are you sure?
 DIALOGUE_FLORIST_PROPOSAL_2,好，好。往后花园里，多你一个。,Wonderful. One more pair of hands in the garden.
 DIALOGUE_FLORIST_TIP,野花也能卖钱，采下来别浪费。,Wildflowers sell too. Don't waste them.
+DIALOGUE_LIBRARIAN_CAVE_REPLY,你也听说了？旧书里夹着一张矿道地图，送你了。,You heard as well? An old book held a mine map. It is yours now.
+DIALOGUE_LIBRARIAN_CHOICE_BOOK,想借一本关于季节的书。,I would like a book about the seasons.
+DIALOGUE_LIBRARIAN_CHOICE_BROWSE,随便看看。,Just browsing.
+DIALOGUE_LIBRARIAN_CHOICE_CAVE,矿洞的传说，这里有记载吗？,Are the mine legends written down here?
 DIALOGUE_LIBRARIAN_CONFESSION_1,我一直在等一个会认真听我说话的人。,I have been waiting for someone who truly listens.
 DIALOGUE_LIBRARIAN_CONFESSION_2,如果那个人是你……我愿意。,And if that someone is you... I would be glad.
 DIALOGUE_LIBRARIAN_FRIEND,你来了。书我帮你留着呢，慢慢看。,You came. I saved these books for you.
@@ -58,7 +72,10 @@ DIALOGUE_LIBRARIAN_PROPOSAL_1,这……这是给我的吗？,Is this... for me?
 DIALOGUE_LIBRARIAN_PROPOSAL_2,我愿意。以后每个故事里，都有你。,Yes. Every story from now on will have you in it.
 DIALOGUE_LIBRARIAN_SEASON,无论外面什么季节，书里都是安静的。,Books stay calm whatever the season.
 DIALOGUE_LIBRARIAN_TIP,想了解季节和作物，来这儿翻翻书准没错。,Books here explain seasons and crops.
+DIALOGUE_MAYOR_CHOICE_ADVICE,请教一下农场的事。,Any advice for the farm?
+DIALOGUE_MAYOR_CHOICE_NEWS,村里最近怎么样？,How is the village lately?
 DIALOGUE_MAYOR_GREETING,早啊，年轻人。农场就交给你了。,Morning. The farm is in your hands now.
+DIALOGUE_MAYOR_NEWS_REPLY,村里还算安稳。倒是矿洞那边，最近总有人进进出出。,All quiet here. Though people keep going in and out of the mine.
 DIALOGUE_MAYOR_SEASON,换季的时候，能种的东西就变了。,When the season turns so do your crops.
 DIALOGUE_MAYOR_TIP,别忘了给作物浇水，不然它们会枯掉的。,Don't forget to water your crops or they wilt.
 DIALOGUE_MERCHANT_BUY_REPLY,有眼光！今天新到了几样好货。,Good eye! We just got some fresh stock.
@@ -66,8 +83,10 @@ DIALOGUE_MERCHANT_CHOICE_BROWSE,只是随便看看。,Just looking around.
 DIALOGUE_MERCHANT_CHOICE_BUY,想买点东西。,I would like to buy something.
 DIALOGUE_MERCHANT_CLOSING,谢谢惠顾，慢走！,Thanks for coming!
 DIALOGUE_MERCHANT_GREETING,欢迎光临，今天要买点什么吗？,Welcome! Buying anything today?
-DIALOGUE_MERCHANT_RAIN,下雨天不用浇水，可以省点力气。,Rain saves you the watering.
 DIALOGUE_MERCHANT_WEATHER,今天天气不错，地里的活儿会顺利的。,Nice weather today. Good for the fields.
+DIALOGUE_MINER_CAVE_REPLY,再往里走有段老矿道，听说埋着会发光的石头。,There is an old shaft deeper in. They say glowing stones are buried there.
+DIALOGUE_MINER_CHOICE_CAVE,矿洞深处有什么？,What lies deeper in the mine?
+DIALOGUE_MINER_CHOICE_SMALLTALK,就是打个招呼。,Just saying hello.
 DIALOGUE_MINER_GREETING,洞里黑，跟紧点别乱跑。,It's dark in there. Stay close.
 DIALOGUE_MINER_SEASON,洞里头不分四季，倒省心。,Down here it's the same all year round.
 DIALOGUE_MINER_TIP,带够镐子再来，石头可不客气。,Bring a pickaxe. The rocks won't be kind.

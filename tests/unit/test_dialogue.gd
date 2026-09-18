@@ -113,14 +113,65 @@ func test_sequential_line_still_valid() -> void:
 
 # ---------------------------------------------------------------- 示例数据
 
-func test_sample_merchant_greeting_is_branching() -> void:
-	var dialogue := Database.get_dialogue(&"merchant_greeting")
+## 每位村民的开场都应当是分支的（示例内容的验收）。
+func test_every_sample_greeting_is_branching() -> void:
+	for dialogue_id: StringName in [
+		&"merchant_greeting", &"mayor_greeting", &"blacksmith_greeting",
+		&"florist_greeting", &"fisher_greeting", &"miner_greeting",
+		&"child_greeting", &"librarian_greeting",
+	]:
+		var dialogue := Database.get_dialogue(dialogue_id)
+		assert_object(dialogue).override_failure_message(
+			"缺少对白 %s" % dialogue_id
+		).is_not_null()
+		if dialogue == null:
+			continue
+		assert_bool(dialogue.lines[0].has_choices()).override_failure_message(
+			"%s 的开场没有分支" % dialogue_id
+		).is_true()
+		for choice: DialogueChoice in dialogue.lines[0].choices:
+			assert_int(
+				DialogueRules.choice_target(choice, dialogue.line_count())
+			).override_failure_message(
+				"%s 的选项 %s 跳转越界" % [dialogue_id, choice.text_key]
+			).is_greater_equal(0)
+
+
+## 书雅问矿洞的选项受矿工写下的旗标门控。
+func test_librarian_cave_choice_is_gated_by_miner_rumor() -> void:
+	var dialogue := Database.get_dialogue(&"librarian_greeting")
 	assert_object(dialogue).is_not_null()
 	if dialogue == null:
 		return
-	assert_bool(dialogue.lines[0].has_choices()).is_true()
-	for choice: DialogueChoice in dialogue.lines[0].choices:
-		assert_int(DialogueRules.choice_target(choice, dialogue.line_count())).is_greater_equal(0)
+	var profile := PlayerProfile.new()
+	var before := DialogueRules.available_choices(dialogue.lines[0], profile).size()
+	profile.set_flag(&"heard_cave_rumor")
+	var after := DialogueRules.available_choices(dialogue.lines[0], profile).size()
+	assert_int(after).override_failure_message(
+		"听过矿洞传闻后，书雅应该多出一个选项"
+	).is_equal(before + 1)
+
+
+## 选项的 [member DialogueChoice.set_flag] 必须真的被某个 NPC 写下来。
+##
+## 允许一份“外部旗标”白名单（关系 / 节日等系统写的），否则对话里引用它们会被误报。
+func test_required_flags_are_produced_somewhere() -> void:
+	var external_flags: Array[StringName] = [&"child_born"]
+	var produced: Dictionary[StringName, bool] = {}
+	var required: Dictionary[StringName, StringName] = {}
+	for dialogue_id: StringName in Database.dialogues():
+		var dialogue := Database.get_dialogue(dialogue_id)
+		for line: DialogueLine in dialogue.lines:
+			for choice: DialogueChoice in line.choices:
+				if choice.set_flag != &"":
+					produced[choice.set_flag] = true
+				if choice.required_flag != &"" and not external_flags.has(choice.required_flag):
+					required[choice.required_flag] = dialogue_id
+	for flag: StringName in required:
+		assert_bool(produced.has(flag)).override_failure_message(
+			"对白 %s 的选项要求旗标 %s，但没有任何选项会写下它（条件永远不成立）"
+			% [required[flag], flag]
+		).is_true()
 
 
 func test_sample_blacksmith_flirt_raises_affection() -> void:

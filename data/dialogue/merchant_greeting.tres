@@ -16,25 +16,21 @@ next_line = 2
 
 [sub_resource type="Resource" id="Resource_2s2fy"]
 script = ExtResource("1_v7i78")
-speaker_key = &"NPC_MERCHANT"
 text_key = &"DIALOGUE_MERCHANT_GREETING"
 choices = Array[ExtResource("2_8vcw4")]([SubResource("Resource_acvp7"), SubResource("Resource_blhao")])
 
 [sub_resource type="Resource" id="Resource_cdlko"]
 script = ExtResource("1_v7i78")
-speaker_key = &"NPC_MERCHANT"
 text_key = &"DIALOGUE_MERCHANT_BUY_REPLY"
-next_line = -2
+next_line = 3
 
 [sub_resource type="Resource" id="Resource_1q0lj"]
 script = ExtResource("1_v7i78")
-speaker_key = &"NPC_MERCHANT"
 text_key = &"DIALOGUE_MERCHANT_WEATHER"
 next_line = 3
 
 [sub_resource type="Resource" id="Resource_r0uj2"]
 script = ExtResource("1_v7i78")
-speaker_key = &"NPC_MERCHANT"
 text_key = &"DIALOGUE_MERCHANT_CLOSING"
 next_line = -2
 

@@ -1,25 +1,43 @@
 [gd_resource type="Resource" script_class="DialogueData" format=3]
 
-[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_84bm2"]
-[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_lkhsx"]
-
-[sub_resource type="Resource" id="Resource_77nd8"]
-script = ExtResource("1_84bm2")
-speaker_key = &"NPC_FLORIST"
-text_key = &"DIALOGUE_FLORIST_GREETING"
-
-[sub_resource type="Resource" id="Resource_v5ity"]
-script = ExtResource("1_84bm2")
-speaker_key = &"NPC_FLORIST"
-text_key = &"DIALOGUE_FLORIST_TIP"
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_lkhsx"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_77nd8"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_v5ity"]
 
 [sub_resource type="Resource" id="Resource_iteuj"]
-script = ExtResource("1_84bm2")
-speaker_key = &"NPC_FLORIST"
+script = ExtResource("2_77nd8")
+text_key = &"DIALOGUE_FLORIST_CHOICE_PRAISE"
+next_line = 1
+affection_delta = 2
+
+[sub_resource type="Resource" id="Resource_o2mdl"]
+script = ExtResource("2_77nd8")
+text_key = &"DIALOGUE_FLORIST_CHOICE_KINDS"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_iec4f"]
+script = ExtResource("1_lkhsx")
+text_key = &"DIALOGUE_FLORIST_GREETING"
+choices = Array[ExtResource("2_77nd8")]([SubResource("Resource_iteuj"), SubResource("Resource_o2mdl")])
+
+[sub_resource type="Resource" id="Resource_hbpd1"]
+script = ExtResource("1_lkhsx")
+text_key = &"DIALOGUE_FLORIST_PRAISE_REPLY"
+emotion = 1
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_l2ptq"]
+script = ExtResource("1_lkhsx")
+text_key = &"DIALOGUE_FLORIST_KINDS_REPLY"
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_rqnw6"]
+script = ExtResource("1_lkhsx")
 text_key = &"DIALOGUE_FLORIST_CLOSING"
+next_line = -2
 
 [resource]
-script = ExtResource("2_lkhsx")
+script = ExtResource("3_v5ity")
 id = &"florist_greeting"
 speaker_key = &"NPC_FLORIST"
-lines = Array[ExtResource("1_84bm2")]([SubResource("Resource_77nd8"), SubResource("Resource_v5ity"), SubResource("Resource_iteuj")])
+lines = Array[ExtResource("1_lkhsx")]([SubResource("Resource_iec4f"), SubResource("Resource_hbpd1"), SubResource("Resource_l2ptq"), SubResource("Resource_rqnw6")])

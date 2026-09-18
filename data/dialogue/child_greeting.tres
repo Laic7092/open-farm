@@ -1,25 +1,38 @@
 [gd_resource type="Resource" script_class="DialogueData" format=3]
 
-[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_nry7e"]
-[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_q6fko"]
-
-[sub_resource type="Resource" id="Resource_kkiwh"]
-script = ExtResource("1_nry7e")
-speaker_key = &"NPC_CHILD"
-text_key = &"DIALOGUE_CHILD_GREETING"
-
-[sub_resource type="Resource" id="Resource_85gsm"]
-script = ExtResource("1_nry7e")
-speaker_key = &"NPC_CHILD"
-text_key = &"DIALOGUE_CHILD_PLAY"
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_q6fko"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_kkiwh"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_85gsm"]
 
 [sub_resource type="Resource" id="Resource_n44nb"]
-script = ExtResource("1_nry7e")
-speaker_key = &"NPC_CHILD"
+script = ExtResource("2_kkiwh")
+text_key = &"DIALOGUE_CHILD_CHOICE_PLAY"
+next_line = 1
+affection_delta = 1
+
+[sub_resource type="Resource" id="Resource_0mfbn"]
+script = ExtResource("2_kkiwh")
+text_key = &"DIALOGUE_CHILD_CHOICE_TIP"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_8f32j"]
+script = ExtResource("1_q6fko")
+text_key = &"DIALOGUE_CHILD_GREETING"
+choices = Array[ExtResource("2_kkiwh")]([SubResource("Resource_n44nb"), SubResource("Resource_0mfbn")])
+
+[sub_resource type="Resource" id="Resource_pktkc"]
+script = ExtResource("1_q6fko")
+text_key = &"DIALOGUE_CHILD_PLAY"
+emotion = 1
+next_line = -2
+
+[sub_resource type="Resource" id="Resource_x8gvn"]
+script = ExtResource("1_q6fko")
 text_key = &"DIALOGUE_CHILD_TIP"
+next_line = -2
 
 [resource]
-script = ExtResource("2_q6fko")
+script = ExtResource("3_85gsm")
 id = &"child_greeting"
 speaker_key = &"NPC_CHILD"
-lines = Array[ExtResource("1_nry7e")]([SubResource("Resource_kkiwh"), SubResource("Resource_85gsm"), SubResource("Resource_n44nb")])
+lines = Array[ExtResource("1_q6fko")]([SubResource("Resource_8f32j"), SubResource("Resource_pktkc"), SubResource("Resource_x8gvn")])
