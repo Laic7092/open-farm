@@ -1,25 +1,45 @@
 [gd_resource type="Resource" script_class="DialogueData" format=3]
 
-[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_ptdy6"]
-[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="2_v7i78"]
-
-[sub_resource type="Resource" id="Resource_8vcw4"]
-script = ExtResource("1_ptdy6")
-speaker_key = &"NPC_MERCHANT"
-text_key = &"DIALOGUE_MERCHANT_GREETING"
-
-[sub_resource type="Resource" id="Resource_bqmvp"]
-script = ExtResource("1_ptdy6")
-speaker_key = &"NPC_MERCHANT"
-text_key = &"DIALOGUE_MERCHANT_WEATHER"
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_v7i78"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_8vcw4"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_bqmvp"]
 
 [sub_resource type="Resource" id="Resource_acvp7"]
-script = ExtResource("1_ptdy6")
+script = ExtResource("2_8vcw4")
+text_key = &"DIALOGUE_MERCHANT_CHOICE_BUY"
+next_line = 1
+
+[sub_resource type="Resource" id="Resource_blhao"]
+script = ExtResource("2_8vcw4")
+text_key = &"DIALOGUE_MERCHANT_CHOICE_BROWSE"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_2s2fy"]
+script = ExtResource("1_v7i78")
+speaker_key = &"NPC_MERCHANT"
+text_key = &"DIALOGUE_MERCHANT_GREETING"
+choices = Array[ExtResource("2_8vcw4")]([SubResource("Resource_acvp7"), SubResource("Resource_blhao")])
+
+[sub_resource type="Resource" id="Resource_cdlko"]
+script = ExtResource("1_v7i78")
+speaker_key = &"NPC_MERCHANT"
+text_key = &"DIALOGUE_MERCHANT_BUY_REPLY"
+next_line = -2
+
+[sub_resource type="Resource" id="Resource_1q0lj"]
+script = ExtResource("1_v7i78")
+speaker_key = &"NPC_MERCHANT"
+text_key = &"DIALOGUE_MERCHANT_WEATHER"
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_r0uj2"]
+script = ExtResource("1_v7i78")
 speaker_key = &"NPC_MERCHANT"
 text_key = &"DIALOGUE_MERCHANT_CLOSING"
+next_line = -2
 
 [resource]
-script = ExtResource("2_v7i78")
+script = ExtResource("3_bqmvp")
 id = &"merchant_greeting"
 speaker_key = &"NPC_MERCHANT"
-lines = Array[ExtResource("1_ptdy6")]([SubResource("Resource_8vcw4"), SubResource("Resource_bqmvp"), SubResource("Resource_acvp7")])
+lines = Array[ExtResource("1_v7i78")]([SubResource("Resource_2s2fy"), SubResource("Resource_cdlko"), SubResource("Resource_1q0lj"), SubResource("Resource_r0uj2")])

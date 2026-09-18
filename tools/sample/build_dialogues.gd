@@ -6,9 +6,13 @@ func build() -> void:
 	merchant.id = &"merchant_greeting"
 	merchant.speaker_key = &"NPC_MERCHANT"
 	merchant.lines = [
-		_line(&"NPC_MERCHANT", &"DIALOGUE_MERCHANT_GREETING"),
-		_line(&"NPC_MERCHANT", &"DIALOGUE_MERCHANT_WEATHER"),
-		_line(&"NPC_MERCHANT", &"DIALOGUE_MERCHANT_CLOSING"),
+		_branch_line(&"NPC_MERCHANT", &"DIALOGUE_MERCHANT_GREETING", [
+			_choice(&"DIALOGUE_MERCHANT_CHOICE_BUY", 1, 0),
+			_choice(&"DIALOGUE_MERCHANT_CHOICE_BROWSE", 2, 0),
+		]),
+		_line(&"NPC_MERCHANT", &"DIALOGUE_MERCHANT_BUY_REPLY", DialogueLine.STOP),
+		_line(&"NPC_MERCHANT", &"DIALOGUE_MERCHANT_WEATHER", 3),
+		_line(&"NPC_MERCHANT", &"DIALOGUE_MERCHANT_CLOSING", DialogueLine.STOP),
 	] as Array[DialogueLine]
 	_save(merchant, DIALOGUE_DIR.path_join("merchant_greeting.tres"))
 
@@ -22,11 +26,7 @@ func build() -> void:
 	] as Array[DialogueLine]
 	_save(mayor, DIALOGUE_DIR.path_join("mayor_greeting.tres"))
 
-	_add_dialogue(&"blacksmith_greeting", &"NPC_BLACKSMITH", [
-		&"DIALOGUE_BLACKSMITH_GREETING",
-		&"DIALOGUE_BLACKSMITH_TIP",
-		&"DIALOGUE_BLACKSMITH_SEASON",
-	])
+	_build_blacksmith_greeting()
 	_add_dialogue(&"florist_greeting", &"NPC_FLORIST", [
 		&"DIALOGUE_FLORIST_GREETING",
 		&"DIALOGUE_FLORIST_TIP",
@@ -126,8 +126,68 @@ func _add_dialogue(
 	_save(dialogue, DIALOGUE_DIR.path_join("%s.tres" % dialogue_id))
 
 
-func _line(speaker_key: StringName, text_key: StringName) -> DialogueLine:
+func _line(
+	speaker_key: StringName,
+	text_key: StringName,
+	next_line: int = DialogueLine.NEXT_SEQUENTIAL
+) -> DialogueLine:
 	var line := DialogueLine.new()
 	line.speaker_key = speaker_key
 	line.text_key = text_key
+	line.next_line = next_line
+	return line
+
+
+## 一句带玩家选项的对白；[param choices] 非空时本句不按顺序推进。
+func _branch_line(
+	speaker_key: StringName, text_key: StringName, choices: Array
+) -> DialogueLine:
+	var line := _line(speaker_key, text_key)
+	var built: Array[DialogueChoice] = []
+	for choice: DialogueChoice in choices:
+		built.append(choice)
+	line.choices = built
+	return line
+
+
+## 一个选项：显示文本 + 跳转目标 + 可选好感 / 旗标条件。
+func _choice(
+	text_key: StringName,
+	next_line: int,
+	affection_delta: int = 0,
+	required_flag: StringName = &""
+) -> DialogueChoice:
+	var choice := DialogueChoice.new()
+	choice.text_key = text_key
+	choice.next_line = next_line
+	choice.affection_delta = affection_delta
+	choice.required_flag = required_flag
+	return choice
+
+
+## 铁匠的对白演示"选择 → 分支 → 汇合"：
+## 夸他的手艺会 +2 好感，问生意则维持原样，两条支线最后都回到"提示 → 季节"。
+func _build_blacksmith_greeting() -> void:
+	var greeting := DialogueData.new()
+	greeting.id = &"blacksmith_greeting"
+	greeting.speaker_key = &"NPC_BLACKSMITH"
+	greeting.lines = [
+		_branch_line(&"NPC_BLACKSMITH", &"DIALOGUE_BLACKSMITH_GREETING", [
+			_choice(&"DIALOGUE_BLACKSMITH_CHOICE_FLIRT", 1, 2),
+			_choice(&"DIALOGUE_BLACKSMITH_CHOICE_WORK", 2, 0),
+		]),
+		_happy_line(&"NPC_BLACKSMITH", &"DIALOGUE_BLACKSMITH_FLIRT_REPLY", 3),
+		_line(&"NPC_BLACKSMITH", &"DIALOGUE_BLACKSMITH_WORK_REPLY", 3),
+		_line(&"NPC_BLACKSMITH", &"DIALOGUE_BLACKSMITH_TIP", 4),
+		_line(&"NPC_BLACKSMITH", &"DIALOGUE_BLACKSMITH_SEASON", DialogueLine.STOP),
+	] as Array[DialogueLine]
+	_save(greeting, DIALOGUE_DIR.path_join("blacksmith_greeting.tres"))
+
+
+## 带表情的对白行；用来在 UI 上验证情绪染色。
+func _happy_line(
+	speaker_key: StringName, text_key: StringName, next_line: int
+) -> DialogueLine:
+	var line := _line(speaker_key, text_key, next_line)
+	line.emotion = DialogueLine.Emotion.HAPPY
 	return line

@@ -51,6 +51,8 @@ var affection: int = 0
 var facing: Facing.Direction = Facing.Direction.DOWN
 
 var _pending_milestone: Milestone = Milestone.NONE
+## 最近一次由本 NPC 发起的对话；用来只结算"自己"的选项副作用。
+var _active_dialogue: DialogueData
 var _available: bool = true
 var _schedule: NpcSchedule
 var _current_entry: ScheduleEntry
@@ -99,6 +101,8 @@ func _enter_tree() -> void:
 		EventBus.minute_changed.connect(_on_minute_changed)
 	if not EventBus.ui.dialogue_finished.is_connected(_on_dialogue_finished):
 		EventBus.ui.dialogue_finished.connect(_on_dialogue_finished)
+	if not EventBus.ui.dialogue_choice_made.is_connected(_on_dialogue_choice_made):
+		EventBus.ui.dialogue_choice_made.connect(_on_dialogue_choice_made)
 	if not EventBus.player.npc_affection_changed.is_connected(_on_npc_affection_changed):
 		EventBus.player.npc_affection_changed.connect(_on_npc_affection_changed)
 	if not EventBus.day_changed.is_connected(_on_day_changed):
@@ -113,6 +117,8 @@ func _exit_tree() -> void:
 		EventBus.minute_changed.disconnect(_on_minute_changed)
 	if EventBus.ui.dialogue_finished.is_connected(_on_dialogue_finished):
 		EventBus.ui.dialogue_finished.disconnect(_on_dialogue_finished)
+	if EventBus.ui.dialogue_choice_made.is_connected(_on_dialogue_choice_made):
+		EventBus.ui.dialogue_choice_made.disconnect(_on_dialogue_choice_made)
 	if EventBus.player.npc_affection_changed.is_connected(_on_npc_affection_changed):
 		EventBus.player.npc_affection_changed.disconnect(_on_npc_affection_changed)
 	if EventBus.day_changed.is_connected(_on_day_changed):
@@ -401,6 +407,8 @@ func interact(actor: Node2D) -> void:
 	if not can_interact():
 		return
 	super.interact(actor)
+	# 每次交互都先清掉上一次的引用，避免对话被 close_all() 强行中断后残留下副作用。
+	_active_dialogue = null
 
 	# 1) 聊天好感每天只结算一次；先结算，里程碑判定用得到最新值。
 	var gained := _relationships.talk(npc_id)
@@ -414,7 +422,9 @@ func interact(actor: Node2D) -> void:
 	if milestone != Milestone.NONE:
 		_pending_milestone = milestone
 		_face_actor(actor)
-		EventBus.ui.dialogue_requested.emit(_milestone_dialogue(milestone))
+		var milestone_dialogue := _milestone_dialogue(milestone)
+		_active_dialogue = milestone_dialogue
+		EventBus.ui.dialogue_requested.emit(milestone_dialogue)
 		return
 
 	var dialogue := current_dialogue()
@@ -424,6 +434,7 @@ func interact(actor: Node2D) -> void:
 
 	_face_actor(actor)
 	_pending_milestone = Milestone.NONE
+	_active_dialogue = dialogue
 	EventBus.ui.dialogue_requested.emit(dialogue)
 
 
@@ -531,6 +542,7 @@ func from_dict(data_dict: Dictionary) -> void:
 
 
 func _on_dialogue_finished(_dialogue: DialogueData) -> void:
+	_active_dialogue = null
 	var milestone := _pending_milestone
 	_pending_milestone = Milestone.NONE
 	if milestone == Milestone.CONFESS:
@@ -539,6 +551,20 @@ func _on_dialogue_finished(_dialogue: DialogueData) -> void:
 		# 只有真的扣掉了信物才结婚，避免对白被跳过时"白嫖"。
 		if _consume_proposal_item():
 			_relationships.marry(npc_id)
+
+
+## 结算对话选项的副作用（好感 / 旗标）。
+##
+## 只处理当前由本 NPC 发起的对话，避免同一段对白被多个 NPC 重复结算。
+func _on_dialogue_choice_made(
+	dialogue: DialogueData, choice: DialogueChoice
+) -> void:
+	if dialogue == null or choice == null or dialogue != _active_dialogue:
+		return
+	if choice.affection_delta != 0:
+		_relationships.add_affection(npc_id, choice.affection_delta)
+	if choice.set_flag != &"" and _profile != null:
+		_profile.set_flag(choice.set_flag)
 
 
 # ---------------------------------------------------------------- 关系 / 可用性

@@ -70,6 +70,7 @@ func _ready() -> void:
 	EventBus.ui.pause_menu_toggle_requested.connect(_on_pause_menu_toggle)
 
 	dialogue_box.finished.connect(_on_dialogue_finished)
+	dialogue_box.choice_selected.connect(_on_dialogue_choice_selected)
 	pause_menu.close_requested.connect(func() -> void: _close(pause_menu))
 
 
@@ -138,6 +139,13 @@ func _on_dialogue_requested(dialogue: DialogueData) -> void:
 
 func _on_dialogue_finished(_dialogue: DialogueData) -> void:
 	_close(dialogue_box)
+
+
+## 选项本身不含副作用；转发到事件总线，由发起对话的 [Npc] 结算。
+func _on_dialogue_choice_selected(
+	dialogue: DialogueData, choice: DialogueChoice
+) -> void:
+	EventBus.ui.dialogue_choice_made.emit(dialogue, choice)
 
 
 func _on_shop_requested(shop_id: StringName) -> void:

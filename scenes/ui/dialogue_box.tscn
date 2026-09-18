@@ -16,7 +16,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 16.0
-offset_top = -96.0
+offset_top = -150.0
 offset_right = -16.0
 offset_bottom = -10.0
 grow_horizontal = 2
@@ -49,6 +49,12 @@ layout_mode = 2
 size_flags_vertical = 3
 autowrap_mode = 3
 text = "……"
+
+[node name="ChoicesBox" type="VBoxContainer" parent="Panel/Margin/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 2
 
 [node name="HintLabel" type="Label" parent="Panel/Margin/VBox"]
 unique_name_in_owner = true

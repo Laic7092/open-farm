@@ -14,6 +14,8 @@ signal dialogue_started(dialogue: DialogueData)
 signal dialogue_finished(dialogue: DialogueData)
 ## 对话翻到新的一句（逐字显示之前触发，供打字音效使用）。
 signal dialogue_line_shown()
+## 玩家在对话中做出了选择；副作用（好感 / 旗标）由发起方结算。
+signal dialogue_choice_made(dialogue: DialogueData, choice: DialogueChoice)
 ## 请求打开商店。
 signal shop_requested(shop_id: StringName)
 ## 商店开关。

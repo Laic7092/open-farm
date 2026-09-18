@@ -33,9 +33,37 @@ func validate() -> PackedStringArray:
 		var line: DialogueLine = lines[index]
 		if line == null:
 			problems.append("第 %d 行为空" % index)
-		elif line.text_key == &"":
-			problems.append("第 %d 行缺少 text_key" % index)
+			continue
+		for problem: String in line.validate():
+			problems.append("第 %d 行：%s" % [index, problem])
+		_check_jump(problems, index, line.next_line, false)
+		for choice: DialogueChoice in line.choices:
+			if choice == null:
+				continue
+			_check_jump(problems, index, choice.next_line, true)
 	return problems
+
+
+## 校验一处跳转目标。
+##
+## 普通对白：[constant DialogueLine.NEXT_SEQUENTIAL]（顺序）与
+## [constant DialogueLine.STOP]（结束）都合法，其余负数报错，正数越界报错。
+## 选项：[param from_choice] 为 true，必须明确给出 [constant DialogueLine.STOP]
+## 或有效索引，“顺序播放”语义对选项不成立。
+func _check_jump(
+	problems: PackedStringArray, index: int, target: int, from_choice: bool
+) -> void:
+	if target == DialogueLine.STOP:
+		return
+	if target == DialogueLine.NEXT_SEQUENTIAL:
+		if from_choice:
+			problems.append("第 %d 行：选项缺少跳转目标" % index)
+		return
+	if target < 0:
+		problems.append("第 %d 行：无效的跳转目标 %d" % [index, target])
+		return
+	if target >= lines.size():
+		problems.append("第 %d 行：跳转越界 %d" % [index, target])
 
 
 func _to_string() -> String:

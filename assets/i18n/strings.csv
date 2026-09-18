@@ -85,6 +85,7 @@ INVENTORY_TITLE,背包,Inventory
 INVENTORY_HINT,按 Tab 或 Esc 关闭,Press Tab or Esc to close
 INVENTORY_EMPTY,（空）,（empty）
 DIALOGUE_ADVANCE_HINT,按 E 继续,Press E to continue
+DIALOGUE_CHOOSE_HINT,↑↓ 选择，E 确认,↑↓ to choose, E to confirm
 NPC_MERCHANT,杂货店老板,Store Owner
 NPC_MAYOR,村长,Mayor
 NPC_BLACKSMITH,铁匠,Blacksmith
@@ -94,6 +95,9 @@ NPC_MINER,矿工,Miner
 NPC_CHILD,小满,May
 NPC_LIBRARIAN,书雅,Librarian
 DIALOGUE_MERCHANT_GREETING,欢迎光临，今天要买点什么吗？,Welcome! Buying anything today?
+DIALOGUE_MERCHANT_CHOICE_BUY,想买点东西。,I would like to buy something.
+DIALOGUE_MERCHANT_CHOICE_BROWSE,只是随便看看。,Just looking around.
+DIALOGUE_MERCHANT_BUY_REPLY,有眼光！今天新到了几样好货。,Good eye! We just got some fresh stock.
 DIALOGUE_MERCHANT_WEATHER,今天天气不错，地里的活儿会顺利的。,Nice weather today. Good for the fields.
 DIALOGUE_MERCHANT_RAIN,下雨天不用浇水，可以省点力气。,Rain saves you the watering.
 DIALOGUE_MERCHANT_CLOSING,谢谢惠顾，慢走！,Thanks for coming!
@@ -101,6 +105,10 @@ DIALOGUE_MAYOR_GREETING,早啊，年轻人。农场就交给你了。,Morning. T
 DIALOGUE_MAYOR_TIP,别忘了给作物浇水，不然它们会枯掉的。,Don't forget to water your crops or they wilt.
 DIALOGUE_MAYOR_SEASON,换季的时候，能种的东西就变了。,When the season turns so do your crops.
 DIALOGUE_BLACKSMITH_GREETING,炉子正旺，要打把新家伙吗？,The forge is hot. Need a new tool?
+DIALOGUE_BLACKSMITH_CHOICE_FLIRT,你打铁的样子真帅。,You look great at the anvil.
+DIALOGUE_BLACKSMITH_CHOICE_WORK,最近生意怎么样？,How is business lately?
+DIALOGUE_BLACKSMITH_FLIRT_REPLY,少、少贫嘴！……不过，谢了。,Quit it! ...Thanks, though.
+DIALOGUE_BLACKSMITH_WORK_REPLY,还行，庄稼人趁手就够用了。,Steady enough. Folks need what lasts.
 DIALOGUE_BLACKSMITH_TIP,斧头和镐子要常磨，砍树砸石头才不费劲。,Keep your axe and pickaxe sharp.
 DIALOGUE_BLACKSMITH_SEASON,天冷了，铁也硬得快，干活得趁热。,Cold mornings make the iron bite faster.
 DIALOGUE_FLORIST_GREETING,来挑几朵花吧，刚剪下来的。,Freshly cut flowers for you.
