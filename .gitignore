@@ -8,6 +8,9 @@ godot
 # 工具产物：截图、临时存档
 .tmp/
 
+# codegraph 本地索引（可由 `codegraph index` 随时重建）
+.codegraph/
+
 # gdUnit4 生成的测试报告
 reports/
 
