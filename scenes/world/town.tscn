@@ -35,7 +35,6 @@ bgm_track = &"town"
 footstep_sfx = &"footstep_path"
 camera_limits = Rect2(0, 0, 640, 416)
 default_spawn_id = &"from_twon"
-water_kind = 0
 
 [node name="Ground" type="TileMapLayer" parent="." node_paths=PackedStringArray("decor_root")]
 z_index = -20

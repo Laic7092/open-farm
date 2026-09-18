@@ -11,6 +11,7 @@ const Layout := preload("res://src/art/atlas_layout.gd")
 const Palette := preload("res://src/art/palette.gd")
 const TileCollision := preload("res://src/world/tile_collision.gd")
 const Decor := preload("res://src/world/decor_painter.gd")
+const WaterLayout := preload("res://src/world/water_layout.gd")
 
 const I18N_DIR: String = "res://assets/i18n"
 const PIXEL_FONT: String = "res://assets/fonts/pixel_cjk.fnt"
@@ -24,6 +25,9 @@ const SILHOUETTE_MIN_DIFFERENT_ROWS: int = 32
 ## 所有生成器都必须产出的文件。
 const REQUIRED_ASSETS: Array[String] = [
 	"res://assets/sprites/tileset_farm.png",
+	"res://assets/sprites/water/town_0.png",
+	"res://assets/sprites/water/twon_0.png",
+	"res://assets/sprites/water/beach_0.png",
 	"res://assets/sprites/actors/player.png",
 	"res://assets/sprites/actors/npc_merchant.png",
 	"res://assets/sprites/actors/npc_mayor.png",
@@ -122,6 +126,31 @@ func test_tileset_png_matches_atlas_layout() -> void:
 		return
 	assert_int(texture.get_width()).is_equal(Layout.TILESET_SIZE.x)
 	assert_int(texture.get_height()).is_equal(Layout.TILESET_SIZE.y)
+
+
+## 每片水体的贴图尺寸必须与 [WaterLayout] 声明的一致：运行期按同一份
+## [method WaterLayout.Body.pixel_bounds] 摆放贴图，尺寸差一像素就会错位。
+func test_water_textures_match_layout() -> void:
+	for world_id: StringName in WaterLayout.worlds():
+		var bodies := WaterLayout.bodies_for(world_id)
+		assert_bool(bodies.size() > 0).override_failure_message(
+			"%s 登记为有水面，却没有任何水体" % world_id
+		).is_true()
+		for index: int in bodies.size():
+			var path: String = WaterLayout.sprite_path(world_id, index)
+			var texture := load(path) as Texture2D
+			assert_object(texture).override_failure_message(
+				"缺少水面贴图 %s" % path
+			).is_not_null()
+			if texture == null:
+				continue
+			var expected: Vector2i = bodies[index].pixel_bounds().size
+			assert_int(texture.get_width()).override_failure_message(
+				"%s 宽度应为 %d" % [path, expected.x]
+			).is_equal(expected.x)
+			assert_int(texture.get_height()).override_failure_message(
+				"%s 高度应为 %d" % [path, expected.y]
+			).is_equal(expected.y)
 
 
 func test_actor_png_matches_atlas_layout() -> void:

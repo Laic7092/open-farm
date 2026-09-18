@@ -16,6 +16,11 @@ extends TileMapLayer
 
 ## 装饰节点的父节点（通常是 Props，参与 Y 排序）。
 @export var decor_root: Node2D
+## 木栈桥所在的 TileMapLayer。
+##
+## 栈桥必须画在水面之上，而水面是 [WaterField] 的贴图（z=-15），
+## 所以桥面不能再铺在地面层（z=-20）里，得单独占一层（见 [code]beach.tscn[/code]）。
+@export var pier_layer: TileMapLayer
 
 
 func _ready() -> void:
@@ -39,8 +44,8 @@ func paint() -> void:
 			var cell := Vector2i(origin.x + x, origin.y + y)
 			set_cell(cell, FarmAtlas.SOURCE_ID, GroundPainter.grass_variant(cell))
 
-	# 下方海水：深水 → 浅滩 → 浪线，三段读起来才像有坡度的岸。
-	GroundPainter.water(self, Rect2i(origin.x, origin.y + size.y - 8, size.x, 8), 2)
+	# 下方海面：形状与贴图由 [WaterLayout] / [WaterField] 负责，
+	# Ground 只把沙滩铺满——水不在瓦片层里，岸线因此是弯的。
 
 	# 从西口（集市）进来的乡道，与集市的主街同宽同高，走到边缘是接得上的。
 	GroundPainter.horizontal_road(
@@ -55,11 +60,15 @@ func paint() -> void:
 		self, origin.x + 31, origin.x + 37, origin.y + 6, 0, GroundPainter.Style.DIRT
 	)
 
-	# 木栈桥：从沙滩一路铺进水里，渔夫的落点在桥头。
-	for y: int in range(origin.y + 15, origin.y + size.y):
-		for x: int in range(origin.x + 18, origin.x + 22):
-			if ground_area.has_point(Vector2i(x, y)):
-				set_cell(Vector2i(x, y), FarmAtlas.SOURCE_ID, FarmAtlas.WOOD)
+	# 木栈桥：从沙滩一路铺进海里，渔夫的落点在桥头。
+	# 铺在 [member pier_layer] 上，桥面才会盖在水面之上；
+	# [WaterLayout.BEACH_PIER] 会把碰撞在桥面处挖空，不然上不了桥。
+	if pier_layer != null:
+		pier_layer.clear()
+		for y: int in range(origin.y + 15, origin.y + size.y):
+			for x: int in range(origin.x + 18, origin.x + 22):
+				if ground_area.has_point(Vector2i(x, y)):
+					pier_layer.set_cell(Vector2i(x, y), FarmAtlas.SOURCE_ID, FarmAtlas.WOOD)
 
 	# 零散点缀：沙滩上是卵石与贝壳，草坡上才是花与草。
 	# 贴图透明，摆到沙上再也不会露出绿方块。

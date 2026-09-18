@@ -54,6 +54,7 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 | 加节日 / 事件 | `data/festivals/` + `data/events/` + 地图 `FestivalGround` + `src/event/*_rules.gd` + `src/services/calendar_service.gd` |
 | 加恋爱线 | `NpcData` 的 `romanceable` / `*_dialogue` / 礼物偏好 + 五段对白 + `AffectionRules` + `src/services/relationship_service.gd` |
 | 加地图 | 复制 `scenes/world/twon.tscn` 或 `library.tscn`；地面用 `src/world/*_ground.gd`；放 `SpawnPoint` 并用 `SceneDoor` 互连；同步 `tests/unit/test_world_map.gd` 的 `MAPS` |
+| 加水域 / 改岸线 | `src/world/water_layout.gd` 登记形状（`src/world/water_shape.gd` 造曲线）+ `tools/art/generate_water.gd` 烘贴图 + `src/world/water_field.gd` 显示 / 碰撞 / 波光 |
 | 加音效 / BGM | `src/audio/audio_catalog.gd` + `tools/audio/generate_*.gd` + 场景里的 `SceneAudio`（`src/audio/scene_audio.gd`）|
 | 改 UI | `src/ui/*.gd` + `scenes/ui/*.tscn` + `src/ui/ui_root.gd` |
 | 参与存档 | 节点实现 `to_dict/from_dict`，并 `Persistence.register(self, &"id")`；JSON 往返后 `StringName` 要转回。槽位无上限，手动与日结自动存档都走 `SaveManager.save_current()` |
@@ -68,7 +69,7 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 
 - 美术与音频由脚本生成，细节和动态表现有限；中文像素字体是字符子集，容器缺字时生僻字会显示方块。
 - 世界场景切过后常驻内存；地图继续增加后需改成「按需卸载 + 状态外置」。
-- 水域没有碰撞；NPC 只走固定时刻表，不会互相避让；事件只在日结转时判定。
+- 水域有碰撞（`WaterField` 的 `CollisionPolygon2D`，玩家与 NPC 都下不去水）；NPC 只走固定时刻表，不会互相避让；事件只在日结转时判定。
 - 恋爱是满足条件自动推进的里程碑；牲畜不会死亡或繁殖。
 - 钓鱼有蓄力抛竿与拉扯小游戏（按住 / 松开 `空格` 控制钩子深度），但落点距离不影响能钓到的水域；鱼仍只按水域 / 季节 / 天气 / 时段筛选，蓄力只放大难钓鱼的权重。
 - 鱼线是逐帧算出的下垂折线（`FishingRules.cast_arc` / `line_curve`），不是 Physics2D 绳索：不会绕障碍物，也不会垂到景深遮档后面。

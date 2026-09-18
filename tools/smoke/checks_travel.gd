@@ -32,6 +32,12 @@ func _check_town() -> void:
 			water.kind_at(Vector2i(6, 20)) == WaterKind.Kind.POND,
 			"集市的水应当算作池塘"
 		)
+
+	# 池塘有碰撞体：NPC 寻路不会往水里走。
+	var navigator := get_tree().get_first_node_in_group(NpcNavigator.GROUP) as NpcNavigator
+	_check(navigator != null, "集市应当自动挂载 NPC 导航网格")
+	if navigator != null:
+		_check(not navigator.is_walkable(Vector2i(6, 20)), "池塘里应当是走不进去的")
 	_check_buildings(world, {
 		"Granary": "res://assets/sprites/props/barn.png",
 		"Cottage": "res://assets/sprites/props/house.png",
@@ -167,6 +173,16 @@ func _check_beach() -> void:
 	_check(_find_schedule_point(&"pier") != null, "海滩应当有 pier 日程地点")
 	_check(_find_schedule_point(&"shore") != null, "海滩应当有 shore 日程地点")
 	_check_npc_can_reach(&"fisher", &"pier")
+
+	# 水面有碰撞体：海里走不进去，木栈桥那截仍然上得去。
+	var navigator := get_tree().get_first_node_in_group(NpcNavigator.GROUP) as NpcNavigator
+	_check(navigator != null, "海滩应当自动挂载 NPC 导航网格")
+	if navigator != null:
+		_check(
+			not navigator.is_walkable(Vector2i(6, 24)),
+			"海里应当是走不进去的（水面碰撞体）"
+		)
+		_check(navigator.is_walkable(Vector2i(19, 24)), "木栈桥上应当能走")
 
 
 ## 矿洞：无天气、矿工、矿道 / 营地日程点。

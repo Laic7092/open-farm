@@ -19,6 +19,7 @@
 | --- | --- |
 | `generate_font.gd` | 像素中文字体（`.fnt` + PNG 子集） |
 | `generate_terrain.gd` | 地形图集 `tileset_farm.png` + 透明装饰 `assets/sprites/decor/*.png` |
+| `generate_water.gd` | 每张地图的水体贴图 `assets/sprites/water/<map>_<n>.png`（按 `WaterLayout` 的形状逐像素烘） |
 | `generate_props.gd` | 建筑 / 家具 / 树木 / 水面浮标（一物一图） |
 | `generate_houses.gd` | NPC 住宅：每个职业一栋，体量与屋顶各画各的 |
 | `generate_actors.gd` | 玩家与 NPC（共用一套角色画法） |
@@ -109,8 +110,9 @@ PNG / `.tres` / `.fnt` 都提交进仓库（CI 与玩家不必跑生成器，也
   会按贴图底部自动生成脚印碰撞盒。只有牧草这类低矮摆件才设 `passable = true`。
 - `FloraData.passable = false` 为默认值，且 `solid_from_stage` 默认从 `0`
   开始。树、石头一落地就挡路；杂草 / 野花 / 蘑菇等低矮地被显式 `passable = true`。
-- 地面 [code]TileMapLayer[/code] 只画地板（草 / 路 / 水 / 沙 / 石 / 木）。
-  花、蘑菇、栅栏、牌子这类装饰不再写进地板图层，改由
+- 地面 [code]TileMapLayer[/code] 只画地板（草 / 路 / 沙 / 石 / 木）。
+  水面[b]不在地面层里[/b]：它是 [code]WaterLayout[/code] 里的一条闭合折线，
+  见下面的 §2.8。花、蘑菇、栅栏、牌子这类装饰也不写进地板图层，改由
   [code]src/world/decor_painter.gd[/code] 生成透明 [WorldProp]；
   这样每一件装饰都能参与 Y 排序和独立碰撞；身后淡出只留给 `building` 组建筑。
 - 仍留在 TileMap 里的建筑 / 崖壁等结构瓦片，按
@@ -121,6 +123,25 @@ PNG / `.tres` / `.fnt` 都提交进仓库（CI 与玩家不必跑生成器，也
   `assets/sprites/decor/*.png`，不带草底 / 沙底，摆在任何地板上都不会露底色。
 - 规范由 `tests/unit/test_world_prop.gd`、`test_flora_growth.gd` 与
   `test_assets.gd` 的可执行断言守住。
+
+### 2.8 水域：形状 → 贴图 → 碰撞
+
+水面由三份职责拼起来，坐标与形状只有一处定义：
+
+| 环节 | 入口 | 说什么 |
+| --- | --- | --- |
+| 形状 | `src/world/water_shape.gd` | 圆角矩形 / 椭圆 / 有机水塘的闭合折线，纯静态、可单测 |
+| 登记 | `src/world/water_layout.gd` | 每张地图有哪些水体（形状 + 水域类型 + 栈桥通道），唯一事实来源 |
+| 烘图 | `tools/art/generate_water.gd` | 按"到岸线的距离"逐像素上色：深浅三档 + 岸沿暗带 + 岸边浪花 |
+| 运行 | `src/world/water_field.gd` | 放贴图、建 `CollisionPolygon2D`、逐帧画浪花 / 水波 / 碎光、回答 `is_water(cell)` |
+
+为什么不继续用瓦片：16×16 的格子只能拼出 45° 台阶，拼不出圆润的岸线，
+也画不出俯视的深浅与岸边浪花。代价是"水下那几格"不再是水面瓦片，
+所以 `FloraField` 要单独问一次 `WaterField.is_water()`，不然树会长到水里。
+
+木栈桥这类架在水上的通道：外观照旧铺在单独的 `TileMapLayer`（z 高于水面），
+碰撞则在 `WaterLayout.Body.walkways` 里声明，由 `WaterShape.collision_polygons()`
+从水面多边形里减掉。
 
 ## 3. 怎么跑
 

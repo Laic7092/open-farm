@@ -38,7 +38,8 @@ func paint() -> void:
 	# 南侧广场：石板铺开一片，水井与节日会场都在这里。
 	GroundPainter.plaza(self, Rect2i(origin.x + 34, center_row + 6, 16, 8))
 	# 南侧水塘。
-	GroundPainter.water(self, Rect2i(origin.x + 21, center_row + 12, 7, 4), 2)
+	# 水面形状登记在 [WaterLayout]（形状 + 碰撞 + 贴图都在那边），
+	# Ground 只负责岸上的草地与路面——水不在瓦片层里，所以岸线可以是弯的。
 
 	# 从主街下到广场、花园、牧场、水塘的四条支路。
 	GroundPainter.vertical_road(

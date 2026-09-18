@@ -35,14 +35,18 @@ bgm_track = &"town"
 footstep_sfx = &"footstep_path"
 camera_limits = Rect2(0, 0, 640, 416)
 default_spawn_id = &"from_town"
-water_kind = 1
 
-[node name="Ground" type="TileMapLayer" parent="." node_paths=PackedStringArray("decor_root")]
+[node name="Ground" type="TileMapLayer" parent="." node_paths=PackedStringArray("decor_root", "pier_layer")]
 z_index = -20
 tile_set = ExtResource("2_tileset")
 script = ExtResource("8_ground")
 ground_area = Rect2i(0, 0, 40, 26)
 decor_root = NodePath("../Props")
+pier_layer = NodePath("../Pier")
+
+[node name="Pier" type="TileMapLayer" parent="."]
+z_index = -14
+tile_set = ExtResource("2_tileset")
 
 [node name="FloraField" type="Node2D" parent="." node_paths=PackedStringArray("ground_layer", "flora_root")]
 script = ExtResource("10_flora_field")

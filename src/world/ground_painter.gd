@@ -1,6 +1,9 @@
 class_name GroundPainter
 extends RefCounted
-## 户外地图铺地的公共手法：草地、主路、小径与水面。
+## 户外地图铺地的公共手法：草地、主路与小径。
+##
+## 水面不在这里：它是一条闭合曲线 + 烘出来的贴图（见 [WaterLayout] /
+## [WaterField]），因为瓦片拼不出圆润的岸线。
 ##
 ## 装饰摆件不再写进这里，统一由 [DecorPainter] 生成透明 [WorldProp]；
 ## Ground 图层只回答"脚下是什么地板"。
@@ -91,20 +94,6 @@ static func plaza(layer: TileMapLayer, area: Rect2i) -> void:
 		if (cell.x + cell.y * 2) % 5 == 0:
 			atlas = FarmAtlas.PATH_STONE
 		layer.set_cell(cell, FarmAtlas.SOURCE_ID, atlas)
-
-
-## 一片水：先铺深水，再在上沿铺一排水岸与浅滩。
-##
-## [param area] 是水面的格子范围；[param shore_rows] 是水面上沿要压几行浅水，
-## 让"深水 → 浅滩 → 沙"这三段读起来是有坡度的岸，而不是一刀切。
-static func water(layer: TileMapLayer, area: Rect2i, shore_rows: int = 1) -> void:
-	for cell: Vector2i in GridUtils.cells_in_area(area.position, area.size):
-		layer.set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.WATER)
-	for row: int in shore_rows:
-		for x: int in area.size.x:
-			var cell := Vector2i(area.position.x + x, area.position.y + row)
-			var atlas: Vector2i = FarmAtlas.WATER_EDGE if row == 0 else FarmAtlas.SHALLOW_WATER
-			layer.set_cell(cell, FarmAtlas.SOURCE_ID, atlas)
 
 
 # ---------------------------------------------------------------- 内部

@@ -17,8 +17,6 @@ extends Node2D
 @export var lighting_effects: bool = true
 ## 是否自动挂载 NPC 行走网格。没有 NPC 的地图可以关掉省一点探测。
 @export var navigation_enabled: bool = true
-## 本场景水面的类型（见 [enum WaterKind.Kind]）；-1 表示这张地图没有可垂钓的水面。
-@export var water_kind: int = -1
 ## 本场景白天播放的 BGM id；由 [SceneAudio] 读取，地图自己声明自己听起来什么样。
 @export var bgm_track: StringName = &"farm"
 ## 本场景夜晚播放的 BGM id；空表示夜晚也沿用白天曲。
@@ -70,7 +68,7 @@ func _ready() -> void:
 		_ensure_lighting()
 	if navigation_enabled:
 		_ensure_navigator()
-	if water_kind >= 0:
+	if _has_water():
 		_ensure_water_field()
 
 
@@ -98,19 +96,21 @@ func _ensure_lighting() -> void:
 	add_child(lighting)
 
 
-## 水面标记同样由基类按 [member water_kind] 挂载：
-## 新增一张带水的地图，只要在场景里填上水域类型，鱼就自动能钓。
+## 水面同样由基类自动挂载：水体形状写在 [WaterLayout] 里（那张图的唯一事实来源），
+## 新增一张带水的地图只要在 [method WaterLayout.bodies_for] 里登记，
+## 水色贴图、碰撞、钓鱼与 NPC 避让就一起成立。
 func _ensure_water_field() -> void:
 	if get_node_or_null(^"WaterField") != null:
 		return
-	var ground := find_child("Ground", true, false) as TileMapLayer
-	if ground == null:
-		return
 	var water := WaterField.new()
 	water.name = "WaterField"
-	water.ground_layer = ground
-	water.water_kind = water_kind
+	water.world_id = world_id
 	add_child(water)
+
+
+## 本场景在 [WaterLayout] 里登记过水面吗。
+func _has_water() -> bool:
+	return WaterLayout.has_water(world_id)
 
 
 ## NPC 行走网格同样由基类挂载：新地图上的 NPC 自动会寻路。

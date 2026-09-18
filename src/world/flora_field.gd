@@ -75,6 +75,8 @@ var _initialized: bool = false
 var _loaded: bool = false
 ## 组合根注入的时钟；日结转钩子注册在它上面。
 var _clock: GameDateClock
+## 同图的水面；懒查一次即可，地图上的水不会中途换形状。
+var _water: WaterField
 ## 组合根注入的天气服务；日结转时决定植被生长。
 var _weather: WeatherService
 
@@ -361,6 +363,10 @@ func _can_place(cell: Vector2i, flora_id: StringName) -> bool:
 		return false
 	if not _on_natural_ground(cell):
 		return false
+	# 水不在瓦片层里（水下就是草地），所以"不长在水里"得单独问水面。
+	var water := _water_field()
+	if water != null and water.is_water(cell):
+		return false
 	if not _farmland_allows(cell, data):
 		return false
 	if data.min_spacing > 0 and _too_close_to_same(cell, flora_id, data.min_spacing):
@@ -372,6 +378,17 @@ func _can_place(cell: Vector2i, flora_id: StringName) -> bool:
 	if _near_player(cell):
 		return false
 	return true
+
+
+## 同图的水面。水面由 [WorldScene] 在 [code]_ready()[/code] 挂载，
+## 而植被的首次撒点被推迟到第一个物理帧，所以这里一定查得到。
+func _water_field() -> WaterField:
+	if _water == null or not is_instance_valid(_water):
+		var tree := get_tree()
+		if tree == null:
+			return null
+		_water = tree.get_first_node_in_group(WaterField.GROUP) as WaterField
+	return _water
 
 
 ## 只有自然地表才长东西：路、石板、水、木地板、栅栏、花圃、干草、木箱

@@ -50,6 +50,8 @@ const WATER := Color8(58, 122, 186)
 const WATER_DARK := Color8(40, 92, 152)
 const WATER_LIGHT := Color8(112, 176, 226)
 const WATER_FOAM := Color8(226, 240, 248)
+## 岸沿挡光打进水面里的暗带：比 [constant WATER_DARK] 再深一档。
+const WATER_SHADOW := Color8(30, 70, 122)
 ## 鱼线：比浪花更冷、略暗一点，在水面与夜里都看得清。
 const FISHING_LINE := Color8(222, 230, 244)
 

@@ -43,7 +43,7 @@ func paint() -> void:
 	GroundPainter.plaza(self, Rect2i(origin.x + 8, center_row - 6, 24, 5))
 
 	# 南侧的水塘：给集市一个能喘气的绿角。
-	GroundPainter.water(self, Rect2i(origin.x + 4, center_row + 6, 7, 4), 2)
+	# 水面形状登记在 [WaterLayout]，Ground 只管岸上的地面。
 
 	# 街道两侧的点缀：花圃、灌木与踩秃的草。
 	DecorPainter.spawn_many(
