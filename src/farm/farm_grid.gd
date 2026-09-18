@@ -293,12 +293,28 @@ func paint_ground() -> void:
 		GroundPainter.Style.DIRT
 	)
 
+	# 东侧纵向乡道：北通林道、南下南坡，与东西乡道在东端汇成丁字路口。
+	# 三条出口因此都踩在同一条土路上，而不是"走到草丛里碰巧换图"。
+	GroundPainter.vertical_road(
+		ground_layer,
+		ground_area.position.y + 1,
+		ground_area.end.y - 1,
+		_north_south_column(),
+		1,
+		GroundPainter.Style.DIRT
+	)
+
 	# 农舍门前的小径：从屋前一路通到乡道。
 	for y: int in range(7, center_row - 1):
 		ground_layer.set_cell(Vector2i(6, y), FarmAtlas.SOURCE_ID, FarmAtlas.PATH_STONE)
 		ground_layer.set_cell(Vector2i(7, y), FarmAtlas.SOURCE_ID, FarmAtlas.PATH_STONE)
 
 	GroundPainter.transitions(ground_layer, ground_area)
+
+
+## 东侧纵向乡道所在的格列（三条出口共用的那条南北路）。
+func _north_south_column() -> int:
+	return ground_area.end.x - 4
 
 
 ## 草地明暗：与 [GroundPainter.grass_variant] 共用同一套低频噪声，
@@ -349,14 +365,14 @@ func paint_decorations() -> void:
 		Vector2i(31, 20): &"pebble",
 		Vector2i(33, 22): &"bush",
 		Vector2i(29, 12): &"flowers",
-		Vector2i(44, 12): &"tall_grass",
+		Vector2i(41, 12): &"tall_grass",
 		# 东南荒地
 		Vector2i(36, 21): &"stump_tile",
 		Vector2i(39, 24): &"mushroom",
-		Vector2i(43, 20): &"tall_grass",
+		Vector2i(41, 20): &"tall_grass",
 		Vector2i(41, 27): &"pebble",
 		Vector2i(34, 25): &"well_top",
-		Vector2i(45, 22): &"bush",
+		Vector2i(47, 23): &"bush",
 		Vector2i(46, 26): &"mushroom",
 		# 田边
 		Vector2i(3, 28): &"flowers",
@@ -371,6 +387,9 @@ func _wild_decorations() -> Dictionary:
 	var center_row: int = ground_area.position.y + ground_area.size.y / 2
 	for cell: Vector2i in GridUtils.cells_in_area(ground_area.position, ground_area.size):
 		if cell.x <= farmable_area.end.x + 2 or cell.y <= center_row + 2:
+			continue
+		# 纵向乡道是三条出口的通道，不许摆杂草碎石。
+		if absi(cell.x - _north_south_column()) <= 1:
 			continue
 		var roll: int = (cell.x * 7 + cell.y * 11) % 13
 		if roll == 0:

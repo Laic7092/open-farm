@@ -18,10 +18,15 @@ const TOWN: String = "res://scenes/world/town.tscn"
 const BEACH: String = "res://scenes/world/beach.tscn"
 const MINE: String = "res://scenes/world/mine.tscn"
 const LIBRARY: String = "res://scenes/world/library.tscn"
+const HOME: String = "res://scenes/world/home.tscn"
+const NORTH_WOODS: String = "res://scenes/world/north_woods.tscn"
+const SOUTH_PASTURE: String = "res://scenes/world/south_pasture.tscn"
 const PLAYER: String = "res://scenes/player/player.tscn"
 
 ## 世界里的全部地图。新增地图时这里必须一起加，否则可达性检查形同虚设。
-const MAPS: Array[String] = [FARM, TWON, TOWN, BEACH, MINE, LIBRARY]
+const MAPS: Array[String] = [
+	FARM, TWON, TOWN, BEACH, MINE, LIBRARY, HOME, NORTH_WOODS, SOUTH_PASTURE
+]
 
 ## 出口离地图左 / 右边缘多近才算"横向出口"（像素）。
 const EDGE_MARGIN: float = 24.0
@@ -121,6 +126,7 @@ func test_road_exits_sit_on_the_map_middle() -> void:
 
 ## 乡道的两端是农场与海滩，村庄与集市是路过的中间站；
 ## 矿洞靠海滩上的洞口进入，室内地图由门口按 E 进入——两者都不算乡道。
+## 农场北面的林道与南面的草坡也是"走进即传送"，但不是左右贯通的乡道。
 func test_the_road_has_exactly_two_ends() -> void:
 	assert_int(_road_exit_count(FARM)).override_failure_message("农场应当是乡道的起点").is_equal(1)
 	assert_int(_road_exit_count(BEACH)).override_failure_message("乡道终点在海边（矿洞靠洞口进）").is_equal(1)
@@ -128,6 +134,9 @@ func test_the_road_has_exactly_two_ends() -> void:
 	assert_int(_road_exit_count(TOWN)).override_failure_message("集市两头都该有路").is_equal(2)
 	assert_int(_road_exit_count(MINE)).override_failure_message("矿洞是洞口进，不该有乡道出口").is_equal(0)
 	assert_int(_road_exit_count(LIBRARY)).override_failure_message("室内地图不该有乡道出口").is_equal(0)
+	assert_int(_road_exit_count(HOME)).override_failure_message("室内地图不该有乡道出口").is_equal(0)
+	assert_int(_road_exit_count(NORTH_WOODS)).override_failure_message("林道是南北进，不该有乡道出口").is_equal(0)
+	assert_int(_road_exit_count(SOUTH_PASTURE)).override_failure_message("草坡是南北进，不该有乡道出口").is_equal(0)
 
 
 ## 乡道横向接得上，纵向也不能因为"路缘起伏"被挤成一线或胀成五格。

@@ -44,6 +44,13 @@ func _initialize() -> void:
 	Art.save_png(_counter(), DIR.path_join("counter.png"))
 	Art.save_png(_forge(), DIR.path_join("forge.png"))
 	Art.save_png(_flower_stand(), DIR.path_join("flower_stand.png"))
+	# 室内家具：把玩家的小屋布置成一个家。
+	Art.save_png(_tv(), DIR.path_join("tv.png"))
+	Art.save_png(_table(), DIR.path_join("table.png"))
+	Art.save_png(_chair(), DIR.path_join("chair.png"))
+	Art.save_png(_stove(), DIR.path_join("stove.png"))
+	Art.save_png(_wardrobe(), DIR.path_join("wardrobe.png"))
+	Art.save_png(_rug(), DIR.path_join("rug.png"))
 	# 钓鱼：水面浮标与水花。
 	Art.save_png(_bobber(), DIR.path_join("bobber.png"))
 	Art.save_png(_ripple(), DIR.path_join("ripple.png"))
@@ -588,6 +595,113 @@ func _flower_stand() -> Image:
 			Art.rect(image, Rect2i(x, y + 7, 7, 4), P.FRUIT_ORANGE)
 			Art.h_line(image, x, y + 7, 7, P.ROOF_LIGHT)
 	Art.outline(image, P.OUTLINE)
+	return image
+
+
+# ---------------------------------------------------------------- 室内家具
+
+## 老式电视机：深色外壳 + 玻璃屏 + 两根天线，放在客厅一角。
+func _tv() -> Image:
+	var image := Art.new_image(24, 24)
+	Art.ground_shadow(image, 24, 24, 4)
+	# 天线。
+	Art.line(image, Vector2(8, 6), Vector2(5, 1), P.STONE_DARK)
+	Art.line(image, Vector2(14, 6), Vector2(18, 1), P.STONE_DARK)
+	# 机身与外框。
+	Art.rect(image, Rect2i(2, 6, 20, 13), P.STONE_DARK)
+	Art.frame_rect(image, Rect2i(2, 6, 20, 13), P.BLACK)
+	# 玻璃屏：左上受光。
+	Art.rect(image, Rect2i(4, 8, 13, 9), P.BLACK)
+	Art.rect(image, Rect2i(5, 9, 11, 7), P.GLASS_DARK)
+	Art.rect(image, Rect2i(6, 10, 9, 5), P.GLASS)
+	Art.px(image, 7, 11, P.WHITE)
+	# 右侧两个旋钮。
+	Art.rect(image, Rect2i(19, 9, 2, 2), P.FRUIT_RED)
+	Art.rect(image, Rect2i(19, 13, 2, 2), P.FRUIT_GREEN)
+	# 底座。
+	Art.rect(image, Rect2i(7, 19, 10, 3), P.WOOD_DARK)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 木餐桌：桌面 + 两条桌腿，桌上放一只盘子。
+func _table() -> Image:
+	var image := Art.new_image(32, 24)
+	Art.ground_shadow(image, 32, 24, 4)
+	Art.rect(image, Rect2i(1, 6, 30, 4), P.PLANK)
+	Art.h_line(image, 1, 6, 30, P.WOOD_LIGHT)
+	Art.h_line(image, 1, 9, 30, P.WOOD_DARK)
+	Art.rect(image, Rect2i(3, 10, 3, 10), P.WOOD_DARK)
+	Art.rect(image, Rect2i(26, 10, 3, 10), P.WOOD_DARK)
+	# 桌上的盘子与一点水果。
+	Art.ellipse(image, Vector2i(16, 5), Vector2i(4, 2), P.WHITE)
+	Art.px(image, 15, 4, P.FRUIT_RED)
+	Art.px(image, 17, 4, P.FRUIT_GREEN)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 木椅：靠背 + 坐面 + 两条腿。
+func _chair() -> Image:
+	var image := Art.new_image(12, 16)
+	Art.ground_shadow(image, 12, 16, 2)
+	Art.rect(image, Rect2i(2, 1, 8, 8), P.WOOD)
+	Art.frame_rect(image, Rect2i(2, 1, 8, 8), P.WOOD_DARK)
+	Art.rect(image, Rect2i(1, 9, 10, 3), P.PLANK)
+	Art.h_line(image, 1, 9, 10, P.WOOD_LIGHT)
+	Art.rect(image, Rect2i(2, 12, 2, 3), P.WOOD_DARK)
+	Art.rect(image, Rect2i(8, 12, 2, 3), P.WOOD_DARK)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 厨房灶台：石砌炉体 + 两个灶眼 + 一点炉火。
+func _stove() -> Image:
+	var image := Art.new_image(24, 28)
+	Art.ground_shadow(image, 24, 28, 3)
+	# 炉体。
+	Art.rect(image, Rect2i(2, 6, 20, 18), P.STONE)
+	Art.scatter(image, Rect2i(2, 6, 20, 18), P.STONE_DARK, 0.12, 41)
+	Art.h_line(image, 2, 6, 20, P.STONE_LIGHT)
+	# 台面与两个灶眼。
+	Art.rect(image, Rect2i(1, 4, 22, 3), P.STONE_DARK)
+	Art.ellipse(image, Vector2i(8, 5), Vector2i(3, 1), P.BLACK)
+	Art.ellipse(image, Vector2i(16, 5), Vector2i(3, 1), P.BLACK)
+	# 烤箱门里的火。
+	Art.rect(image, Rect2i(6, 12, 12, 10), P.BLACK)
+	Art.frame_rect(image, Rect2i(6, 12, 12, 10), P.STONE_DARK)
+	Art.rect(image, Rect2i(8, 15, 8, 5), P.FRUIT_ORANGE)
+	Art.rect(image, Rect2i(9, 16, 6, 4), P.FRUIT_YELLOW)
+	Art.h_line(image, 11, 13, 2, P.STONE_LIGHT)
+	# 烟囱。
+	Art.rect(image, Rect2i(9, 0, 6, 5), P.STONE_DARK)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 衣柜：双开门的大木柜，门上有把手。
+func _wardrobe() -> Image:
+	var image := Art.new_image(24, 32)
+	Art.ground_shadow(image, 24, 32, 3)
+	Art.rect(image, Rect2i(2, 3, 20, 26), P.WOOD)
+	Art.frame_rect(image, Rect2i(2, 3, 20, 26), P.WOOD_DARK)
+	Art.rect(image, Rect2i(4, 5, 4, 22), P.WOOD_LIGHT)
+	Art.v_line(image, 12, 4, 24, P.WOOD_DARK)
+	Art.v_line(image, 11, 4, 24, P.WOOD_LIGHT)
+	Art.px(image, 10, 16, P.COIN)
+	Art.px(image, 14, 16, P.COIN)
+	Art.rect(image, Rect2i(1, 1, 22, 3), P.WOOD_DARK)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 地毯：同心椭圆，可穿过，铺在客厅地板上。
+func _rug() -> Image:
+	var image := Art.new_image(32, 16)
+	Art.ellipse(image, Vector2i(16, 8), Vector2i(15, 7), P.ROOF_ROSE_DARK)
+	Art.ellipse(image, Vector2i(16, 8), Vector2i(13, 6), P.ROOF_ROSE)
+	Art.ellipse(image, Vector2i(16, 8), Vector2i(7, 3), P.ROOF_ROSE_LIGHT)
+	Art.ellipse(image, Vector2i(16, 8), Vector2i(4, 2), P.ROOF_ROSE)
 	return image
 
 

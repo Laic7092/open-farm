@@ -319,9 +319,18 @@ func _seed_weights() -> Dictionary:
 func _generate_initial() -> void:
 	if initial_budget <= 0 or flora_scene == null:
 		return
-	for _i: int in initial_budget:
-		if not _try_spawn(_seed_weights()):
-			break
+	# 连续失败若干次才收手：一次抽中"这片已经摆不下"的物种，
+	# 不该让整张地图停止播种——树摆不下时杂草还能长。
+	# 旧实现一遇到失败就 break，开局农场因此远达不到 initial_budget。
+	var placed: int = 0
+	var misses: int = 0
+	var max_misses: int = CANDIDATE_TRIES * 4
+	while placed < initial_budget and misses < max_misses:
+		if _try_spawn(_seed_weights()):
+			placed += 1
+			misses = 0
+		else:
+			misses += 1
 
 
 ## 播下一株；如果它一落地就挡路，还要确认没有把地图切成两半。

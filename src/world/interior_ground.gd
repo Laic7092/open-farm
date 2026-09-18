@@ -15,6 +15,8 @@ extends TileMapLayer
 			paint()
 ## 装饰节点的父节点（通常是 Props，参与 Y 排序）。
 @export var decor_root: Node2D
+## 是否自动撒四角花砖摆件。住宅这类要自己摆家具的房间可以关掉。
+@export var decor_enabled: bool = true
 
 
 func _ready() -> void:
@@ -41,13 +43,14 @@ func paint() -> void:
 		set_cell(Vector2i(door_x, y), FarmAtlas.SOURCE_ID, FarmAtlas.PATH_STONE)
 
 	# 两侧花砖点缀：改成透明摆件，放在地板上不占 TileMap。
-	DecorPainter.spawn_many(
-		decor_root,
-		{
-			Vector2i(origin.x + 3, origin.y + 6): &"flower_bed",
-			Vector2i(origin.x + size.x - 4, origin.y + 6): &"flower_bed",
-			Vector2i(origin.x + 3, origin.y + size.y - 4): &"flower_bed",
-			Vector2i(origin.x + size.x - 4, origin.y + size.y - 4): &"flower_bed",
-		},
-		ground_area
-	)
+	if decor_enabled:
+		DecorPainter.spawn_many(
+			decor_root,
+			{
+				Vector2i(origin.x + 3, origin.y + 6): &"flower_bed",
+				Vector2i(origin.x + size.x - 4, origin.y + 6): &"flower_bed",
+				Vector2i(origin.x + 3, origin.y + size.y - 4): &"flower_bed",
+				Vector2i(origin.x + size.x - 4, origin.y + size.y - 4): &"flower_bed",
+			},
+			ground_area
+		)

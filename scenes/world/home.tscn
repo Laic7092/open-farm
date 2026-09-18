@@ -1,0 +1,175 @@
+[gd_scene load_steps=22 format=3]
+
+[ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
+[ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
+[ext_resource type="Script" path="res://src/world/world_bounds.gd" id="3_bounds"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="4_player"]
+[ext_resource type="Script" path="res://src/core/spawn_point.gd" id="5_spawn"]
+[ext_resource type="Script" path="res://src/world/scene_door.gd" id="6_door"]
+[ext_resource type="Script" path="res://src/world/interior_ground.gd" id="7_ground"]
+[ext_resource type="Script" path="res://src/world/interior_walls.gd" id="8_walls"]
+[ext_resource type="Script" path="res://src/world/world_prop.gd" id="9_prop"]
+[ext_resource type="Script" path="res://src/world/bed.gd" id="10_bed"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/bed.png" id="20_bed"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/tv.png" id="21_tv"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/table.png" id="22_table"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/chair.png" id="23_chair"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/stove.png" id="24_stove"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/wardrobe.png" id="25_wardrobe"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/rug.png" id="26_rug"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/bookshelf.png" id="27_bookshelf"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/flower_pot.png" id="28_pot"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/lamp.png" id="29_lamp"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
+size = Vector2(16, 16)
+
+[node name="Home" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_world")
+world_id = &"home"
+bgm_track = &"town"
+footstep_sfx = &"footstep_path"
+camera_limits = Rect2(0, 0, 384, 256)
+default_spawn_id = &"from_farm"
+weather_effects = false
+navigation_enabled = false
+
+[node name="Ground" type="TileMapLayer" parent="." node_paths=PackedStringArray("decor_root")]
+z_index = -20
+tile_set = ExtResource("2_tileset")
+script = ExtResource("7_ground")
+ground_area = Rect2i(0, 0, 24, 16)
+decor_root = NodePath("../Props")
+decor_enabled = false
+
+[node name="Walls" type="TileMapLayer" parent="."]
+z_index = -15
+tile_set = ExtResource("2_tileset")
+script = ExtResource("8_walls")
+ground_area = Rect2i(0, 0, 24, 16)
+wall_rows = 3
+
+[node name="Bounds" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("3_bounds")
+bounds = Rect2(8, 8, 368, 240)
+
+[node name="Props" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Rug" type="Sprite2D" parent="Props"]
+z_index = -1
+position = Vector2(288, 168)
+texture = ExtResource("26_rug")
+script = ExtResource("9_prop")
+passable = true
+
+[node name="Wardrobe" type="Sprite2D" parent="Props"]
+position = Vector2(44, 176)
+texture = ExtResource("25_wardrobe")
+script = ExtResource("9_prop")
+solid_size = Vector2(18, 8)
+solid_offset = Vector2(0, 7)
+
+[node name="Bed" type="Area2D" parent="Props"]
+position = Vector2(60, 104)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("10_bed")
+persistence_id = &"home_bed"
+
+[node name="Sprite" type="Sprite2D" parent="Props/Bed"]
+texture = ExtResource("20_bed")
+offset = Vector2(0, -3)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Props/Bed"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="Stove" type="Sprite2D" parent="Props"]
+position = Vector2(44, 224)
+texture = ExtResource("24_stove")
+script = ExtResource("9_prop")
+solid_size = Vector2(18, 8)
+solid_offset = Vector2(0, 6)
+
+[node name="Table" type="Sprite2D" parent="Props"]
+position = Vector2(120, 152)
+texture = ExtResource("22_table")
+script = ExtResource("9_prop")
+solid_size = Vector2(28, 8)
+solid_offset = Vector2(0, 5)
+
+[node name="ChairLeft" type="Sprite2D" parent="Props"]
+position = Vector2(96, 152)
+texture = ExtResource("23_chair")
+script = ExtResource("9_prop")
+solid_size = Vector2(8, 6)
+solid_offset = Vector2(0, 4)
+
+[node name="ChairRight" type="Sprite2D" parent="Props"]
+position = Vector2(144, 152)
+texture = ExtResource("23_chair")
+script = ExtResource("9_prop")
+solid_size = Vector2(8, 6)
+solid_offset = Vector2(0, 4)
+
+[node name="Television" type="Sprite2D" parent="Props"]
+position = Vector2(320, 96)
+texture = ExtResource("21_tv")
+script = ExtResource("9_prop")
+solid_size = Vector2(16, 8)
+solid_offset = Vector2(0, 5)
+
+[node name="Bookshelf" type="Sprite2D" parent="Props"]
+position = Vector2(336, 208)
+texture = ExtResource("27_bookshelf")
+script = ExtResource("9_prop")
+solid_size = Vector2(28, 10)
+solid_offset = Vector2(0, 8)
+
+[node name="FlowerPot" type="Sprite2D" parent="Props"]
+position = Vector2(180, 216)
+texture = ExtResource("28_pot")
+script = ExtResource("9_prop")
+
+[node name="LampLeft" type="Sprite2D" parent="Props"]
+position = Vector2(96, 72)
+texture = ExtResource("29_lamp")
+script = ExtResource("9_prop")
+light_radius = 80.0
+light_offset = Vector2(0, -6)
+
+[node name="LampRight" type="Sprite2D" parent="Props"]
+position = Vector2(288, 72)
+texture = ExtResource("29_lamp")
+script = ExtResource("9_prop")
+light_radius = 80.0
+light_offset = Vector2(0, -6)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="FromFarm" type="Marker2D" parent="Spawns"]
+position = Vector2(192, 224)
+script = ExtResource("5_spawn")
+spawn_id = &"from_farm"
+facing = 1
+
+[node name="Interactables" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="ToFarm" type="Area2D" parent="Interactables"]
+position = Vector2(192, 240)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("6_door")
+prompt_key = &"PROMPT_ENTER"
+target_scene = "res://scenes/world/farm.tscn"
+target_spawn_id = &"from_home"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToFarm"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="Player" parent="Props" instance=ExtResource("4_player")]
+position = Vector2(192, 224)

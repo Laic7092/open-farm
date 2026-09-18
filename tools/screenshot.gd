@@ -13,7 +13,8 @@ extends Node
 ## godot --path . --rendering-driver opengl3 res://tools/screenshot.tscn
 ## [/codeblock]
 ## 输出到 [code]res://.tmp/screenshots/[/code]：
-## [code]title.png[/code]、[code]shot_00.png[/code]…、[code]town.png[/code]、[code]twon.png[/code]。
+## [code]title.png[/code]、[code]shot_00.png[/code]…、[code]town.png[/code]、[code]twon.png[/code]、
+## 以及 [code]capture_extras[/code] 打开时的海滩 / 矿洞 / 图书馆 / 农舍屋内 / 林道 / 草坡。
 
 ## 输出目录。
 const OUTPUT_DIR: String = "res://.tmp/screenshots"
@@ -24,6 +25,9 @@ const TWON_SCENE: String = "res://scenes/world/twon.tscn"
 const BEACH_SCENE: String = "res://scenes/world/beach.tscn"
 const MINE_SCENE: String = "res://scenes/world/mine.tscn"
 const LIBRARY_SCENE: String = "res://scenes/world/library.tscn"
+const HOME_SCENE: String = "res://scenes/world/home.tscn"
+const NORTH_WOODS_SCENE: String = "res://scenes/world/north_woods.tscn"
+const SOUTH_PASTURE_SCENE: String = "res://scenes/world/south_pasture.tscn"
 
 ## 标题页稳定后再等多少帧截图（等云飘一点、布局完成）。
 const TITLE_SETTLE_FRAMES: int = 20
@@ -40,7 +44,7 @@ const MAX_FRAMES: int = 2400
 @export var capture_town: bool = true
 ## 是否顺带截一张村庄（大场景 twon）。
 @export var capture_twon: bool = true
-## 是否顺带截新增地图：海滩 / 矿洞 / 图书馆。
+## 是否顺带截新增地图：海滩 / 矿洞 / 图书馆 / 农舍屋内 / 林道 / 草坡。
 @export var capture_extras: bool = true
 
 var _frames: int = 0
@@ -96,6 +100,12 @@ func _run() -> void:
 		if not await _capture_world(MINE_SCENE, &"from_beach", "mine"):
 			return
 		if not await _capture_world(LIBRARY_SCENE, &"from_twon", "library"):
+			return
+		if not await _capture_world(HOME_SCENE, &"from_farm", "home"):
+			return
+		if not await _capture_world(NORTH_WOODS_SCENE, &"from_farm", "north_woods"):
+			return
+		if not await _capture_world(SOUTH_PASTURE_SCENE, &"from_farm", "south_pasture"):
 			return
 
 	print("截图完成 → ", OUTPUT_DIR)

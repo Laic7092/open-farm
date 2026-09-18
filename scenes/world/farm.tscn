@@ -1,4 +1,4 @@
-[gd_scene load_steps=37 format=3]
+[gd_scene load_steps=35 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -7,7 +7,6 @@
 [ext_resource type="Script" path="res://src/world/world_bounds.gd" id="5_bounds"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="6_player"]
 [ext_resource type="Script" path="res://src/core/spawn_point.gd" id="7_spawn"]
-[ext_resource type="Script" path="res://src/world/bed.gd" id="8_bed"]
 [ext_resource type="Script" path="res://src/world/shipping_bin.gd" id="9_bin"]
 [ext_resource type="Script" path="res://src/world/scene_door.gd" id="10_door"]
 [ext_resource type="Script" path="res://src/world/world_prop.gd" id="12_prop"]
@@ -25,7 +24,6 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/rock_big.png" id="30_rock_big"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/stump.png" id="31_stump"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/mailbox.png" id="32_mailbox"]
-[ext_resource type="Texture2D" path="res://assets/sprites/props/bed.png" id="33_bed_tex"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/shipping_bin.png" id="34_bin_tex"]
 [ext_resource type="Script" path="res://src/farm/livestock_manager.gd" id="35_livestock"]
 [ext_resource type="Script" path="res://src/farm/animal_pen.gd" id="36_pen"]
@@ -77,9 +75,9 @@ flora_root = NodePath("..")
 flora_scene = ExtResource("14_flora")
 growth_area = Rect2i(1, 1, 46, 28)
 persistence_id = &"flora_farm"
-initial_budget = 45
+initial_budget = 200
 daily_budget = 3
-max_total = 140
+max_total = 200
 world_seed = 1
 
 [node name="Bounds" type="StaticBody2D" parent="."]
@@ -106,7 +104,7 @@ light_radius = 60.0
 light_offset = Vector2(0, -6)
 
 [node name="HousePot" type="Sprite2D" parent="Props"]
-position = Vector2(146, 108)
+position = Vector2(128, 100)
 texture = ExtResource("27_pot")
 script = ExtResource("12_prop")
 
@@ -116,12 +114,12 @@ texture = ExtResource("27_pot")
 script = ExtResource("12_prop")
 
 [node name="GateSign" type="Sprite2D" parent="Props"]
-position = Vector2(688, 200)
+position = Vector2(656, 200)
 texture = ExtResource("25_sign")
 script = ExtResource("12_prop")
 
 [node name="Mailbox" type="Sprite2D" parent="Props"]
-position = Vector2(724, 192)
+position = Vector2(656, 168)
 texture = ExtResource("32_mailbox")
 script = ExtResource("12_prop")
 
@@ -229,14 +227,14 @@ solid_size = Vector2(18, 8)
 solid_offset = Vector2(0, 20)
 
 [node name="SoutheastTree" type="Sprite2D" parent="Props"]
-position = Vector2(688, 412)
+position = Vector2(656, 424)
 texture = ExtResource("22_tree")
 script = ExtResource("12_prop")
 solid_size = Vector2(18, 8)
 solid_offset = Vector2(0, 20)
 
 [node name="EastPine" type="Sprite2D" parent="Props"]
-position = Vector2(736, 344)
+position = Vector2(656, 344)
 texture = ExtResource("23_pine")
 script = ExtResource("12_prop")
 solid_size = Vector2(18, 8)
@@ -250,7 +248,7 @@ solid_size = Vector2(26, 10)
 solid_offset = Vector2(0, 6)
 
 [node name="Rock2" type="Sprite2D" parent="Props"]
-position = Vector2(712, 400)
+position = Vector2(664, 384)
 texture = ExtResource("29_rock")
 script = ExtResource("12_prop")
 solid_size = Vector2(14, 8)
@@ -339,25 +337,29 @@ script = ExtResource("7_spawn")
 spawn_id = &"from_twon"
 facing = 2
 
+[node name="FromHome" type="Marker2D" parent="Spawns"]
+position = Vector2(100, 124)
+script = ExtResource("7_spawn")
+spawn_id = &"from_home"
+facing = 2
+
+[node name="FromNorthWoods" type="Marker2D" parent="Spawns"]
+position = Vector2(712, 40)
+script = ExtResource("7_spawn")
+spawn_id = &"from_north_woods"
+facing = 1
+
+[node name="FromSouthPasture" type="Marker2D" parent="Spawns"]
+position = Vector2(712, 436)
+script = ExtResource("7_spawn")
+spawn_id = &"from_south_pasture"
+facing = 0
+
 [node name="Interactables" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="Bed" type="Area2D" parent="Interactables"]
-position = Vector2(140, 120)
-collision_layer = 8
-collision_mask = 0
-script = ExtResource("8_bed")
-persistence_id = &"farm_bed"
-
-[node name="Sprite" type="Sprite2D" parent="Interactables/Bed"]
-texture = ExtResource("33_bed_tex")
-offset = Vector2(0, -3)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/Bed"]
-shape = SubResource("RectangleShape2D_tile")
-
 [node name="ShippingBin" type="Area2D" parent="Interactables"]
-position = Vector2(52, 120)
+position = Vector2(150, 122)
 collision_layer = 8
 collision_mask = 0
 script = ExtResource("9_bin")
@@ -368,6 +370,44 @@ texture = ExtResource("34_bin_tex")
 offset = Vector2(0, -1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ShippingBin"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="HouseDoor" type="Area2D" parent="Interactables"]
+position = Vector2(100, 112)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("10_door")
+prompt_key = &"PROMPT_ENTER"
+target_scene = "res://scenes/world/home.tscn"
+target_spawn_id = &"from_farm"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/HouseDoor"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="ToNorthWoods" type="Area2D" parent="Interactables"]
+position = Vector2(712, 16)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("10_door")
+prompt_key = &"PROMPT_ENTER"
+target_scene = "res://scenes/world/north_woods.tscn"
+target_spawn_id = &"from_farm"
+auto_enter = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToNorthWoods"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="ToSouthPasture" type="Area2D" parent="Interactables"]
+position = Vector2(712, 456)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("10_door")
+prompt_key = &"PROMPT_ENTER"
+target_scene = "res://scenes/world/south_pasture.tscn"
+target_spawn_id = &"from_farm"
+auto_enter = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToSouthPasture"]
 shape = SubResource("RectangleShape2D_tile")
 
 [node name="ToTwon" type="Area2D" parent="Interactables"]

@@ -1,0 +1,135 @@
+[gd_scene load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
+[ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
+[ext_resource type="Script" path="res://src/world/world_bounds.gd" id="3_bounds"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="4_player"]
+[ext_resource type="Script" path="res://src/core/spawn_point.gd" id="5_spawn"]
+[ext_resource type="Script" path="res://src/world/scene_door.gd" id="6_door"]
+[ext_resource type="Script" path="res://src/world/flora_field.gd" id="7_flora_field"]
+[ext_resource type="PackedScene" path="res://scenes/world/flora.tscn" id="8_flora"]
+[ext_resource type="Script" path="res://src/world/north_woods_ground.gd" id="9_ground"]
+[ext_resource type="Script" path="res://src/world/world_prop.gd" id="10_prop"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/tree.png" id="20_tree"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/tree_pine.png" id="21_pine"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/rock_big.png" id="22_rock_big"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/signpost.png" id="23_sign"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/lamp.png" id="24_lamp"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/stump.png" id="25_stump"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
+size = Vector2(16, 16)
+
+[node name="NorthWoods" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_world")
+world_id = &"north_woods"
+bgm_track = &"farm"
+footstep_sfx = &"footstep_grass"
+camera_limits = Rect2(0, 0, 640, 416)
+default_spawn_id = &"from_farm"
+navigation_enabled = false
+
+[node name="Ground" type="TileMapLayer" parent="." node_paths=PackedStringArray("decor_root")]
+z_index = -20
+tile_set = ExtResource("2_tileset")
+script = ExtResource("9_ground")
+ground_area = Rect2i(0, 0, 40, 26)
+decor_root = NodePath("../Props")
+
+[node name="FloraField" type="Node2D" parent="." node_paths=PackedStringArray("ground_layer", "flora_root")]
+script = ExtResource("7_flora_field")
+ground_layer = NodePath("../Ground")
+flora_root = NodePath("..")
+flora_scene = ExtResource("8_flora")
+growth_area = Rect2i(1, 1, 38, 24)
+persistence_id = &"flora_north_woods"
+initial_budget = 150
+daily_budget = 4
+max_total = 240
+world_seed = 7
+protect_radius = 3
+allowed_species = Array[StringName]([&"tree_oak", &"tree_pine", &"rock", &"boulder", &"weed"])
+
+[node name="Bounds" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("3_bounds")
+bounds = Rect2(8, 8, 624, 400)
+
+[node name="Props" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="EntranceSign" type="Sprite2D" parent="Props"]
+position = Vector2(256, 376)
+texture = ExtResource("23_sign")
+script = ExtResource("10_prop")
+
+[node name="CornerOak" type="Sprite2D" parent="Props"]
+position = Vector2(48, 56)
+texture = ExtResource("20_tree")
+script = ExtResource("10_prop")
+solid_size = Vector2(18, 8)
+solid_offset = Vector2(0, 20)
+
+[node name="CornerPine" type="Sprite2D" parent="Props"]
+position = Vector2(576, 64)
+texture = ExtResource("21_pine")
+script = ExtResource("10_prop")
+solid_size = Vector2(18, 8)
+solid_offset = Vector2(0, 20)
+
+[node name="CornerRock" type="Sprite2D" parent="Props"]
+position = Vector2(592, 336)
+texture = ExtResource("22_rock_big")
+script = ExtResource("10_prop")
+solid_size = Vector2(26, 10)
+solid_offset = Vector2(0, 6)
+
+[node name="OldStump" type="Sprite2D" parent="Props"]
+position = Vector2(80, 320)
+texture = ExtResource("25_stump")
+script = ExtResource("10_prop")
+solid_size = Vector2(16, 8)
+solid_offset = Vector2(0, 4)
+
+[node name="LampNorth" type="Sprite2D" parent="Props"]
+position = Vector2(368, 112)
+texture = ExtResource("24_lamp")
+script = ExtResource("10_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
+
+[node name="LampSouth" type="Sprite2D" parent="Props"]
+position = Vector2(272, 296)
+texture = ExtResource("24_lamp")
+script = ExtResource("10_prop")
+light_radius = 60.0
+light_offset = Vector2(0, -6)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="FromFarm" type="Marker2D" parent="Spawns"]
+position = Vector2(320, 344)
+script = ExtResource("5_spawn")
+spawn_id = &"from_farm"
+facing = 1
+
+[node name="Interactables" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="ToFarm" type="Area2D" parent="Interactables"]
+position = Vector2(320, 400)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("6_door")
+prompt_key = &"PROMPT_ENTER"
+target_scene = "res://scenes/world/farm.tscn"
+target_spawn_id = &"from_north_woods"
+auto_enter = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ToFarm"]
+shape = SubResource("RectangleShape2D_tile")
+
+[node name="Player" parent="Props" instance=ExtResource("4_player")]
+position = Vector2(320, 344)

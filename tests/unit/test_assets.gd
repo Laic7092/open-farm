@@ -70,6 +70,12 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://assets/sprites/animals/cow.png",
 	"res://assets/sprites/props/coop.png",
 	"res://assets/sprites/props/trough.png",
+	"res://assets/sprites/props/tv.png",
+	"res://assets/sprites/props/table.png",
+	"res://assets/sprites/props/chair.png",
+	"res://assets/sprites/props/stove.png",
+	"res://assets/sprites/props/wardrobe.png",
+	"res://assets/sprites/props/rug.png",
 	"res://assets/sprites/weather/rain_drop.png",
 	"res://assets/sprites/weather/snow_flake.png",
 	"res://assets/sprites/props/bobber.png",
@@ -102,7 +108,7 @@ func test_all_generated_assets_exist() -> void:
 		).is_true()
 
 
-## 六张世界地图都要在，否则 [SceneDoor] 的 target_scene 会指向空气。
+## 全部世界地图都要在，否则 [SceneDoor] 的 target_scene 会指向空气。
 func test_world_scenes_exist() -> void:
 	for path: String in [
 		"res://scenes/world/farm.tscn",
@@ -111,6 +117,9 @@ func test_world_scenes_exist() -> void:
 		"res://scenes/world/beach.tscn",
 		"res://scenes/world/mine.tscn",
 		"res://scenes/world/library.tscn",
+		"res://scenes/world/home.tscn",
+		"res://scenes/world/north_woods.tscn",
+		"res://scenes/world/south_pasture.tscn",
 	]:
 		assert_bool(ResourceLoader.exists(path)).override_failure_message(
 			"缺少世界场景 %s" % path
