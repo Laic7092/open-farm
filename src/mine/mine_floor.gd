@@ -2,6 +2,10 @@ class_name MineFloor
 extends FloraField
 ## 矿洞的一层：按深度确定性地生成矿石与出口。
 ##
+## [b]矿洞单元[/b]：整个矿洞都收在 [code]src/mine/[/code]——本节点负责层生成、
+## 矿脉与出口（爬梯 / 电梯），楼层选择界面 [MineElevatorUi] 也由本单元持有；
+## 深度规则仍是纯逻辑 [MineRules]，静态数据在 [code]data/mine/[/code]，只按 id 取。
+##
 ## [b]为什么复用 [FloraField][/b]：矿石就是"砸了就掉东西的野生植被"，
 ## [FarmInteractor] 只认 [code]occupied() / clear()[/code] 这一组鸭子接口，
 ## 于是同一套镐子逻辑在农场砸石头、在矿洞砸矿石都不需要改。
