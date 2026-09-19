@@ -150,3 +150,25 @@ TOOL_HOE_DESC,用来翻地，把草地变成可耕种的土地。,Tills grass in
 TOOL_PICKAXE_DESC,砸碎石头，得到石材。,Smashes rocks for stone.
 TOOL_SICKLE_DESC,清除枯死的作物，也可以割草。,Clears withered crops and cuts weeds.
 TOOL_WATERING_CAN_DESC,给作物浇水，作物才会生长。,Waters crops so they keep growing.
+FLORA_COPPER_ORE,铜矿石,Copper Ore
+FLORA_IRON_ORE,铁矿石,Iron Ore
+FLORA_GOLD_ORE,金矿石,Gold Ore
+ITEM_COPPER_ORE,铜矿石,Copper Ore
+ITEM_IRON_ORE,铁矿石,Iron Ore
+ITEM_GOLD_ORE,金矿石,Gold Ore
+ITEM_HOE_COPPER,铜锄头,Copper Hoe
+ITEM_HOE_IRON,铁锄头,Iron Hoe
+ITEM_WATERING_CAN_COPPER,铜洒水壶,Copper Watering Can
+ITEM_WATERING_CAN_IRON,铁洒水壶,Iron Watering Can
+ITEM_AXE_COPPER,铜斧头,Copper Axe
+ITEM_AXE_IRON,铁斧头,Iron Axe
+ITEM_PICKAXE_COPPER,铜镐子,Copper Pickaxe
+ITEM_PICKAXE_IRON,铁镐子,Iron Pickaxe
+TOOL_HOE_COPPER_DESC,一次能翻一大片地,Tills a wider patch
+TOOL_HOE_IRON_DESC,翻地又大又省力,Larger area and less stamina
+TOOL_WATERING_CAN_COPPER_DESC,一次浇一大片地,Waters a wider patch
+TOOL_WATERING_CAN_IRON_DESC,浇灌范围覆盖整片田,Covers a whole plot
+TOOL_AXE_COPPER_DESC,砍树更快更省力,Chops faster with less stamina
+TOOL_AXE_IRON_DESC,一挥就能清掉一片,Clears a swath in one swing
+TOOL_PICKAXE_COPPER_DESC,能砸开铁矿,Frees iron ore
+TOOL_PICKAXE_IRON_DESC,能砸开金矿范围更大,Frees gold ore over a wider area

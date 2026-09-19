@@ -12,4 +12,6 @@ harvest_item_id = &"tulip"
 days_per_stage = Array[int]([2, 2, 2])
 seed_price = 30
 base_sell_price = 70
+quality_silver_chance = 0.085
+quality_gold_chance = 0.02125
 sprite_sheet = ExtResource("2_ycmhn")

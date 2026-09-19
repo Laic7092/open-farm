@@ -31,7 +31,7 @@ func interact(actor: Node2D) -> void:
 		var item := Database.get_item(slot.item_id)
 		if item == null or not item.sellable or item.category == ItemData.Category.TOOL:
 			continue
-		entries.append(InventorySlot.new(slot.item_id, slot.count))
+		entries.append(InventorySlot.new(slot.item_id, slot.count, slot.quality))
 
 	if entries.is_empty():
 		EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_TO_SHIP", {})
@@ -43,7 +43,7 @@ func interact(actor: Node2D) -> void:
 		var item := Database.get_item(entry.item_id)
 		if not player.inventory.remove(entry.item_id, entry.count):
 			continue
-		total += item.sell_price * entry.count
+		total += QualityRules.adjusted_price(item.sell_price, entry.quality) * entry.count
 		shipped += entry.count
 
 	if total <= 0:

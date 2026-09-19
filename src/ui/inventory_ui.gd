@@ -48,7 +48,7 @@ func refresh() -> void:
 			_slot_nodes[index].clear()
 			continue
 		var slot: InventorySlot = inventory.slots[index]
-		_slot_nodes[index].set_item(slot.item_id, slot.count)
+		_slot_nodes[index].set_item(slot.item_id, slot.count, slot.quality)
 
 
 func _build_slots() -> void:

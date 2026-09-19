@@ -65,6 +65,9 @@ func build() -> void:
 		"stamina_cost": 3,
 		"drop_item_id": &"stone",
 		"drop_amount": Vector2i(1, 2),
+		"mine_weight": 5,
+		"mine_min_depth": 1,
+		"mine_max_depth": 100,
 	})
 
 	# 大石头：稀少，挡路，出的石材更多。
@@ -80,6 +83,59 @@ func build() -> void:
 		"stamina_cost": 3,
 		"drop_item_id": &"stone",
 		"drop_amount": Vector2i(2, 3),
+		"mine_weight": 2,
+		"mine_min_depth": 25,
+		"mine_max_depth": 100,
+	})
+
+	# 矿洞矿石：越深越好的产出；required_tier 用镐子等级卡进度。
+	_flora(&"copper_ore", &"FLORA_COPPER_ORE", FloraData.Kind.ROCK, [], {
+		"spawn_weight": [0, 0, 0, 0],
+		"solid_from_stage": 0,
+		"solid_size": Vector2(12, 8),
+		"solid_offset": Vector2(0, 4),
+		"tool_kind": ToolData.Kind.PICKAXE,
+		"stamina_cost": 3,
+		"drop_item_id": &"copper_ore",
+		"drop_amount": Vector2i(1, 3),
+		"quality_silver_chance": 0.1,
+		"quality_gold_chance": 0.02,
+		"required_tier": 1,
+		"mine_weight": 10,
+		"mine_min_depth": 1,
+		"mine_max_depth": 60,
+	})
+	_flora(&"iron_ore", &"FLORA_IRON_ORE", FloraData.Kind.ROCK, [], {
+		"spawn_weight": [0, 0, 0, 0],
+		"solid_from_stage": 0,
+		"solid_size": Vector2(12, 8),
+		"solid_offset": Vector2(0, 4),
+		"tool_kind": ToolData.Kind.PICKAXE,
+		"stamina_cost": 3,
+		"drop_item_id": &"iron_ore",
+		"drop_amount": Vector2i(1, 2),
+		"quality_silver_chance": 0.15,
+		"quality_gold_chance": 0.04,
+		"required_tier": 2,
+		"mine_weight": 7,
+		"mine_min_depth": 15,
+		"mine_max_depth": 100,
+	})
+	_flora(&"gold_ore", &"FLORA_GOLD_ORE", FloraData.Kind.ROCK, [], {
+		"spawn_weight": [0, 0, 0, 0],
+		"solid_from_stage": 0,
+		"solid_size": Vector2(12, 8),
+		"solid_offset": Vector2(0, 4),
+		"tool_kind": ToolData.Kind.PICKAXE,
+		"stamina_cost": 3,
+		"drop_item_id": &"gold_ore",
+		"drop_amount": Vector2i(1, 2),
+		"quality_silver_chance": 0.2,
+		"quality_gold_chance": 0.08,
+		"required_tier": 3,
+		"mine_weight": 4,
+		"mine_min_depth": 40,
+		"mine_max_depth": 100,
 	})
 
 	# 野花：两天开花，可以徒手采；低矮地被显式可穿过。

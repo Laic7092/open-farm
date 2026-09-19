@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/pickaxe_copper.png" id="1_ht7gw"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_22hln"]
+
+[resource]
+script = ExtResource("2_22hln")
+id = &"pickaxe_copper"
+display_name_key = &"ITEM_PICKAXE_COPPER"
+description_key = &"TOOL_PICKAXE_COPPER_DESC"
+category = 2
+stack_limit = 1
+sellable = false
+icon = ExtResource("1_ht7gw")
+tool_id = &"pickaxe_copper"

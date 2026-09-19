@@ -15,13 +15,16 @@ func _ready() -> void:
 
 
 ## 显示一件道具。
-func set_item(item_id: StringName, count: int) -> void:
+func set_item(item_id: StringName, count: int, quality: int = 0) -> void:
 	if item_id == &"" or count <= 0:
 		clear()
 		return
 
 	var item := Database.get_item(item_id)
 	var display_name := Text.item_name(item)
+	var grade: int = QualityRules.clamp_grade(quality)
+	if grade > 0:
+		display_name = "%s(%s)" % [display_name, Text.key(QualityRules.label_key(grade))]
 
 	modulate.a = 1.0
 	icon.texture = item.icon if item != null else null

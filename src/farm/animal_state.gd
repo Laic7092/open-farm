@@ -12,6 +12,8 @@ var days_grown: int = 0
 var affection: int = 0
 ## 距上次产出过去了几天。
 var days_since_product: int = 0
+## 繁殖冷却：> 0 时还不能再生一只幼崽。
+var breed_cooldown: int = 0
 ## 今天是否喂过（日结转后重置）。
 var fed_today: bool = false
 ## 今天是否摸过（日结转后重置）。
@@ -28,6 +30,7 @@ func to_dict() -> Dictionary:
 		"days_grown": days_grown,
 		"affection": affection,
 		"days_since_product": days_since_product,
+		"breed_cooldown": breed_cooldown,
 		"fed_today": fed_today,
 		"petted_today": petted_today,
 	}
@@ -38,6 +41,7 @@ func from_dict(data: Dictionary) -> void:
 	days_grown = maxi(int(data.get("days_grown", 0)), 0)
 	affection = maxi(int(data.get("affection", 0)), 0)
 	days_since_product = maxi(int(data.get("days_since_product", 0)), 0)
+	breed_cooldown = maxi(int(data.get("breed_cooldown", 0)), 0)
 	fed_today = bool(data.get("fed_today", false))
 	petted_today = bool(data.get("petted_today", false))
 
@@ -47,6 +51,7 @@ func duplicate_state() -> AnimalState:
 	copy.days_grown = days_grown
 	copy.affection = affection
 	copy.days_since_product = days_since_product
+	copy.breed_cooldown = breed_cooldown
 	copy.fed_today = fed_today
 	copy.petted_today = petted_today
 	return copy

@@ -71,6 +71,17 @@ enum Kind {
 @export var drop_item_id: StringName = &""
 @export var drop_amount: Vector2i = Vector2i(1, 1)
 @export_range(0.0, 1.0, 0.01) var drop_chance: float = 1.0
+## 产出时至少抽出银品质的概率（见 [QualityRules]）。
+@export_range(0.0, 1.0, 0.01) var quality_silver_chance: float = 0.0
+## 产出时抽出金品质的概率。
+@export_range(0.0, 1.0, 0.01) var quality_gold_chance: float = 0.0
+## 需要至少几级的工具才能清除（0 = 任意等级）。[MineFloor] 用镐子等级卡矿石。
+@export_range(0, 5) var required_tier: int = 0
+## 在矿洞里出现的最浅 / 最深楼层；-1 表示不参与矿洞生成。
+@export_range(-1, 200) var mine_min_depth: int = -1
+@export_range(-1, 200) var mine_max_depth: int = -1
+## 矿洞生成权重；0 表示不在矿洞出现。
+@export_range(0, 999) var mine_weight: int = 0
 
 ## 阶段图：[code]assets/sprites/flora/<id>.png[/code]，固定 4 列。
 ##
@@ -115,6 +126,8 @@ func peak_spawn_weight() -> int:
 ## 数据自检；返回空数组表示通过。
 func validate() -> PackedStringArray:
 	var problems := PackedStringArray()
+	if mine_weight > 0 and (mine_min_depth < 1 or mine_max_depth < mine_min_depth):
+		problems.append("矿洞生成要求 mine_min_depth >= 1 且 mine_max_depth >= mine_min_depth")
 	if id == &"":
 		problems.append("id 不能为空")
 	if display_name_key == &"":

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ToolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/tool_data.gd" id="1_1djah"]
+
+[resource]
+script = ExtResource("1_1djah")
+id = &"watering_can_iron"
+display_name_key = &"ITEM_WATERING_CAN_IRON"
+kind = 1
+stamina_cost = 1
+reach = 2
+area_size = Vector2i(5, 5)
+tier = 3

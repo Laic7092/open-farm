@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/axe_iron.png" id="1_0axj1"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_2h60q"]
+
+[resource]
+script = ExtResource("2_2h60q")
+id = &"axe_iron"
+display_name_key = &"ITEM_AXE_IRON"
+description_key = &"TOOL_AXE_IRON_DESC"
+category = 2
+stack_limit = 1
+sellable = false
+icon = ExtResource("1_0axj1")
+tool_id = &"axe_iron"

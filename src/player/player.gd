@@ -140,8 +140,14 @@ func facing_vector() -> Vector2i:
 
 
 ## 面朝的格子（工具作用的目标格）。
+##
+## 距离取手持工具的 [member ToolData.reach]，于是升级后的工具能伸得更远。
 func target_cell() -> Vector2i:
-	var probe: Vector2 = global_position + Vector2(facing_vector()) * float(GridUtils.TILE_SIZE)
+	var reach: int = 1
+	var tool := selected_tool()
+	if tool != null:
+		reach = maxi(tool.reach, 1)
+	var probe: Vector2 = global_position + Vector2(facing_vector()) * float(GridUtils.TILE_SIZE * reach)
 	return GridUtils.world_to_cell(probe)
 
 
@@ -392,7 +398,7 @@ func _try_harvest_crop(grid: FarmGrid, cell: Vector2i) -> bool:
 	if amount <= 0:
 		return false
 	var item_id: StringName = outcome.get("item_id", &"")
-	inventory.add(item_id, amount)
+	inventory.add(item_id, amount, int(outcome.get("quality", 0)))
 	EventBus.ui.notification_requested.emit(
 		&"NOTIFY_CROP_HARVESTED", {"item": Text.item_name(Database.get_item(item_id)), "count": amount}
 	)
@@ -402,14 +408,14 @@ func _try_harvest_crop(grid: FarmGrid, cell: Vector2i) -> bool:
 ## 野外的花 / 蘑菇（[member FloraData.pickable_by_hand]）。
 func _try_pick_flora(cell: Vector2i) -> bool:
 	var field := interactor.current_flora()
-	if field == null or not field.occupied(cell):
+	if field == null or not bool(field.call(&"occupied", cell)):
 		return false
-	var outcome := field.clear(cell, ToolData.Kind.SICKLE, true)
+	var outcome: Dictionary = field.call(&"clear", cell, ToolData.Kind.SICKLE, true)
 	var amount: int = int(outcome.get("amount", 0))
 	if amount <= 0:
 		return false
 	var item_id: StringName = outcome.get("item_id", &"")
-	inventory.add(item_id, amount)
+	inventory.add(item_id, amount, int(outcome.get("quality", 0)))
 	EventBus.ui.notification_requested.emit(
 		&"NOTIFY_FLORA_CLEARED", {"item": Text.item_name(Database.get_item(item_id)), "count": amount}
 	)

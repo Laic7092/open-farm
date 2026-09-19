@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FloraData" format=3]
+
+[ext_resource type="Script" path="res://src/data/flora_data.gd" id="1_rpn0t"]
+[ext_resource type="Texture2D" path="res://assets/sprites/flora/iron_ore.png" id="2_4o21g"]
+
+[resource]
+script = ExtResource("1_rpn0t")
+id = &"iron_ore"
+display_name_key = &"FLORA_IRON_ORE"
+kind = 2
+solid_size = Vector2(12, 8)
+solid_offset = Vector2(0, 4)
+tool_kind = 4
+stamina_cost = 3
+drop_item_id = &"iron_ore"
+drop_amount = Vector2i(1, 2)
+quality_silver_chance = 0.15
+quality_gold_chance = 0.04
+required_tier = 2
+mine_min_depth = 15
+mine_max_depth = 100
+mine_weight = 7
+sprite_sheet = ExtResource("2_4o21g")

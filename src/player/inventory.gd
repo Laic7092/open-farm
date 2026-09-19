@@ -35,10 +35,11 @@ func _init(p_capacity: int = DEFAULT_CAPACITY) -> void:
 
 ## 放入道具，返回[b]没能放下的数量[/b]（0 表示全部放入）。
 ##
-## 先填已有堆叠，再占用空格，符合玩家直觉。
-func add(item_id: StringName, count: int = 1) -> int:
+## 先填已有堆叠，再占用空格，符合玩家直觉。品质不同的同类道具会分成两堆。
+func add(item_id: StringName, count: int = 1, quality: int = 0) -> int:
 	if item_id == &"" or count <= 0:
 		return count
+	var grade: int = QualityRules.clamp_grade(quality)
 	var remaining: int = count
 	var limit: int = _stack_limit(item_id)
 	var touched: Array[int] = []
@@ -48,7 +49,7 @@ func add(item_id: StringName, count: int = 1) -> int:
 		if remaining <= 0:
 			break
 		var slot: InventorySlot = slots[index]
-		if slot.is_empty() or slot.item_id != item_id:
+		if slot.is_empty() or slot.item_id != item_id or slot.quality != grade:
 			continue
 		var room: int = limit - slot.count
 		if room <= 0:
@@ -68,6 +69,7 @@ func add(item_id: StringName, count: int = 1) -> int:
 		var moved: int = mini(limit, remaining)
 		slot.item_id = item_id
 		slot.count = moved
+		slot.quality = grade
 		remaining -= moved
 		touched.append(index)
 

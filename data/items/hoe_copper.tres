@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/hoe_copper.png" id="1_drc0w"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_twdmb"]
+
+[resource]
+script = ExtResource("2_twdmb")
+id = &"hoe_copper"
+display_name_key = &"ITEM_HOE_COPPER"
+description_key = &"TOOL_HOE_COPPER_DESC"
+category = 2
+stack_limit = 1
+sellable = false
+icon = ExtResource("1_drc0w")
+tool_id = &"hoe_copper"

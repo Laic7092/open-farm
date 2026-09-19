@@ -13,4 +13,6 @@ days_per_stage = Array[int]([2, 2, 2])
 seasons = Array[int]([2])
 seed_price = 40
 base_sell_price = 95
+quality_silver_chance = 0.0975
+quality_gold_chance = 0.024375
 sprite_sheet = ExtResource("2_nrmot")

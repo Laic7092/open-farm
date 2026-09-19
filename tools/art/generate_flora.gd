@@ -28,6 +28,7 @@ const DIR: String = "res://assets/sprites/flora"
 ## 全部要导出的植被 id。
 const IDS: Array[String] = [
 	"tree_oak", "tree_pine", "weed", "rock", "boulder", "flower", "mushroom",
+	"copper_ore", "iron_ore", "gold_ore",
 ]
 
 ## 有叶子的植被 id：为它们额外出季节变体。
@@ -85,6 +86,12 @@ func _build(flora_id: String) -> Image:
 			return _sheet(Layout.FLORA_SMALL_CELL, [_flower(0), _flower(1)])
 		"mushroom":
 			return _sheet(Layout.FLORA_SMALL_CELL, [_mushroom()])
+		"copper_ore":
+			return _sheet(Layout.FLORA_SMALL_CELL, [_ore(P.COPPER_DARK, P.COPPER, P.COPPER_LIGHT)])
+		"iron_ore":
+			return _sheet(Layout.FLORA_SMALL_CELL, [_ore(P.IRON_DARK, P.IRON, P.IRON_LIGHT)])
+		"gold_ore":
+			return _sheet(Layout.FLORA_SMALL_CELL, [_ore(P.GOLD_DARK, P.GOLD, P.GOLD_LIGHT)])
 		_:
 			return _sheet(Layout.FLORA_SMALL_CELL, [_rock_small()])
 
@@ -212,6 +219,20 @@ func _rock_small() -> Image:
 	Art.ellipse(image, Vector2i(8, 11), Vector2i(6, 4), P.STONE_DARK)
 	Art.ellipse(image, Vector2i(8, 10), Vector2i(5, 4), P.STONE)
 	Art.ellipse(image, Vector2i(6, 8), Vector2i(2, 1), P.STONE_LIGHT)
+	Art.outline(image)
+	return image
+
+
+## 矿石：石头底 + 金属矿脉。
+func _ore(dark: Color, base: Color, light: Color) -> Image:
+	var cell := Layout.FLORA_SMALL_CELL
+	var image := Art.new_image(cell.x, cell.y)
+	Art.ground_shadow(image, cell.x, cell.y, 3)
+	Art.ellipse(image, Vector2i(8, 11), Vector2i(6, 4), P.STONE_DARK)
+	Art.ellipse(image, Vector2i(8, 10), Vector2i(5, 4), P.STONE)
+	Art.ellipse(image, Vector2i(7, 9), Vector2i(3, 2), base)
+	Art.ellipse(image, Vector2i(9, 11), Vector2i(2, 1), dark)
+	Art.ellipse(image, Vector2i(6, 8), Vector2i(1, 1), light)
 	Art.outline(image)
 	return image
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=3]
+[gd_scene load_steps=37 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="4_player"]
 [ext_resource type="Script" path="res://src/core/spawn_point.gd" id="5_spawn"]
 [ext_resource type="Script" path="res://src/world/scene_door.gd" id="6_door"]
+[ext_resource type="Script" path="res://src/world/upgrade_bench.gd" id="40_upgrade"]
 [ext_resource type="PackedScene" path="res://scenes/npc/npc.tscn" id="7_npc"]
 [ext_resource type="Script" path="res://src/world/town_ground.gd" id="8_ground"]
 [ext_resource type="Script" path="res://src/world/world_prop.gd" id="9_prop"]
@@ -552,3 +553,13 @@ npc_id = &"child"
 
 [node name="Player" parent="Props" instance=ExtResource("4_player")]
 position = Vector2(40, 488)
+
+[node name="ForgeBench" type="Area2D" parent="Interactables"]
+position = Vector2(296, 440)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("40_upgrade")
+prompt_key = &"PROMPT_UPGRADE"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/ForgeBench"]
+shape = SubResource("RectangleShape2D_tile")

@@ -32,6 +32,8 @@ building_id: StringName, animal_id: StringName, item_id: StringName, amount: int
 )
 ## 牲畜长大成年。
 signal animal_matured(building_id: StringName, animal_id: StringName)
+## 繁殖出一只幼崽。
+signal animal_bred(building_id: StringName, animal_id: StringName)
 ## 抛竿（开始一次垂钓）；[param power] 为蓄力（0~1），[param distance] 为落点距离（格）。
 signal fish_cast(power: float, distance: float)
 ## 有鱼咬钩（拉扯小游戏开始）。

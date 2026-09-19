@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ToolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/tool_data.gd" id="1_3bgbw"]
+
+[resource]
+script = ExtResource("1_3bgbw")
+id = &"pickaxe_copper"
+display_name_key = &"ITEM_PICKAXE_COPPER"
+kind = 4
+tier = 2
+next_id = &"pickaxe_iron"
+upgrade_cost = {
+"copper_ore": 5,
+"stone": 5
+}
+upgrade_money = 600

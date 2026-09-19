@@ -12,4 +12,6 @@ harvest_item_id = &"potato"
 days_per_stage = Array[int]([2, 2, 2])
 seed_price = 35
 base_sell_price = 90
+quality_silver_chance = 0.095
+quality_gold_chance = 0.02375
 sprite_sheet = ExtResource("2_k7vch")

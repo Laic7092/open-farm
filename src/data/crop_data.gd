@@ -31,6 +31,10 @@ extends Resource
 @export_range(0, 99999) var base_sell_price: int = 0
 ## 每次收获额外产出 1 个的概率。
 @export_range(0.0, 1.0, 0.01) var bonus_yield_chance: float = 0.0
+## 收获时至少抽出银品质的概率（见 [QualityRules]）。
+@export_range(0.0, 1.0, 0.01) var quality_silver_chance: float = 0.0
+## 收获时抽出金品质的概率。
+@export_range(0.0, 1.0, 0.01) var quality_gold_chance: float = 0.0
 ## 生长图：[code]assets/sprites/crops/<id>.png[/code]，5 列 = 4 个生长阶段 + 枯死形态。
 ##
 ## 由 [code]tools/generate_sample_data.gd[/code] 按 id 自动填好，

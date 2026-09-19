@@ -8,3 +8,4 @@ id = &"pickaxe"
 display_name_key = &"ITEM_PICKAXE"
 kind = 4
 stamina_cost = 3
+next_id = &"pickaxe_copper"

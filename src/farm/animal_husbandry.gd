@@ -72,6 +72,8 @@ static func advance(data: AnimalData, state: AnimalState, fed: bool) -> Dictiona
 	else:
 		state.affection = maxi(state.affection - data.affection_decay_per_day, 0)
 
+	state.breed_cooldown = maxi(state.breed_cooldown - 1, 0)
+
 	# 日结转后重置当天的"照顾"标记。
 	state.fed_today = false
 	state.petted_today = false
@@ -80,12 +82,12 @@ static func advance(data: AnimalData, state: AnimalState, fed: bool) -> Dictiona
 
 ## 结算一次产出，返回产出描述并就地更新状态。
 ##
-## 返回 [code]{ "item_id": StringName, "amount": int, "bonus": bool }[/code]；
+## 返回 [code]{ "item_id": StringName, "amount": int, "quality": int, "bonus": bool }[/code]；
 ## [code]amount[/code] 为 0 表示现在没有可收的东西。
 static func apply_collect(
 	data: AnimalData, state: AnimalState, rng: RandomNumberGenerator = null
 ) -> Dictionary:
-	var outcome := {"item_id": &"", "amount": 0, "bonus": false}
+	var outcome := {"item_id": &"", "amount": 0, "quality": 0, "bonus": false}
 	if not can_collect(data, state):
 		return outcome
 
@@ -102,7 +104,26 @@ static func apply_collect(
 	state.days_since_product = 0
 	outcome["item_id"] = data.product_item_id
 	outcome["amount"] = amount
+	outcome["quality"] = QualityRules.roll(
+		rng, data.quality_silver_chance, data.quality_gold_chance
+	)
 	return outcome
+
+
+## 这只牲畜现在能不能参与繁殖（成年 / 好感达标 / 不在冷却中）。
+static func can_breed(data: AnimalData, state: AnimalState) -> bool:
+	if data == null or state == null:
+		return false
+	if data.breed_days <= 0 or not is_mature(data, state):
+		return false
+	return state.affection >= data.breed_affection and state.breed_cooldown <= 0
+
+
+## 记一次繁殖，让这只牲畜进入冷却。
+static func start_breed(data: AnimalData, state: AnimalState) -> void:
+	if data == null or state == null:
+		return
+	state.breed_cooldown = maxi(data.breed_days, 1)
 
 
 ## 动物贴图应显示的列：0 = 幼崽、1 = 成年、2 = 有产出。

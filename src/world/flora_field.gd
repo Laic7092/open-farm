@@ -194,7 +194,7 @@ func apply_season(season: Season.Type) -> void:
 ## 返回 [code]{ "item_id": StringName, "amount": int, "flora_id": StringName }[/code]，
 ## 空字典表示这一格没东西 / 工具不对。
 func clear(
-	cell: Vector2i, tool_kind: ToolData.Kind, by_hand: bool = false
+	cell: Vector2i, tool_kind: ToolData.Kind, by_hand: bool = false, _tier: int = 0
 ) -> Dictionary:
 	var state: FloraState = flora.get(cell) as FloraState
 	if state == null:
@@ -211,10 +211,11 @@ func clear(
 	var outcome := FloraGrowth.apply_removal(data, state, _rng)
 	var item_id: StringName = outcome.get("item_id", &"")
 	var amount: int = int(outcome.get("amount", 0))
+	var quality: int = int(outcome.get("quality", 0))
 	var flora_id: StringName = state.flora_id
 	_remove_silently(cell)
 	EventBus.world.flora_cleared.emit(cell, flora_id, item_id, amount)
-	return {"item_id": item_id, "amount": amount, "flora_id": flora_id}
+	return {"item_id": item_id, "amount": amount, "quality": quality, "flora_id": flora_id}
 
 
 # ---------------------------------------------------------------- 日结转

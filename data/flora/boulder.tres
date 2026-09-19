@@ -18,4 +18,7 @@ tool_kind = 4
 stamina_cost = 3
 drop_item_id = &"stone"
 drop_amount = Vector2i(2, 3)
+mine_min_depth = 25
+mine_max_depth = 100
+mine_weight = 2
 sprite_sheet = ExtResource("2_mahiu")

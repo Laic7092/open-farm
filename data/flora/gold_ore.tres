@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="FloraData" format=3]
+
+[ext_resource type="Script" path="res://src/data/flora_data.gd" id="1_haw8w"]
+[ext_resource type="Texture2D" path="res://assets/sprites/flora/gold_ore.png" id="2_cr48u"]
+
+[resource]
+script = ExtResource("1_haw8w")
+id = &"gold_ore"
+display_name_key = &"FLORA_GOLD_ORE"
+kind = 2
+solid_size = Vector2(12, 8)
+solid_offset = Vector2(0, 4)
+tool_kind = 4
+stamina_cost = 3
+drop_item_id = &"gold_ore"
+drop_amount = Vector2i(1, 2)
+quality_silver_chance = 0.2
+quality_gold_chance = 0.08
+required_tier = 3
+mine_min_depth = 40
+mine_max_depth = 100
+mine_weight = 4
+sprite_sheet = ExtResource("2_cr48u")

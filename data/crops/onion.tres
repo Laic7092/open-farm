@@ -13,4 +13,6 @@ days_per_stage = Array[int]([1, 2, 2])
 seed_price = 25
 base_sell_price = 60
 bonus_yield_chance = 0.15
+quality_silver_chance = 0.08
+quality_gold_chance = 0.02
 sprite_sheet = ExtResource("2_v25r7")

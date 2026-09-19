@@ -8,3 +8,4 @@ id = &"axe"
 display_name_key = &"ITEM_AXE"
 kind = 3
 stamina_cost = 3
+next_id = &"axe_copper"

@@ -151,7 +151,7 @@ static func advance(
 static func apply_removal(
 	data: FloraData, state: FloraState, rng: RandomNumberGenerator = null
 ) -> Dictionary:
-	var outcome := {"item_id": &"", "amount": 0}
+	var outcome := {"item_id": &"", "amount": 0, "quality": 0}
 	if data == null or state == null or data.drop_item_id == &"":
 		return outcome
 	var roll: float = rng.randf() if rng != null else randf()
@@ -164,4 +164,7 @@ static func apply_removal(
 		return outcome
 	outcome["item_id"] = data.drop_item_id
 	outcome["amount"] = amount
+	outcome["quality"] = QualityRules.roll(
+		rng, data.quality_silver_chance, data.quality_gold_chance
+	)
 	return outcome

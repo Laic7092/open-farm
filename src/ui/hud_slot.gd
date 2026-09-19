@@ -23,7 +23,7 @@ func _ready() -> void:
 
 
 ## 显示一件道具。[param selected] 为 true 时使用选中底色。
-func set_item(item_id: StringName, count: int, selected: bool = false) -> void:
+func set_item(item_id: StringName, count: int, selected: bool = false, quality: int = 0) -> void:
 	if item_id == &"" or count <= 0:
 		clear(selected)
 		return
@@ -32,7 +32,11 @@ func set_item(item_id: StringName, count: int, selected: bool = false) -> void:
 	icon.texture = item.icon if item != null else null
 	icon.visible = icon.texture != null
 	count_label.text = str(count) if count > 1 else ""
-	tooltip_text = Text.item_name(item) if item != null else String(item_id)
+	var display_name := Text.item_name(item) if item != null else String(item_id)
+	var grade: int = QualityRules.clamp_grade(quality)
+	if grade > 0:
+		display_name = "%s(%s)" % [display_name, Text.key(QualityRules.label_key(grade))]
+	tooltip_text = display_name
 	_set_selected(selected)
 
 

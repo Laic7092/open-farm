@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ToolData" format=3]
+
+[ext_resource type="Script" path="res://src/data/tool_data.gd" id="1_hjpww"]
+
+[resource]
+script = ExtResource("1_hjpww")
+id = &"axe_copper"
+display_name_key = &"ITEM_AXE_COPPER"
+kind = 3
+area_size = Vector2i(3, 3)
+tier = 2
+next_id = &"axe_iron"
+upgrade_cost = {
+"copper_ore": 5,
+"wood": 5
+}
+upgrade_money = 600

@@ -62,6 +62,9 @@ func _initialize() -> void:
 	# 钓鱼：水面浮标与水花。
 	Art.save_png(_bobber(), DIR.path_join("bobber.png"))
 	Art.save_png(_ripple(), DIR.path_join("ripple.png"))
+	# 矿洞：下层竖井爬梯与电梯。
+	Art.save_png(_ladder(), DIR.path_join("ladder.png"))
+	Art.save_png(_elevator(), DIR.path_join("elevator.png"))
 	print("场景道具生成完成 → ", DIR)
 	quit()
 
@@ -368,6 +371,32 @@ func _signpost() -> Image:
 	Art.h_line(image, 3, 6, 8, P.WOOD_DARK)
 	Art.h_line(image, 3, 8, 5, P.WOOD_DARK)
 	Art.h_line(image, 8, 14, 6, P.WOOD)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 矿洞爬梯：两根木梁 + 横档；站在上面按 E 下一层。
+func _ladder() -> Image:
+	var image := Art.new_image(16, 24)
+	Art.ground_shadow(image, 16, 24, 5)
+	Art.rect(image, Rect2i(3, 3, 3, 19), P.WOOD_DARK)
+	Art.rect(image, Rect2i(10, 3, 3, 19), P.WOOD_DARK)
+	Art.rect(image, Rect2i(4, 4, 1, 17), P.WOOD)
+	Art.rect(image, Rect2i(11, 4, 1, 17), P.WOOD)
+	for y: int in [6, 10, 14, 18]:
+		Art.h_line(image, 5, y, 6, P.WOOD_LIGHT)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 矿洞电梯：铁制轿厢 + 向下箭头；交互后可选择已解锁楼层。
+func _elevator() -> Image:
+	var image := Art.new_image(16, 24)
+	Art.ground_shadow(image, 16, 24, 4)
+	Art.rect(image, Rect2i(2, 2, 12, 19), P.STONE_DARK)
+	Art.frame_rect(image, Rect2i(2, 2, 12, 19), P.STONE)
+	Art.rect(image, Rect2i(4, 4, 8, 15), P.WATER_DARK)
+	Art.triangle(image, Vector2(8, 18), Vector2(5, 12), Vector2(11, 12), P.FLOWER_YELLOW)
 	Art.outline(image, P.OUTLINE)
 	return image
 

@@ -39,6 +39,10 @@ func build() -> void:
 	_food_item(&"egg", &"ITEM_EGG", 80)
 	_food_item(&"milk", &"ITEM_MILK", 160)
 	_material_item(&"hay", &"ITEM_HAY", 4)
+	# 矿洞矿石：越深越值钱，是升级工具的原料。
+	_material_item(&"copper_ore", &"ITEM_COPPER_ORE", 15)
+	_material_item(&"iron_ore", &"ITEM_IRON_ORE", 40)
+	_material_item(&"gold_ore", &"ITEM_GOLD_ORE", 90)
 	# 牲畜：杂货店买来后放进畜舍。
 	_animal_item(&"chicken", &"ITEM_CHICKEN", &"chicken", 500)
 	_animal_item(&"cow", &"ITEM_COW", &"cow", 1200)
@@ -61,6 +65,15 @@ func build() -> void:
 	_tool_item(&"sickle", &"ITEM_SICKLE", &"TOOL_SICKLE_DESC", &"sickle")
 	_tool_item(&"axe", &"ITEM_AXE", &"TOOL_AXE_DESC", &"axe")
 	_tool_item(&"pickaxe", &"ITEM_PICKAXE", &"TOOL_PICKAXE_DESC", &"pickaxe")
+	# 升级后的工具：图标沿用基础外形 + 一颗金属铆钉。
+	_tool_item(&"hoe_copper", &"ITEM_HOE_COPPER", &"TOOL_HOE_COPPER_DESC", &"hoe_copper")
+	_tool_item(&"hoe_iron", &"ITEM_HOE_IRON", &"TOOL_HOE_IRON_DESC", &"hoe_iron")
+	_tool_item(&"watering_can_copper", &"ITEM_WATERING_CAN_COPPER", &"TOOL_WATERING_CAN_COPPER_DESC", &"watering_can_copper")
+	_tool_item(&"watering_can_iron", &"ITEM_WATERING_CAN_IRON", &"TOOL_WATERING_CAN_IRON_DESC", &"watering_can_iron")
+	_tool_item(&"axe_copper", &"ITEM_AXE_COPPER", &"TOOL_AXE_COPPER_DESC", &"axe_copper")
+	_tool_item(&"axe_iron", &"ITEM_AXE_IRON", &"TOOL_AXE_IRON_DESC", &"axe_iron")
+	_tool_item(&"pickaxe_copper", &"ITEM_PICKAXE_COPPER", &"TOOL_PICKAXE_COPPER_DESC", &"pickaxe_copper")
+	_tool_item(&"pickaxe_iron", &"ITEM_PICKAXE_IRON", &"TOOL_PICKAXE_IRON_DESC", &"pickaxe_iron")
 
 	# 钓鱼产出：和畜产品一样属于"能吃能卖"的食物，海边与池塘各有一批。
 	_food_item(&"sardine", &"ITEM_SARDINE", 40)

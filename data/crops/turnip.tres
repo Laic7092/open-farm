@@ -12,4 +12,6 @@ harvest_item_id = &"turnip"
 seed_price = 20
 base_sell_price = 45
 bonus_yield_chance = 0.1
+quality_silver_chance = 0.07250000000000001
+quality_gold_chance = 0.018125000000000002
 sprite_sheet = ExtResource("2_124lj")

@@ -130,3 +130,21 @@ WEATHER_RAINY,雨,Rainy
 WEATHER_SNOWY,雪,Snowy
 WEATHER_STORMY,暴风雨,Stormy
 WEATHER_SUNNY,晴,Sunny
+QUALITY_NORMAL,普通,Normal
+QUALITY_SILVER,银,Silver
+QUALITY_GOLD,金,Gold
+PROMPT_UPGRADE,升级工具,Upgrade Tool
+PROMPT_ELEVATOR,乘电梯,Take Elevator
+PROMPT_DESCEND,下一层,Descend
+NOTIFY_TOOL_UPGRADED,升级成功：{tool},Upgraded: {tool}
+NOTIFY_TOOL_MAXED,这件工具已经升到顶了,This tool is fully upgraded
+NOTIFY_UPGRADE_NEED_TOOL,手持一件工具再来升级,Hold a tool to upgrade
+NOTIFY_UPGRADE_MATERIALS,升级材料不够,Not enough upgrade materials
+NOTIFY_UPGRADE_MONEY,升级还差 {amount} 金币,Need {amount} more gold
+NOTIFY_MINE_BOTTOM,已经到矿洞最深处了,Reached the deepest floor
+NOTIFY_ANIMAL_BRED,{animal} 生下了幼崽,{animal} had a baby
+MINE_ELEVATOR_TITLE,电梯,Elevator
+MINE_ELEVATOR_HINT,选择要去的楼层,Choose a floor
+MINE_SURFACE,地面,Surface
+MINE_FLOOR,第{n}层,Floor {n}
+MINE_CURRENT,（当前）, (current)

@@ -221,7 +221,32 @@ func advance_day(_date: GameDate) -> void:
 			)
 			if bool(change.get(AnimalHusbandry.KEY_MATURED, false)):
 				EventBus.farm.animal_matured.emit(building_id, animal_state.animal_id)
+		_try_breed(building_id, state)
 	_refresh_all()
+
+
+## 成年且好感达标的同类两两配对；每栋畜舍每天最多添一只幼崽。
+func _try_breed(building_id: StringName, state: BuildingState) -> void:
+	if state == null or is_full(building_id):
+		return
+	for i: int in state.animals.size():
+		var first: AnimalState = state.animals[i]
+		var data := Database.get_animal(first.animal_id)
+		if not AnimalHusbandry.can_breed(data, first):
+			continue
+		for j: int in range(i + 1, state.animals.size()):
+			var second: AnimalState = state.animals[j]
+			if second.animal_id != first.animal_id:
+				continue
+			if not AnimalHusbandry.can_breed(data, second):
+				continue
+			if is_full(building_id):
+				return
+			AnimalHusbandry.start_breed(data, first)
+			AnimalHusbandry.start_breed(data, second)
+			_add_animal(building_id, first.animal_id)
+			EventBus.farm.animal_bred.emit(building_id, first.animal_id)
+			return
 
 
 # ---------------------------------------------------------------- 序列化

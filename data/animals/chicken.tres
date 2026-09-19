@@ -9,4 +9,7 @@ id = &"chicken"
 display_name_key = &"ANIMAL_CHICKEN"
 species = &"chicken"
 product_item_id = &"egg"
+quality_silver_chance = 0.08
+quality_gold_chance = 0.02
+breed_days = 4
 sprite_sheet = ExtResource("2_x2wux")

@@ -14,4 +14,6 @@ seasons = Array[int]([1])
 regrow_days = 5
 seed_price = 120
 base_sell_price = 300
+quality_silver_chance = 0.2
+quality_gold_chance = 0.05
 sprite_sheet = ExtResource("2_qups0")

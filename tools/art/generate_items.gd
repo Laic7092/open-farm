@@ -52,6 +52,17 @@ func _initialize() -> void:
 	Art.save_png(_fish_icon(P.FRUIT_ORANGE, P.FRUIT_YELLOW, P.FRUIT_RED), _path("carp"))
 	Art.save_png(_fish_icon(P.SOIL_DARK, P.SOIL_LIGHT, P.SOIL, true), _path("catfish"))
 	Art.save_png(_fish_icon(P.UI_GOLD, P.FRUIT_YELLOW, P.FRUIT_ORANGE), _path("golden_carp"))
+	# 矿石与升级工具（矿洞 v0.4）。
+	Art.save_png(_ore_icon(P.COPPER_DARK, P.COPPER, P.COPPER_LIGHT), _path("copper_ore"))
+	Art.save_png(_ore_icon(P.IRON_DARK, P.IRON, P.IRON_LIGHT), _path("iron_ore"))
+	Art.save_png(_ore_icon(P.GOLD_DARK, P.GOLD, P.GOLD_LIGHT), _path("gold_ore"))
+	for tier: Array in [["copper", P.COPPER], ["iron", P.IRON]]:
+		var suffix: String = tier[0]
+		var accent: Color = tier[1]
+		Art.save_png(_tiered(_tool_hoe(), accent), _path("hoe_%s" % suffix))
+		Art.save_png(_tiered(_tool_axe(), accent), _path("axe_%s" % suffix))
+		Art.save_png(_tiered(_tool_pickaxe(), accent), _path("pickaxe_%s" % suffix))
+		Art.save_png(_tiered(_watering_can(), accent), _path("watering_can_%s" % suffix))
 	print("道具图标生成完成 → ", DIR)
 	quit()
 
@@ -62,6 +73,26 @@ func _path(item_id: String) -> String:
 
 func _blank() -> Image:
 	return Art.new_image(Layout.ITEM_ICON_SIZE.x, Layout.ITEM_ICON_SIZE.y)
+
+
+## 矿石图标：石头底 + 金属矿脉。
+func _ore_icon(dark: Color, base: Color, light: Color) -> Image:
+	var image := _blank()
+	Art.ellipse(image, Vector2i(8, 10), Vector2i(6, 5), P.STONE_DARK)
+	Art.ellipse(image, Vector2i(8, 9), Vector2i(5, 4), P.STONE)
+	Art.ellipse(image, Vector2i(7, 9), Vector2i(3, 2), base)
+	Art.ellipse(image, Vector2i(9, 11), Vector2i(2, 1), dark)
+	Art.ellipse(image, Vector2i(6, 7), Vector2i(1, 1), light)
+	Art.outline(image)
+	return image
+
+
+## 给基础工具图叠一颗金属铆钉，表示升级后的等级。
+func _tiered(base: Image, accent: Color) -> Image:
+	var image: Image = base.duplicate()
+	Art.ellipse(image, Vector2i(13, 3), Vector2i(2, 2), accent)
+	Art.px(image, 13, 2, P.WHITE)
+	return image
 
 
 # ---------------------------------------------------------------- 收获物

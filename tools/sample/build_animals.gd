@@ -18,6 +18,10 @@ func build() -> void:
 	chicken.product_item_id = &"egg"
 	chicken.product_amount = 1
 	chicken.feed_item_id = &"hay"
+	chicken.quality_silver_chance = 0.08
+	chicken.quality_gold_chance = 0.02
+	chicken.breed_days = 4
+	chicken.breed_affection = 60
 	chicken.sprite_sheet = _animal_sheet(&"chicken")
 	_save(chicken, ANIMAL_DIR.path_join("chicken.tres"))
 
@@ -33,6 +37,10 @@ func build() -> void:
 	cow.feed_item_id = &"hay"
 	cow.affection_per_pet = 3
 	cow.bonus_product_chance = 0.35
+	cow.quality_silver_chance = 0.15
+	cow.quality_gold_chance = 0.05
+	cow.breed_days = 8
+	cow.breed_affection = 70
 	cow.sprite_sheet = _animal_sheet(&"cow")
 	_save(cow, ANIMAL_DIR.path_join("cow.tres"))
 

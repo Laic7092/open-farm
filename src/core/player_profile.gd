@@ -35,6 +35,15 @@ var flags: Dictionary[StringName, int] = {}
 ## 累计游玩秒数。
 @export var play_seconds: float = 0.0
 
+## 矿洞：当前所在楼层（1 起）。
+var mine_depth: int = 1
+## 已解锁的最深电梯楼层（每 5 层一个，始终是 5 的倍数，最小为 5）。
+var mine_elevator_depth: int = 5
+## 已挖掉的矿石格，键为 "depth:x:y"；每日重置（矿石次日重新生成）。
+var mine_mined: Dictionary = {}
+## 上次生成矿洞的绝对日；跨天时清空已挖记录。
+var mine_day: int = -1
+
 ## 是否正在累计游玩时长（读档完成前不计时）。
 var counting_playtime: bool = false
 
@@ -48,6 +57,10 @@ func reset() -> void:
 	total_shipped = 0
 	play_seconds = 0.0
 	counting_playtime = false
+	mine_depth = 1
+	mine_elevator_depth = 5
+	mine_mined.clear()
+	mine_day = -1
 	money_changed.emit(money, 0)
 
 
@@ -118,6 +131,43 @@ func record_shipped(count: int = 1) -> void:
 	total_shipped += maxi(count, 0)
 
 
+# ---------------------------------------------------------------- 矿洞
+
+## 下到指定楼层，并解锁该层以下的电梯（每 5 层）。
+func mine_enter(depth: int) -> void:
+	mine_depth = clampi(depth, 1, MineRules.MAX_DEPTH)
+	var reached_elevator: int = (mine_depth / MineRules.ELEVATOR_EVERY) * MineRules.ELEVATOR_EVERY
+	if reached_elevator > 0:
+		mine_elevator_depth = maxi(mine_elevator_depth, reached_elevator)
+
+
+## 回到地面（深度 1）；不改变已解锁的电梯。
+func mine_leave() -> void:
+	mine_depth = 1
+
+
+## 已挖掉的矿石格在跨天时重新生成。
+func mine_refresh_for_day(day: int) -> void:
+	if mine_day == day:
+		return
+	mine_day = day
+	mine_mined.clear()
+
+
+## 某一层某一格是否已经挖过。
+func mine_is_mined(depth: int, cell: Vector2i) -> bool:
+	return mine_mined.has(_mine_key(depth, cell))
+
+
+## 记下已经挖过的矿石格。
+func mine_mark_mined(depth: int, cell: Vector2i) -> void:
+	mine_mined[_mine_key(depth, cell)] = true
+
+
+func _mine_key(depth: int, cell: Vector2i) -> String:
+	return "%d:%d:%d" % [depth, cell.x, cell.y]
+
+
 ## 开始 / 停止累计游玩时长。
 func set_playtime_counting(enabled: bool) -> void:
 	counting_playtime = enabled
@@ -134,6 +184,10 @@ func to_dict() -> Dictionary:
 		"total_earned": total_earned,
 		"total_shipped": total_shipped,
 		"play_seconds": play_seconds,
+		"mine_depth": mine_depth,
+		"mine_elevator_depth": mine_elevator_depth,
+		"mine_mined": mine_mined.duplicate(),
+		"mine_day": mine_day,
 	}
 
 
@@ -148,4 +202,12 @@ func from_dict(data: Dictionary) -> void:
 	total_earned = maxi(int(data.get("total_earned", 0)), 0)
 	total_shipped = maxi(int(data.get("total_shipped", 0)), 0)
 	play_seconds = maxf(float(data.get("play_seconds", 0.0)), 0.0)
+	mine_depth = maxi(int(data.get("mine_depth", 1)), 1)
+	mine_elevator_depth = maxi(int(data.get("mine_elevator_depth", 5)), 5)
+	mine_day = int(data.get("mine_day", -1))
+	mine_mined.clear()
+	var mined: Variant = data.get("mine_mined", {})
+	if mined is Dictionary:
+		for key: Variant in mined:
+			mine_mined[str(key)] = true
 	money_changed.emit(money, 0)

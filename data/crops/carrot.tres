@@ -14,4 +14,6 @@ seasons = Array[int]([2])
 seed_price = 30
 base_sell_price = 75
 bonus_yield_chance = 0.1
+quality_silver_chance = 0.0875
+quality_gold_chance = 0.021875
 sprite_sheet = ExtResource("2_u6mle")

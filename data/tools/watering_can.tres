@@ -8,3 +8,4 @@ id = &"watering_can"
 display_name_key = &"ITEM_WATERING_CAN"
 kind = 1
 stamina_cost = 1
+next_id = &"watering_can_copper"

@@ -91,12 +91,12 @@ static func advance(
 
 ## 结算一次收获，返回产出描述并就地更新状态。
 ##
-## 返回 [code]{ "item_id": StringName, "amount": int, "removed": bool }[/code]；
+## 返回 [code]{ "item_id": StringName, "amount": int, "quality": int, "removed": bool }[/code]；
 ## [code]removed[/code] 为 true 表示收获后这株作物应当从地里消失。
 static func apply_harvest(
 	data: CropData, state: CropState, rng: RandomNumberGenerator = null
 ) -> Dictionary:
-	var outcome := {"item_id": &"", "amount": 0, "removed": false}
+	var outcome := {"item_id": &"", "amount": 0, "quality": 0, "removed": false}
 	if not can_harvest(data, state):
 		return outcome
 
@@ -108,6 +108,9 @@ static func apply_harvest(
 
 	outcome["item_id"] = data.harvest_item_id
 	outcome["amount"] = amount
+	outcome["quality"] = QualityRules.roll(
+		rng, data.quality_silver_chance, data.quality_gold_chance
+	)
 	state.harvests += 1
 
 	if data.is_regrowable():

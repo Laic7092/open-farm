@@ -204,7 +204,10 @@ func _refresh_item_bar() -> void:
 			continue
 		var inventory_slot: InventorySlot = player.inventory.slots[backpack_index]
 		_item_slots[bar_index].set_item(
-			inventory_slot.item_id, inventory_slot.count, backpack_index == selected
+			inventory_slot.item_id,
+			inventory_slot.count,
+			backpack_index == selected,
+			inventory_slot.quality
 		)
 
 

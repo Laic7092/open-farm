@@ -6,3 +6,4 @@
 script = ExtResource("1_rx8py")
 id = &"hoe"
 display_name_key = &"ITEM_HOE"
+next_id = &"hoe_copper"

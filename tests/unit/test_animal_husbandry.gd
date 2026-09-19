@@ -208,3 +208,55 @@ func test_building_state_roundtrip() -> void:
 	assert_str(String(restored.building_id)).is_equal("coop")
 	assert_int(restored.size()).is_equal(2)
 	assert_str(String(restored.animals[0].animal_id)).is_equal("chicken")
+
+
+# ---------------------------------------------------------------- 繁殖
+
+func test_can_breed_requires_maturity_affection_and_cooldown() -> void:
+	_data.breed_days = 4
+	_data.breed_affection = 60
+	_adult()
+	_state.affection = 59
+	assert_bool(AnimalHusbandry.can_breed(_data, _state)).is_false()
+	_state.affection = 60
+	assert_bool(AnimalHusbandry.can_breed(_data, _state)).is_true()
+	AnimalHusbandry.start_breed(_data, _state)
+	assert_int(_state.breed_cooldown).is_equal(4)
+	assert_bool(AnimalHusbandry.can_breed(_data, _state)).is_false()
+
+
+func test_advance_ticks_breed_cooldown() -> void:
+	_data.breed_days = 2
+	_data.breed_affection = 0
+	_adult()
+	AnimalHusbandry.start_breed(_data, _state)
+	AnimalHusbandry.advance(_data, _state, true)
+	assert_int(_state.breed_cooldown).is_equal(1)
+	AnimalHusbandry.advance(_data, _state, true)
+	assert_int(_state.breed_cooldown).is_equal(0)
+
+
+func test_breed_disabled_when_breed_days_zero() -> void:
+	_data.breed_days = 0
+	_data.breed_affection = 0
+	_adult()
+	_state.affection = 100
+	assert_bool(AnimalHusbandry.can_breed(_data, _state)).is_false()
+
+
+func test_breed_cooldown_roundtrips() -> void:
+	_state.breed_cooldown = 3
+	var restored := AnimalState.new()
+	restored.from_dict(_state.to_dict())
+	assert_int(restored.breed_cooldown).is_equal(3)
+
+
+# ---------------------------------------------------------------- 品质
+
+func test_collect_rolls_quality() -> void:
+	_data.quality_silver_chance = 1.0
+	_data.quality_gold_chance = 1.0
+	_adult()
+	_state.days_since_product = _data.produce_days
+	var outcome := AnimalHusbandry.apply_collect(_data, _state)
+	assert_int(int(outcome.get("quality", -1))).is_equal(QualityRules.Grade.GOLD)

@@ -226,6 +226,14 @@ func _check_mine() -> void:
 	_check(mine_field != null, "矿洞也应当有自己的野生植被")
 	_check(mine_field == null or mine_field.count_of(&"tree_oak") == 0, "矿洞不应该长出阔叶树")
 	_check(mine_field == null or mine_field.count_of(&"tree_pine") == 0, "矿洞不应该长出松树")
+	_check(mine_field is MineFloor, "矿洞的野生植被应当由 MineFloor 接管")
+	_check(mine_field != null and mine_field.total() > 0, "矿洞应当生成矿石")
+	if mine_field != null:
+		for state: FloraState in mine_field.flora.values():
+			var ore := Database.get_flora(state.flora_id)
+			_check(ore != null and MineRules.allows(ore, 1), "第 1 层不该出现 %s" % state.flora_id)
+	if _profile != null:
+		_check_eq(_profile.mine_depth, 1, "从海滩进矿洞应当落在第 1 层")
 	_check(world.get(&"weather_effects") == false, "矿洞不应下雨下雪")
 
 	var ground := world.find_child("Ground", true, false) as TileMapLayer

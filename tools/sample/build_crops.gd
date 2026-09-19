@@ -124,6 +124,12 @@ func build() -> void:
 		crop.seed_price = int(entry["seed"])
 		crop.base_sell_price = int(entry["sell"])
 		crop.bonus_yield_chance = float(entry.get("bonus", 0.0))
+		crop.quality_silver_chance = clampf(
+			float(entry.get("silver", 0.05 + float(crop.base_sell_price) / 2000.0)), 0.0, 0.9
+		)
+		crop.quality_gold_chance = clampf(
+			float(entry.get("gold", crop.quality_silver_chance * 0.25)), 0.0, 0.9
+		)
 		crop.sprite_sheet = _crop_sheet(crop_id)
 		_save(crop, CROP_DIR.path_join("%s.tres" % crop_id))
 

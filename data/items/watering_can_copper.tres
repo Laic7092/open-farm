@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/watering_can_copper.png" id="1_p7bj2"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_vypga"]
+
+[resource]
+script = ExtResource("2_vypga")
+id = &"watering_can_copper"
+display_name_key = &"ITEM_WATERING_CAN_COPPER"
+description_key = &"TOOL_WATERING_CAN_COPPER_DESC"
+category = 2
+stack_limit = 1
+sellable = false
+icon = ExtResource("1_p7bj2")
+tool_id = &"watering_can_copper"

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/hoe_iron.png" id="1_ohiku"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_1rqkm"]
+
+[resource]
+script = ExtResource("2_1rqkm")
+id = &"hoe_iron"
+display_name_key = &"ITEM_HOE_IRON"
+description_key = &"TOOL_HOE_IRON_DESC"
+category = 2
+stack_limit = 1
+sellable = false
+icon = ExtResource("1_ohiku")
+tool_id = &"hoe_iron"

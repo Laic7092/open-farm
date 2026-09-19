@@ -67,7 +67,7 @@ func interact(actor: Node2D) -> void:
 		var amount: int = int(outcome.get("amount", 0))
 		if amount > 0:
 			var item_id: StringName = outcome.get("item_id", &"")
-			player.inventory.add(item_id, amount)
+			player.inventory.add(item_id, amount, int(outcome.get("quality", 0)))
 			EventBus.ui.notification_requested.emit(&"NOTIFY_ANIMAL_PRODUCT", {
 				"item": Text.item_name(Database.get_item(item_id)), "count": amount,
 			})

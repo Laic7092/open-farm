@@ -48,11 +48,17 @@ func current_grid() -> FarmGrid:
 
 
 ## 当前场景中的野生植被。
-func current_flora() -> FloraField:
+##
+## 矿洞用 [MineFloor] 接管同一分组，两者都提供 occupied() / clear()，
+## 因此这里鸭子类型地返回 Node，而不是写死 [FloraField]。
+func current_flora() -> Node:
 	var tree := get_tree()
 	if tree == null:
 		return null
-	return tree.get_first_node_in_group(FloraField.GROUP) as FloraField
+	var field := tree.get_first_node_in_group(FloraField.GROUP)
+	if field != null and field.has_method(&"occupied") and field.has_method(&"clear"):
+		return field
+	return null
 
 ## 当前场景中的水面标记。
 func current_water() -> WaterField:
@@ -87,23 +93,30 @@ func use_tool(tool: ToolData, cell: Vector2i) -> bool:
 		return false
 
 	var success: bool = false
-	match tool.kind:
-		ToolData.Kind.HOE:
-			success = grid.till(cell)
-		ToolData.Kind.WATERING_CAN:
-			success = grid.water(cell)
-		ToolData.Kind.SICKLE:
-			success = grid.clear_crop(cell)
-		ToolData.Kind.SEED:
-			success = _plant(grid, cell)
-		ToolData.Kind.AXE, ToolData.Kind.PICKAXE:
-			success = grid.revert_soil(cell)
-		ToolData.Kind.FISHING:
-			# 钓鱼是多帧时序（抛竿 → 等鱼 → 收竿），由 PlayerStateFishing 驱动；
-			# 走到这里说明状态机没有接管，按"什么也没发生"处理。
-			success = false
-		_:
-			success = false
+	for target: Vector2i in _area_cells(cell, tool.area_size):
+		var worked: bool = false
+		match tool.kind:
+			ToolData.Kind.HOE:
+				worked = grid.till(target)
+			ToolData.Kind.WATERING_CAN:
+				worked = grid.water(target)
+			ToolData.Kind.SICKLE:
+				worked = grid.clear_crop(target)
+			ToolData.Kind.SEED:
+				worked = _plant(grid, target)
+			ToolData.Kind.AXE, ToolData.Kind.PICKAXE:
+				worked = grid.revert_soil(target)
+			ToolData.Kind.FISHING:
+				# 钓鱼是多帧时序（抛竿 → 等鱼 → 收竿），由 PlayerStateFishing 驱动；
+				# 走到这里说明状态机没有接管，按"什么也没发生"处理。
+				worked = false
+			_:
+				worked = false
+		if worked:
+			success = true
+		# 播种是消耗品，一次只种一格。
+		if tool.kind == ToolData.Kind.SEED:
+			break
 
 	if success:
 		consume_stamina(tool)
@@ -125,13 +138,23 @@ func _use_tool_on_flora(tool: ToolData, cell: Vector2i) -> bool:
 	if not _is_clearing_tool(tool.kind):
 		return false
 	var field := current_flora()
-	if field == null or not field.occupied(cell):
+	if field == null:
 		return false
 
-	var outcome := field.clear(cell, tool.kind)
-	var success: bool = not outcome.is_empty()
+	var handled: bool = false
+	var success: bool = false
+	for target: Vector2i in _area_cells(cell, tool.area_size):
+		if not bool(field.call(&"occupied", target)):
+			continue
+		handled = true
+		var outcome: Dictionary = field.call(&"clear", target, tool.kind, false, tool.tier)
+		if not outcome.is_empty():
+			_grant(outcome)
+			success = true
+	if not handled:
+		return false
+
 	if success:
-		_grant(outcome)
 		consume_stamina(tool)
 	else:
 		_notify(&"NOTIFY_NOTHING_HAPPENED")
@@ -139,6 +162,19 @@ func _use_tool_on_flora(tool: ToolData, cell: Vector2i) -> bool:
 	action_finished.emit(tool.id, cell, success)
 	EventBus.farm.tool_used.emit(tool.id, cell, success)
 	return true
+
+
+## 以目标格为中心展开的作用范围（格子列表）。奇数边长时严格居中，偶数时偏向右下。
+func _area_cells(cell: Vector2i, size: Vector2i) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	var width: int = maxi(size.x, 1)
+	var height: int = maxi(size.y, 1)
+	var offset_x: int = (width - 1) / 2
+	var offset_y: int = (height - 1) / 2
+	for y: int in height:
+		for x: int in width:
+			cells.append(cell + Vector2i(x - offset_x, y - offset_y))
+	return cells
 
 
 func _is_clearing_tool(kind: ToolData.Kind) -> bool:
@@ -156,7 +192,7 @@ func _grant(outcome: Dictionary) -> void:
 	if item_id == &"" or amount <= 0:
 		return
 	if player != null:
-		player.inventory.add(item_id, amount)
+		player.inventory.add(item_id, amount, int(outcome.get("quality", 0)))
 	EventBus.ui.notification_requested.emit(
 		&"NOTIFY_FLORA_CLEARED", {"item": Text.item_name(Database.get_item(item_id)), "count": amount}
 	)
