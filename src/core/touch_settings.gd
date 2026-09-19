@@ -2,7 +2,7 @@ class_name TouchSettings
 extends RefCounted
 ## 显示 / 输入设置：要不要在屏幕上摆虚拟摇杆与动作按钮。
 ##
-## 与 [SceneAudio] 的音量设置同构：写进 [code]user://display_settings.cfg[/code]，
+## 与 [BgmPlayer] 的音量设置同构：写进 [code]user://display_settings.cfg[/code]，
 ## 读不到 / 写不进都静默降级（[code]user://[/code] 不可写时游戏照常能玩）。
 ##
 ## 缺省值取"这台机器有没有触摸屏"：手机 / 平板上开箱即用，桌面上保持纯键盘。

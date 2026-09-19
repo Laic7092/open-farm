@@ -5,7 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://dcy1t0nxxd2k8" path="res://assets/title/cloud_a.png" id="3_cloud_a"]
 [ext_resource type="Texture2D" uid="uid://coodx0ioctp4c" path="res://assets/title/cloud_b.png" id="4_cloud_b"]
 [ext_resource type="Texture2D" uid="uid://c2ynltnhr8r4a" path="res://assets/title/plate.png" id="5_plate"]
-[ext_resource type="Script" uid="uid://dtud0h1buexqk" path="res://src/audio/scene_audio.gd" id="6_scene_audio"]
+[ext_resource type="Script" path="res://src/audio/bgm_player.gd" id="6_bgm"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_plate"]
 content_margin_left = 22.0
@@ -270,8 +270,8 @@ text = "Enter 读取 · Delete 删除 · Esc 返回"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="SceneAudio" type="Node" parent="."]
+[node name="Bgm" type="Node" parent="."]
 unique_name_in_owner = true
-script = ExtResource("6_scene_audio")
-bgm_track = &"title"
-autoplay_bgm = true
+script = ExtResource("6_bgm")
+track = &"title"
+autoplay = true

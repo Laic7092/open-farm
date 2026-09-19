@@ -168,9 +168,19 @@ func _world_host() -> WorldHost:
 	return get_tree().get_first_node_in_group(WorldHost.GROUP) as WorldHost
 
 
-## 本场景自带的音频节点（见 [SceneAudio]）；[Main] 拥有它，不再是全局 Autoload。
-func _scene_audio() -> SceneAudio:
-	return _main.scene_audio if _main != null else null
+## 当前挂载地图的 BGM 播放器（BGM 归地图所有）。
+func _bgm() -> BgmPlayer:
+	var host := _world_host()
+	if host == null:
+		return null
+	var world := host.current_world() as WorldScene
+	return world.bgm_player() if world != null else null
+
+
+## 当前地图正在播放的曲目 id；没有地图时为空串。
+func _current_bgm() -> String:
+	var bgm := _bgm()
+	return String(bgm.current()) if bgm != null else ""
 
 
 func _is_transitioning() -> bool:

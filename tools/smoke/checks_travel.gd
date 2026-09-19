@@ -8,7 +8,7 @@ func _check_town() -> void:
 	if world == null:
 		return
 	_check_eq(String(world.get(&"world_id")), "town", "切换后应当在集市")
-	_check_eq(String(_scene_audio().current_bgm()), "town", "白天进集市应当换成小镇 BGM")
+	_check_eq(_current_bgm(), "town", "白天进集市应当换成小镇 BGM")
 	_check(_player() != null, "集市里应当有玩家")
 	_check(_farm_grid() == null, "集市里不应该有农场网格")
 	_check(_flora_field() != null, "集市也应当有自己的野生植被")
@@ -176,7 +176,7 @@ func _check_beach() -> void:
 	if world == null:
 		return
 	_check_eq(String(world.get(&"world_id")), "beach", "切换后应当在海滩")
-	_check_eq(String(_scene_audio().current_bgm()), "town", "白天进海滩应当换成小镇 BGM")
+	_check_eq(_current_bgm(), "town", "白天进海滩应当换成小镇 BGM")
 	_check(_player() != null, "海滩里应当有玩家")
 	_check(_farm_grid() == null, "海滩里不应该有农场网格")
 	_check(_flora_field() != null, "海滩也应当有自己的野生植被")
@@ -258,7 +258,7 @@ func _check_library() -> void:
 	if world == null:
 		return
 	_check_eq(String(world.get(&"world_id")), "library", "切换后应当在图书馆")
-	_check_eq(String(_scene_audio().current_bgm()), "town", "进图书馆应当播放小镇 BGM")
+	_check_eq(_current_bgm(), "town", "进图书馆应当播放小镇 BGM")
 	_check(_player() != null, "图书馆里应当有玩家")
 	_check(_flora_field() == null, "室内图书馆不应该有野生植被")
 	_check(world.get(&"weather_effects") == false, "室内不应下雨下雪")

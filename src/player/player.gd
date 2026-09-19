@@ -103,9 +103,7 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	interactor.setup(self)
-	sfx = SfxPlayer.new()
-	sfx.name = "Sfx"
-	add_child(sfx)
+	sfx = SfxPlayer.attach(self)
 
 	interaction_area.area_entered.connect(_on_area_entered)
 	interaction_area.area_exited.connect(_on_area_exited)
@@ -158,6 +156,11 @@ func _world_scene() -> WorldScene:
 			return node
 		node = node.get_parent()
 	return null
+
+
+## 玩家所属的世界场景（供钓鱼等世界级行为取用）；不在世界里时为 null。
+func world_scene() -> WorldScene:
+	return _world_scene()
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -175,6 +175,10 @@ func _cast() -> void:
 	# 蓄力越满，出力声越尖。
 	_play(AudioCatalog.SFX_FISH_CHARGE, 0.88 + 0.35 * clampf(_cast_power, 0.0, 1.0), -5.0)
 	_play(AudioCatalog.SFX_FISH_CAST, 1.0, -4.0)
+	# 抛竿后由所在地图临时接管 BGM。
+	var world := _player.world_scene()
+	if world != null:
+		world.push_bgm_override(AudioCatalog.BGM_FISHING)
 
 
 func _begin_wait() -> void:
@@ -263,6 +267,9 @@ func _end_fishing() -> void:
 	_ended = true
 	_player.fishing_bobber.reel_in()
 	EventBus.farm.fish_ended.emit()
+	var world := _player.world_scene()
+	if world != null:
+		world.pop_bgm_override()
 
 
 ## 钓鱼音效由鱼竿所在的玩家播放器出声。

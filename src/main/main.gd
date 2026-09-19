@@ -58,8 +58,6 @@ var weather_service: WeatherService
 var relationship_service: RelationshipService
 ## 日历服务；由 Main 创建为子节点，不再是 Autoload。
 var calendar_service: CalendarService
-## 本场景自带的音频节点；由 main.tscn 放置，Main 只负责注入时钟与共享引用。
-var scene_audio: SceneAudio
 ## 本局核心存档节；Main 是唯一注册入口，SaveManager 只消费 [SaveSection]。
 var save_sections: Array[SaveSection] = []
 
@@ -208,11 +206,6 @@ func _bind_dependencies() -> void:
 	calendar_service.bind_dependencies(
 		player_profile, clock_state, weather_service, relationship_service
 	)
-
-	# 本场景的音频节点：注入时钟，并把引用转给需要音量滑杆的界面。
-	scene_audio = get_node_or_null(^"SceneAudio") as SceneAudio
-	if scene_audio != null:
-		scene_audio.bind_clock(clock_state)
 
 	# 世界宿主持有缓存与依赖；SceneRouter 不再保存任何世界节点。
 	if host != null:

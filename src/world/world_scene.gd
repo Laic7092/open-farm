@@ -19,7 +19,7 @@ extends Node2D
 @export var season_effects: bool = true
 ## 是否自动挂载 NPC 行走网格。没有 NPC 的地图可以关掉省一点探测。
 @export var navigation_enabled: bool = true
-## 本场景白天播放的 BGM id；由 [SceneAudio] 读取，地图自己声明自己听起来什么样。
+## 本场景白天播放的 BGM id；由地图自己的 [BgmPlayer] 播放。
 @export var bgm_track: StringName = &"farm"
 ## 本场景夜晚播放的 BGM id；空表示夜晚也沿用白天曲。
 @export var bgm_night_track: StringName = &"night"
@@ -36,6 +36,10 @@ var relationship_service: RelationshipService
 var calendar_service: CalendarService
 ## 季节外观服务；[member season_effects] 为 false 时始终为空。
 var _season_look: SeasonLook
+## 本图的 BGM 播放器（BGM 归地图所有）。
+var _bgm: BgmPlayer
+## 本图的氛围音效播放器（如清晨鸣叫）。
+var _sfx: SfxPlayer
 
 
 ## 由 [SceneRouter] 在世界场景 [method Node.add_child] 之前调用。
@@ -75,6 +79,44 @@ func _ready() -> void:
 		_ensure_navigator()
 	if _has_water():
 		_ensure_water_field()
+	_ensure_bgm()
+	_ensure_ambience()
+
+
+## 地图自己的 BGM：曲目由本场景声明，播放器是本节点的子节点。
+func _ensure_bgm() -> void:
+	var existing := get_node_or_null(^"Bgm") as BgmPlayer
+	if existing != null:
+		_bgm = existing
+		return
+	var bgm := BgmPlayer.new()
+	bgm.name = "Bgm"
+	bgm.track = bgm_track
+	bgm.night_track = bgm_night_track
+	bgm.bind_clock(clock_state)
+	add_child(bgm)
+	_bgm = bgm
+
+
+## 清晨鸣叫等氛围音：地图自己发声（缓存里的旧地图不响）。
+func _ensure_ambience() -> void:
+	if _sfx != null:
+		return
+	_sfx = SfxPlayer.attach(self, &"Ambience")
+	EventBus.day_changed.connect(_on_day_changed)
+
+
+func _on_day_changed(_date: GameDate) -> void:
+	# 只有当前挂载的地图才鸣晨；凌晨 02:00 的自然跨天不放鸡叫，只有睡到早上的才放。
+	if not is_inside_tree() or _hour() < 5:
+		return
+	_sfx.play(AudioCatalog.SFX_MORNING, 1.0, -6.0)
+
+
+func _hour() -> int:
+	if clock_state == null:
+		return 0
+	return int(clock_state.minute_of_day / GameDateClock.MINUTES_PER_HOUR)
 
 
 ## 天气特效由基类统一挂载，而不是每个世界场景各写一份：
@@ -154,7 +196,32 @@ func on_world_enter(spawn_id: StringName) -> void:
 	# 场景会被缓存复用，_ready() 只跑一次；这里才是“每次进图都要对齐季节”的位置。
 	if _season_look != null:
 		_season_look.refresh()
+	# BGM 同样要每次进图重新确认（从缓存挂回来时它已停过）。
+	if _bgm != null:
+		_bgm.refresh()
 	EventBus.world_entered.emit(world_id)
+
+
+## 本图的 BGM 播放器；测试与调试可读。
+func bgm_player() -> BgmPlayer:
+	return _bgm
+
+
+## 当前播放的曲目 id。
+func current_bgm() -> StringName:
+	return _bgm.current() if _bgm != null else &""
+
+
+## 临时接管本图 BGM（例：钓鱼抛竿）；由世界内的对象显式调用。
+func push_bgm_override(track_id: StringName) -> void:
+	if _bgm != null:
+		_bgm.push_override(track_id)
+
+
+## 结束临时接管，还原地图曲目。
+func pop_bgm_override() -> void:
+	if _bgm != null:
+		_bgm.pop_override()
 
 
 ## 本场景被切出（但实例仍保留在缓存里）时调用。

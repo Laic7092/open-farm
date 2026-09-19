@@ -116,62 +116,57 @@ func test_sfx_streams_are_short() -> void:
 
 # ---------------------------------------------------------------- 运行时
 
-## 音频不再是全局 Autoload：每个用例现造一个 [SceneAudio] 场景节点，结束时自动释放。
-func _make_audio() -> SceneAudio:
-	var audio := auto_free(SceneAudio.new()) as SceneAudio
-	add_child(audio)
-	return audio
+## 音频不再是全局 Autoload：每个用例现造一个 [BgmPlayer] 组件，结束时自动释放。
+func _make_bgm() -> BgmPlayer:
+	var bgm := auto_free(BgmPlayer.new()) as BgmPlayer
+	add_child(bgm)
+	return bgm
 
 
-func test_scene_audio_ensures_buses() -> void:
-	_make_audio()
-	assert_int(AudioServer.get_bus_index(SceneAudio.BGM_BUS)).override_failure_message(
+func test_buses_exist_after_audio_starts() -> void:
+	_make_bgm()
+	assert_int(AudioServer.get_bus_index(AudioBus.BGM_BUS)).override_failure_message(
 		"缺少 BGM 总线"
 	).is_greater_equal(0)
-	assert_int(AudioServer.get_bus_index(SceneAudio.SFX_BUS)).override_failure_message(
+	assert_int(AudioServer.get_bus_index(AudioBus.SFX_BUS)).override_failure_message(
 		"缺少 SFX 总线"
 	).is_greater_equal(0)
 
 
 func test_bgm_volume_controls_bus() -> void:
-	var audio := _make_audio()
-	var original: float = audio.bgm_volume
-	audio.set_bgm_volume(0.5)
-	assert_float(audio.bgm_volume).is_equal_approx(0.5, 0.001)
-	var bus := AudioServer.get_bus_index(SceneAudio.BGM_BUS)
+	var original: float = AudioBus.bgm_volume
+	AudioBus.set_bgm_volume(0.5)
+	assert_float(AudioBus.bgm_volume).is_equal_approx(0.5, 0.001)
+	var bus := AudioServer.get_bus_index(AudioBus.BGM_BUS)
 	assert_float(AudioServer.get_bus_volume_db(bus)).is_equal_approx(
 		linear_to_db(0.5), 0.01
 	)
-	audio.set_bgm_volume(original)
-	assert_float(audio.bgm_volume).is_equal_approx(original, 0.001)
+	AudioBus.set_bgm_volume(original)
+	assert_float(AudioBus.bgm_volume).is_equal_approx(original, 0.001)
 
 
 func test_playing_bgm_remembers_track() -> void:
-	var audio := _make_audio()
-	audio.play_bgm(Catalog.BGM_FARM)
-	assert_str(String(audio.current_bgm())).is_equal(String(Catalog.BGM_FARM))
+	var bgm := _make_bgm()
+	bgm.play_bgm(Catalog.BGM_FARM)
+	assert_str(String(bgm.current())).is_equal(String(Catalog.BGM_FARM))
 
 
 func test_injected_clock_drives_night_track_selection() -> void:
-	var audio := _make_audio()
+	var bgm := _make_bgm()
 	var clock := GameDateClock.new()
 	clock.minute_of_day = 23 * 60
-	audio.bind_clock(clock)
+	bgm.bind_clock(clock)
 
-	assert_bool(audio._is_night()).is_true()
-	assert_str(String(audio._resolve_track(&"farm", &"night"))).is_equal(
-		String(Catalog.BGM_NIGHT)
-	)
+	assert_bool(bgm._is_night()).is_true()
+	assert_str(String(bgm._resolve(&"farm", &"night"))).is_equal(String(Catalog.BGM_NIGHT))
 	# 没有夜曲的地图，夜晚沿用白天曲。
-	assert_str(String(audio._resolve_track(&"farm", &""))).is_equal(String(Catalog.BGM_FARM))
+	assert_str(String(bgm._resolve(&"farm", &""))).is_equal(String(Catalog.BGM_FARM))
 
 	clock.minute_of_day = 12 * 60
-	assert_bool(audio._is_night()).is_false()
-	assert_str(String(audio._resolve_track(&"farm", &"night"))).is_equal(
-		String(Catalog.BGM_FARM)
-	)
+	assert_bool(bgm._is_night()).is_false()
+	assert_str(String(bgm._resolve(&"farm", &"night"))).is_equal(String(Catalog.BGM_FARM))
 
-	audio.bind_clock(null)
+	bgm.bind_clock(null)
 
 
 # ---------------------------------------------------------------- 工具

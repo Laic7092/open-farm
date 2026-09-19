@@ -194,7 +194,7 @@ func _night() -> PackedFloat32Array:
 
 ## 钓鱼：G 大调，68 BPM，I–vi–IV–V，无鼓、只有水波似的琶音。
 ##
-## 抛竿后接管世界曲目（见 [SceneAudio] 的钓鱼 BGM 覆盖），
+## 抛竿后接管世界曲目（见 [BgmPlayer] 的钓鱼 BGM 覆盖），
 ## 所以它比自己单独听时要更安静、少打击，避免拉锯时抢注意力。
 func _fishing() -> PackedFloat32Array:
 	var bpm := 68.0
