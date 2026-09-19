@@ -153,3 +153,30 @@ MINE_FLOOR,第{n}层,Floor {n}
 MINE_CURRENT,（当前）, (current)
 NOTIFY_MINE_STRATUM,进入{name}（第{depth}层）,Entering {name} (Floor {depth})
 TOUCH_HINT,A 工具 · B 交互 · X 换具 · Y 背包,A Tool · B Use · X Swap · Y Bag
+PROMPT_COOK,按 E 做饭,Cook
+PROMPT_GOALS,按 E 查看村庄目标,Village goals
+COOKING_TITLE,料理台,Kitchen
+COOKING_HINT,方向键选择 · E 下锅 · Esc 离开,Arrows to select · E to cook · Esc to close
+COOKING_KNOWN,已学会 {known} / {total},Learned {known} / {total}
+COOKING_HAVE,有,Own
+COOKING_LOCKED,尚未解锁,Locked
+FESTIVAL_GAME_TITLE,品评会,Contest
+FESTIVAL_GAME_HINT,方向键选择 · E 提交 · Esc 离开,Arrows to select · E to submit · Esc to close
+FESTIVAL_GAME_SCORE,预估得分,Estimated score
+FESTIVAL_GAME_BEST,最好 {score}（门槛 {target}）,Best {score} (target {target})
+FESTIVAL_GAME_DONE,今年已经评过了，明年再来吧。,Judged for this year. Come again next year.
+GOAL_TITLE,村庄目标,Village Goals
+GOAL_HINT,方向键选择 · E 领奖 · Esc 离开,Arrows to select · E to claim · Esc to close
+GOAL_PROGRESS,已完成 {done} / {total},Completed {done} / {total}
+GOAL_LOCKED,尚未开启,Locked
+GOAL_CLAIMED,已领取,Claimed
+GOAL_REWARD,奖励 {money}G,Reward {money}G
+NOTIFY_COOKED,做好了 {item} ×{count},Cooked {item} x{count}
+NOTIFY_COOK_MATERIALS,材料不够,Not enough ingredients
+NOTIFY_CONTEST_WON,{item} 得了 {score} 分，夺冠！,{item} scored {score} and won!
+NOTIFY_CONTEST_LOST,{item} 得了 {score} 分，下次再来。,{item} scored {score}. Try again next year.
+NOTIFY_CONTEST_ALREADY,今年这场已经评过了,Already entered this year
+NOTIFY_CONTEST_NOT_ACCEPTED,这件东西不能参赛,That cannot be entered
+NOTIFY_CONTEST_MISSING,背包里没有这件东西,Not in your bag
+NOTIFY_GOAL_CLAIMED,完成「{title}」，获得 {money}G,Completed "{title}" for {money}G
+NOTIFY_GOAL_NOT_READY,还没达成目标,Goal not reached yet

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RecipeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/recipe_ingredient.gd" id="1_ghj4e"]
+[ext_resource type="Script" path="res://src/data/recipe_data.gd" id="2_wmhe1"]
+
+[sub_resource type="Resource" id="Resource_psfmt"]
+script = ExtResource("1_ghj4e")
+item_id = &"egg"
+amount = 2
+
+[sub_resource type="Resource" id="Resource_pp138"]
+script = ExtResource("1_ghj4e")
+item_id = &"milk"
+
+[resource]
+script = ExtResource("2_wmhe1")
+id = &"omelette"
+display_name_key = &"RECIPE_OMELETTE"
+output_item_id = &"omelette"
+ingredients = Array[ExtResource("1_ghj4e")]([SubResource("Resource_psfmt"), SubResource("Resource_pp138")])

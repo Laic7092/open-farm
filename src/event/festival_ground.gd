@@ -62,12 +62,19 @@ func interact(actor: Node2D) -> void:
 	super.interact(actor)
 	var entry := _calendar.festival(festival_id)
 	var first_time: bool = not _calendar.has_attended(festival_id)
-	if not _calendar.attend(festival_id):
+	# 首次参加：结算好感 / 旗标并播开场对白；有比赛的话下次交互再开。
+	if first_time:
+		if not _calendar.attend(festival_id):
+			return
+		if entry != null and entry.intro_dialogue != null:
+			if not entry.intro_dialogue.is_empty():
+				EventBus.ui.dialogue_requested.emit(entry.intro_dialogue)
 		return
-	# 首次参加才播开场对白，之后每年再来只发好感与提示。
-	if first_time and entry != null and entry.intro_dialogue != null:
-		if not entry.intro_dialogue.is_empty():
-			EventBus.ui.dialogue_requested.emit(entry.intro_dialogue)
+	# 已经参加过：有比赛就开赛，没有就只提醒今年来过。
+	if entry != null and entry.game_id != &"":
+		EventBus.ui.festival_game_requested.emit(festival_id)
+		return
+	_calendar.attend(festival_id)
 
 
 func _on_day_changed(_date: GameDate) -> void:

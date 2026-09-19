@@ -16,3 +16,4 @@ gather_point = &"plaza"
 npc_ids = Array[StringName]([&"mayor", &"merchant", &"blacksmith", &"florist", &"child", &"librarian"])
 attendance_affection = 5
 intro_dialogue = ExtResource("1_60olv")
+game_id = &"fishing_derby"

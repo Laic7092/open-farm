@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="VillageGoalData" format=3]
+
+[ext_resource type="Script" path="res://src/data/village_goal_data.gd" id="1_qfxnh"]
+
+[resource]
+script = ExtResource("1_qfxnh")
+id = &"village_paths"
+title_key = &"GOAL_VILLAGE_PATHS_TITLE"
+description_key = &"GOAL_VILLAGE_PATHS_DESC"
+target = 50
+reward_money = 800
+reward_flag = &"goal_paths"
+order = 1

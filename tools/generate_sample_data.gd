@@ -26,6 +26,9 @@ const BuildCommissions := preload("res://tools/sample/build_commissions.gd")
 const BuildFestivals := preload("res://tools/sample/build_festivals.gd")
 const BuildEvents := preload("res://tools/sample/build_events.gd")
 const BuildMineStrata := preload("res://tools/sample/build_mine_strata.gd")
+const BuildRecipes := preload("res://tools/sample/build_recipes.gd")
+const BuildFestivalGames := preload("res://tools/sample/build_festival_games.gd")
+const BuildGoals := preload("res://tools/sample/build_goals.gd")
 
 
 func _initialize() -> void:
@@ -43,10 +46,15 @@ func _initialize() -> void:
 	BuildNpcs.new().build()
 	BuildShops.new().build()
 	BuildCommissions.new().build()
-	# 节日与事件引用对白资源，必须排在 BuildDialogues 之后。
+	# 料理引用道具（成品 / 材料），必须排在 BuildItems 之后。
+	BuildRecipes.new().build()
+	# 节日引用小游戏 id，小游戏先写。
+	BuildFestivalGames.new().build()
 	BuildFestivals.new().build()
 	BuildEvents.new().build()
 	BuildMineStrata.new().build()
+	# 长期目标最后写：它的 reward_flag 就是两道锁着的食谱旗标。
+	BuildGoals.new().build()
 
 	print("示例数据生成完成")
 	quit()

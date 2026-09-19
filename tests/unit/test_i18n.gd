@@ -161,6 +161,14 @@ func _referenced_keys() -> Array[StringName]:
 		var event := Database.get_event(event_id)
 		seen[event.title_key] = true
 		seen[event.message_key] = true
+	for game_id: StringName in Database.festival_games():
+		seen[Database.get_festival_game(game_id).display_name_key] = true
+	for recipe_id: StringName in Database.recipes():
+		seen[Database.get_recipe(recipe_id).display_name_key] = true
+	for goal_id: StringName in Database.village_goals():
+		var goal := Database.get_village_goal(goal_id)
+		seen[goal.title_key] = true
+		seen[goal.description_key] = true
 	for dialogue_id: StringName in Database.dialogues():
 		var dialogue := Database.get_dialogue(dialogue_id)
 		seen[dialogue.speaker_key] = true

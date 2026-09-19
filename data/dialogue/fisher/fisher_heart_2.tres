@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_tobeo"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_6drtc"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_yyeof"]
+
+[sub_resource type="Resource" id="Resource_655qh"]
+script = ExtResource("1_tobeo")
+speaker_key = &"NPC_FISHER"
+text_key = &"DIALOGUE_FISHER_HEART_2_1"
+
+[sub_resource type="Resource" id="Resource_08ig2"]
+script = ExtResource("1_tobeo")
+speaker_key = &"NPC_FISHER"
+text_key = &"DIALOGUE_FISHER_HEART_2_2"
+
+[resource]
+script = ExtResource("3_yyeof")
+id = &"fisher_heart_2"
+speaker_key = &"NPC_FISHER"
+lines = Array[ExtResource("1_tobeo")]([SubResource("Resource_655qh"), SubResource("Resource_08ig2")])

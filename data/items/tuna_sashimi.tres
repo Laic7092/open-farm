@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/tuna_sashimi.png" id="1_xricm"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_a3txa"]
+
+[resource]
+script = ExtResource("2_a3txa")
+id = &"tuna_sashimi"
+display_name_key = &"ITEM_TUNA_SASHIMI"
+category = 4
+sell_price = 900
+icon = ExtResource("1_xricm")

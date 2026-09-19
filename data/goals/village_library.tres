@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="VillageGoalData" format=3]
+
+[ext_resource type="Script" path="res://src/data/village_goal_data.gd" id="1_7benv"]
+
+[resource]
+script = ExtResource("1_7benv")
+id = &"village_library"
+title_key = &"GOAL_VILLAGE_LIBRARY_TITLE"
+description_key = &"GOAL_VILLAGE_LIBRARY_DESC"
+metric = 2
+target = 20
+reward_money = 1000
+reward_flag = &"goal_library"
+required_flag = &"goal_paths"
+order = 2

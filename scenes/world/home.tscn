@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://src/world/interior_walls.gd" id="8_walls"]
 [ext_resource type="Script" path="res://src/world/world_prop.gd" id="9_prop"]
 [ext_resource type="Script" path="res://src/world/bed.gd" id="10_bed"]
+[ext_resource type="Script" path="res://src/world/cooking_stand.gd" id="11_cook"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/bed.png" id="20_bed"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/tv.png" id="21_tv"]
 [ext_resource type="Texture2D" path="res://assets/sprites/props/table.png" id="22_table"]
@@ -87,12 +88,17 @@ offset = Vector2(0, -3)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Props/Bed"]
 shape = SubResource("RectangleShape2D_tile")
 
-[node name="Stove" type="Sprite2D" parent="Props"]
+[node name="CookingStand" type="Area2D" parent="Props"]
 position = Vector2(44, 224)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("11_cook")
+
+[node name="Sprite" type="Sprite2D" parent="Props/CookingStand"]
 texture = ExtResource("24_stove")
-script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 6)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Props/CookingStand"]
+shape = SubResource("RectangleShape2D_tile")
 
 [node name="Table" type="Sprite2D" parent="Props"]
 position = Vector2(120, 152)

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FestivalGameData" format=3]
+
+[ext_resource type="Script" path="res://src/data/festival_game_data.gd" id="1_kwkty"]
+
+[resource]
+script = ExtResource("1_kwkty")
+id = &"fishing_derby"
+display_name_key = &"FESTIVAL_GAME_FISHING_DERBY"
+item_ids = Array[StringName]([&"sardine", &"mackerel", &"sea_bream", &"squid", &"octopus", &"tuna", &"crucian", &"carp", &"catfish", &"golden_carp"])
+min_score = 250
+reward_money = 800
+consolation_money = 150

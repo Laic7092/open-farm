@@ -14,3 +14,4 @@ gather_point = &"garden"
 npc_ids = Array[StringName]([&"florist", &"child", &"mayor"])
 attendance_flag = &"flower_festival_joined"
 intro_dialogue = ExtResource("1_mynft")
+game_id = &"flower_exhibit"

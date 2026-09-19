@@ -176,3 +176,40 @@ MINE_STRATUM_IRON,铁矿脉,Iron Vein
 MINE_STRATUM_CRYSTAL,幽晶层,Glimmering Crystal
 MINE_STRATUM_MAGMA,熔岩层,Magma Chamber
 MINE_STRATUM_ABYSS,深渊,Abyss
+ITEM_VEGGIE_SALAD,蔬菜沙拉,Vegetable Salad
+ITEM_OMELETTE,蛋包饭,Omelette
+ITEM_MUSHROOM_SOUP,蘑菇汤,Mushroom Soup
+ITEM_GRILLED_FISH,烤鱼,Grilled Fish
+ITEM_FISH_STEW,海鲜浓汤,Fish Stew
+ITEM_STRAWBERRY_JAM,草莓果酱,Strawberry Jam
+ITEM_PUMPKIN_PIE,南瓜派,Pumpkin Pie
+ITEM_TUNA_SASHIMI,金枪鱼刺身,Tuna Sashimi
+RECIPE_VEGGIE_SALAD,蔬菜沙拉,Vegetable Salad
+RECIPE_OMELETTE,蛋包饭,Omelette
+RECIPE_MUSHROOM_SOUP,蘑菇汤,Mushroom Soup
+RECIPE_GRILLED_FISH,烤鱼,Grilled Fish
+RECIPE_FISH_STEW,海鲜浓汤,Fish Stew
+RECIPE_STRAWBERRY_JAM,草莓果酱,Strawberry Jam
+RECIPE_PUMPKIN_PIE,南瓜派,Pumpkin Pie
+RECIPE_TUNA_SASHIMI,金枪鱼刺身,Tuna Sashimi
+FESTIVAL_GAME_FLOWER_EXHIBIT,花卉品评会,Flower Exhibit
+FESTIVAL_GAME_FISHING_DERBY,夏夜钓鱼大赛,Night Fishing Derby
+FESTIVAL_GAME_HARVEST_CONTEST,收获品评会,Harvest Contest
+EVENT_LIBRARIAN_HEART_1,书雅想和你聊聊最近读的书。,Shuyai wants to talk about what you have been reading.
+EVENT_LIBRARIAN_HEART_2,书雅留了张纸条，约你傍晚去图书馆。,Shuyai left a note asking you to the library at dusk.
+EVENT_FLORIST_HEART_1,花婆婆特意留了一束花给你。,The florist saved a bouquet just for you.
+EVENT_FLORIST_HEART_2,花婆婆说，想让你看看她最宝贝的角落。,The florist wants to show you her dearest corner.
+EVENT_FISHER_HEART_1,渔夫约你去码头看日出。,The fisher invites you to the dock for sunrise.
+EVENT_FISHER_HEART_2,渔夫说要带你去一个只有他知道的地方。,The fisher wants to take you somewhere only he knows.
+EVENT_BLACKSMITH_HEART_1,铁匠塞给你一件小东西，转身继续打铁。,The blacksmith shoves a little gift at you and turns back to the anvil.
+EVENT_BLACKSMITH_HEART_2,铁匠说，想请你帮他挑一块好铁。,The blacksmith asks you to help pick good iron.
+GOAL_VILLAGE_PATHS_TITLE,整备村道,Rebuild the Village Roads
+GOAL_VILLAGE_PATHS_DESC,累计出货 50 件，把修路的钱攒出来。,Ship 50 items in total to fund the roads.
+GOAL_VILLAGE_LIBRARY_TITLE,充实图书馆,Stock the Library
+GOAL_VILLAGE_LIBRARY_DESC,让图鉴发现 20 种道具，书架上就有新书了。,Discover 20 kinds of items to fill the shelves.
+GOAL_VILLAGE_KITCHEN_TITLE,推广料理,Spread Home Cooking
+GOAL_VILLAGE_KITCHEN_DESC,学会 5 道食谱，顺便解开南瓜派的做法。,Learn 5 recipes to unlock Pumpkin Pie.
+GOAL_VILLAGE_MARKET_TITLE,繁荣集市,Liven the Market
+GOAL_VILLAGE_MARKET_DESC,累计赚到 5000G，商队就愿意常来。,Earn 5000G in total to keep the caravans coming.
+GOAL_VILLAGE_FESTIVALS_TITLE,办齐节庆,Celebrate Every Festival
+GOAL_VILLAGE_FESTIVALS_DESC,参加 4 场不同的节日，顺便解开金枪鱼刺身的做法。,Join 4 different festivals to unlock Tuna Sashimi.

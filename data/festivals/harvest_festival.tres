@@ -15,3 +15,4 @@ npc_ids = Array[StringName]([&"mayor", &"merchant", &"blacksmith", &"florist", &
 attendance_affection = 5
 attendance_flag = &"harvest_festival_joined"
 intro_dialogue = ExtResource("1_71raj")
+game_id = &"harvest_contest"

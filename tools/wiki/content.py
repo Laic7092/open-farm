@@ -32,6 +32,9 @@ KINDS: dict[str, tuple[str, str]] = {
     "CommissionData": ("commissions", "委托"),
     "FestivalData": ("festivals", "节日"),
     "EventData": ("events", "事件"),
+    "RecipeData": ("recipes", "食谱"),
+    "FestivalGameData": ("festival_games", "节日小游戏"),
+    "VillageGoalData": ("village_goals", "村庄目标"),
 }
 
 ## 字段名 →（被引用资源的类名）。用于把裸 id 渲染成链接、以及反查索引。
@@ -47,6 +50,8 @@ REF_FIELDS: dict[str, str] = {
     "feed_item_id": "ItemData",
     "drop_item_id": "ItemData",
     "item_id": "ItemData",
+    "output_item_id": "ItemData",
+    "game_id": "FestivalGameData",
 }
 
 ## 字段名 → 被引用资源列表的类名。
@@ -55,6 +60,7 @@ REF_LIST_FIELDS: dict[str, str] = {
     "loved_gifts": "ItemData",
     "liked_gifts": "ItemData",
     "disliked_gifts": "ItemData",
+    "item_ids": "ItemData",
 }
 
 ## 枚举名 → 中文取值表（这些值没有进 i18n，直接给中文）。
@@ -65,6 +71,7 @@ ENUMS: dict[str, list[str]] = {
     "Emotion": ["平静", "开心", "难过", "生气", "惊讶"],
     "Facing": ["下", "上", "左", "右"],
     "WaterKind": ["池塘 / 河沟", "海"],
+    "Metric": ["出货件数", "累计收入", "图鉴发现", "学会食谱", "参加节日"],
 }
 
 ## 季节 / 天气用 i18n 的键，保证双语都能显示。
@@ -278,6 +285,10 @@ FIELD_LABELS: dict[str, str] = {
     "choices": "选项", "next_line": "下一句", "affection_delta": "好感变化",
     "emotion": "情绪", "start_minute": "时刻", "location_id": "地点", "activity": "活动",
     "facing": "朝向", "entries": "时间块",
+    "output_item_id": "成品", "output_amount": "成品数量", "ingredients": "材料",
+    "game_id": "小游戏", "item_ids": "参赛道具", "min_score": "夺冠门槛",
+    "consolation_money": "安慰奖", "metric": "统计口径", "target": "目标值",
+    "reward_flag": "奖励旗标", "order": "顺序",
 }
 
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="Script" path="res://src/world/world_scene.gd" id="1_world"]
 [ext_resource type="TileSet" path="res://assets/tilesets/farm_tileset.tres" id="2_tileset"]
@@ -27,6 +27,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/props/notice_board.png" id="34_board"]
 [ext_resource type="Script" path="res://src/world/museum_stand.gd" id="35_museum_script"]
 [ext_resource type="Script" path="res://src/world/commission_board.gd" id="36_board_script"]
+[ext_resource type="Script" path="res://src/world/goal_board.gd" id="37_goal_script"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tile"]
 size = Vector2(16, 16)
@@ -290,6 +291,18 @@ collision_mask = 0
 script = ExtResource("36_board_script")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/CommissionBoard"]
+shape = SubResource("RectangleShape2D_wide")
+
+[node name="VillageGoalBoard" type="Area2D" parent="Interactables"]
+position = Vector2(176, 256)
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("37_goal_script")
+
+[node name="Sprite" type="Sprite2D" parent="Interactables/VillageGoalBoard"]
+texture = ExtResource("34_board")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Interactables/VillageGoalBoard"]
 shape = SubResource("RectangleShape2D_wide")
 
 [node name="Player" parent="Props" instance=ExtResource("4_player")]

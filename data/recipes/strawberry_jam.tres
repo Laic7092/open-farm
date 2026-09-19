@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="RecipeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/recipe_ingredient.gd" id="1_y3vok"]
+[ext_resource type="Script" path="res://src/data/recipe_data.gd" id="2_601pn"]
+
+[sub_resource type="Resource" id="Resource_o3rfn"]
+script = ExtResource("1_y3vok")
+item_id = &"strawberry"
+amount = 2
+
+[resource]
+script = ExtResource("2_601pn")
+id = &"strawberry_jam"
+display_name_key = &"RECIPE_STRAWBERRY_JAM"
+output_item_id = &"strawberry_jam"
+ingredients = Array[ExtResource("1_y3vok")]([SubResource("Resource_o3rfn")])

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FestivalGameData" format=3]
+
+[ext_resource type="Script" path="res://src/data/festival_game_data.gd" id="1_o10y7"]
+
+[resource]
+script = ExtResource("1_o10y7")
+id = &"flower_exhibit"
+display_name_key = &"FESTIVAL_GAME_FLOWER_EXHIBIT"
+item_ids = Array[StringName]([&"flower", &"tulip", &"sunflower", &"chrysanthemum", &"wintersweet"])
+min_score = 150
+reward_money = 600
+consolation_money = 100

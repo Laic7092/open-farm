@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EventData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/librarian/librarian_heart_2.tres" id="1_1ctd6"]
+[ext_resource type="Script" path="res://src/data/event_data.gd" id="2_ywr2b"]
+
+[resource]
+script = ExtResource("2_ywr2b")
+id = &"librarian_heart_2"
+title_key = &"EVENT_LIBRARIAN_HEART_2"
+message_key = &"EVENT_LIBRARIAN_HEART_2"
+required_flag = &"librarian_heart_1"
+required_affection = 200
+required_npc = &"librarian"
+set_flag = &"librarian_heart_2"
+dialogue = ExtResource("1_1ctd6")

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EventData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/blacksmith/blacksmith_heart_1.tres" id="1_u6oa6"]
+[ext_resource type="Script" path="res://src/data/event_data.gd" id="2_xddaf"]
+
+[resource]
+script = ExtResource("2_xddaf")
+id = &"blacksmith_heart_1"
+title_key = &"EVENT_BLACKSMITH_HEART_1"
+message_key = &"EVENT_BLACKSMITH_HEART_1"
+required_affection = 100
+required_npc = &"blacksmith"
+set_flag = &"blacksmith_heart_1"
+dialogue = ExtResource("1_u6oa6")

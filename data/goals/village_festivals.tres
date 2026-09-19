@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="VillageGoalData" format=3]
+
+[ext_resource type="Script" path="res://src/data/village_goal_data.gd" id="1_6ypx6"]
+
+[resource]
+script = ExtResource("1_6ypx6")
+id = &"village_festivals"
+title_key = &"GOAL_VILLAGE_FESTIVALS_TITLE"
+description_key = &"GOAL_VILLAGE_FESTIVALS_DESC"
+metric = 4
+target = 4
+reward_money = 2500
+reward_flag = &"recipe_tuna_sashimi"
+required_flag = &"goal_market"
+order = 5

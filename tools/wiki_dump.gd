@@ -20,7 +20,7 @@ const OUTPUT_PATH: String = "res://.tmp/wiki/data.json"
 const BUCKETS: Array[StringName] = [
 	&"items", &"crops", &"fish", &"animals", &"buildings", &"floras", &"tools",
 	&"npcs", &"dialogues", &"shops", &"commissions", &"festivals", &"events",
-	&"strata",
+	&"strata", &"recipes", &"festival_games", &"village_goals",
 ]
 
 

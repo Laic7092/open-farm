@@ -26,9 +26,12 @@ const NPC_DIR: String = "res://data/npcs"
 const SHOP_DIR: String = "res://data/shops"
 const DIALOGUE_DIR: String = "res://data/dialogue"
 const FESTIVAL_DIR: String = "res://data/festivals"
+const FESTIVAL_GAME_DIR: String = "res://data/festival_games"
 const EVENT_DIR: String = "res://data/events"
 const COMMISSION_DIR: String = "res://data/commissions"
 const MINE_DIR: String = "res://data/mine"
+const RECIPE_DIR: String = "res://data/recipes"
+const GOAL_DIR: String = "res://data/goals"
 
 ## 数据装载完成后发出。
 signal reloaded()
@@ -44,9 +47,12 @@ var _npcs: Dictionary[StringName, NpcData] = {}
 var _shops: Dictionary[StringName, ShopData] = {}
 var _dialogues: Dictionary[StringName, DialogueData] = {}
 var _festivals: Dictionary[StringName, FestivalData] = {}
+var _festival_games: Dictionary[StringName, FestivalGameData] = {}
 var _events: Dictionary[StringName, EventData] = {}
 var _commissions: Dictionary[StringName, CommissionData] = {}
 var _strata: Dictionary[StringName, MineStratumData] = {}
+var _recipes: Dictionary[StringName, RecipeData] = {}
+var _goals: Dictionary[StringName, VillageGoalData] = {}
 
 
 func _ready() -> void:
@@ -66,9 +72,12 @@ func reload() -> void:
 	_shops.clear()
 	_dialogues.clear()
 	_festivals.clear()
+	_festival_games.clear()
 	_events.clear()
 	_commissions.clear()
 	_strata.clear()
+	_recipes.clear()
+	_goals.clear()
 
 	_index(CROP_DIR, _crops, "CropData")
 	_index(ANIMAL_DIR, _animals, "AnimalData")
@@ -81,9 +90,12 @@ func reload() -> void:
 	_index(SHOP_DIR, _shops, "ShopData")
 	_index(DIALOGUE_DIR, _dialogues, "DialogueData")
 	_index(FESTIVAL_DIR, _festivals, "FestivalData")
+	_index(FESTIVAL_GAME_DIR, _festival_games, "FestivalGameData")
 	_index(EVENT_DIR, _events, "EventData")
 	_index(COMMISSION_DIR, _commissions, "CommissionData")
 	_index(MINE_DIR, _strata, "MineStratumData")
+	_index(RECIPE_DIR, _recipes, "RecipeData")
+	_index(GOAL_DIR, _goals, "VillageGoalData")
 
 	reloaded.emit()
 
@@ -133,6 +145,10 @@ func get_festival(id: StringName) -> FestivalData:
 	return _festivals.get(id) as FestivalData
 
 
+func get_festival_game(id: StringName) -> FestivalGameData:
+	return _festival_games.get(id) as FestivalGameData
+
+
 func get_event(id: StringName) -> EventData:
 	return _events.get(id) as EventData
 
@@ -143,6 +159,14 @@ func get_commission(id: StringName) -> CommissionData:
 
 func get_stratum(id: StringName) -> MineStratumData:
 	return _strata.get(id) as MineStratumData
+
+
+func get_recipe(id: StringName) -> RecipeData:
+	return _recipes.get(id) as RecipeData
+
+
+func get_village_goal(id: StringName) -> VillageGoalData:
+	return _goals.get(id) as VillageGoalData
 
 
 ## 全部数据桶的只读快照；调用方不应直接迭代内部字典。
@@ -280,6 +304,16 @@ func festivals() -> Dictionary:
 	return _festivals.duplicate()
 
 
+## 全部节日小游戏，键为 id。
+func festival_games() -> Dictionary:
+	return _festival_games.duplicate()
+
+
+## 是否存在指定 id 的 festival_game 数据。
+func has_festival_game(id: StringName) -> bool:
+	return _festival_games.has(id)
+
+
 func commissions() -> Dictionary:
 	return _commissions.duplicate()
 
@@ -287,6 +321,37 @@ func commissions() -> Dictionary:
 ## 全部矿层，键为 id。
 func strata() -> Dictionary:
 	return _strata.duplicate()
+
+
+## 全部食谱，键为 id。
+func recipes() -> Dictionary:
+	return _recipes.duplicate()
+
+
+## 是否存在指定 id 的 recipe 数据。
+func has_recipe(id: StringName) -> bool:
+	return _recipes.has(id)
+
+
+## 全部食谱，按 id 排序（料理台列表要求输出稳定）。
+func recipe_list() -> Array[RecipeData]:
+	var result: Array[RecipeData] = []
+	for id: StringName in _recipes:
+		result.append(_recipes[id])
+	result.sort_custom(func(a: RecipeData, b: RecipeData) -> bool:
+		return String(a.id) < String(b.id)
+	)
+	return result
+
+
+## 全部村庄目标，键为 id。
+func village_goals() -> Dictionary:
+	return _goals.duplicate()
+
+
+## 是否存在指定 id 的 village_goal 数据。
+func has_village_goal(id: StringName) -> bool:
+	return _goals.has(id)
 
 
 ## 是否存在指定 id 的矿层数据。
@@ -404,7 +469,7 @@ func total_count() -> int:
 		_crops.size() + _animals.size() + _buildings.size() + _floras.size()
 		+ _fish.size() + _items.size() + _tools.size() + _npcs.size() + _shops.size()
 		+ _dialogues.size() + _festivals.size() + _events.size() + _commissions.size()
-		+ _strata.size()
+		+ _strata.size() + _recipes.size() + _festival_games.size() + _goals.size()
 	)
 
 
@@ -413,7 +478,8 @@ func validate_all() -> PackedStringArray:
 	var problems := PackedStringArray()
 	for bucket: Dictionary in [
 		_crops, _animals, _buildings, _floras, _fish, _items, _tools, _npcs, _shops,
-		_dialogues, _festivals, _events, _commissions, _strata
+		_dialogues, _festivals, _events, _commissions, _strata, _recipes,
+		_festival_games, _goals
 	]:
 		for key: StringName in bucket:
 			var resource: Resource = bucket[key]

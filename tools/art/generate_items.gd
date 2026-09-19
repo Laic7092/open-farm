@@ -34,6 +34,15 @@ func _initialize() -> void:
 	Art.save_png(_fiber(), _path("fiber"))
 	Art.save_png(_flower(), _path("flower"))
 	Art.save_png(_mushroom(), _path("mushroom"))
+	# v0.6 料理：盘 / 碗 / 派 / 刺身各有造型，颜色区分菜色。
+	Art.save_png(_salad(), _path("veggie_salad"))
+	Art.save_png(_omelette(), _path("omelette"))
+	Art.save_png(_soup(P.MUSHROOM_CAP), _path("mushroom_soup"))
+	Art.save_png(_grilled_fish(), _path("grilled_fish"))
+	Art.save_png(_soup(P.WATER), _path("fish_stew"))
+	Art.save_png(_jam(), _path("strawberry_jam"))
+	Art.save_png(_pie(), _path("pumpkin_pie"))
+	Art.save_png(_sashimi(), _path("tuna_sashimi"))
 	Art.save_png(_egg(), _path("egg"))
 	Art.save_png(_milk(), _path("milk"))
 	Art.save_png(_hay(), _path("hay"))
@@ -389,8 +398,101 @@ func _mushroom() -> Image:
 	return image
 
 
-# ---------------------------------------------------------------- 钓鱼
+# ---------------------------------------------------------------- 料理（v0.6）
 
+## 盘子底：全部盘装料理共用，让背包里一眼能认出"这是一道菜"而不是素材。
+func _plate() -> Image:
+	var image := _blank()
+	Art.ellipse(image, Vector2i(8, 11), Vector2i(7, 3), P.STONE_LIGHT)
+	Art.ellipse(image, Vector2i(8, 10), Vector2i(6, 2), P.WHITE)
+	return image
+
+
+## 蔬菜沙拉：盘底一圈绿菜叶，点缀番茄与胡萝卜。
+func _salad() -> Image:
+	var image := _plate()
+	Art.ellipse(image, Vector2i(8, 8), Vector2i(5, 3), P.LEAF)
+	Art.ellipse(image, Vector2i(6, 7), Vector2i(2, 2), P.LEAF_LIGHT)
+	Art.px(image, 10, 7, P.FRUIT_RED)
+	Art.px(image, 9, 9, P.FRUIT_RED)
+	Art.px(image, 5, 9, P.FRUIT_ORANGE)
+	Art.outline(image)
+	return image
+
+
+## 蛋包饭：金黄的蛋皮裹住米饭，顶上一勺红酱。
+func _omelette() -> Image:
+	var image := _plate()
+	Art.ellipse(image, Vector2i(8, 9), Vector2i(5, 3), P.FRUIT_YELLOW)
+	Art.ellipse(image, Vector2i(7, 8), Vector2i(3, 2), P.HAY)
+	Art.ellipse(image, Vector2i(10, 9), Vector2i(2, 1), P.FRUIT_RED)
+	Art.outline(image)
+	return image
+
+
+## 汤：碗口按 [param broth] 换色，热气从碗口升起。
+func _soup(broth: Color) -> Image:
+	var image := _blank()
+	Art.ellipse(image, Vector2i(8, 10), Vector2i(7, 4), P.WALL_DARK)
+	Art.ellipse(image, Vector2i(8, 9), Vector2i(5, 3), broth)
+	Art.px(image, 7, 9, P.WHITE)
+	Art.px(image, 10, 8, P.WHITE)
+	Art.px(image, 8, 4, P.WHITE)
+	Art.px(image, 9, 3, P.WHITE)
+	Art.outline(image)
+	return image
+
+
+## 烤鱼：竹签穿一条焦黄的鱼。
+func _grilled_fish() -> Image:
+	var image := _blank()
+	Art.h_line(image, 2, 9, 12, P.WOOD_DARK)
+	Art.ellipse(image, Vector2i(8, 8), Vector2i(4, 3), P.FRUIT_ORANGE)
+	Art.h_line(image, 6, 7, 4, P.HAY)
+	Art.px(image, 5, 7, P.OUTLINE)
+	Art.px(image, 11, 8, P.FRUIT_ORANGE)
+	Art.outline(image)
+	return image
+
+
+## 果酱：玻璃罐里装着红色的果酱，盖子是金属色。
+func _jam() -> Image:
+	var image := _blank()
+	Art.rect(image, Rect2i(4, 6, 8, 7), P.FRUIT_RED)
+	Art.rect(image, Rect2i(4, 6, 8, 2), P.WALL_LIGHT)
+	Art.rect(image, Rect2i(5, 3, 6, 3), P.STONE_LIGHT)
+	Art.rect(image, Rect2i(5, 4, 6, 1), P.STONE_DARK)
+	Art.px(image, 5, 9, P.WHITE)
+	Art.outline(image)
+	return image
+
+
+## 南瓜派：派皮托着橙色的馅，上面刻一道网格。
+func _pie() -> Image:
+	var image := _blank()
+	Art.ellipse(image, Vector2i(8, 11), Vector2i(7, 3), P.SEED_BROWN)
+	Art.ellipse(image, Vector2i(8, 10), Vector2i(6, 2), P.PATH_LIGHT)
+	Art.ellipse(image, Vector2i(8, 9), Vector2i(4, 2), P.FRUIT_ORANGE)
+	Art.h_line(image, 5, 9, 6, P.SEED_BROWN)
+	Art.v_line(image, 8, 8, 2, P.SEED_BROWN)
+	Art.outline(image)
+	return image
+
+
+## 刺身：盘上三片红白相间的鱼生，配一撮绿叶。
+func _sashimi() -> Image:
+	var image := _plate()
+	for slice_index: int in 3:
+		var x: int = 5 + slice_index * 3
+		Art.ellipse(image, Vector2i(x, 8), Vector2i(2, 2), P.FRUIT_RED)
+		Art.px(image, x, 7, P.FLOWER_PINK)
+	Art.px(image, 6, 10, P.LEAF)
+	Art.px(image, 7, 10, P.LEAF_LIGHT)
+	Art.outline(image)
+	return image
+
+
+# ---------------------------------------------------------------- 钓鱼
 ## 钓竿：斜握的竿身 + 垂下的鱼线与钩。
 func _fishing_rod() -> Image:
 	var image := _blank()

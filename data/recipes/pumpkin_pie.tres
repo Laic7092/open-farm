@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="RecipeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/recipe_ingredient.gd" id="1_in8w3"]
+[ext_resource type="Script" path="res://src/data/recipe_data.gd" id="2_yln2i"]
+
+[sub_resource type="Resource" id="Resource_q3woo"]
+script = ExtResource("1_in8w3")
+item_id = &"pumpkin"
+
+[sub_resource type="Resource" id="Resource_emiob"]
+script = ExtResource("1_in8w3")
+item_id = &"egg"
+
+[sub_resource type="Resource" id="Resource_72hgm"]
+script = ExtResource("1_in8w3")
+item_id = &"milk"
+
+[resource]
+script = ExtResource("2_yln2i")
+id = &"pumpkin_pie"
+display_name_key = &"RECIPE_PUMPKIN_PIE"
+output_item_id = &"pumpkin_pie"
+ingredients = Array[ExtResource("1_in8w3")]([SubResource("Resource_q3woo"), SubResource("Resource_emiob"), SubResource("Resource_72hgm")])
+required_flag = &"recipe_pumpkin_pie"

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="VillageGoalData" format=3]
+
+[ext_resource type="Script" path="res://src/data/village_goal_data.gd" id="1_p5mfi"]
+
+[resource]
+script = ExtResource("1_p5mfi")
+id = &"village_market"
+title_key = &"GOAL_VILLAGE_MARKET_TITLE"
+description_key = &"GOAL_VILLAGE_MARKET_DESC"
+metric = 1
+target = 5000
+reward_money = 2000
+reward_flag = &"goal_market"
+required_flag = &"recipe_pumpkin_pie"
+order = 4

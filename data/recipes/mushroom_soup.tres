@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="RecipeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/recipe_ingredient.gd" id="1_u6bqf"]
+[ext_resource type="Script" path="res://src/data/recipe_data.gd" id="2_btsb6"]
+
+[sub_resource type="Resource" id="Resource_wfwxa"]
+script = ExtResource("1_u6bqf")
+item_id = &"mushroom"
+amount = 2
+
+[sub_resource type="Resource" id="Resource_2c4ca"]
+script = ExtResource("1_u6bqf")
+item_id = &"milk"
+
+[resource]
+script = ExtResource("2_btsb6")
+id = &"mushroom_soup"
+display_name_key = &"RECIPE_MUSHROOM_SOUP"
+output_item_id = &"mushroom_soup"
+ingredients = Array[ExtResource("1_u6bqf")]([SubResource("Resource_wfwxa"), SubResource("Resource_2c4ca")])

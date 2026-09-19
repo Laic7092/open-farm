@@ -89,6 +89,16 @@ func build() -> void:
 
 	_tool_item(&"fishing_rod", &"ITEM_FISHING_ROD", &"TOOL_FISHING_ROD_DESC", &"fishing_rod")
 
+	# v0.6 料理：作物 / 畜产 / 鱼下锅后变成更值钱的菜（食谱见 build_recipes.gd）。
+	_food_item(&"veggie_salad", &"ITEM_VEGGIE_SALAD", 220)
+	_food_item(&"omelette", &"ITEM_OMELETTE", 260)
+	_food_item(&"mushroom_soup", &"ITEM_MUSHROOM_SOUP", 240)
+	_food_item(&"grilled_fish", &"ITEM_GRILLED_FISH", 150)
+	_food_item(&"fish_stew", &"ITEM_FISH_STEW", 400)
+	_food_item(&"strawberry_jam", &"ITEM_STRAWBERRY_JAM", 300)
+	_food_item(&"pumpkin_pie", &"ITEM_PUMPKIN_PIE", 700)
+	_food_item(&"tuna_sashimi", &"ITEM_TUNA_SASHIMI", 900)
+
 
 ## 道具显示名翻译键；与 i18n 的 ITEM_<ID> 约定一致。
 static func _item_name_key(item_id: StringName) -> StringName:

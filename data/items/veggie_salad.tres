@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/veggie_salad.png" id="1_fgj6q"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_6nyrc"]
+
+[resource]
+script = ExtResource("2_6nyrc")
+id = &"veggie_salad"
+display_name_key = &"ITEM_VEGGIE_SALAD"
+category = 4
+sell_price = 220
+icon = ExtResource("1_fgj6q")

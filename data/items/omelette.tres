@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/omelette.png" id="1_qmg5i"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_xhpre"]
+
+[resource]
+script = ExtResource("2_xhpre")
+id = &"omelette"
+display_name_key = &"ITEM_OMELETTE"
+category = 4
+sell_price = 260
+icon = ExtResource("1_qmg5i")

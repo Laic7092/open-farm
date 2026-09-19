@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="FestivalGameData" format=3]
+
+[ext_resource type="Script" path="res://src/data/festival_game_data.gd" id="1_q3fgq"]
+
+[resource]
+script = ExtResource("1_q3fgq")
+id = &"harvest_contest"
+display_name_key = &"FESTIVAL_GAME_HARVEST_CONTEST"
+item_ids = Array[StringName]([&"turnip", &"potato", &"tomato", &"corn", &"pumpkin", &"melon", &"cabbage", &"carrot", &"eggplant", &"strawberry", &"grape", &"pineapple"])
+reward_money = 700
+consolation_money = 120

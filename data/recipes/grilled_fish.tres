@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="RecipeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/recipe_ingredient.gd" id="1_hl0fw"]
+[ext_resource type="Script" path="res://src/data/recipe_data.gd" id="2_tdeey"]
+
+[sub_resource type="Resource" id="Resource_d81qi"]
+script = ExtResource("1_hl0fw")
+item_id = &"crucian"
+
+[resource]
+script = ExtResource("2_tdeey")
+id = &"grilled_fish"
+display_name_key = &"RECIPE_GRILLED_FISH"
+output_item_id = &"grilled_fish"
+ingredients = Array[ExtResource("1_hl0fw")]([SubResource("Resource_d81qi")])

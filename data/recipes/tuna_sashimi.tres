@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="RecipeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/recipe_ingredient.gd" id="1_uim7j"]
+[ext_resource type="Script" path="res://src/data/recipe_data.gd" id="2_ogoea"]
+
+[sub_resource type="Resource" id="Resource_i8tlj"]
+script = ExtResource("1_uim7j")
+item_id = &"tuna"
+
+[resource]
+script = ExtResource("2_ogoea")
+id = &"tuna_sashimi"
+display_name_key = &"RECIPE_TUNA_SASHIMI"
+output_item_id = &"tuna_sashimi"
+ingredients = Array[ExtResource("1_uim7j")]([SubResource("Resource_i8tlj")])
+required_flag = &"recipe_tuna_sashimi"

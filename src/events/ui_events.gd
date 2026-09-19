@@ -33,5 +33,11 @@ signal touch_controls_toggled(enabled: bool)
 signal museum_requested()
 ## 请求打开委托板。
 signal commission_requested()
+## 请求打开料理台。
+signal cooking_requested()
+## 请求打开某个节日的小游戏（[param festival_id] 为正在进行的节日）。
+signal festival_game_requested(festival_id: StringName)
+## 请求打开长期村庄目标板。
+signal village_goals_requested()
 ## 全局暂停状态变化（打开菜单 / 对话 / 商店时）。
 signal game_paused_changed(paused: bool)

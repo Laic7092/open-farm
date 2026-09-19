@@ -14,6 +14,9 @@ extends CanvasLayer
 @onready var shop_ui: ShopUi = %ShopUi
 @onready var museum_ui: MuseumUi = %MuseumUi
 @onready var commission_ui: CommissionUi = %CommissionUi
+@onready var cooking_ui: CookingUi = %CookingUi
+@onready var festival_game_ui: FestivalGameUi = %FestivalGameUi
+@onready var village_goal_ui: VillageGoalUi = %VillageGoalUi
 @onready var pause_menu: PauseMenu = %PauseMenu
 @onready var fishing_ui: FishingUi = %FishingUi
 @onready var hud: Hud = %Hud
@@ -71,6 +74,27 @@ func bind_commission(commission: Commission) -> void:
 			child.call(&"bind_commission", commission)
 
 
+## 由 [Main] 注入料理单元；下发给料理台界面。
+func bind_cooking(cooking: Cooking) -> void:
+	for child: Node in get_children():
+		if child.has_method(&"bind_cooking"):
+			child.call(&"bind_cooking", cooking)
+
+
+## 由 [Main] 注入节日小游戏单元；下发给品评会界面。
+func bind_festival_game(game: FestivalGame) -> void:
+	for child: Node in get_children():
+		if child.has_method(&"bind_festival_game"):
+			child.call(&"bind_festival_game", game)
+
+
+## 由 [Main] 注入长期村庄目标单元；下发给目标板界面。
+func bind_goals(goals: VillageGoals) -> void:
+	for child: Node in get_children():
+		if child.has_method(&"bind_goals"):
+			child.call(&"bind_goals", goals)
+
+
 ## 由 [Main] 注入"当前钓鱼单元"的提供者；下发给需要它的界面。
 func bind_fishing(provider: Callable) -> void:
 	for child: Node in get_children():
@@ -97,6 +121,9 @@ func _ready() -> void:
 	EventBus.ui.shop_requested.connect(_on_shop_requested)
 	EventBus.ui.museum_requested.connect(_on_museum_requested)
 	EventBus.ui.commission_requested.connect(_on_commission_requested)
+	EventBus.ui.cooking_requested.connect(_on_cooking_requested)
+	EventBus.ui.festival_game_requested.connect(_on_festival_game_requested)
+	EventBus.ui.village_goals_requested.connect(_on_village_goals_requested)
 	EventBus.ui.inventory_toggle_requested.connect(_on_inventory_toggle)
 	EventBus.ui.pause_menu_toggle_requested.connect(_on_pause_menu_toggle)
 
@@ -129,6 +156,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		commission_ui.close()
 		_close(commission_ui)
 		return
+	if cooking_ui.visible:
+		cooking_ui.close()
+		_close(cooking_ui)
+		return
+	if festival_game_ui.visible:
+		festival_game_ui.close()
+		_close(festival_game_ui)
+		return
+	if village_goal_ui.visible:
+		village_goal_ui.close()
+		_close(village_goal_ui)
+		return
 	_on_pause_menu_toggle()
 
 
@@ -148,6 +187,9 @@ func close_all() -> void:
 	shop_ui.close()
 	museum_ui.close()
 	commission_ui.close()
+	cooking_ui.close()
+	festival_game_ui.close()
+	village_goal_ui.close()
 	pause_menu.close()
 	_modals.clear()
 	_sync_pause()
@@ -215,6 +257,27 @@ func _on_commission_requested() -> void:
 		return
 	_open(commission_ui)
 	commission_ui.open()
+
+
+func _on_cooking_requested() -> void:
+	if cooking_ui.visible:
+		return
+	_open(cooking_ui)
+	cooking_ui.open()
+
+
+func _on_festival_game_requested(festival_id: StringName) -> void:
+	if festival_game_ui.visible:
+		return
+	_open(festival_game_ui)
+	festival_game_ui.open(festival_id)
+
+
+func _on_village_goals_requested() -> void:
+	if village_goal_ui.visible:
+		return
+	_open(village_goal_ui)
+	village_goal_ui.open()
 
 
 func _close_shop() -> void:

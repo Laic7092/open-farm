@@ -20,6 +20,7 @@ func build() -> void:
 	_build_greetings()
 	_build_seasonal()
 	_build_romance()
+	_build_heart_events()
 	_build_festivals()
 
 
@@ -204,6 +205,34 @@ func _build_romance() -> void:
 				StringName("DIALOGUE_%s_PROPOSAL_2" % upper),
 			]
 		)
+
+
+# ---------------------------------------------------------------- 好感度心事件
+
+## 每位可攻略 NPC 在 2 心 / 4 心各有一段专属对白；事件本体在 build_events.gd。
+##
+## 与恋爱段一样用顺序播放（[method _add_dialogue]）：心事件是"看到一段日常"，
+## 不需要玩家做选择，选择交给表白 / 求婚去承载。
+func _build_heart_events() -> void:
+	for entry: Array in [
+		[&"librarian", &"NPC_LIBRARIAN"],
+		[&"florist", &"NPC_FLORIST"],
+		[&"fisher", &"NPC_FISHER"],
+		[&"blacksmith", &"NPC_BLACKSMITH"],
+	]:
+		var prefix: StringName = entry[0]
+		var speaker: StringName = entry[1]
+		var upper := String(prefix).to_upper()
+		for stage: int in [1, 2]:
+			_add_dialogue(
+				_npc_dialogue_dir(prefix),
+				StringName("%s_heart_%d" % [prefix, stage]),
+				speaker,
+				[
+					StringName("DIALOGUE_%s_HEART_%d_1" % [upper, stage]),
+					StringName("DIALOGUE_%s_HEART_%d_2" % [upper, stage]),
+				]
+			)
 
 
 # ---------------------------------------------------------------- 节日 / 事件（共享）

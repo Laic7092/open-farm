@@ -166,6 +166,8 @@ def format_field(ctx: Context, kind: str, name: str, value: object) -> str:
         return f'<span class="badge">{ENUMS["Emotion"][int(value)]}</span>'
     if name == "facing":
         return f'<span class="badge">{ENUMS["Facing"][int(value)]}</span>'
+    if name == "metric":
+        return f'<span class="badge">{ENUMS["Metric"][int(value)]}</span>'
 
     if name in MONEY_FIELDS and not isinstance(value, bool):
         return f'<span class="money">{esc(number(value))} G</span>'

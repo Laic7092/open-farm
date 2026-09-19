@@ -16,6 +16,7 @@ const INDEXED: Array[String] = [
 	"CropData", "AnimalData", "BuildingData", "FloraData", "FishData",
 	"ItemData", "ToolData", "NpcData", "ShopData", "DialogueData",
 	"FestivalData", "EventData", "CommissionData", "MineStratumData",
+	"RecipeData", "FestivalGameData", "VillageGoalData",
 ]
 
 
@@ -60,11 +61,13 @@ static func value(input: Variant) -> Variant:
 		TYPE_DICTIONARY:
 			var table: Dictionary = {}
 			for key: Variant in input:
-				table[String(key)] = value(input[key])
+				# 字典的键可能是 int（如 NpcData.seasonal_dialogue 的季节下标）；
+				# String(int) 不是合法构造，必须用 str() 转。
+				table[str(key)] = value(input[key])
 			return table
 		TYPE_OBJECT:
 			return object(input)
-	return String(input)
+	return str(input)
 
 
 ## 序列化对象：贴图取路径，顶层数据资源取 id 引用，其余原地展开。
@@ -82,4 +85,4 @@ static func object(input: Variant) -> Variant:
 		if id != null and String(id) != "" and INDEXED.has(kind):
 			return {"$ref": kind, "id": String(id)}
 		return serialize(resource)
-	return String(input)
+	return str(input)

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RecipeData" format=3]
+
+[ext_resource type="Script" path="res://src/data/recipe_ingredient.gd" id="1_ed1ax"]
+[ext_resource type="Script" path="res://src/data/recipe_data.gd" id="2_og7ei"]
+
+[sub_resource type="Resource" id="Resource_urm5i"]
+script = ExtResource("1_ed1ax")
+item_id = &"sardine"
+
+[sub_resource type="Resource" id="Resource_g3k7t"]
+script = ExtResource("1_ed1ax")
+item_id = &"mackerel"
+
+[sub_resource type="Resource" id="Resource_14wov"]
+script = ExtResource("1_ed1ax")
+item_id = &"mushroom"
+
+[resource]
+script = ExtResource("2_og7ei")
+id = &"fish_stew"
+display_name_key = &"RECIPE_FISH_STEW"
+output_item_id = &"fish_stew"
+ingredients = Array[ExtResource("1_ed1ax")]([SubResource("Resource_urm5i"), SubResource("Resource_g3k7t"), SubResource("Resource_14wov")])

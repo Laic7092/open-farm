@@ -11,17 +11,17 @@ func build() -> void:
 	_festival(
 		&"flower_festival", &"FESTIVAL_FLOWER", Season.Type.SPRING, 14, 9, 16,
 		&"garden", [&"florist", &"child", &"mayor"],
-		4, "festival_flower", &"flower_festival_joined"
+		4, "festival_flower", &"flower_festival_joined", &"flower_exhibit"
 	)
 	_festival(
 		&"fireworks", &"FESTIVAL_FIREWORKS", Season.Type.SUMMER, 24, 18, 23,
 		&"plaza", [&"mayor", &"merchant", &"blacksmith", &"florist", &"child", &"librarian"],
-		5, "festival_fireworks"
+		5, "festival_fireworks", &"", &"fishing_derby"
 	)
 	_festival(
 		&"harvest_festival", &"FESTIVAL_HARVEST", Season.Type.FALL, 15, 9, 17,
 		&"plaza", [&"mayor", &"merchant", &"blacksmith", &"florist", &"child"],
-		5, "festival_harvest", &"harvest_festival_joined"
+		5, "festival_harvest", &"harvest_festival_joined", &"harvest_contest"
 	)
 	_festival(
 		&"starry_night", &"FESTIVAL_STARRY_NIGHT", Season.Type.WINTER, 25, 18, 22,
@@ -33,7 +33,8 @@ func build() -> void:
 func _festival(
 	festival_id: StringName, name_key: StringName, season: Season.Type, day: int,
 	start_hour: int, end_hour: int, gather_point: StringName, npc_ids: Array,
-	affection: int, dialogue_id: String, attendance_flag: StringName = &""
+	affection: int, dialogue_id: String, attendance_flag: StringName = &"",
+	game_id: StringName = &""
 ) -> void:
 	var festival := FestivalData.new()
 	festival.id = festival_id
@@ -47,6 +48,7 @@ func _festival(
 	festival.npc_ids = _str_array(npc_ids)
 	festival.attendance_affection = affection
 	festival.attendance_flag = attendance_flag
+	festival.game_id = game_id
 	festival.intro_dialogue = (
 		_load(SHARED_DIALOGUE_DIR.path_join("%s.tres" % dialogue_id)) as DialogueData
 	)

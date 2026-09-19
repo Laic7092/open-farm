@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EventData" format=3]
+
+[ext_resource type="Resource" path="res://data/dialogue/fisher/fisher_heart_2.tres" id="1_4fqrd"]
+[ext_resource type="Script" path="res://src/data/event_data.gd" id="2_dqduo"]
+
+[resource]
+script = ExtResource("2_dqduo")
+id = &"fisher_heart_2"
+title_key = &"EVENT_FISHER_HEART_2"
+message_key = &"EVENT_FISHER_HEART_2"
+required_flag = &"fisher_heart_1"
+required_affection = 200
+required_npc = &"fisher"
+set_flag = &"fisher_heart_2"
+dialogue = ExtResource("1_4fqrd")

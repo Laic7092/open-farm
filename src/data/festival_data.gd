@@ -31,6 +31,8 @@ extends Resource
 @export var attendance_flag: StringName = &""
 ## 第一次参加时播放的对白（可空）。
 @export var intro_dialogue: DialogueData
+## 本节日的小游戏 id（指向 [FestivalGameData]）；留空表示只参加、不比赛。
+@export var game_id: StringName = &""
 ## 需要玩家已有该旗标节日才出现（可空，例如"村长通知过"之后才办收获祭）。
 @export var required_flag: StringName = &""
 
@@ -55,7 +57,6 @@ func validate() -> PackedStringArray:
 	if intro_dialogue != null and intro_dialogue.is_empty():
 		problems.append("intro_dialogue 不能是空对白")
 	return problems
-
 
 func _to_string() -> String:
 	return "FestivalData(%s)" % id

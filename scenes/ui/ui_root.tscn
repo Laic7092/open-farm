@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://src/ui/ui_root.gd" id="1_ui_root"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -10,6 +10,9 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/museum_ui.tscn" id="8_museum"]
 [ext_resource type="PackedScene" path="res://scenes/ui/commission_ui.tscn" id="9_commission"]
 [ext_resource type="PackedScene" path="res://scenes/ui/touch_controls.tscn" id="10_touch"]
+[ext_resource type="PackedScene" path="res://scenes/ui/cooking_ui.tscn" id="11_cooking"]
+[ext_resource type="PackedScene" path="res://scenes/ui/festival_game_ui.tscn" id="12_contest"]
+[ext_resource type="PackedScene" path="res://scenes/ui/village_goal_ui.tscn" id="13_goals"]
 
 [node name="UiRoot" type="CanvasLayer"]
 layer = 10
@@ -40,4 +43,13 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 
 [node name="CommissionUi" parent="." instance=ExtResource("9_commission")]
+unique_name_in_owner = true
+
+[node name="CookingUi" parent="." instance=ExtResource("11_cooking")]
+unique_name_in_owner = true
+
+[node name="FestivalGameUi" parent="." instance=ExtResource("12_contest")]
+unique_name_in_owner = true
+
+[node name="VillageGoalUi" parent="." instance=ExtResource("13_goals")]
 unique_name_in_owner = true

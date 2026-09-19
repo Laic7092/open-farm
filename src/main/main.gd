@@ -51,6 +51,12 @@ var calendar_progress: CalendarProgress = CalendarProgress.new()
 var museum: Museum = Museum.new()
 ## 本局委托单元；持有委托板状态，负责出题、刷新与交付结算。
 var commission: Commission = Commission.new()
+## 本局料理单元；持有食谱进度，负责扣材料与出成品。
+var cooking: Cooking = Cooking.new()
+## 本局节日小游戏单元；持有参赛记录，负责评分与发奖。
+var festival_game: FestivalGame = FestivalGame.new()
+## 本局长期村庄目标单元；汇总累计指标并在达标后发奖。
+var village_goals: VillageGoals = VillageGoals.new()
 
 ## 天气服务；由 Main 创建为子节点，不再是 Autoload。
 var weather_service: WeatherService
@@ -168,6 +174,9 @@ func _bind_dependencies() -> void:
 	save_sections.append(SaveSection.new(calendar_service, &"Calendar", 50, true))
 	save_sections.append(SaveSection.new(museum.state, &"Museum", 55, true))
 	save_sections.append(SaveSection.new(commission.state, &"Commissions", 56, true))
+	save_sections.append(SaveSection.new(cooking.state, &"Cooking", 57, true))
+	save_sections.append(SaveSection.new(festival_game.state, &"FestivalGames", 58, true))
+	save_sections.append(SaveSection.new(village_goals.state, &"VillageGoals", 59, true))
 	if host != null:
 		save_sections.append(SaveSection.new(host, &"SceneRouter", 60, true))
 	SaveManager.set_core_sections(save_sections)
@@ -195,6 +204,14 @@ func _bind_dependencies() -> void:
 	museum.bind(player_profile.events, clock_state)
 	# 委托：注入档案 / 时钟 / "当前背包"提供者；出题与结算都由委托单元负责。
 	commission.bind(player_profile, clock_state, Callable(self, &"_current_inventory"))
+	# 料理：解锁旗标来自档案，材料与成品都过背包。
+	cooking.bind(player_profile, Callable(self, &"_current_inventory"))
+	# 节日小游戏：需要日历判断"哪一场在办"。
+	festival_game.bind(
+		player_profile, clock_state, calendar_service, Callable(self, &"_current_inventory")
+	)
+	# 长期目标：汇总档案 / 图鉴 / 食谱 / 日历的数字。
+	village_goals.bind(player_profile, museum.state, cooking.state, calendar_service)
 
 	# 本局服务：状态 Resource 与彼此依赖全部在 Main 显式注入。
 	weather_service.bind_dependencies(clock_state, weather_state)
@@ -221,6 +238,12 @@ func _bind_dependencies() -> void:
 		ui_root.call(&"bind_progress", museum.state, commission.state)
 	if ui_root != null and ui_root.has_method(&"bind_commission"):
 		ui_root.call(&"bind_commission", commission)
+	if ui_root != null and ui_root.has_method(&"bind_cooking"):
+		ui_root.call(&"bind_cooking", cooking)
+	if ui_root != null and ui_root.has_method(&"bind_festival_game"):
+		ui_root.call(&"bind_festival_game", festival_game)
+	if ui_root != null and ui_root.has_method(&"bind_goals"):
+		ui_root.call(&"bind_goals", village_goals)
 	if ui_root != null and ui_root.has_method(&"bind_fishing"):
 		ui_root.call(&"bind_fishing", Callable(self, &"_current_fishing"))
 	if ui_root != null and ui_root.has_method(&"bind_item_bar"):
@@ -252,6 +275,9 @@ func _boot_new_game() -> void:
 	calendar_service.reset()
 	museum.state.reset()
 	commission.state.reset()
+	cooking.state.reset()
+	festival_game.state.reset()
+	village_goals.state.reset()
 	# 开局也要让 HUD / 音频节点看到完整状态，而不依赖某次日结转。
 	clock_state.refresh_observers()
 	world_host.clear_world_cache()

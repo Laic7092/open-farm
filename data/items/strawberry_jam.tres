@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/strawberry_jam.png" id="1_enpev"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_7viaq"]
+
+[resource]
+script = ExtResource("2_7viaq")
+id = &"strawberry_jam"
+display_name_key = &"ITEM_STRAWBERRY_JAM"
+category = 4
+sell_price = 300
+icon = ExtResource("1_enpev")
