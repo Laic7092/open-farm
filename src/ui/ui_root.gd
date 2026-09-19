@@ -78,6 +78,13 @@ func bind_fishing(provider: Callable) -> void:
 			child.call(&"bind_fishing", provider)
 
 
+## 由 [Main] 注入"当前物品栏"的提供者；下发给需要它的界面（HUD 底部的物品栏）。
+func bind_item_bar(provider: Callable) -> void:
+	for child: Node in get_children():
+		if child.has_method(&"bind_item_bar"):
+			child.call(&"bind_item_bar", provider)
+
+
 func _ready() -> void:
 	# 界面必须能在暂停时继续响应输入（否则暂停后就按不动了）。
 	process_mode = Node.PROCESS_MODE_ALWAYS

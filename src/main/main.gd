@@ -223,6 +223,8 @@ func _bind_dependencies() -> void:
 		ui_root.call(&"bind_commission", commission)
 	if ui_root != null and ui_root.has_method(&"bind_fishing"):
 		ui_root.call(&"bind_fishing", Callable(self, &"_current_fishing"))
+	if ui_root != null and ui_root.has_method(&"bind_item_bar"):
+		ui_root.call(&"bind_item_bar", Callable(self, &"_current_item_bar"))
 
 
 # ---------------------------------------------------------------- 启动
@@ -300,6 +302,14 @@ func _current_fishing() -> FishingSession:
 		return null
 	var player := world_host.current_player()
 	return player.fishing if player != null else null
+
+
+## 当前世界里的物品栏；同上，供 HUD 底部的物品栏只读。
+func _current_item_bar() -> ItemBar:
+	if world_host == null:
+		return null
+	var player := world_host.current_player()
+	return player.item_bar if player != null else null
 
 
 

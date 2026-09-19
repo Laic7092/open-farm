@@ -58,6 +58,20 @@ func test_domain_events_have_a_single_owner() -> void:
 	assert_bool(profile.events == EventBus.player).is_true()
 
 
+## HUD 只是容器：它自己只碰 UI 域，别的域的状态各有各的小视图。
+func test_hud_container_only_owns_the_ui_domain() -> void:
+	var source := FileAccess.get_file_as_string("res://src/ui/hud.gd")
+	assert_bool(source.contains("get_first_node_in_group")).override_failure_message(
+		"HUD 容器不该去场景树里找玩家，物品栏由组合根注入"
+	).is_false()
+	assert_bool(source.contains("EventBus.player.")).override_failure_message(
+		"HUD 容器不该订阅玩家域的信号"
+	).is_false()
+	assert_bool(source.contains("EventBus.world.")).override_failure_message(
+		"HUD 容器不该订阅世界域的信号"
+	).is_false()
+
+
 ## 覆写了 [code]_enter_tree()[/code] 的 [Interactable] 子类必须显式调 [code]super[/code]。
 ##
 ## Godot 的生命周期回调不会自动向父类串。漏掉 [code]super._enter_tree()[/code]，
