@@ -9,7 +9,9 @@ extends Interactable
 ## [br]- 交谈 / 送礼的好感度与表白 / 求婚由 [code]RelationshipService[/code] 结算，
 ##   本节点只是它的视图（见 [AffectionRules]）。
 ##
-## 本脚本只负责"把数据变成移动与一次交互"，寻路算法本身在 [GridPathfinder] 里。
+## 本脚本只负责"把数据变成移动与一次交互"，寻路算法本身在 [GridPathfinder] 里；
+## 时间 / 好感 / 对白都由本图协作根 [NpcField] 转进来，本节点不订阅全局信号、
+## 也不自己断开（地图会被缓存复用，那里最容易写错）。
 
 const GROUP: StringName = &"npc"
 ## 距目标格中心多近算"到了"（像素）。
@@ -51,8 +53,8 @@ var affection: int = 0
 var facing: Facing.Direction = Facing.Direction.DOWN
 
 var _pending_milestone: Milestone = Milestone.NONE
-## 最近一次由本 NPC 发起的对话；用来只结算"自己"的选项副作用。
-var _active_dialogue: DialogueData
+## 发起表白 / 求婚的那个玩家；对白结束时从"他"身上扣信物。
+var _milestone_actor: Player
 var _available: bool = true
 var _schedule: NpcSchedule
 var _current_entry: ScheduleEntry
@@ -66,6 +68,8 @@ var _weather: WeatherService
 var _relationships: RelationshipService
 ## 组合根注入的日历服务；节日聚集点。
 var _calendar: CalendarService
+## 本图协作根；由 [WorldScene] 在本节点进树前注入。
+var _field: NpcField
 ## 节日聚集用的临时日程段；复用同一个实例，避免每次刷新都新建资源。
 var _festival_entry: ScheduleEntry
 var _target_cell: Vector2i = NpcNavigator.NO_CELL
@@ -93,38 +97,17 @@ func bind_services(
 	_calendar = calendar
 
 
+## 由 [WorldScene] 在世界进入树前注入本图协作根。
+##
+## 时间 / 好感 / 对白这些"外面发生的事"全部由它转进来，本节点因此不订阅
+## 任何全局信号，也没有需要自己断开的连接。
+func bind_npc_field(field: NpcField) -> void:
+	_field = field
+
+
 func _enter_tree() -> void:
 	add_to_group(GROUP)
-	# 世界场景会被缓存复用，所以"每次进树都要接上"的信号放在这里，
-	# 不能放在一生只跑一次的 _ready() 里。
-	if not EventBus.minute_changed.is_connected(_on_minute_changed):
-		EventBus.minute_changed.connect(_on_minute_changed)
-	if not EventBus.ui.dialogue_finished.is_connected(_on_dialogue_finished):
-		EventBus.ui.dialogue_finished.connect(_on_dialogue_finished)
-	if not EventBus.ui.dialogue_choice_made.is_connected(_on_dialogue_choice_made):
-		EventBus.ui.dialogue_choice_made.connect(_on_dialogue_choice_made)
-	if not EventBus.player.npc_affection_changed.is_connected(_on_npc_affection_changed):
-		EventBus.player.npc_affection_changed.connect(_on_npc_affection_changed)
-	if not EventBus.day_changed.is_connected(_on_day_changed):
-		EventBus.day_changed.connect(_on_day_changed)
-	if not EventBus.player.child_born.is_connected(_on_child_born):
-		EventBus.player.child_born.connect(_on_child_born)
-	_refresh_availability()
-
-
-func _exit_tree() -> void:
-	if EventBus.minute_changed.is_connected(_on_minute_changed):
-		EventBus.minute_changed.disconnect(_on_minute_changed)
-	if EventBus.ui.dialogue_finished.is_connected(_on_dialogue_finished):
-		EventBus.ui.dialogue_finished.disconnect(_on_dialogue_finished)
-	if EventBus.ui.dialogue_choice_made.is_connected(_on_dialogue_choice_made):
-		EventBus.ui.dialogue_choice_made.disconnect(_on_dialogue_choice_made)
-	if EventBus.player.npc_affection_changed.is_connected(_on_npc_affection_changed):
-		EventBus.player.npc_affection_changed.disconnect(_on_npc_affection_changed)
-	if EventBus.day_changed.is_connected(_on_day_changed):
-		EventBus.day_changed.disconnect(_on_day_changed)
-	if EventBus.player.child_born.is_connected(_on_child_born):
-		EventBus.player.child_born.disconnect(_on_child_born)
+	refresh_availability()
 
 
 func _ready() -> void:
@@ -149,15 +132,14 @@ func _ready() -> void:
 	if idle_bob:
 		_play(&"idle")
 
-	_refresh_availability()
+	refresh_availability()
 	_refresh_schedule()
 
 
 func _physics_process(delta: float) -> void:
 	if _repath_timer > 0.0:
 		_repath_timer = maxf(_repath_timer - delta, 0.0)
-	if schedule_enabled:
-		_refresh_schedule()
+	# 日程推进只由协作根在分钟变化时触发，不必每帧重排一次日程表。
 	_advance(delta)
 
 
@@ -190,7 +172,8 @@ func is_working() -> bool:
 	return _current_entry.activity == &"shop"
 
 
-func _on_minute_changed(_hour: int, _minute: int) -> void:
+## 到点推进日程；由本图协作根在分钟变化时调用。
+func tick_schedule() -> void:
 	if schedule_enabled:
 		_refresh_schedule()
 
@@ -222,7 +205,7 @@ func _festival_entry_for(location_id: StringName) -> ScheduleEntry:
 
 
 func _navigate_to(location_id: StringName) -> void:
-	var point := _find_schedule_point(location_id)
+	var point := _schedule_point(location_id)
 	if point == null:
 		push_warning("Npc '%s': 找不到日程地点 '%s'" % [npc_id, location_id])
 		_target_cell = NpcNavigator.NO_CELL
@@ -344,41 +327,14 @@ func _move_speed() -> float:
 	return maxf(data.move_speed, 1.0) if data != null else 24.0
 
 
+## 本图导航网格；协作根没注入时返回 null（此时 NPC 原地不动）。
 func _navigator() -> NpcNavigator:
-	var tree := get_tree()
-	if tree == null:
-		return null
-	var root := _world_root()
-	for node: Node in tree.get_nodes_in_group(NpcNavigator.GROUP):
-		var navigator := node as NpcNavigator
-		if navigator == null:
-			continue
-		if root == null or root == navigator or root.is_ancestor_of(navigator):
-			return navigator
-	return null
+	return _field.navigator() if _field != null else null
 
 
-func _world_root() -> Node:
-	var node: Node = self
-	while node != null:
-		if node is WorldScene:
-			return node
-		node = node.get_parent()
-	return owner
-
-
-func _find_schedule_point(location_id: StringName) -> SchedulePoint:
-	var tree := get_tree()
-	if tree == null:
-		return null
-	var root := _world_root()
-	for node: Node in tree.get_nodes_in_group(SchedulePoint.GROUP):
-		var point := node as SchedulePoint
-		if point == null or point.point_id != location_id:
-			continue
-		if root == null or root == point or root.is_ancestor_of(point):
-			return point
-	return null
+## 本图日程地点；没有这个地点时返回 null。
+func _schedule_point(location_id: StringName) -> SchedulePoint:
+	return _field.schedule_point(location_id) if _field != null else null
 
 
 # ---------------------------------------------------------------- 对白 / 交互
@@ -407,8 +363,8 @@ func interact(actor: Node2D) -> void:
 	if not can_interact():
 		return
 	super.interact(actor)
-	# 每次交互都先清掉上一次的引用，避免对话被 close_all() 强行中断后残留下副作用。
-	_active_dialogue = null
+	# 每次交互都先清掉上一次的引用，避免对白被强行中断后残留下副作用。
+	_milestone_actor = null
 
 	# 1) 聊天好感每天只结算一次；先结算，里程碑判定用得到最新值。
 	var gained := _relationships.talk(npc_id)
@@ -421,10 +377,9 @@ func interact(actor: Node2D) -> void:
 	var milestone := _milestone_for(actor)
 	if milestone != Milestone.NONE:
 		_pending_milestone = milestone
+		_milestone_actor = actor as Player
 		_face_actor(actor)
-		var milestone_dialogue := _milestone_dialogue(milestone)
-		_active_dialogue = milestone_dialogue
-		EventBus.ui.dialogue_requested.emit(milestone_dialogue)
+		_open_dialogue(_milestone_dialogue(milestone))
 		return
 
 	var dialogue := current_dialogue()
@@ -434,8 +389,13 @@ func interact(actor: Node2D) -> void:
 
 	_face_actor(actor)
 	_pending_milestone = Milestone.NONE
-	_active_dialogue = dialogue
-	EventBus.ui.dialogue_requested.emit(dialogue)
+	_open_dialogue(dialogue)
+
+
+## 把对白交给本图协作根：由它记下"谁在说话"，结束 / 选项时再找回来。
+func _open_dialogue(dialogue: DialogueData) -> void:
+	if _field != null:
+		_field.open_dialogue(self, dialogue)
 
 
 ## 增加好感度（转发到全局关系系统 [code]RelationshipService[/code]）。
@@ -500,18 +460,15 @@ func _face_actor(actor: Node2D) -> void:
 
 
 ## 扣除求婚信物；没有则返回 false。
+##
+## 信物从发起求婚的那个玩家身上扣：他已经在 [method interact] 里给过我们，
+## 不必再去全局找"当前玩家"。
 func _consume_proposal_item() -> bool:
-	var player := _find_player()
-	if player == null or not player.inventory.has(AffectionRules.PROPOSAL_ITEM):
+	if not is_instance_valid(_milestone_actor):
 		return false
-	return player.inventory.remove(AffectionRules.PROPOSAL_ITEM, 1)
-
-
-func _find_player() -> Player:
-	var tree := get_tree()
-	if tree == null:
-		return null
-	return tree.get_first_node_in_group(Player.GROUP) as Player
+	if not _milestone_actor.inventory.has(AffectionRules.PROPOSAL_ITEM):
+		return false
+	return _milestone_actor.inventory.remove(AffectionRules.PROPOSAL_ITEM, 1)
 
 
 # ---------------------------------------------------------------- 序列化
@@ -534,15 +491,16 @@ func from_dict(data_dict: Dictionary) -> void:
 		global_position = Vector2(
 			float((raw_position as Array)[0]), float((raw_position as Array)[1])
 		)
-	# 位置被存档改写后，强制下一帧按当前时间重新寻路。
+	# 位置被存档改写后，立刻按当前时间重新挑一段日程并寻路。
 	_current_entry = null
 	_repath_timer = 0.0
 	_clear_path()
+	_refresh_schedule()
 	affection_changed.emit(affection)
 
 
-func _on_dialogue_finished(_dialogue: DialogueData) -> void:
-	_active_dialogue = null
+## 对白播完（或被关掉）；由本图协作根只回传给发起者。
+func finish_dialogue() -> void:
 	var milestone := _pending_milestone
 	_pending_milestone = Milestone.NONE
 	if milestone == Milestone.CONFESS:
@@ -551,15 +509,12 @@ func _on_dialogue_finished(_dialogue: DialogueData) -> void:
 		# 只有真的扣掉了信物才结婚，避免对白被跳过时"白嫖"。
 		if _consume_proposal_item():
 			_relationships.marry(npc_id)
+	_milestone_actor = null
 
 
-## 结算对话选项的副作用（好感 / 旗标）。
-##
-## 只处理当前由本 NPC 发起的对话，避免同一段对白被多个 NPC 重复结算。
-func _on_dialogue_choice_made(
-	dialogue: DialogueData, choice: DialogueChoice
-) -> void:
-	if dialogue == null or choice == null or dialogue != _active_dialogue:
+## 结算对白选项的副作用（好感 / 旗标）；由本图协作根只回传给发起者。
+func apply_dialogue_choice(choice: DialogueChoice) -> void:
+	if choice == null:
 		return
 	if choice.affection_delta != 0:
 		_relationships.add_affection(npc_id, choice.affection_delta)
@@ -569,27 +524,18 @@ func _on_dialogue_choice_made(
 
 # ---------------------------------------------------------------- 关系 / 可用性
 
-## 好感度被外部改写时同步镜像并发本地信号。
-func _on_npc_affection_changed(changed_id: StringName, value: int, _delta: int) -> void:
-	if changed_id != npc_id:
-		return
+## 好感度被外部改写时同步镜像并发本地信号；由协作根只转给对应的那个人。
+func mirror_affection(value: int) -> void:
 	affection = value
 	affection_changed.emit(value)
 
 
-func _on_day_changed(_date: GameDate) -> void:
-	_refresh_availability()
-
-
-func _on_child_born(_child_id: StringName) -> void:
-	_refresh_availability()
-
-
 ## 按 [member required_flag] 决定这个 NPC 当前是否存在。
 ##
+## 由协作根在跨天 / 孩子出生时调用，[method _ready] 也会先跑一次。
 ## 不存在时隐藏、退出 [constant GROUP] 并停掉物理处理，
 ## 这样"未出生的孩子"不会出现在日程 / 寻路 / 存档遍历里。
-func _refresh_availability() -> void:
+func refresh_availability() -> void:
 	if required_flag == &"":
 		return
 	var available := _profile != null and _profile.has_flag(required_flag)
@@ -602,6 +548,7 @@ func _refresh_availability() -> void:
 	if available:
 		if not is_in_group(GROUP):
 			add_to_group(GROUP)
+		_refresh_schedule()
 	else:
 		if is_in_group(GROUP):
 			remove_from_group(GROUP)

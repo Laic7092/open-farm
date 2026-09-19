@@ -276,26 +276,61 @@ func test_dialogue_box_stop_choice_closes_immediately() -> void:
 
 # ---------------------------------------------------------------- 副作用
 
-func test_npc_applies_choice_effects_only_for_its_own_dialogue() -> void:
+## NPC 不再自己订阅全局信号：这类连接全部收口在本图协作根。
+func test_npc_does_not_subscribe_to_global_signals() -> void:
+	var service := RelationshipService.new()
+	service.set_state(RelationshipStore.new())
+	var npc: Npc = auto_free(
+		load("res://scenes/npc/npc.tscn").instantiate()
+	) as Npc
+	npc.npc_id = &"blacksmith"
+	npc.bind_dependencies(PlayerProfile.new(), null)
+	npc.bind_services(null, service, null)
+	add_child(npc)
+
+	var watched: Array[Signal] = [
+		EventBus.minute_changed,
+		EventBus.day_changed,
+		EventBus.player.npc_affection_changed,
+		EventBus.player.child_born,
+		EventBus.ui.dialogue_finished,
+		EventBus.ui.dialogue_choice_made,
+	]
+	for signal_ref: Signal in watched:
+		for connection: Dictionary in signal_ref.get_connections():
+			var callable: Callable = connection.get("callable")
+			assert_bool(callable.get_object() == npc).override_failure_message(
+				"NPC 不应订阅全局信号"
+			).is_false()
+
+	remove_child(npc)
+	service.free()
+
+
+## 选项副作用只结算给发起这一段对白的人。
+func test_field_routes_choice_effects_only_to_the_speaker() -> void:
 	var profile := PlayerProfile.new()
 	var service := RelationshipService.new()
 	service.set_state(RelationshipStore.new())
 
+	var field: NpcField = auto_free(NpcField.new()) as NpcField
+	add_child(field)
 	var npc: Npc = auto_free(
 		load("res://scenes/npc/npc.tscn").instantiate()
 	) as Npc
 	npc.npc_id = &"blacksmith"
 	npc.bind_dependencies(profile, null)
 	npc.bind_services(null, service, null)
+	npc.bind_npc_field(field)
 	add_child(npc)
 
 	var dialogue := Database.get_dialogue(&"blacksmith_greeting")
-	npc.set(&"_active_dialogue", dialogue)
+	field.open_dialogue(npc, dialogue)
 	var choice := DialogueRules.available_choices(dialogue.lines[0], null)[0]
 	EventBus.ui.dialogue_choice_made.emit(dialogue, choice)
 	assert_int(service.affection(&"blacksmith")).is_equal(choice.affection_delta)
 
-	# 别人的对话不应被本 NPC 结算。
+	# 不是当前这段对白，无论内容如何都不结算。
 	var other := Database.get_dialogue(&"merchant_greeting")
 	EventBus.ui.dialogue_choice_made.emit(other, other.lines[0].choices[0])
 	assert_int(service.affection(&"blacksmith")).is_equal(choice.affection_delta)

@@ -36,6 +36,8 @@ var relationship_service: RelationshipService
 var calendar_service: CalendarService
 ## 季节外观服务；[member season_effects] 为 false 时始终为空。
 var _season_look: SeasonLook
+## 本图的 NPC 协作根；NPC 的日程推进与寻路都走它。
+var _npc_field: NpcField
 ## 本图的 BGM 播放器（BGM 归地图所有）。
 var _bgm: BgmPlayer
 ## 本图的氛围音效播放器（如清晨鸣叫）。
@@ -63,8 +65,11 @@ func _enter_tree() -> void:
 	# 父节点的 _enter_tree 先于子节点执行；组合根已在 add_child 前调完 bind_*，
 	# 这里一次遍历把状态与服务推下去，子节点的 _enter_tree / _ready 就能用。
 	# 注入只在这里做一遍：换图一定会触发 _enter_tree，重复下发纯属浪费。
+	# 协作根必须先于 NPC 进树，里面的人才有地方报到。
+	_ensure_npc_field()
 	_distribute_dependencies()
 	_distribute_services()
+	_distribute_npc_field()
 
 
 func _ready() -> void:
@@ -75,8 +80,6 @@ func _ready() -> void:
 		_ensure_lighting()
 	if season_effects:
 		_ensure_season_look()
-	if navigation_enabled:
-		_ensure_navigator()
 	if _has_water():
 		_ensure_water_field()
 	_ensure_bgm()
@@ -174,15 +177,26 @@ func _has_water() -> bool:
 	return WaterLayout.has_water(world_id)
 
 
-## NPC 行走网格同样由基类挂载：新地图上的 NPC 自动会寻路。
-func _ensure_navigator() -> void:
-	if get_node_or_null(^"NpcNavigator") != null:
+## NPC 协作根同样由基类挂载：新地图上的 NPC 自动会按日程走动、自动有行走网格。
+##
+## 它是本图 NPC 唯一的全局信号收件箱，也是导航网格的持有者；
+## 地图只需声明 [member navigation_enabled]。
+func _ensure_npc_field() -> void:
+	var existing := get_node_or_null(^"NpcField") as NpcField
+	if existing != null:
+		_npc_field = existing
 		return
-	var navigator := NpcNavigator.new()
-	navigator.name = "NpcNavigator"
-	navigator.area = camera_limits
-	navigator.bind_dependencies(player_profile, clock_state)
-	add_child(navigator)
+	var field := NpcField.new()
+	field.name = "NpcField"
+	field.area = camera_limits
+	field.navigation_enabled = navigation_enabled
+	add_child(field)
+	_npc_field = field
+
+
+## 本图的 NPC 协作根；测试与调试可读。
+func npc_field() -> NpcField:
+	return _npc_field
 
 
 ## 每次本场景被切换到时调用（包括从 [SceneRouter] 的缓存里重新挂载）。
@@ -243,6 +257,15 @@ func _distribute_services() -> void:
 			node.call(
 				&"bind_services", weather_service, relationship_service, calendar_service
 			)
+
+
+## 把本图协作根推给所有 NPC（与 bind_dependencies 同一套鸭子类型注入）。
+func _distribute_npc_field() -> void:
+	if _npc_field == null:
+		return
+	for node: Node in find_children("*", "", true, false):
+		if node.has_method(&"bind_npc_field"):
+			node.call(&"bind_npc_field", _npc_field)
 
 
 func _apply_camera_limits() -> void:
