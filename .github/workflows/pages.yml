@@ -36,9 +36,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -62,15 +62,12 @@ jobs:
       - name: 构建 wiki
         run: ./tools/build_wiki.sh
 
-      - name: 禁用 Jekyll
-        run: touch .tmp/wiki/.nojekyll
+      # 首发布前需到 Settings → Pages 把 Source 选成 GitHub Actions（一次性）。
+      # 不在这用 enablement: true：该选项要求 PAT / GitHub App 这类
+      # 非 GITHUB_TOKEN 凭证，用默认 token 会报 Resource not accessible。
+      - uses: actions/configure-pages@v6
 
-      - uses: actions/configure-pages@v5
-        with:
-          # 仓库首次发布时自动开启 Pages（无需先到 Settings 里手动选源）。
-          enablement: true
-
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: .tmp/wiki
 
@@ -82,4 +79,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
