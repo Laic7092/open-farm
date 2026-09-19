@@ -5,7 +5,7 @@
 
 ## 铁律（测试兜不住，靠自觉）
 
-0. **禁止直接读取整个文件**: 了解结构,然后按需读取。
+0. **禁止直接读取整个文件**：先按 `## 定位` 取一条，取到就动手。
 1. **只加数据，不改结构**：内容进 `res://data/**/*.tres`，脚本只认 id；`XxxData`（`Resource`）↔ `XxxState`（`RefCounted`），规则写成纯静态函数。
 2. **不再新增 Autoload**：全局只留跨域时间 / 场景 / 存档信号，领域信号走 `EventBus.player/farm/world/ui`；其余状态与服务挂 `Main` 组合根注入。
 3. **日结转按显式顺序**：`GameDateClock.register_day_hook(callable, DayPipeline.PRIORITY_*)`，在 `_exit_tree` 注销；不依赖信号回调顺序。
@@ -13,6 +13,13 @@
 5. **生成物只改生成器**：`assets/**` 永不手改，改 `tools/` 后重跑 `./tools/build_assets.sh`；确定性判据是连跑两次 `git status` 干净。
 6. **测试输出收口**：Godot 输出重定向到 `.tmp/check/*.log`，控制台只回统计与失败明细。
 7. **禁止反复验证**：只有逻辑或生成物变了才跑测试，且同一批改动只跑一次对应的那条命令；纯布局 / 配色 / 注释调整一律不重跑，不要用"再跑一次确认"代替判断。
+
+## 定位（缺什么信息，取哪条命令）
+
+跨文件找符号 / 定义 / 影响面 → `codegraph search | def | impact <名>`；
+本文件的结构 / 函数体 / 文本 / 调用方 → `python3 tools/outline.py outline | sym | grep | callers`。
+
+一次只取最便宜的那条，取到就动手；实现细节才 `read`（带 `offset/limit`），永不整读。
 
 ## 任务路由
 
@@ -26,7 +33,6 @@
 | 加地图 | `SceneDoor` / `SpawnPoint` + `test_world_map.gd` 的 `MAPS` |
 | 改数值 | `data/**/*.tres` |
 | 审阅内容 | `./tools/build_wiki.sh --open`（Godot 导出 `.tmp/wiki/data.json` → `build_wiki.py` 渲染静态 HTML）|
-| 读 / 改大文件 | `python3 tools/outline.py map / outline / sym / callers` |
 
 ## Godot 坑（4.7.2 实测，代码里没有）
 
@@ -40,5 +46,5 @@
 ## 测试 / 大文件 / 提交
 
 - 跑 `./tools/check.sh [unit|smoke]`；规范断言在 `tests/unit/test_{assets,audio,i18n,world_map}.gd`。
-- 大文件阈值 400 / 800（文件）、80 / 120（函数），`python3 tools/outline.py lint`；改共享函数前先 `callers`。
+- 大文件阈值 400 / 800（文件）、80 / 120（函数）：`python3 tools/outline.py lint`。
 - 提交 `feat:` / `fix:` / `chore:` 单行中文；生成物与代码一起提交。
