@@ -118,7 +118,7 @@ func test_every_sample_greeting_is_branching() -> void:
 	for dialogue_id: StringName in [
 		&"merchant_greeting", &"mayor_greeting", &"blacksmith_greeting",
 		&"florist_greeting", &"fisher_greeting", &"miner_greeting",
-		&"child_greeting", &"librarian_greeting",
+		&"child_greeting", &"librarian_greeting", &"our_child_greeting",
 	]:
 		var dialogue := Database.get_dialogue(dialogue_id)
 		assert_object(dialogue).override_failure_message(
@@ -135,6 +135,63 @@ func test_every_sample_greeting_is_branching() -> void:
 			).override_failure_message(
 				"%s 的选项 %s 跳转越界" % [dialogue_id, choice.text_key]
 			).is_greater_equal(0)
+
+
+## 所有生成出来的对白都要通过自检：跳转不越界、选项都有目标。
+func test_every_sample_dialogue_validates() -> void:
+	var problems := PackedStringArray()
+	for dialogue_id: StringName in Database.dialogues():
+		var dialogue := Database.get_dialogue(dialogue_id)
+		for problem: String in dialogue.validate():
+			problems.append("%s：%s" % [dialogue_id, problem])
+	assert_array(problems).override_failure_message(
+		"有 %d 条对白没通过自检：%s" % [problems.size(), ", ".join(problems)]
+	).is_empty()
+
+
+## 每位村民（自家孩子除外）都要有夏 / 秋 / 冬三份专属问候，且开局就是分支。
+##
+## 春季沿用 [member NpcData.default_dialogue]，所以这里只检查另外三季确实是覆盖值。
+func test_every_villager_has_seasonal_greetings() -> void:
+	for npc_id: StringName in [
+		&"merchant", &"mayor", &"blacksmith", &"florist",
+		&"fisher", &"miner", &"child", &"librarian",
+	]:
+		var npc := Database.get_npc(npc_id)
+		assert_object(npc).override_failure_message("缺少 NPC %s" % npc_id).is_not_null()
+		if npc == null:
+			continue
+		for season: Season.Type in [
+			Season.Type.SUMMER, Season.Type.FALL, Season.Type.WINTER
+		]:
+			var dialogue := npc.dialogue_for_season(season)
+			assert_object(dialogue).override_failure_message(
+				"%s 缺少 %s 的季节对白" % [npc_id, Season.to_key(season)]
+			).is_not_null()
+			if dialogue == null:
+				continue
+			assert_str(String(dialogue.id)).override_failure_message(
+				"%s 的 %s 对白没有覆盖默认问候" % [npc_id, Season.to_key(season)]
+			).is_not_equal(String(npc.default_dialogue.id))
+			assert_bool(dialogue.lines[0].has_choices()).override_failure_message(
+				"%s 的季节问候 %s 没有分支" % [npc_id, dialogue.id]
+			).is_true()
+
+
+## 语言无关：季节对白应当按季节换到不同的资源，而不是四季同一份。
+func test_seasonal_dialogues_are_not_shared_between_seasons() -> void:
+	for npc_id: StringName in Database.npcs():
+		var npc := Database.get_npc(npc_id)
+		if npc.seasonal_dialogue.is_empty():
+			continue
+		var seen: Dictionary[StringName, bool] = {}
+		for season: Season.Type in Season.all():
+			var dialogue := npc.dialogue_for_season(season)
+			assert_bool(seen.has(dialogue.id)).override_failure_message(
+				"%s 的 %s 与上一季共用同一份对白 %s"
+				% [npc_id, Season.to_key(season), dialogue.id]
+			).is_false()
+			seen[dialogue.id] = true
 
 
 ## 书雅问矿洞的选项受矿工写下的旗标门控。

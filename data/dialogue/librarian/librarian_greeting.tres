@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_wtjwk"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_4jbx6"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_7rhtf"]
+
+[sub_resource type="Resource" id="Resource_saoqw"]
+script = ExtResource("2_4jbx6")
+text_key = &"DIALOGUE_LIBRARIAN_CHOICE_BOOK"
+next_line = 1
+affection_delta = 1
+
+[sub_resource type="Resource" id="Resource_fly7h"]
+script = ExtResource("2_4jbx6")
+text_key = &"DIALOGUE_LIBRARIAN_CHOICE_CAVE"
+next_line = 2
+set_flag = &"knows_cave_map"
+required_flag = &"heard_cave_rumor"
+
+[sub_resource type="Resource" id="Resource_dkgm7"]
+script = ExtResource("2_4jbx6")
+text_key = &"DIALOGUE_LIBRARIAN_CHOICE_BROWSE"
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_m3nig"]
+script = ExtResource("1_wtjwk")
+text_key = &"DIALOGUE_LIBRARIAN_GREETING"
+choices = Array[ExtResource("2_4jbx6")]([SubResource("Resource_saoqw"), SubResource("Resource_fly7h"), SubResource("Resource_dkgm7")])
+
+[sub_resource type="Resource" id="Resource_s0naq"]
+script = ExtResource("1_wtjwk")
+text_key = &"DIALOGUE_LIBRARIAN_SEASON"
+next_line = -2
+
+[sub_resource type="Resource" id="Resource_b848r"]
+script = ExtResource("1_wtjwk")
+text_key = &"DIALOGUE_LIBRARIAN_CAVE_REPLY"
+emotion = 1
+next_line = -2
+
+[sub_resource type="Resource" id="Resource_pabds"]
+script = ExtResource("1_wtjwk")
+text_key = &"DIALOGUE_LIBRARIAN_TIP"
+next_line = -2
+
+[resource]
+script = ExtResource("3_7rhtf")
+id = &"librarian_greeting"
+speaker_key = &"NPC_LIBRARIAN"
+lines = Array[ExtResource("1_wtjwk")]([SubResource("Resource_m3nig"), SubResource("Resource_s0naq"), SubResource("Resource_b848r"), SubResource("Resource_pabds")])

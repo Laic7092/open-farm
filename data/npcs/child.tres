@@ -1,15 +1,23 @@
 [gd_resource type="Resource" script_class="NpcData" format=3]
 
-[ext_resource type="Resource" path="res://data/dialogue/child_greeting.tres" id="1_pslpf"]
-[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_child_frames.tres" id="2_i7ukl"]
-[ext_resource type="Resource" path="res://data/schedules/child_schedule.tres" id="3_5pu3u"]
-[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_veus1"]
+[ext_resource type="Resource" path="res://data/dialogue/child/child_greeting.tres" id="1_veus1"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_child_frames.tres" id="2_ot7bm"]
+[ext_resource type="Resource" path="res://data/schedules/child_schedule.tres" id="3_gp56r"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_cqso3"]
+[ext_resource type="Resource" path="res://data/dialogue/child/child_summer.tres" id="5_awkwh"]
+[ext_resource type="Resource" path="res://data/dialogue/child/child_fall.tres" id="6_b0ix8"]
+[ext_resource type="Resource" path="res://data/dialogue/child/child_winter.tres" id="7_iwiyj"]
 
 [resource]
-script = ExtResource("4_veus1")
+script = ExtResource("4_cqso3")
 id = &"child"
 display_name_key = &"NPC_CHILD"
-frames = ExtResource("2_i7ukl")
-default_dialogue = ExtResource("1_pslpf")
-schedule = ExtResource("3_5pu3u")
+frames = ExtResource("2_ot7bm")
+default_dialogue = ExtResource("1_veus1")
+seasonal_dialogue = {
+1: ExtResource("5_awkwh"),
+2: ExtResource("6_b0ix8"),
+3: ExtResource("7_iwiyj")
+}
+schedule = ExtResource("3_gp56r")
 move_speed = 34.0

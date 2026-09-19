@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_t5b8r"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_2dulm"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_rex7m"]
+
+[sub_resource type="Resource" id="Resource_umj3r"]
+script = ExtResource("2_2dulm")
+text_key = &"DIALOGUE_FISHER_CHOICE_CATCH"
+next_line = 1
+
+[sub_resource type="Resource" id="Resource_4huga"]
+script = ExtResource("2_2dulm")
+text_key = &"DIALOGUE_FISHER_CHOICE_STORY"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_fu0pv"]
+script = ExtResource("1_t5b8r")
+text_key = &"DIALOGUE_FISHER_GREETING"
+choices = Array[ExtResource("2_2dulm")]([SubResource("Resource_umj3r"), SubResource("Resource_4huga")])
+
+[sub_resource type="Resource" id="Resource_e7tnh"]
+script = ExtResource("1_t5b8r")
+text_key = &"DIALOGUE_FISHER_CATCH_REPLY"
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_hcg0u"]
+script = ExtResource("1_t5b8r")
+text_key = &"DIALOGUE_FISHER_STORY_REPLY"
+emotion = 4
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_f2cuy"]
+script = ExtResource("1_t5b8r")
+text_key = &"DIALOGUE_FISHER_SEASON"
+next_line = -2
+
+[resource]
+script = ExtResource("3_rex7m")
+id = &"fisher_greeting"
+speaker_key = &"NPC_FISHER"
+lines = Array[ExtResource("1_t5b8r")]([SubResource("Resource_fu0pv"), SubResource("Resource_e7tnh"), SubResource("Resource_hcg0u"), SubResource("Resource_f2cuy")])

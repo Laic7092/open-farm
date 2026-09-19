@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_gcx65"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_0vjwt"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_28246"]
+
+[sub_resource type="Resource" id="Resource_f16un"]
+script = ExtResource("2_0vjwt")
+text_key = &"DIALOGUE_MERCHANT_CHOICE_BUY"
+next_line = 1
+
+[sub_resource type="Resource" id="Resource_rn0gn"]
+script = ExtResource("2_0vjwt")
+text_key = &"DIALOGUE_MERCHANT_CHOICE_BROWSE"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_6mqgb"]
+script = ExtResource("1_gcx65")
+text_key = &"DIALOGUE_MERCHANT_GREETING"
+choices = Array[ExtResource("2_0vjwt")]([SubResource("Resource_f16un"), SubResource("Resource_rn0gn")])
+
+[sub_resource type="Resource" id="Resource_vjc02"]
+script = ExtResource("1_gcx65")
+text_key = &"DIALOGUE_MERCHANT_BUY_REPLY"
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_avjw0"]
+script = ExtResource("1_gcx65")
+text_key = &"DIALOGUE_MERCHANT_WEATHER"
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_argh0"]
+script = ExtResource("1_gcx65")
+text_key = &"DIALOGUE_MERCHANT_CLOSING"
+next_line = -2
+
+[resource]
+script = ExtResource("3_28246")
+id = &"merchant_greeting"
+speaker_key = &"NPC_MERCHANT"
+lines = Array[ExtResource("1_gcx65")]([SubResource("Resource_6mqgb"), SubResource("Resource_vjc02"), SubResource("Resource_avjw0"), SubResource("Resource_argh0")])

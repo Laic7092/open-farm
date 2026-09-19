@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="FestivalData" format=3]
 
-[ext_resource type="Resource" path="res://data/dialogue/festival_new_year.tres" id="1_5028t"]
+[ext_resource type="Resource" path="res://data/dialogue/shared/festival_new_year.tres" id="1_5028t"]
 [ext_resource type="Script" path="res://src/data/festival_data.gd" id="2_s7g2s"]
 
 [resource]

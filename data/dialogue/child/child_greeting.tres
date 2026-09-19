@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_qot1l"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_lsm0v"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_3l6ek"]
+
+[sub_resource type="Resource" id="Resource_l33ih"]
+script = ExtResource("2_lsm0v")
+text_key = &"DIALOGUE_CHILD_CHOICE_PLAY"
+next_line = 1
+affection_delta = 1
+
+[sub_resource type="Resource" id="Resource_5c2v3"]
+script = ExtResource("2_lsm0v")
+text_key = &"DIALOGUE_CHILD_CHOICE_TIP"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_xpu4v"]
+script = ExtResource("1_qot1l")
+text_key = &"DIALOGUE_CHILD_GREETING"
+choices = Array[ExtResource("2_lsm0v")]([SubResource("Resource_l33ih"), SubResource("Resource_5c2v3")])
+
+[sub_resource type="Resource" id="Resource_qq6bk"]
+script = ExtResource("1_qot1l")
+text_key = &"DIALOGUE_CHILD_PLAY"
+emotion = 1
+next_line = -2
+
+[sub_resource type="Resource" id="Resource_oqhag"]
+script = ExtResource("1_qot1l")
+text_key = &"DIALOGUE_CHILD_TIP"
+next_line = -2
+
+[resource]
+script = ExtResource("3_3l6ek")
+id = &"child_greeting"
+speaker_key = &"NPC_CHILD"
+lines = Array[ExtResource("1_qot1l")]([SubResource("Resource_xpu4v"), SubResource("Resource_qq6bk"), SubResource("Resource_oqhag")])

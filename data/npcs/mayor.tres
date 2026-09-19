@@ -1,15 +1,23 @@
 [gd_resource type="Resource" script_class="NpcData" format=3]
 
-[ext_resource type="Resource" path="res://data/dialogue/mayor_greeting.tres" id="1_dsksj"]
-[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_mayor_frames.tres" id="2_im64c"]
-[ext_resource type="Resource" path="res://data/schedules/mayor_schedule.tres" id="3_cub80"]
-[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_tqv1u"]
+[ext_resource type="Resource" path="res://data/dialogue/mayor/mayor_greeting.tres" id="1_tqv1u"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_mayor_frames.tres" id="2_5rdqy"]
+[ext_resource type="Resource" path="res://data/schedules/mayor_schedule.tres" id="3_qi4ts"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_us51a"]
+[ext_resource type="Resource" path="res://data/dialogue/mayor/mayor_summer.tres" id="5_j6udb"]
+[ext_resource type="Resource" path="res://data/dialogue/mayor/mayor_fall.tres" id="6_w84fx"]
+[ext_resource type="Resource" path="res://data/dialogue/mayor/mayor_winter.tres" id="7_xi7ha"]
 
 [resource]
-script = ExtResource("4_tqv1u")
+script = ExtResource("4_us51a")
 id = &"mayor"
 display_name_key = &"NPC_MAYOR"
-frames = ExtResource("2_im64c")
-default_dialogue = ExtResource("1_dsksj")
-schedule = ExtResource("3_cub80")
+frames = ExtResource("2_5rdqy")
+default_dialogue = ExtResource("1_tqv1u")
+seasonal_dialogue = {
+1: ExtResource("5_j6udb"),
+2: ExtResource("6_w84fx"),
+3: ExtResource("7_xi7ha")
+}
+schedule = ExtResource("3_qi4ts")
 move_speed = 30.0

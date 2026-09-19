@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_ao35h"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_3ogo3"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_lyk03"]
+
+[sub_resource type="Resource" id="Resource_hopyh"]
+script = ExtResource("2_3ogo3")
+text_key = &"DIALOGUE_FISHER_WINTER_CHOICE_A"
+next_line = 1
+affection_delta = 1
+
+[sub_resource type="Resource" id="Resource_jenth"]
+script = ExtResource("2_3ogo3")
+text_key = &"DIALOGUE_FISHER_WINTER_CHOICE_B"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_q4vh0"]
+script = ExtResource("1_ao35h")
+text_key = &"DIALOGUE_FISHER_WINTER_GREETING"
+choices = Array[ExtResource("2_3ogo3")]([SubResource("Resource_hopyh"), SubResource("Resource_jenth")])
+
+[sub_resource type="Resource" id="Resource_ftgkf"]
+script = ExtResource("1_ao35h")
+text_key = &"DIALOGUE_FISHER_WINTER_REPLY_A"
+emotion = 1
+next_line = -2
+
+[sub_resource type="Resource" id="Resource_ccxm0"]
+script = ExtResource("1_ao35h")
+text_key = &"DIALOGUE_FISHER_WINTER_REPLY_B"
+next_line = -2
+
+[resource]
+script = ExtResource("3_lyk03")
+id = &"fisher_winter"
+speaker_key = &"NPC_FISHER"
+lines = Array[ExtResource("1_ao35h")]([SubResource("Resource_q4vh0"), SubResource("Resource_ftgkf"), SubResource("Resource_ccxm0")])

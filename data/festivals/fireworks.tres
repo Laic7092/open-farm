@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="FestivalData" format=3]
 
-[ext_resource type="Resource" path="res://data/dialogue/festival_fireworks.tres" id="1_60olv"]
+[ext_resource type="Resource" path="res://data/dialogue/shared/festival_fireworks.tres" id="1_60olv"]
 [ext_resource type="Script" path="res://src/data/festival_data.gd" id="2_fuvyi"]
 
 [resource]

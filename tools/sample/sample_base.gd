@@ -12,6 +12,8 @@ const FISH_DIR: String = "res://data/fish"
 const ITEM_DIR: String = "res://data/items"
 const TOOL_DIR: String = "res://data/tools"
 const DIALOGUE_DIR: String = "res://data/dialogue"
+## 与 NPC 无关的共享对白（节日 / 事件）所在的子目录。
+const SHARED_DIALOGUE_DIR: String = "res://data/dialogue/shared"
 const NPC_DIR: String = "res://data/npcs"
 const SCHEDULE_DIR: String = "res://data/schedules"
 const SHOP_DIR: String = "res://data/shops"
@@ -41,6 +43,12 @@ static func ensure_dirs() -> void:
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(directory))
 
 
+## 某个 NPC 的专属对白目录：
+## [code]res://data/dialogue/<npc_id>/[/code]（每个 NPC 一份，互不干扰）。
+func _npc_dialogue_dir(npc_id: StringName) -> String:
+	return DIALOGUE_DIR.path_join(String(npc_id))
+
+
 func _str_array(values: Array) -> Array[StringName]:
 	var result: Array[StringName] = []
 	for value: Variant in values:
@@ -63,6 +71,10 @@ func _load(path: String) -> Resource:
 
 
 func _save(resource: Resource, path: String) -> void:
+	# 允许写到尚不存在的子目录（例如按 NPC 拆分的对白目录）。
+	DirAccess.make_dir_recursive_absolute(
+		ProjectSettings.globalize_path(path.get_base_dir())
+	)
 	var error: Error = ResourceSaver.save(resource, path)
 	if error != OK:
 		push_error("无法写入 %s（错误码 %d）" % [path, error])

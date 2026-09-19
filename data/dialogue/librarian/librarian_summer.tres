@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_3tyy0"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_5fv2r"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_0p3o7"]
+
+[sub_resource type="Resource" id="Resource_sl4c4"]
+script = ExtResource("2_5fv2r")
+text_key = &"DIALOGUE_LIBRARIAN_SUMMER_CHOICE_A"
+next_line = 1
+affection_delta = 1
+
+[sub_resource type="Resource" id="Resource_om71i"]
+script = ExtResource("2_5fv2r")
+text_key = &"DIALOGUE_LIBRARIAN_SUMMER_CHOICE_B"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_20qjd"]
+script = ExtResource("1_3tyy0")
+text_key = &"DIALOGUE_LIBRARIAN_SUMMER_GREETING"
+choices = Array[ExtResource("2_5fv2r")]([SubResource("Resource_sl4c4"), SubResource("Resource_om71i")])
+
+[sub_resource type="Resource" id="Resource_h7u86"]
+script = ExtResource("1_3tyy0")
+text_key = &"DIALOGUE_LIBRARIAN_SUMMER_REPLY_A"
+emotion = 1
+next_line = -2
+
+[sub_resource type="Resource" id="Resource_p754e"]
+script = ExtResource("1_3tyy0")
+text_key = &"DIALOGUE_LIBRARIAN_SUMMER_REPLY_B"
+next_line = -2
+
+[resource]
+script = ExtResource("3_0p3o7")
+id = &"librarian_summer"
+speaker_key = &"NPC_LIBRARIAN"
+lines = Array[ExtResource("1_3tyy0")]([SubResource("Resource_20qjd"), SubResource("Resource_h7u86"), SubResource("Resource_p754e")])

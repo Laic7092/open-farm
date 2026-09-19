@@ -1,29 +1,37 @@
 [gd_resource type="Resource" script_class="NpcData" format=3]
 
-[ext_resource type="Resource" path="res://data/dialogue/librarian_confession.tres" id="1_8kc8h"]
-[ext_resource type="Resource" path="res://data/dialogue/librarian_greeting.tres" id="2_ka8d1"]
-[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_librarian_frames.tres" id="3_4k55u"]
-[ext_resource type="Resource" path="res://data/dialogue/librarian_friend.tres" id="4_coxu2"]
-[ext_resource type="Resource" path="res://data/dialogue/librarian_lover.tres" id="5_wivcl"]
-[ext_resource type="Resource" path="res://data/dialogue/librarian_married.tres" id="6_6ekqk"]
-[ext_resource type="Resource" path="res://data/dialogue/librarian_proposal.tres" id="7_msdvl"]
-[ext_resource type="Resource" path="res://data/schedules/librarian_schedule.tres" id="8_yelr7"]
-[ext_resource type="Script" path="res://src/data/npc_data.gd" id="9_j2kfq"]
+[ext_resource type="Resource" path="res://data/dialogue/librarian/librarian_confession.tres" id="1_coxu2"]
+[ext_resource type="Resource" path="res://data/dialogue/librarian/librarian_greeting.tres" id="2_wivcl"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_librarian_frames.tres" id="3_6ekqk"]
+[ext_resource type="Resource" path="res://data/dialogue/librarian/librarian_friend.tres" id="4_msdvl"]
+[ext_resource type="Resource" path="res://data/dialogue/librarian/librarian_lover.tres" id="5_yelr7"]
+[ext_resource type="Resource" path="res://data/dialogue/librarian/librarian_married.tres" id="6_j2kfq"]
+[ext_resource type="Resource" path="res://data/dialogue/librarian/librarian_proposal.tres" id="7_18m4s"]
+[ext_resource type="Resource" path="res://data/schedules/librarian_schedule.tres" id="8_td555"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="9_abjy8"]
+[ext_resource type="Resource" path="res://data/dialogue/librarian/librarian_summer.tres" id="10_r0jdn"]
+[ext_resource type="Resource" path="res://data/dialogue/librarian/librarian_fall.tres" id="11_ju8ce"]
+[ext_resource type="Resource" path="res://data/dialogue/librarian/librarian_winter.tres" id="12_eb44v"]
 
 [resource]
-script = ExtResource("9_j2kfq")
+script = ExtResource("9_abjy8")
 id = &"librarian"
 display_name_key = &"NPC_LIBRARIAN"
-frames = ExtResource("3_4k55u")
-default_dialogue = ExtResource("2_ka8d1")
-schedule = ExtResource("8_yelr7")
+frames = ExtResource("3_6ekqk")
+default_dialogue = ExtResource("2_wivcl")
+seasonal_dialogue = {
+1: ExtResource("10_r0jdn"),
+2: ExtResource("11_ju8ce"),
+3: ExtResource("12_eb44v")
+}
+schedule = ExtResource("8_td555")
 move_speed = 26.0
 romanceable = true
 loved_gifts = Array[StringName]([&"flower"])
 liked_gifts = Array[StringName]([&"egg"])
 disliked_gifts = Array[StringName]([&"stone"])
-friend_dialogue = ExtResource("4_coxu2")
-lover_dialogue = ExtResource("5_wivcl")
-married_dialogue = ExtResource("6_6ekqk")
-confession_dialogue = ExtResource("1_8kc8h")
-proposal_dialogue = ExtResource("7_msdvl")
+friend_dialogue = ExtResource("4_msdvl")
+lover_dialogue = ExtResource("5_yelr7")
+married_dialogue = ExtResource("6_j2kfq")
+confession_dialogue = ExtResource("1_coxu2")
+proposal_dialogue = ExtResource("7_18m4s")

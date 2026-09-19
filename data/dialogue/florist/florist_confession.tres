@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_513v5"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_r0uu7"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_noxot"]
+
+[sub_resource type="Resource" id="Resource_nwqq4"]
+script = ExtResource("1_513v5")
+speaker_key = &"NPC_FLORIST"
+text_key = &"DIALOGUE_FLORIST_CONFESSION_1"
+
+[sub_resource type="Resource" id="Resource_7vk2n"]
+script = ExtResource("1_513v5")
+speaker_key = &"NPC_FLORIST"
+text_key = &"DIALOGUE_FLORIST_CONFESSION_2"
+
+[resource]
+script = ExtResource("3_noxot")
+id = &"florist_confession"
+speaker_key = &"NPC_FLORIST"
+lines = Array[ExtResource("1_513v5")]([SubResource("Resource_nwqq4"), SubResource("Resource_7vk2n")])

@@ -1,16 +1,24 @@
 [gd_resource type="Resource" script_class="NpcData" format=3]
 
-[ext_resource type="Resource" path="res://data/dialogue/merchant_greeting.tres" id="1_wp1os"]
-[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_merchant_frames.tres" id="2_u88sx"]
-[ext_resource type="Resource" path="res://data/schedules/merchant_schedule.tres" id="3_8jut3"]
-[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_643wj"]
+[ext_resource type="Resource" path="res://data/dialogue/merchant/merchant_greeting.tres" id="1_643wj"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_merchant_frames.tres" id="2_pt7sj"]
+[ext_resource type="Resource" path="res://data/schedules/merchant_schedule.tres" id="3_gwv55"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_2qkv7"]
+[ext_resource type="Resource" path="res://data/dialogue/merchant/merchant_summer.tres" id="5_lw5aa"]
+[ext_resource type="Resource" path="res://data/dialogue/merchant/merchant_fall.tres" id="6_r71ac"]
+[ext_resource type="Resource" path="res://data/dialogue/merchant/merchant_winter.tres" id="7_1uu8v"]
 
 [resource]
-script = ExtResource("4_643wj")
+script = ExtResource("4_2qkv7")
 id = &"merchant"
 display_name_key = &"NPC_MERCHANT"
-frames = ExtResource("2_u88sx")
-default_dialogue = ExtResource("1_wp1os")
-schedule = ExtResource("3_8jut3")
+frames = ExtResource("2_pt7sj")
+default_dialogue = ExtResource("1_643wj")
+seasonal_dialogue = {
+1: ExtResource("5_lw5aa"),
+2: ExtResource("6_r71ac"),
+3: ExtResource("7_1uu8v")
+}
+schedule = ExtResource("3_gwv55")
 shop_id = &"general_store"
 move_speed = 36.0

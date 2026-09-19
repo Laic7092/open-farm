@@ -48,6 +48,6 @@ func _festival(
 	festival.attendance_affection = affection
 	festival.attendance_flag = attendance_flag
 	festival.intro_dialogue = (
-		_load(DIALOGUE_DIR.path_join("%s.tres" % dialogue_id)) as DialogueData
+		_load(SHARED_DIALOGUE_DIR.path_join("%s.tres" % dialogue_id)) as DialogueData
 	)
 	_save(festival, FESTIVAL_DIR.path_join("%s.tres" % festival_id))

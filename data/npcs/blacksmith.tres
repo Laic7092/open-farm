@@ -1,29 +1,37 @@
 [gd_resource type="Resource" script_class="NpcData" format=3]
 
-[ext_resource type="Resource" path="res://data/dialogue/blacksmith_confession.tres" id="1_wtxwx"]
-[ext_resource type="Resource" path="res://data/dialogue/blacksmith_greeting.tres" id="2_pbxmb"]
-[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_blacksmith_frames.tres" id="3_marry"]
-[ext_resource type="Resource" path="res://data/dialogue/blacksmith_friend.tres" id="4_qoq68"]
-[ext_resource type="Resource" path="res://data/dialogue/blacksmith_lover.tres" id="5_b3of4"]
-[ext_resource type="Resource" path="res://data/dialogue/blacksmith_married.tres" id="6_ngnbp"]
-[ext_resource type="Resource" path="res://data/dialogue/blacksmith_proposal.tres" id="7_ur10e"]
-[ext_resource type="Resource" path="res://data/schedules/blacksmith_schedule.tres" id="8_rlcpc"]
-[ext_resource type="Script" path="res://src/data/npc_data.gd" id="9_atoxq"]
+[ext_resource type="Resource" path="res://data/dialogue/blacksmith/blacksmith_confession.tres" id="1_qoq68"]
+[ext_resource type="Resource" path="res://data/dialogue/blacksmith/blacksmith_greeting.tres" id="2_b3of4"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_blacksmith_frames.tres" id="3_ngnbp"]
+[ext_resource type="Resource" path="res://data/dialogue/blacksmith/blacksmith_friend.tres" id="4_ur10e"]
+[ext_resource type="Resource" path="res://data/dialogue/blacksmith/blacksmith_lover.tres" id="5_rlcpc"]
+[ext_resource type="Resource" path="res://data/dialogue/blacksmith/blacksmith_married.tres" id="6_atoxq"]
+[ext_resource type="Resource" path="res://data/dialogue/blacksmith/blacksmith_proposal.tres" id="7_1inul"]
+[ext_resource type="Resource" path="res://data/schedules/blacksmith_schedule.tres" id="8_dquwv"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="9_h52c2"]
+[ext_resource type="Resource" path="res://data/dialogue/blacksmith/blacksmith_summer.tres" id="10_n0cce"]
+[ext_resource type="Resource" path="res://data/dialogue/blacksmith/blacksmith_fall.tres" id="11_fk4lw"]
+[ext_resource type="Resource" path="res://data/dialogue/blacksmith/blacksmith_winter.tres" id="12_0ho0t"]
 
 [resource]
-script = ExtResource("9_atoxq")
+script = ExtResource("9_h52c2")
 id = &"blacksmith"
 display_name_key = &"NPC_BLACKSMITH"
-frames = ExtResource("3_marry")
-default_dialogue = ExtResource("2_pbxmb")
-schedule = ExtResource("8_rlcpc")
+frames = ExtResource("3_ngnbp")
+default_dialogue = ExtResource("2_b3of4")
+seasonal_dialogue = {
+1: ExtResource("10_n0cce"),
+2: ExtResource("11_fk4lw"),
+3: ExtResource("12_0ho0t")
+}
+schedule = ExtResource("8_dquwv")
 move_speed = 28.0
 romanceable = true
 loved_gifts = Array[StringName]([&"stone"])
 liked_gifts = Array[StringName]([&"wood"])
 disliked_gifts = Array[StringName]([&"flower"])
-friend_dialogue = ExtResource("4_qoq68")
-lover_dialogue = ExtResource("5_b3of4")
-married_dialogue = ExtResource("6_ngnbp")
-confession_dialogue = ExtResource("1_wtxwx")
-proposal_dialogue = ExtResource("7_ur10e")
+friend_dialogue = ExtResource("4_ur10e")
+lover_dialogue = ExtResource("5_rlcpc")
+married_dialogue = ExtResource("6_atoxq")
+confession_dialogue = ExtResource("1_qoq68")
+proposal_dialogue = ExtResource("7_1inul")

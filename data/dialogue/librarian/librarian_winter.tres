@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_g6aaa"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_1hyae"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_dw5na"]
+
+[sub_resource type="Resource" id="Resource_0pwi1"]
+script = ExtResource("2_1hyae")
+text_key = &"DIALOGUE_LIBRARIAN_WINTER_CHOICE_A"
+next_line = 1
+affection_delta = 1
+
+[sub_resource type="Resource" id="Resource_dm503"]
+script = ExtResource("2_1hyae")
+text_key = &"DIALOGUE_LIBRARIAN_WINTER_CHOICE_B"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_kav6f"]
+script = ExtResource("1_g6aaa")
+text_key = &"DIALOGUE_LIBRARIAN_WINTER_GREETING"
+choices = Array[ExtResource("2_1hyae")]([SubResource("Resource_0pwi1"), SubResource("Resource_dm503")])
+
+[sub_resource type="Resource" id="Resource_e1juk"]
+script = ExtResource("1_g6aaa")
+text_key = &"DIALOGUE_LIBRARIAN_WINTER_REPLY_A"
+emotion = 1
+next_line = -2
+
+[sub_resource type="Resource" id="Resource_7kba2"]
+script = ExtResource("1_g6aaa")
+text_key = &"DIALOGUE_LIBRARIAN_WINTER_REPLY_B"
+next_line = -2
+
+[resource]
+script = ExtResource("3_dw5na")
+id = &"librarian_winter"
+speaker_key = &"NPC_LIBRARIAN"
+lines = Array[ExtResource("1_g6aaa")]([SubResource("Resource_kav6f"), SubResource("Resource_e1juk"), SubResource("Resource_7kba2")])

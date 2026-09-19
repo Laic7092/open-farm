@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_0dpeg"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_c2wr6"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_04r20"]
+
+[sub_resource type="Resource" id="Resource_ydsdd"]
+script = ExtResource("2_c2wr6")
+text_key = &"DIALOGUE_FLORIST_CHOICE_PRAISE"
+next_line = 1
+affection_delta = 2
+
+[sub_resource type="Resource" id="Resource_5bgwa"]
+script = ExtResource("2_c2wr6")
+text_key = &"DIALOGUE_FLORIST_CHOICE_KINDS"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_eonox"]
+script = ExtResource("1_0dpeg")
+text_key = &"DIALOGUE_FLORIST_GREETING"
+choices = Array[ExtResource("2_c2wr6")]([SubResource("Resource_ydsdd"), SubResource("Resource_5bgwa")])
+
+[sub_resource type="Resource" id="Resource_oonr3"]
+script = ExtResource("1_0dpeg")
+text_key = &"DIALOGUE_FLORIST_PRAISE_REPLY"
+emotion = 1
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_bv8wv"]
+script = ExtResource("1_0dpeg")
+text_key = &"DIALOGUE_FLORIST_KINDS_REPLY"
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_y54ea"]
+script = ExtResource("1_0dpeg")
+text_key = &"DIALOGUE_FLORIST_CLOSING"
+next_line = -2
+
+[resource]
+script = ExtResource("3_04r20")
+id = &"florist_greeting"
+speaker_key = &"NPC_FLORIST"
+lines = Array[ExtResource("1_0dpeg")]([SubResource("Resource_eonox"), SubResource("Resource_oonr3"), SubResource("Resource_bv8wv"), SubResource("Resource_y54ea")])

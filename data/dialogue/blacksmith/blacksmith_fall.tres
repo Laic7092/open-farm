@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_vvfp7"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_p36f1"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_d1xx8"]
+
+[sub_resource type="Resource" id="Resource_fh6ke"]
+script = ExtResource("2_p36f1")
+text_key = &"DIALOGUE_BLACKSMITH_FALL_CHOICE_A"
+next_line = 1
+affection_delta = 1
+
+[sub_resource type="Resource" id="Resource_svgdm"]
+script = ExtResource("2_p36f1")
+text_key = &"DIALOGUE_BLACKSMITH_FALL_CHOICE_B"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_0cp30"]
+script = ExtResource("1_vvfp7")
+text_key = &"DIALOGUE_BLACKSMITH_FALL_GREETING"
+choices = Array[ExtResource("2_p36f1")]([SubResource("Resource_fh6ke"), SubResource("Resource_svgdm")])
+
+[sub_resource type="Resource" id="Resource_fq2eu"]
+script = ExtResource("1_vvfp7")
+text_key = &"DIALOGUE_BLACKSMITH_FALL_REPLY_A"
+emotion = 1
+next_line = -2
+
+[sub_resource type="Resource" id="Resource_e762t"]
+script = ExtResource("1_vvfp7")
+text_key = &"DIALOGUE_BLACKSMITH_FALL_REPLY_B"
+next_line = -2
+
+[resource]
+script = ExtResource("3_d1xx8")
+id = &"blacksmith_fall"
+speaker_key = &"NPC_BLACKSMITH"
+lines = Array[ExtResource("1_vvfp7")]([SubResource("Resource_0cp30"), SubResource("Resource_fq2eu"), SubResource("Resource_e762t")])

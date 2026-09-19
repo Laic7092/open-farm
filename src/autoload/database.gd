@@ -451,12 +451,27 @@ func _global_class_of(resource: Resource) -> String:
 	return script.get_global_name()
 
 
+## 收集 [param dir_path] 及其[b]全部子目录[/b]里的 [code].tres[/code]。
+##
+## 允许按域再分一层目录（例如每个 NPC 一个 [code]data/dialogue/<npc>/[/code]），
+## 让一个域的内容增长时不必把几百个文件挤在同一层；索引仍然只认 [code]id[/code]，
+## 因此分目录对业务代码完全透明。目录名排序后遍历，保证加载顺序稳定。
 func _load_resources(dir_path: String) -> Array[Resource]:
 	var found: Array[Resource] = []
+	_collect_resources(dir_path, found)
+	return found
+
+
+## [method _load_resources] 的递归实现，结果累加到 [param found]。
+func _collect_resources(dir_path: String, found: Array[Resource]) -> void:
 	var dir := DirAccess.open(dir_path)
 	if dir == null:
 		# 目录不存在是合法情况（例如还没添加任何商店）。
-		return found
+		return
+	var sub_dirs: PackedStringArray = dir.get_directories()
+	sub_dirs.sort()
+	for sub_dir: String in sub_dirs:
+		_collect_resources(dir_path.path_join(sub_dir), found)
 	for file_name: String in dir.get_files():
 		var clean_name: String = file_name.trim_suffix(".remap")
 		if not clean_name.ends_with(".tres"):
@@ -464,4 +479,3 @@ func _load_resources(dir_path: String) -> Array[Resource]:
 		var resource: Resource = ResourceLoader.load(dir_path.path_join(clean_name))
 		if resource != null:
 			found.append(resource)
-	return found

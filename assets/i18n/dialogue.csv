@@ -4,6 +4,11 @@ DIALOGUE_BLACKSMITH_CHOICE_FLIRT,你打铁的样子真帅。,You look great at t
 DIALOGUE_BLACKSMITH_CHOICE_WORK,最近生意怎么样？,How is business lately?
 DIALOGUE_BLACKSMITH_CONFESSION_1,我嘴笨，敲铁比说话利索。,I am clumsy with words but handy with a hammer.
 DIALOGUE_BLACKSMITH_CONFESSION_2,可这句我练了很久——我喜欢你。,But I practiced this one. I like you.
+DIALOGUE_BLACKSMITH_FALL_CHOICE_A,谢谢你。,Thank you.
+DIALOGUE_BLACKSMITH_FALL_CHOICE_B,生意忙吗？,Busy these days?
+DIALOGUE_BLACKSMITH_FALL_GREETING,秋收要用的镰刀，我给你留着最好的。,I saved the best sickle for your harvest.
+DIALOGUE_BLACKSMITH_FALL_REPLY_A,客气啥，拿去用。,Don't mention it. Take it.
+DIALOGUE_BLACKSMITH_FALL_REPLY_B,秋收前都这样，忙点好。,Always like this before harvest. Busy is good.
 DIALOGUE_BLACKSMITH_FLIRT_REPLY,少、少贫嘴！……不过，谢了。,"Quit it! ...Thanks, though."
 DIALOGUE_BLACKSMITH_FRIEND,你这家伙结实，来，给你打的东西刚出炉。,You are a sturdy sort. Your order is fresh from the forge.
 DIALOGUE_BLACKSMITH_GREETING,炉子正旺，要打把新家伙吗？,The forge is hot. Need a new tool?
@@ -12,13 +17,38 @@ DIALOGUE_BLACKSMITH_MARRIED,回来啦？炉火我留着，暖手。,Back already
 DIALOGUE_BLACKSMITH_PROPOSAL_1,这……你拿蓝羽毛来做什么？,This... why the blue feather?
 DIALOGUE_BLACKSMITH_PROPOSAL_2,好。往后我打的每样东西，都有你一半。,Then so be it. Everything I forge is half yours.
 DIALOGUE_BLACKSMITH_SEASON,天冷了，铁也硬得快，干活得趁热。,Cold mornings make the iron bite faster.
+DIALOGUE_BLACKSMITH_SUMMER_CHOICE_A,歇会儿吧，别中暑。,Take a break. Don't overheat.
+DIALOGUE_BLACKSMITH_SUMMER_CHOICE_B,有新打的工具吗？,Got any new tools?
+DIALOGUE_BLACKSMITH_SUMMER_GREETING,夏天炉子更烤人，可活儿不能停。,"The forge burns hotter in summer, but work goes on."
+DIALOGUE_BLACKSMITH_SUMMER_REPLY_A,……你倒是会心疼人。,...You do worry about me.
+DIALOGUE_BLACKSMITH_SUMMER_REPLY_B,刚淬过火，趁手得很。,Freshly tempered. They feel good in hand.
 DIALOGUE_BLACKSMITH_TIP,斧头和镐子要常磨，砍树砸石头才不费劲。,Keep your axe and pickaxe sharp.
+DIALOGUE_BLACKSMITH_WINTER_CHOICE_A,你的手都裂口子了。,Your hands are all cracked.
+DIALOGUE_BLACKSMITH_WINTER_CHOICE_B,冬天还开炉吗？,Still firing the forge in winter?
+DIALOGUE_BLACKSMITH_WINTER_GREETING,手冻僵了不好打铁，进来暖暖。,Cold hands ruin ironwork. Come warm up.
+DIALOGUE_BLACKSMITH_WINTER_REPLY_A,老毛病，不碍事。,Old habit. Doesn't bother me.
+DIALOGUE_BLACKSMITH_WINTER_REPLY_B,开，铁不等人。,Yes. Iron waits for no one.
 DIALOGUE_BLACKSMITH_WORK_REPLY,还行，庄稼人趁手就够用了。,Steady enough. Folks need what lasts.
 DIALOGUE_CHILD_CHOICE_PLAY,好啊，一起去玩！,Sure! Let us go play!
 DIALOGUE_CHILD_CHOICE_TIP,今天学到了什么？,What did you learn today?
+DIALOGUE_CHILD_FALL_CHOICE_A,一起踩踩看？,Want to stomp some together?
+DIALOGUE_CHILD_FALL_CHOICE_B,落叶能做什么？,What can you do with leaves?
+DIALOGUE_CHILD_FALL_GREETING,秋天的落叶踩起来沙沙响，好玩！,Fall leaves go crunch under your feet. Fun!
+DIALOGUE_CHILD_FALL_REPLY_A,好耶！比赛谁响！,Yeah! Let's see who's louder!
+DIALOGUE_CHILD_FALL_REPLY_B,我妈妈说能沤成肥料。,Mom says they turn into fertilizer.
 DIALOGUE_CHILD_GREETING,你就是新来的农场主吗？,Are you the new farmer?
 DIALOGUE_CHILD_PLAY,等会儿一起去广场玩吧！,Let's play at the plaza later!
+DIALOGUE_CHILD_SUMMER_CHOICE_A,抓到了吗？,Caught any?
+DIALOGUE_CHILD_SUMMER_CHOICE_B,别靠水太近哦。,Don't get too close to the water.
+DIALOGUE_CHILD_SUMMER_GREETING,夏天可以去河边抓鱼啦！,Summer means catching fish at the river!
+DIALOGUE_CHILD_SUMMER_REPLY_A,抓到了三条！给你一条！,"Three! Here, one's for you!"
+DIALOGUE_CHILD_SUMMER_REPLY_B,知道啦，我会小心的。,I know. I'll be careful.
 DIALOGUE_CHILD_TIP,我妈妈说，浇水的时候要轻轻的。,My mom says water the crops gently.
+DIALOGUE_CHILD_WINTER_CHOICE_A,我来帮你。,I'll help you.
+DIALOGUE_CHILD_WINTER_CHOICE_B,小心别冻感冒。,Don't catch a cold.
+DIALOGUE_CHILD_WINTER_GREETING,下雪啦！堆雪人堆雪人！,It's snowing! Let's build a snowman!
+DIALOGUE_CHILD_WINTER_REPLY_A,太好了，你来堆头！,Yay! You do the head!
+DIALOGUE_CHILD_WINTER_REPLY_B,我都戴围巾了，不怕！,I have my scarf on. No worries!
 DIALOGUE_CHOOSE_HINT,↑↓ 选择，E 确认,"↑↓ to choose, E to confirm"
 DIALOGUE_FESTIVAL_FIREWORKS_1,快看快看，烟花要开始了！,"Look, the fireworks are about to start!"
 DIALOGUE_FESTIVAL_FIREWORKS_2,夏天的晚上，就该和大家一起看烟花。,Summer nights are for fireworks with friends.
@@ -35,6 +65,11 @@ DIALOGUE_FISHER_CHOICE_CATCH,今天收获如何？,A good catch today?
 DIALOGUE_FISHER_CHOICE_STORY,海上有什么故事吗？,Any tales from the sea?
 DIALOGUE_FISHER_CONFESSION_1,我在海上漂了半辈子，头回这么想靠岸。,I have sailed half my life and never wanted to dock like this.
 DIALOGUE_FISHER_CONFESSION_2,你要是不嫌弃，我想把船停在你心里。,If you will have me I would anchor my boat in your heart.
+DIALOGUE_FISHER_FALL_CHOICE_A,教教我怎么钓。,Teach me to fish.
+DIALOGUE_FISHER_FALL_CHOICE_B,海上有变化吗？,Any change out at sea?
+DIALOGUE_FISHER_FALL_GREETING,秋天鱼要囤膘，正是好时候。,Fall fish fatten up. Prime season.
+DIALOGUE_FISHER_FALL_REPLY_A,行，明早码头等你。,Sure. Meet me at the dock at dawn.
+DIALOGUE_FISHER_FALL_REPLY_B,风转凉了，鱼群也往南走。,The wind turns cold and the schools head south.
 DIALOGUE_FISHER_FRIEND,今天的浪不大，要不要跟我出海？,Calm water today. Want to sail with me?
 DIALOGUE_FISHER_GREETING,海风不小，今天浪有点大。,Brisk sea wind. The waves are high today.
 DIALOGUE_FISHER_LOVER,再大的风浪，想到岸上有人等，就不怕了。,No matter the storm I am calm knowing you wait ashore.
@@ -43,12 +78,27 @@ DIALOGUE_FISHER_PROPOSAL_1,这蓝羽毛……你从哪儿弄来的？,This blue 
 DIALOGUE_FISHER_PROPOSAL_2,我收下了。往后风里雨里，都有我。,I accept. Through wind and rain you have me.
 DIALOGUE_FISHER_SEASON,冬天鱼都往深水里躲喽。,In winter the fish hide in deep water.
 DIALOGUE_FISHER_STORY_REPLY,有一回我见过比船还大的影子，到现在也说不清是啥。,Once I saw a shadow bigger than the boat. I still cannot say what it was.
+DIALOGUE_FISHER_SUMMER_CHOICE_A,真厉害！,Impressive!
+DIALOGUE_FISHER_SUMMER_CHOICE_B,夏天好钓吗？,Good fishing in summer?
+DIALOGUE_FISHER_SUMMER_GREETING,夏天鱼肥，今天网里全是大的。,Summer fish are fat. Today's net is full of big ones.
+DIALOGUE_FISHER_SUMMER_REPLY_A,哈，给你留条最肥的。,Ha. I saved you the fattest one.
+DIALOGUE_FISHER_SUMMER_REPLY_B,日头落山那会儿，鱼口最好。,Right at sunset the fish bite best.
 DIALOGUE_FISHER_TIP,退潮的时候，沙滩上能捡到不少好东西。,At low tide the beach gives up its treasures.
+DIALOGUE_FISHER_WINTER_CHOICE_A,歇着也好。,A rest is good too.
+DIALOGUE_FISHER_WINTER_CHOICE_B,冰面上能钓鱼吗？,Can you fish on the ice?
+DIALOGUE_FISHER_WINTER_GREETING,冬天出不了海，就修修网、补补船。,No sailing in winter. I mend nets and patch the boat.
+DIALOGUE_FISHER_WINTER_REPLY_A,歇久了手痒，还是想出海。,Rest too long and I itch for the sea.
+DIALOGUE_FISHER_WINTER_REPLY_B,能，凿个洞，鱼自己就上来了。,Yes. Cut a hole and they come to you.
 DIALOGUE_FLORIST_CHOICE_KINDS,都种了些什么花？,What kinds do you grow?
 DIALOGUE_FLORIST_CHOICE_PRAISE,这些花真好看。,These flowers are lovely.
 DIALOGUE_FLORIST_CLOSING,花儿谢了就不好看了，常来啊。,Come back before they wilt.
 DIALOGUE_FLORIST_CONFESSION_1,老太婆我看人很准，你是个好孩子。,I read people well and you are a good soul.
 DIALOGUE_FLORIST_CONFESSION_2,要是你不嫌弃……那就一起过日子吧。,If you do not mind... let us share our days.
+DIALOGUE_FLORIST_FALL_CHOICE_A,帮我挑一盆。,Pick a pot for me.
+DIALOGUE_FLORIST_FALL_CHOICE_B,花谢了怎么办？,What if the flowers wilt?
+DIALOGUE_FLORIST_FALL_GREETING,菊花开了，摆一盆在屋里也雅致。,The chrysanthemums are out. A pot would grace any room.
+DIALOGUE_FLORIST_FALL_REPLY_A,来，这盆最精神。,Here. This one's the liveliest.
+DIALOGUE_FLORIST_FALL_REPLY_B,剪下来晾干，还能香好久。,Dry them and they stay fragrant a long while.
 DIALOGUE_FLORIST_FRIEND,来，这朵最好看的，算婆婆送你的。,Here. The prettiest one is my gift to you.
 DIALOGUE_FLORIST_GREETING,来挑几朵花吧，刚剪下来的。,Freshly cut flowers for you.
 DIALOGUE_FLORIST_KINDS_REPLY,春天有郁金香，夏天有向日葵，秋天就数菊花最精神。,Tulips in spring. Sunflowers in summer. Chrysanthemums rule the fall.
@@ -57,13 +107,28 @@ DIALOGUE_FLORIST_MARRIED,家里有你在，比满园的花都热闹。,With you 
 DIALOGUE_FLORIST_PRAISE_REPLY,嘴真甜！这朵拿着，送人也行。,Sweet talker! Take this one and gift it if you like.
 DIALOGUE_FLORIST_PROPOSAL_1,哎呀，这羽毛……你当真？,Oh my. This feather... are you sure?
 DIALOGUE_FLORIST_PROPOSAL_2,好，好。往后花园里，多你一个。,Wonderful. One more pair of hands in the garden.
+DIALOGUE_FLORIST_SUMMER_CHOICE_A,真好看，我要了。,They're lovely. I'll take it.
+DIALOGUE_FLORIST_SUMMER_CHOICE_B,夏天种什么花好？,What blooms best in summer?
+DIALOGUE_FLORIST_SUMMER_GREETING,夏天的向日葵开得正好，来一支？,The sunflowers are at their best. Take one?
+DIALOGUE_FLORIST_SUMMER_REPLY_A,眼光不错，婆婆给你包上。,Good eye. Let me wrap it up.
+DIALOGUE_FLORIST_SUMMER_REPLY_B,向日葵最省心，晒得越足越精神。,Sunflowers. The more sun the better.
 DIALOGUE_FLORIST_TIP,野花也能卖钱，采下来别浪费。,Wildflowers sell too. Don't waste them.
+DIALOGUE_FLORIST_WINTER_CHOICE_A,那就买一束。,Then I'll buy a bunch.
+DIALOGUE_FLORIST_WINTER_CHOICE_B,冬天还有花卖吗？,Do you sell flowers in winter?
+DIALOGUE_FLORIST_WINTER_GREETING,天冷了，屋里摆点花，心也暖。,Cold days. A little green warms the heart.
+DIALOGUE_FLORIST_WINTER_REPLY_A,拿着，就算婆婆送你的。,"Take it, a gift from me."
+DIALOGUE_FLORIST_WINTER_REPLY_B,温室里养着呢，不怕。,Greenhouse-grown. No worries.
 DIALOGUE_LIBRARIAN_CAVE_REPLY,你也听说了？旧书里夹着一张矿道地图，送你了。,You heard as well? An old book held a mine map. It is yours now.
 DIALOGUE_LIBRARIAN_CHOICE_BOOK,想借一本关于季节的书。,I would like a book about the seasons.
 DIALOGUE_LIBRARIAN_CHOICE_BROWSE,随便看看。,Just browsing.
 DIALOGUE_LIBRARIAN_CHOICE_CAVE,矿洞的传说，这里有记载吗？,Are the mine legends written down here?
 DIALOGUE_LIBRARIAN_CONFESSION_1,我一直在等一个会认真听我说话的人。,I have been waiting for someone who truly listens.
 DIALOGUE_LIBRARIAN_CONFESSION_2,如果那个人是你……我愿意。,And if that someone is you... I would be glad.
+DIALOGUE_LIBRARIAN_FALL_CHOICE_A,念一句给我听？,Read me a line?
+DIALOGUE_LIBRARIAN_FALL_CHOICE_B,秋天图书馆忙吗？,Busy at the library in fall?
+DIALOGUE_LIBRARIAN_FALL_GREETING,秋天适合读诗，落叶和句子都慢下来了。,Fall suits poetry. Leaves and lines both slow down.
+DIALOGUE_LIBRARIAN_FALL_REPLY_A,就一句：秋日落在书页上。,Just one: Autumn rests on the page.
+DIALOGUE_LIBRARIAN_FALL_REPLY_B,学生们回来借书，挺热闹的。,Students come back for books. Lively enough.
 DIALOGUE_LIBRARIAN_FRIEND,你来了。书我帮你留着呢，慢慢看。,You came. I saved these books for you.
 DIALOGUE_LIBRARIAN_GREETING,欢迎来到图书馆，请保持安静。,Welcome to the library. Please be quiet.
 DIALOGUE_LIBRARIAN_LOVER,和你一起整理书架的时间，比看书还让我安心。,Shelving books with you calms me more than reading.
@@ -71,23 +136,82 @@ DIALOGUE_LIBRARIAN_MARRIED,回家啦？我炖了汤，就等你呢。,Welcome ho
 DIALOGUE_LIBRARIAN_PROPOSAL_1,这……这是给我的吗？,Is this... for me?
 DIALOGUE_LIBRARIAN_PROPOSAL_2,我愿意。以后每个故事里，都有你。,Yes. Every story from now on will have you in it.
 DIALOGUE_LIBRARIAN_SEASON,无论外面什么季节，书里都是安静的。,Books stay calm whatever the season.
+DIALOGUE_LIBRARIAN_SUMMER_CHOICE_A,推荐一本吧。,Recommend me one.
+DIALOGUE_LIBRARIAN_SUMMER_CHOICE_B,图书馆夏天凉快吗？,Is the library cool in summer?
+DIALOGUE_LIBRARIAN_SUMMER_GREETING,夏天的午后，最适合在窗边看一本厚书。,A summer afternoon is best for a thick book by the window.
+DIALOGUE_LIBRARIAN_SUMMER_REPLY_A,这本，讲海和远方，你会喜欢。,"This one, of the sea and far places. You'll like it."
+DIALOGUE_LIBRARIAN_SUMMER_REPLY_B,石墙厚，天然凉快，常有人来躲暑。,The stone walls keep it cool. People come to escape the heat.
 DIALOGUE_LIBRARIAN_TIP,想了解季节和作物，来这儿翻翻书准没错。,Books here explain seasons and crops.
+DIALOGUE_LIBRARIAN_WINTER_CHOICE_A,那我常来陪你。,Then I'll visit often.
+DIALOGUE_LIBRARIAN_WINTER_CHOICE_B,有讲冬天的书吗？,Any books about winter?
+DIALOGUE_LIBRARIAN_WINTER_GREETING,冬天就靠着炉子和书过活了。,In winter I live by the hearth and my books.
+DIALOGUE_LIBRARIAN_WINTER_REPLY_A,好。位置我给你留着。,Yes. I'll keep your seat.
+DIALOGUE_LIBRARIAN_WINTER_REPLY_B,有，讲雪和极光的，插图很美。,"Yes, of snow and auroras. Lovely plates."
 DIALOGUE_MAYOR_CHOICE_ADVICE,请教一下农场的事。,Any advice for the farm?
 DIALOGUE_MAYOR_CHOICE_NEWS,村里最近怎么样？,How is the village lately?
+DIALOGUE_MAYOR_FALL_CHOICE_A,我一定到场。,I'll be there for sure.
+DIALOGUE_MAYOR_FALL_CHOICE_B,今年村里收成如何？,How did the village fare this year?
+DIALOGUE_MAYOR_FALL_GREETING,丰收祭快到了，今年你可是主角。,The harvest festival is near. You are the star this year.
+DIALOGUE_MAYOR_FALL_REPLY_A,好，村里就缺你这样的年轻人。,Good. This village needs young blood like you.
+DIALOGUE_MAYOR_FALL_REPLY_B,托你的福，比往年都好。,"Better than ever, thanks to you."
 DIALOGUE_MAYOR_GREETING,早啊，年轻人。农场就交给你了。,Morning. The farm is in your hands now.
 DIALOGUE_MAYOR_NEWS_REPLY,村里还算安稳。倒是矿洞那边，最近总有人进进出出。,All quiet here. Though people keep going in and out of the mine.
 DIALOGUE_MAYOR_SEASON,换季的时候，能种的东西就变了。,When the season turns so do your crops.
+DIALOGUE_MAYOR_SUMMER_CHOICE_A,谢谢提醒。,Thanks for the reminder.
+DIALOGUE_MAYOR_SUMMER_CHOICE_B,村里夏天有什么安排？,Anything planned this summer?
+DIALOGUE_MAYOR_SUMMER_GREETING,夏天日头毒，下地记得戴帽子。,The summer sun bites. Wear a hat in the fields.
+DIALOGUE_MAYOR_SUMMER_REPLY_A,年轻人肯听劝，我就放心了。,It eases my mind when the young listen.
+DIALOGUE_MAYOR_SUMMER_REPLY_B,过些日子有烟花大会，别错过。,A fireworks show is coming. Don't miss it.
 DIALOGUE_MAYOR_TIP,别忘了给作物浇水，不然它们会枯掉的。,Don't forget to water your crops or they wilt.
+DIALOGUE_MAYOR_WINTER_CHOICE_A,我会小心的。,I'll be careful.
+DIALOGUE_MAYOR_WINTER_CHOICE_B,冬天还开村会吗？,Any village meetings in winter?
+DIALOGUE_MAYOR_WINTER_GREETING,雪一下，路就不好走了，出门当心。,Once it snows the roads get rough. Mind your step.
+DIALOGUE_MAYOR_WINTER_REPLY_A,嗯，农场有你，我就踏实。,Good. The farm is safe in your hands.
+DIALOGUE_MAYOR_WINTER_REPLY_B,开，等雪停了就在广场。,Yes. On the plaza once the snow stops.
 DIALOGUE_MERCHANT_BUY_REPLY,有眼光！今天新到了几样好货。,Good eye! We just got some fresh stock.
 DIALOGUE_MERCHANT_CHOICE_BROWSE,只是随便看看。,Just looking around.
 DIALOGUE_MERCHANT_CHOICE_BUY,想买点东西。,I would like to buy something.
 DIALOGUE_MERCHANT_CLOSING,谢谢惠顾，慢走！,Thanks for coming!
+DIALOGUE_MERCHANT_FALL_CHOICE_A,南瓜怎么卖？,How much for the pumpkins?
+DIALOGUE_MERCHANT_FALL_CHOICE_B,今年收成真好。,Great harvest this year.
+DIALOGUE_MERCHANT_FALL_GREETING,新收的南瓜和玉米都上架了，来看看？,Fresh pumpkins and corn are in. Want a look?
+DIALOGUE_MERCHANT_FALL_REPLY_A,算你熟客价，够意思吧。,"Regular-customer price for you. Fair, right?"
+DIALOGUE_MERCHANT_FALL_REPLY_B,可不是嘛，仓库都堆满了。,You bet. The storage is bursting.
 DIALOGUE_MERCHANT_GREETING,欢迎光临，今天要买点什么吗？,Welcome! Buying anything today?
+DIALOGUE_MERCHANT_SUMMER_CHOICE_A,来一瓶，正好解渴。,"One bottle, please."
+DIALOGUE_MERCHANT_SUMMER_CHOICE_B,先看看货架。,Let me check the shelves.
+DIALOGUE_MERCHANT_SUMMER_GREETING,天热，冰镇的汽水要不要来一瓶？,Hot day. Want a cold bottle of soda?
+DIALOGUE_MERCHANT_SUMMER_REPLY_A,爽快！给你算便宜点。,Straight to the point. I'll knock a little off.
+DIALOGUE_MERCHANT_SUMMER_REPLY_B,慢慢看，货都在那儿摆着呢。,Take your time. It's all on display.
 DIALOGUE_MERCHANT_WEATHER,今天天气不错，地里的活儿会顺利的。,Nice weather today. Good for the fields.
+DIALOGUE_MERCHANT_WINTER_CHOICE_A,谢谢，正冻得慌。,"Thanks, I'm freezing."
+DIALOGUE_MERCHANT_WINTER_CHOICE_B,冬天还开门吗？,Are you open in winter?
+DIALOGUE_MERCHANT_WINTER_GREETING,外头冷吧？进来烤烤火再走。,Cold out there? Warm up by the fire first.
+DIALOGUE_MERCHANT_WINTER_REPLY_A,热水在那边，自己倒。,Hot water's over there. Help yourself.
+DIALOGUE_MERCHANT_WINTER_REPLY_B,开，风雪不误，就等你来。,"Always. Snow or shine, I'm here for you."
 DIALOGUE_MINER_CAVE_REPLY,再往里走有段老矿道，听说埋着会发光的石头。,There is an old shaft deeper in. They say glowing stones are buried there.
 DIALOGUE_MINER_CHOICE_CAVE,矿洞深处有什么？,What lies deeper in the mine?
 DIALOGUE_MINER_CHOICE_SMALLTALK,就是打个招呼。,Just saying hello.
+DIALOGUE_MINER_FALL_CHOICE_A,你多穿点。,Dress warmly.
+DIALOGUE_MINER_FALL_CHOICE_B,矿洞越深越危险吧？,"The deeper you go, the worse it gets?"
+DIALOGUE_MINER_FALL_GREETING,天冷了，洞里的水汽都结在壁上。,It's colder now. Damp clings to the walls.
+DIALOGUE_MINER_FALL_REPLY_A,知道了，你也是。,I will. You too.
+DIALOGUE_MINER_FALL_REPLY_B,越深越黑，好东西也越多。,"Darker and richer, both."
 DIALOGUE_MINER_GREETING,洞里黑，跟紧点别乱跑。,It's dark in there. Stay close.
 DIALOGUE_MINER_SEASON,洞里头不分四季，倒省心。,Down here it's the same all year round.
+DIALOGUE_MINER_SUMMER_CHOICE_A,洞里安全吗？,Is it safe down there?
+DIALOGUE_MINER_SUMMER_CHOICE_B,夏天挖到什么好矿？,Found anything good this summer?
+DIALOGUE_MINER_SUMMER_GREETING,外头再热，洞里也是凉的，正好干活。,"Hot as it is outside, the mine stays cool."
+DIALOGUE_MINER_SUMMER_REPLY_A,跟着灯走，别乱拐就行。,Follow the lamps. Don't wander.
+DIALOGUE_MINER_SUMMER_REPLY_B,运气好，砸出一小块铜。,Lucky day. Chipped out a bit of copper.
 DIALOGUE_MINER_TIP,带够镐子再来，石头可不客气。,Bring a pickaxe. The rocks won't be kind.
+DIALOGUE_MINER_WINTER_CHOICE_A,那倒是意外之喜。,A happy surprise.
+DIALOGUE_MINER_WINTER_CHOICE_B,冬天矿里有什么特别的？,Anything special in winter?
+DIALOGUE_MINER_WINTER_GREETING,冬天洞里反而暖，手还不僵。,In winter the mine is warmer. Hands don't stiffen.
+DIALOGUE_MINER_WINTER_REPLY_A,要不，跟我下去看看？,Want to come down and see?
+DIALOGUE_MINER_WINTER_REPLY_B,雪水渗进来，会结成亮晶晶的晶石。,Meltwater seeps in and freezes into bright crystal.
+DIALOGUE_OUR_CHILD_CHOICE_HUG,抱抱！,Hug!
+DIALOGUE_OUR_CHILD_CHOICE_PLAY,陪我玩一会儿。,Play with me for a bit.
 DIALOGUE_OUR_CHILD_GREETING,你回来啦！抱抱！,You are back! Hug!
+DIALOGUE_OUR_CHILD_HUG_REPLY,嘿嘿，最喜欢你了！,"Hehe, I like you best!"
+DIALOGUE_OUR_CHILD_PLAY_REPLY,好呀，我们来搭积木！,Okay! Let's build blocks!

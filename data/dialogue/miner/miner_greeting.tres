@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_ohhha"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_xa40n"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_v53pq"]
+
+[sub_resource type="Resource" id="Resource_38l2o"]
+script = ExtResource("2_xa40n")
+text_key = &"DIALOGUE_MINER_CHOICE_CAVE"
+next_line = 1
+set_flag = &"heard_cave_rumor"
+
+[sub_resource type="Resource" id="Resource_triom"]
+script = ExtResource("2_xa40n")
+text_key = &"DIALOGUE_MINER_CHOICE_SMALLTALK"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_6cpfh"]
+script = ExtResource("1_ohhha")
+text_key = &"DIALOGUE_MINER_GREETING"
+choices = Array[ExtResource("2_xa40n")]([SubResource("Resource_38l2o"), SubResource("Resource_triom")])
+
+[sub_resource type="Resource" id="Resource_r3xuk"]
+script = ExtResource("1_ohhha")
+text_key = &"DIALOGUE_MINER_CAVE_REPLY"
+emotion = 4
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_16ap4"]
+script = ExtResource("1_ohhha")
+text_key = &"DIALOGUE_MINER_TIP"
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_8if2l"]
+script = ExtResource("1_ohhha")
+text_key = &"DIALOGUE_MINER_SEASON"
+next_line = -2
+
+[resource]
+script = ExtResource("3_v53pq")
+id = &"miner_greeting"
+speaker_key = &"NPC_MINER"
+lines = Array[ExtResource("1_ohhha")]([SubResource("Resource_6cpfh"), SubResource("Resource_r3xuk"), SubResource("Resource_16ap4"), SubResource("Resource_8if2l")])

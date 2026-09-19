@@ -1,14 +1,22 @@
 [gd_resource type="Resource" script_class="NpcData" format=3]
 
-[ext_resource type="Resource" path="res://data/dialogue/miner_greeting.tres" id="1_aooxd"]
-[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_miner_frames.tres" id="2_ws3eg"]
-[ext_resource type="Resource" path="res://data/schedules/miner_schedule.tres" id="3_5kwjn"]
-[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_gecsv"]
+[ext_resource type="Resource" path="res://data/dialogue/miner/miner_greeting.tres" id="1_gecsv"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/actors/npc_miner_frames.tres" id="2_0uneb"]
+[ext_resource type="Resource" path="res://data/schedules/miner_schedule.tres" id="3_6wk3p"]
+[ext_resource type="Script" path="res://src/data/npc_data.gd" id="4_7jguq"]
+[ext_resource type="Resource" path="res://data/dialogue/miner/miner_summer.tres" id="5_7ci7x"]
+[ext_resource type="Resource" path="res://data/dialogue/miner/miner_fall.tres" id="6_nqiu4"]
+[ext_resource type="Resource" path="res://data/dialogue/miner/miner_winter.tres" id="7_6qf3j"]
 
 [resource]
-script = ExtResource("4_gecsv")
+script = ExtResource("4_7jguq")
 id = &"miner"
 display_name_key = &"NPC_MINER"
-frames = ExtResource("2_ws3eg")
-default_dialogue = ExtResource("1_aooxd")
-schedule = ExtResource("3_5kwjn")
+frames = ExtResource("2_0uneb")
+default_dialogue = ExtResource("1_gecsv")
+seasonal_dialogue = {
+1: ExtResource("5_7ci7x"),
+2: ExtResource("6_nqiu4"),
+3: ExtResource("7_6qf3j")
+}
+schedule = ExtResource("3_6wk3p")

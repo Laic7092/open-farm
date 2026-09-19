@@ -45,5 +45,5 @@ func _event(
 	event.set_flag = set_flag
 	event.once = once
 	if not dialogue_id.is_empty():
-		event.dialogue = _load(DIALOGUE_DIR.path_join("%s.tres" % dialogue_id)) as DialogueData
+		event.dialogue = _load(SHARED_DIALOGUE_DIR.path_join("%s.tres" % dialogue_id)) as DialogueData
 	_save(event, EVENT_DIR.path_join("%s.tres" % event_id))

@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_724tk"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_pmcij"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_hjvco"]
+
+[sub_resource type="Resource" id="Resource_m3njq"]
+script = ExtResource("2_pmcij")
+text_key = &"DIALOGUE_CHILD_SUMMER_CHOICE_A"
+next_line = 1
+affection_delta = 1
+
+[sub_resource type="Resource" id="Resource_5enc4"]
+script = ExtResource("2_pmcij")
+text_key = &"DIALOGUE_CHILD_SUMMER_CHOICE_B"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_iud3c"]
+script = ExtResource("1_724tk")
+text_key = &"DIALOGUE_CHILD_SUMMER_GREETING"
+choices = Array[ExtResource("2_pmcij")]([SubResource("Resource_m3njq"), SubResource("Resource_5enc4")])
+
+[sub_resource type="Resource" id="Resource_hs0ex"]
+script = ExtResource("1_724tk")
+text_key = &"DIALOGUE_CHILD_SUMMER_REPLY_A"
+emotion = 1
+next_line = -2
+
+[sub_resource type="Resource" id="Resource_268eq"]
+script = ExtResource("1_724tk")
+text_key = &"DIALOGUE_CHILD_SUMMER_REPLY_B"
+next_line = -2
+
+[resource]
+script = ExtResource("3_hjvco")
+id = &"child_summer"
+speaker_key = &"NPC_CHILD"
+lines = Array[ExtResource("1_724tk")]([SubResource("Resource_iud3c"), SubResource("Resource_hs0ex"), SubResource("Resource_268eq")])

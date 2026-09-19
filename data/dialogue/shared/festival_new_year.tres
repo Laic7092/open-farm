@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_tshye"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_ef7al"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_dy78j"]
+
+[sub_resource type="Resource" id="Resource_n14ei"]
+script = ExtResource("1_tshye")
+speaker_key = &"NPC_MAYOR"
+text_key = &"DIALOGUE_FESTIVAL_NEW_YEAR_1"
+
+[sub_resource type="Resource" id="Resource_la2i7"]
+script = ExtResource("1_tshye")
+speaker_key = &"NPC_MAYOR"
+text_key = &"DIALOGUE_FESTIVAL_NEW_YEAR_2"
+
+[resource]
+script = ExtResource("3_dy78j")
+id = &"festival_new_year"
+speaker_key = &"NPC_MAYOR"
+lines = Array[ExtResource("1_tshye")]([SubResource("Resource_n14ei"), SubResource("Resource_la2i7")])

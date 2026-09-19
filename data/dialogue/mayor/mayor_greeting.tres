@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_l6rum"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_3ps8j"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_32ja6"]
+
+[sub_resource type="Resource" id="Resource_jye77"]
+script = ExtResource("2_3ps8j")
+text_key = &"DIALOGUE_MAYOR_CHOICE_ADVICE"
+next_line = 1
+affection_delta = 1
+
+[sub_resource type="Resource" id="Resource_jechs"]
+script = ExtResource("2_3ps8j")
+text_key = &"DIALOGUE_MAYOR_CHOICE_NEWS"
+next_line = 2
+set_flag = &"heard_village_news"
+
+[sub_resource type="Resource" id="Resource_7d2ay"]
+script = ExtResource("1_l6rum")
+text_key = &"DIALOGUE_MAYOR_GREETING"
+choices = Array[ExtResource("2_3ps8j")]([SubResource("Resource_jye77"), SubResource("Resource_jechs")])
+
+[sub_resource type="Resource" id="Resource_ks5i8"]
+script = ExtResource("1_l6rum")
+text_key = &"DIALOGUE_MAYOR_TIP"
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_1vvv1"]
+script = ExtResource("1_l6rum")
+text_key = &"DIALOGUE_MAYOR_NEWS_REPLY"
+emotion = 4
+next_line = 3
+
+[sub_resource type="Resource" id="Resource_kyn8v"]
+script = ExtResource("1_l6rum")
+text_key = &"DIALOGUE_MAYOR_SEASON"
+next_line = -2
+
+[resource]
+script = ExtResource("3_32ja6")
+id = &"mayor_greeting"
+speaker_key = &"NPC_MAYOR"
+lines = Array[ExtResource("1_l6rum")]([SubResource("Resource_7d2ay"), SubResource("Resource_ks5i8"), SubResource("Resource_1vvv1"), SubResource("Resource_kyn8v")])

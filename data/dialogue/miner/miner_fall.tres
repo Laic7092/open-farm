@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="DialogueData" format=3]
+
+[ext_resource type="Script" path="res://src/data/dialogue_line.gd" id="1_5iai1"]
+[ext_resource type="Script" path="res://src/data/dialogue_choice.gd" id="2_oylbr"]
+[ext_resource type="Script" path="res://src/data/dialogue_data.gd" id="3_3gi6b"]
+
+[sub_resource type="Resource" id="Resource_uorch"]
+script = ExtResource("2_oylbr")
+text_key = &"DIALOGUE_MINER_FALL_CHOICE_A"
+next_line = 1
+affection_delta = 1
+
+[sub_resource type="Resource" id="Resource_tuim5"]
+script = ExtResource("2_oylbr")
+text_key = &"DIALOGUE_MINER_FALL_CHOICE_B"
+next_line = 2
+
+[sub_resource type="Resource" id="Resource_w66hh"]
+script = ExtResource("1_5iai1")
+text_key = &"DIALOGUE_MINER_FALL_GREETING"
+choices = Array[ExtResource("2_oylbr")]([SubResource("Resource_uorch"), SubResource("Resource_tuim5")])
+
+[sub_resource type="Resource" id="Resource_sqapf"]
+script = ExtResource("1_5iai1")
+text_key = &"DIALOGUE_MINER_FALL_REPLY_A"
+emotion = 1
+next_line = -2
+
+[sub_resource type="Resource" id="Resource_gwwlw"]
+script = ExtResource("1_5iai1")
+text_key = &"DIALOGUE_MINER_FALL_REPLY_B"
+next_line = -2
+
+[resource]
+script = ExtResource("3_3gi6b")
+id = &"miner_fall"
+speaker_key = &"NPC_MINER"
+lines = Array[ExtResource("1_5iai1")]([SubResource("Resource_w66hh"), SubResource("Resource_sqapf"), SubResource("Resource_gwwlw")])
