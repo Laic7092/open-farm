@@ -19,7 +19,6 @@ func build() -> void:
 	_tool(&"watering_can_iron", &"ITEM_WATERING_CAN_IRON", ToolData.Kind.WATERING_CAN, 1, 2, Vector2i(5, 5), 3)
 
 	_tool(&"sickle", &"ITEM_SICKLE", ToolData.Kind.SICKLE, 1, 1, Vector2i.ONE, 1)
-	_tool(&"seed_bag", &"ITEM_SEED_BAG", ToolData.Kind.SEED, 1, 1, Vector2i.ONE, 1)
 
 	# 斧头 / 镐子：世界会自己长树长石，必须给玩家清理手段。
 	_tool(&"axe", &"ITEM_AXE", ToolData.Kind.AXE, 3, 1, Vector2i.ONE, 1, &"axe_copper")

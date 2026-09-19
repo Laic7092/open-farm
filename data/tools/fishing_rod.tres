@@ -6,5 +6,5 @@
 script = ExtResource("1_6xlx2")
 id = &"fishing_rod"
 display_name_key = &"ITEM_FISHING_ROD"
-kind = 6
+kind = 5
 stamina_cost = 1

@@ -6,6 +6,6 @@
 script = ExtResource("1_d2ih5")
 id = &"pickaxe"
 display_name_key = &"ITEM_PICKAXE"
-kind = 4
+kind = 3
 stamina_cost = 3
 next_id = &"pickaxe_copper"

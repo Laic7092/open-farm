@@ -6,9 +6,10 @@ extends RefCounted
 ## [constant SIZE] 格，因此"物品栏里有什么"永远等于"背包前几格里有什么"，
 ## 不可能出现两份会各自变化的状态。
 ##
-## 工具也不是第二份库存：工具本身就是背包里 [constant ItemData.Category.TOOL]
-## 类别的道具，只是不会被消耗。物品栏只额外记住"当前手持背包的哪一格"，
-## 供 Q / R 切换。通过 [signal EventBus.player.hand_changed] 通知 HUD。
+## 工具与种子都是背包里的普通道具（[method ItemData.is_usable]），只是拿在
+## 手上时"用法"不同：工具交给 [Tool] 系统，种子直接播种。物品栏只额外记住
+## "当前手持背包的哪一格"，供 Q / R 切换。通过 [signal EventBus.player.hand_changed]
+## 通知 HUD。
 
 ## 物品栏显示背包的前多少格。
 const SIZE: int = 12
@@ -43,20 +44,20 @@ func visible_count() -> int:
 	return mini(SIZE, backpack.capacity)
 
 
-## 当前手持格在背包中的下标；没有任何工具时返回 -1。
+## 当前手持格在背包中的下标；手上没有可用道具时返回 -1。
 func hand_index() -> int:
-	if _is_tool_index(_index):
+	if _is_usable_index(_index):
 		return _index
-	return first_tool_index()
+	return first_usable_index()
 
 
-## 当前手持的道具 id；没有工具时为空串。
+## 当前手持的道具 id；手上没有可用道具时为空串。
 func selected_item_id() -> StringName:
 	var index := hand_index()
 	return backpack.slots[index].item_id if index >= 0 else &""
 
 
-## 当前手持道具对应的工具数据；手持的不是工具时返回 null。
+## 当前手持道具对应的工具数据；手上拿的不是工具时返回 null。
 func selected_tool() -> ToolData:
 	var item := Database.get_item(selected_item_id())
 	if item == null or item.tool_id == &"":
@@ -64,27 +65,36 @@ func selected_tool() -> ToolData:
 	return Database.get_tool(item.tool_id)
 
 
-## 第一个装着工具的格子；没有工具时返回 -1。
-func first_tool_index() -> int:
+## 当前手持的种子 id；手上拿的不是种子时为空串。
+func selected_seed_id() -> StringName:
+	var item_id := selected_item_id()
+	var item := Database.get_item(item_id)
+	if item != null and item.category == ItemData.Category.SEED:
+		return item_id
+	return &""
+
+
+## 第一个装着可用道具的格子；没有时返回 -1。
+func first_usable_index() -> int:
 	for index: int in visible_count():
-		if _is_tool_index(index):
+		if _is_usable_index(index):
 			return index
 	return -1
 
 
-## 切换到下一个工具（循环）。
+## 切换到下一个可用道具（循环）。
 func next() -> void:
 	_step(1)
 
 
-## 切换到上一个工具（循环）。
+## 切换到上一个可用道具（循环）。
 func prev() -> void:
 	_step(-1)
 
 
-## 选中背包中某一格；不是工具或越界时返回 false。
+## 选中背包中某一格；不是可用道具或越界时返回 false。
 func select(index: int) -> bool:
-	if not _is_tool_index(index):
+	if not _is_usable_index(index):
 		return false
 	if index == hand_index():
 		return true
@@ -104,32 +114,32 @@ func from_dict(data: Dictionary) -> void:
 # ---------------------------------------------------------------- 内部
 
 func _step(step: int) -> void:
-	var tools := _tool_indices()
-	if tools.size() <= 1:
+	var items := _usable_indices()
+	if items.size() <= 1:
 		return
-	var position := tools.find(hand_index())
+	var position := items.find(hand_index())
 	if position < 0:
 		position = 0
-	_index = tools[wrapi(position + step, 0, tools.size())]
+	_index = items[wrapi(position + step, 0, items.size())]
 	_emit()
 
 
-func _tool_indices() -> Array[int]:
+func _usable_indices() -> Array[int]:
 	var indices: Array[int] = []
 	for index: int in visible_count():
-		if _is_tool_index(index):
+		if _is_usable_index(index):
 			indices.append(index)
 	return indices
 
 
-func _is_tool_index(index: int) -> bool:
+func _is_usable_index(index: int) -> bool:
 	if backpack == null or index < 0 or index >= visible_count():
 		return false
 	var slot: InventorySlot = backpack.slots[index]
 	if slot.is_empty():
 		return false
 	var item := Database.get_item(slot.item_id)
-	return item != null and item.category == ItemData.Category.TOOL
+	return item != null and item.is_usable()
 
 
 func _emit() -> void:

@@ -35,6 +35,42 @@ func _check_farming() -> void:
 	_check(int(outcome.get("amount", 0)) >= 1, "收获数量应当至少为 1")
 	_check(grid.get_crop(cell) == null, "一次性作物收获后应当从地里消失")
 
+	_check_seed_planting(grid)
+
+
+## 播种不再借道工具系统：拿在手上的种子直接种下并消耗一颗。
+func _check_seed_planting(grid: FarmGrid) -> void:
+	var player := _player()
+	if player == null:
+		return
+	var slot := _seed_slot(player)
+	_check(slot >= 0, "背包里应当有种子")
+	if slot < 0:
+		return
+	_check(player.item_bar.select(slot), "种子应当能被拿在手上")
+	_check_eq(String(player.held_seed_id()), "turnip_seed", "手上应当拿着萝卜种子")
+
+	var cell: Vector2i = grid.farmable_area.position + Vector2i(3, 1)
+	_clear_flora_at(cell)
+	_check(grid.till(cell), "给播种腾出的地应当能翻")
+	var before: int = player.inventory.count_of(&"turnip_seed")
+	_check(player.plant_seed(&"turnip_seed", cell), "拿在手上的种子应当能种下去")
+	_check_eq(
+		player.inventory.count_of(&"turnip_seed"), before - 1, "播种应当只消耗一颗种子"
+	)
+
+
+## 背包里第一堆种子所在的格；冒烟测试只用来把它拿在手上。
+func _seed_slot(player: Player) -> int:
+	for index: int in player.inventory.capacity:
+		var slot: InventorySlot = player.inventory.slots[index]
+		if slot.is_empty():
+			continue
+		var item := Database.get_item(slot.item_id)
+		if item != null and item.category == ItemData.Category.SEED:
+			return index
+	return -1
+
 
 ## 世界自然生长系统的端到端检查：开局有植被、过一天会长、对的工具能清掉。
 func _check_flora() -> void:

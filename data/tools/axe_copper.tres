@@ -6,7 +6,7 @@
 script = ExtResource("1_hjpww")
 id = &"axe_copper"
 display_name_key = &"ITEM_AXE_COPPER"
-kind = 3
+kind = 2
 area_size = Vector2i(3, 3)
 tier = 2
 next_id = &"axe_iron"

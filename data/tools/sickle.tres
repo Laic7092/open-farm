@@ -6,5 +6,5 @@
 script = ExtResource("1_7nivw")
 id = &"sickle"
 display_name_key = &"ITEM_SICKLE"
-kind = 5
+kind = 4
 stamina_cost = 1

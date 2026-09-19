@@ -6,7 +6,7 @@
 script = ExtResource("1_gmr60")
 id = &"pickaxe_iron"
 display_name_key = &"ITEM_PICKAXE_IRON"
-kind = 4
+kind = 3
 reach = 2
 area_size = Vector2i(3, 3)
 tier = 3

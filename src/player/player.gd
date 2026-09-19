@@ -18,7 +18,7 @@ const GROUP: StringName = &"player"
 ## 斧头与镐子必须自带：世界会自己长树长石头，玩家没有清理手段的话，
 ## "更真实的世界"就变成了"走不动的世界"。
 const DEFAULT_TOOLS: Array[StringName] = [
-	&"hoe", &"watering_can", &"sickle", &"seed_bag", &"axe", &"pickaxe", &"fishing_rod",
+	&"hoe", &"watering_can", &"sickle", &"axe", &"pickaxe", &"fishing_rod",
 ]
 
 ## 脚步：每走这么多像素响一声。
@@ -46,8 +46,6 @@ var sfx: SfxPlayer
 ## 脚步累积距离与左右脚交替计数。
 var _step_accum: float = 0.0
 var _step_index: int = 0
-## 手动选中的种子；为空时自动取背包里的第一种种子。
-var selected_seed_id: StringName = &""
 
 var _nearby: Array[Interactable] = []
 ## 组合根注入的时钟；日结转钩子注册在它上面。
@@ -223,17 +221,27 @@ func play_animation(prefix: StringName) -> void:
 	sprite.play(animation)
 
 
-## 背包中可用的种子（优先手动选中的那个）。
-func effective_seed_id() -> StringName:
-	if selected_seed_id != &"" and inventory.has(selected_seed_id):
-		return selected_seed_id
-	for slot: InventorySlot in inventory.slots:
-		if slot.is_empty():
-			continue
-		var item := Database.get_item(slot.item_id)
-		if item != null and item.category == ItemData.Category.SEED:
-			return slot.item_id
-	return &""
+## 手上拿着的种子 id；手持的不是种子时为空串。
+##
+## 播种不再有专门的工具：拿哪堆种子就种哪种（见 [ItemUse]）。
+func held_seed_id() -> StringName:
+	return item_bar.selected_seed_id()
+
+
+## 把手上的种子种进 [param cell]；成功才消耗一颗。
+##
+## 播种是"物品栏的用法"，不走工具系统；音效由 [FarmGrid] 在种成功时播放，
+## 这里只负责把结果告诉玩家。
+func plant_seed(seed_id: StringName, cell: Vector2i) -> bool:
+	if not ItemUse.plant_seed(
+		interactor.current_grid(), inventory, seed_id, cell, current_season()
+	):
+		EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
+		return false
+	EventBus.ui.notification_requested.emit(
+		&"NOTIFY_PLANTED", {"item": Text.item_name(Database.get_item(seed_id))}
+	)
+	return true
 
 
 ## 当前手持道具对应的工具数据；手持的不是工具时返回 null。
@@ -396,7 +404,6 @@ func to_dict() -> Dictionary:
 	return {
 		"position": [global_position.x, global_position.y],
 		"facing": String(Facing.to_key(facing)),
-		"selected_seed_id": String(selected_seed_id),
 		"stats": stats.to_dict(),
 		"inventory": inventory.to_dict(),
 		"item_bar": item_bar.to_dict(),
@@ -410,7 +417,6 @@ func from_dict(data: Dictionary) -> void:
 			float((raw_position as Array)[0]), float((raw_position as Array)[1])
 		)
 	facing = Facing.from_key(str(data.get("facing", "down")))
-	selected_seed_id = StringName(str(data.get("selected_seed_id", "")))
 	sprite.flip_h = Facing.flip_h(facing)
 
 	var raw_stats: Variant = data.get("stats", {})

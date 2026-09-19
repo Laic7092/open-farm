@@ -6,7 +6,7 @@
 script = ExtResource("1_5vpde")
 id = &"axe_iron"
 display_name_key = &"ITEM_AXE_IRON"
-kind = 3
+kind = 2
 stamina_cost = 1
 reach = 2
 area_size = Vector2i(3, 3)

@@ -31,7 +31,6 @@ func _units() -> Array[Tool]:
 	return [
 		ToolHoe.new(),
 		ToolWateringCan.new(),
-		ToolSeed.new(),
 		ToolAxe.new(),
 		ToolPickaxe.new(),
 		ToolSickle.new(),
@@ -47,7 +46,7 @@ func test_each_kind_has_its_own_unit() -> void:
 			"工具种类 %d 出现了两个单元" % kind
 		).is_false()
 		seen[kind] = true
-	assert_int(seen.size()).is_equal(7)
+	assert_int(seen.size()).is_equal(6)
 
 
 func test_tools_own_their_sound() -> void:
@@ -55,6 +54,6 @@ func test_tools_own_their_sound() -> void:
 	assert_bool(ToolWateringCan.new().sfx_id() == AudioCatalog.SFX_WATER).is_true()
 	assert_bool(ToolAxe.new().sfx_id() == AudioCatalog.SFX_CHOP).is_true()
 	assert_bool(ToolPickaxe.new().sfx_id() == AudioCatalog.SFX_CHOP).is_true()
-	assert_bool(ToolSeed.new().sfx_id() == AudioCatalog.SFX_PLANT).is_true()
+	# 播种不出自工具系统：种子的音效由 [FarmGrid] 在种成功时播放。
 	# 钓竿不在地面上结算，不出声。
 	assert_bool(ToolFishing.new().sfx_id() == &"").is_true()

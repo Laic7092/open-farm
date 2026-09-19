@@ -54,6 +54,13 @@ func is_tool() -> bool:
 	return category == Category.TOOL
 
 
+## 这类物品能否被拿在手上"用一下"（工具 + 种子）。
+##
+## 工具交给 [Tool] 系统；种子是"物品栏的用法"（见 [ItemUse]）。
+func is_usable() -> bool:
+	return category == Category.TOOL or category == Category.SEED
+
+
 ## 数据自检；返回空数组表示通过。
 func validate() -> PackedStringArray:
 	var problems := PackedStringArray()

@@ -110,7 +110,7 @@ func _tool_id_for_kind(kind: ToolData.Kind) -> StringName:
 		ToolData.Kind.SICKLE:
 			return &"sickle"
 		_:
-			return &"seed_bag"
+			return &""
 
 
 ## 建筑外观：每栋房子都要挂上角色专属贴图，且不能两栋共用一张。

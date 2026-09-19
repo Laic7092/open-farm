@@ -155,6 +155,21 @@ func test_item_bar_refuses_to_select_non_tools() -> void:
 	assert_str(String(bar.selected_item_id())).is_equal("hoe")
 
 
+func test_item_bar_treats_seeds_as_usable() -> void:
+	var inventory := Inventory.new(6)
+	inventory.add(&"hoe", 1)
+	inventory.add(&"turnip_seed", 5)
+	var bar := ItemBar.new(inventory)
+	assert_bool(bar.select(1)).is_true()
+	assert_int(bar.hand_index()).is_equal(1)
+	assert_str(String(bar.selected_item_id())).is_equal("turnip_seed")
+	assert_str(String(bar.selected_seed_id())).is_equal("turnip_seed")
+	# 换成工具后就不再是种子。
+	bar.select(0)
+	assert_str(String(bar.selected_seed_id())).is_equal("")
+	assert_object(bar.selected_tool()).is_not_null()
+
+
 func test_item_bar_serialization_roundtrip() -> void:
 	var inventory := Inventory.new(6)
 	inventory.add(&"hoe", 1)

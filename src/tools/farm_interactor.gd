@@ -27,7 +27,6 @@ var _watering_can := ToolWateringCan.new()
 var _sickle := ToolSickle.new()
 var _axe := ToolAxe.new()
 var _pickaxe := ToolPickaxe.new()
-var _seed := ToolSeed.new()
 var _fishing := ToolFishing.new()
 
 
@@ -141,8 +140,6 @@ func _tool_for(kind: ToolData.Kind) -> Tool:
 			return _hoe
 		ToolData.Kind.WATERING_CAN:
 			return _watering_can
-		ToolData.Kind.SEED:
-			return _seed
 		ToolData.Kind.AXE:
 			return _axe
 		ToolData.Kind.PICKAXE:

@@ -89,15 +89,6 @@ func build() -> void:
 
 	_tool_item(&"fishing_rod", &"ITEM_FISHING_ROD", &"TOOL_FISHING_ROD_DESC", &"fishing_rod")
 
-	var seed_bag := ItemData.new()
-	seed_bag.id = &"seed_bag"
-	seed_bag.display_name_key = &"ITEM_SEED_BAG"
-	seed_bag.category = ItemData.Category.TOOL
-	seed_bag.tool_id = &"seed_bag"
-	seed_bag.sellable = false
-	seed_bag.icon = _item_icon(&"seed_bag")
-	_save(seed_bag, ITEM_DIR.path_join("seed_bag.tres"))
-
 
 ## 道具显示名翻译键；与 i18n 的 ITEM_<ID> 约定一致。
 static func _item_name_key(item_id: StringName) -> StringName:

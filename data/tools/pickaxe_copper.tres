@@ -6,7 +6,7 @@
 script = ExtResource("1_3bgbw")
 id = &"pickaxe_copper"
 display_name_key = &"ITEM_PICKAXE_COPPER"
-kind = 4
+kind = 3
 tier = 2
 next_id = &"pickaxe_iron"
 upgrade_cost = {

@@ -33,7 +33,7 @@ func test_all_expected_flora_are_loaded() -> void:
 
 func test_all_expected_tools_are_loaded() -> void:
 	for tool_id: StringName in [
-		&"hoe", &"watering_can", &"sickle", &"seed_bag", &"axe", &"pickaxe", &"fishing_rod"
+		&"hoe", &"watering_can", &"sickle", &"axe", &"pickaxe", &"fishing_rod"
 	]:
 		assert_object(Database.get_tool(tool_id)).override_failure_message(
 			"缺少工具 %s" % tool_id
