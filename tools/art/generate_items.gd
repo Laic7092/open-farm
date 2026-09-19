@@ -34,7 +34,6 @@ func _initialize() -> void:
 	Art.save_png(_fiber(), _path("fiber"))
 	Art.save_png(_flower(), _path("flower"))
 	Art.save_png(_mushroom(), _path("mushroom"))
-	Art.save_png(_seed_bag(), _path("seed_bag"))
 	Art.save_png(_egg(), _path("egg"))
 	Art.save_png(_milk(), _path("milk"))
 	Art.save_png(_hay(), _path("hay"))
@@ -159,21 +158,6 @@ func _packet(look: Dictionary) -> Image:
 	# 几粒露出来的种子
 	Art.px(image, 5, 13, P.SEED_BROWN)
 	Art.px(image, 11, 13, P.SEED_BROWN)
-	Art.outline(image)
-	return image
-
-
-func _seed_bag() -> Image:
-	var image := _blank()
-	Art.taper(image, Vector2i(8, 5), 9, 8, 12, P.PATH)
-	Art.rect(image, Rect2i(4, 4, 9, 2), P.PATH_DARK)
-	Art.h_line(image, 5, 3, 6, P.SEED_BROWN)
-	Art.ellipse(image, Vector2i(8, 10), Vector2i(3, 4), P.PATH_LIGHT)
-	# 袋口的绳结
-	Art.rect(image, Rect2i(5, 5, 6, 1), P.WOOD_DARK)
-	Art.px(image, 6, 3, P.SEED_BROWN)
-	Art.px(image, 9, 2, P.SEED_BROWN)
-	Art.px(image, 11, 3, P.SEED_BROWN)
 	Art.outline(image)
 	return image
 
