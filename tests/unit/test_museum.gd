@@ -24,6 +24,18 @@ func test_discover_inventory_scans_slots() -> void:
 	assert_int(state.discover_inventory(inventory, 8)).is_equal(0)
 
 
+## 单元订阅被注入的玩家事件即可复现发现逻辑，不需要场景树或全局查找。
+func test_unit_records_on_injected_item_event() -> void:
+	var events := PlayerEvents.new()
+	var museum := Museum.new()
+	museum.bind(events, null)
+	events.item_obtained.emit(&"turnip")
+	events.item_obtained.emit(&"stone")
+	events.item_obtained.emit(&"turnip")
+	assert_int(museum.state.discovered_count()).is_equal(2)
+	assert_bool(museum.state.is_discovered(&"turnip")).is_true()
+
+
 func test_state_roundtrip() -> void:
 	var state := MuseumState.new()
 	state.discover(&"turnip", 1)

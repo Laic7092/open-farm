@@ -62,6 +62,13 @@ func bind_progress(museum: MuseumState, commissions: CommissionState) -> void:
 			child.call(&"bind_progress", museum, commissions)
 
 
+## 由 [Main] 注入委托单元；下发给需要它的界面。
+func bind_commission(commission: Commission) -> void:
+	for child: Node in get_children():
+		if child.has_method(&"bind_commission"):
+			child.call(&"bind_commission", commission)
+
+
 ## 由 [Main] 注入本场景的音频节点；继续下发给需要音量控制的界面。
 func bind_audio(audio: SceneAudio) -> void:
 	for child: Node in get_children():

@@ -81,6 +81,7 @@ func _init() -> void:
 	stats.changed.connect(_on_stats_changed)
 	stats.depleted.connect(_on_stats_depleted)
 	inventory.changed.connect(_on_inventory_changed)
+	inventory.item_added.connect(_on_item_added)
 	inventory.full.connect(_on_inventory_full)
 
 
@@ -457,6 +458,11 @@ func _on_stats_depleted() -> void:
 ## 背包内容变化后转发给 UI（物品栏与背包界面都订阅 [signal EventBus.player.inventory_changed]）。
 func _on_inventory_changed() -> void:
 	EventBus.player.inventory_changed.emit()
+
+
+## 新道具入包后转发给图鉴等"收藏"逻辑。
+func _on_item_added(item_id: StringName) -> void:
+	EventBus.player.item_obtained.emit(item_id)
 
 
 ## 背包满时转发给音频。

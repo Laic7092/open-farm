@@ -13,6 +13,8 @@ signal stamina_depleted()
 signal money_changed(money: int, delta: int)
 ## 背包内容变化。
 signal inventory_changed()
+## 新道具进入背包（[param item_id] 为道具 id）；图鉴等"收藏"逻辑据此入册。
+signal item_obtained(item_id: StringName)
 ## 背包已满，新物品放不下。
 signal inventory_full(item_id: StringName)
 ## 当前手持道具切换（即物品栏选中的那一格）；[param index] 为背包下标。

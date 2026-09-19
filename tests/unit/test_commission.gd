@@ -83,6 +83,41 @@ func test_state_roundtrip() -> void:
 	assert_bool(restored.is_completed(&"ship_egg")).is_true()
 
 
+## 结算脱离界面复现：注入档案 / 背包 / 时钟，即可完成一次交付。
+func test_unit_settles_delivery_with_injected_dependencies() -> void:
+	var profile := PlayerProfile.new()
+	profile.set_money(0)
+	var inventory := Inventory.new(4)
+	inventory.add(&"egg", 3)
+	var clock := GameDateClock.new()
+	clock.date = GameDate.new(1, Season.Type.SPRING, 1)
+	var commission := Commission.new()
+	commission.bind(profile, clock, func() -> Inventory: return inventory)
+
+	assert_int(commission.deliver(&"ship_egg")).is_equal(Commission.Result.DELIVERED)
+	assert_int(profile.money).is_equal(220)
+	assert_int(inventory.count_of(&"egg")).is_equal(0)
+	assert_bool(commission.is_completed(&"ship_egg")).is_true()
+
+	# 重复交付不再扣道具 / 发钱。
+	assert_int(commission.deliver(&"ship_egg")).is_equal(Commission.Result.ALREADY_DONE)
+	assert_int(profile.money).is_equal(220)
+
+
+func test_unit_reports_insufficient_items() -> void:
+	var profile := PlayerProfile.new()
+	var inventory := Inventory.new(2)
+	inventory.add(&"egg", 1)
+	var clock := GameDateClock.new()
+	clock.date = GameDate.new(1, Season.Type.SPRING, 1)
+	var commission := Commission.new()
+	commission.bind(profile, clock, func() -> Inventory: return inventory)
+
+	assert_int(commission.deliver(&"ship_egg")).is_equal(Commission.Result.INSUFFICIENT)
+	assert_int(inventory.count_of(&"egg")).is_equal(1)
+	assert_bool(commission.is_completed(&"ship_egg")).is_false()
+
+
 func test_database_exposes_commissions() -> void:
 	assert_bool(Database.commissions().size() > 0).override_failure_message("应当有委托数据").is_true()
 	assert_int(Database.commission_list().size()).is_equal(Database.commissions().size())

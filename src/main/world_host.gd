@@ -106,6 +106,14 @@ func current_world() -> Node:
 	return _current_world if is_instance_valid(_current_world) else null
 
 
+## 当前挂载世界里的玩家：世界宿主只管自己持有的那张图，不做全树查找。
+func current_player() -> Player:
+	var world := current_world()
+	if world == null:
+		return null
+	return world.find_child("Player", true, false) as Player
+
+
 ## 当前世界场景的资源路径。
 func current_world_path() -> String:
 	var world := current_world()

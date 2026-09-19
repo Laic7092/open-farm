@@ -12,6 +12,9 @@ const DEFAULT_CAPACITY: int = 24
 ## 内容发生任何变化时发出。
 signal changed()
 
+## 有新道具成功放入时发出（[param item_id] 为放入的道具）。
+signal item_added(item_id: StringName)
+
 ## 单格内容变化，便于 UI 做局部刷新。
 signal slot_changed(index: int)
 
@@ -77,6 +80,7 @@ func add(item_id: StringName, count: int = 1, quality: int = 0) -> int:
 		slot_changed.emit(index)
 	if not touched.is_empty():
 		changed.emit()
+		item_added.emit(item_id)
 	if remaining > 0:
 		full.emit(item_id)
 	return remaining

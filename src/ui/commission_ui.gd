@@ -2,8 +2,8 @@ class_name CommissionUi
 extends Control
 ## 委托板界面：展示今日委托、交付道具换报酬。
 ##
-## 今日委托由 [CommissionRules] 从 [Database.commission_list] 里确定性挑出，
-## 完成记录在 [CommissionState] 里、按日期自动刷新；界面只做"扣道具 / 发钱"的结算。
+## 委托的"出题、刷新、结算"都在 [Commission] 单元里；界面只做展示与发请求，
+## 不碰背包与金钱——交付结果由单元返回，界面翻译成提示与音效。
 ##
 ## [b]操作[/b]：WASD / 方向键选择，[code]E[/code] / 回车交付，[code]Esc[/code] 关闭。
 
@@ -13,8 +13,8 @@ extends Control
 @onready var info_label: Label = %InfoLabel
 @onready var hint_label: Label = %HintLabel
 
-var _state: CommissionState
-var _profile: PlayerProfile
+## 组合根注入的委托单元。
+var _commission: Commission
 var _clock: GameDateClock
 ## 当前列表里的委托 id，与 [member list] 的行一一对应。
 var _entries: Array[StringName] = []
@@ -26,22 +26,20 @@ func _ready() -> void:
 	list.item_selected.connect(func(_index: int) -> void: _refresh_info())
 
 
-## 组合根注入玩家档案与时钟。
-func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
-	_profile = profile
+## 组合根注入时钟（用于显示日期）；委托逻辑由 [method bind_commission] 注入。
+func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
 	_clock = clock
 
 
-## 组合根注入委托状态。
-func bind_progress(_museum: MuseumState, commissions: CommissionState) -> void:
-	_state = commissions
+## 组合根注入委托单元。
+func bind_commission(commission: Commission) -> void:
+	_commission = commission
 
 
 func open() -> void:
-	if _state == null or _profile == null or _clock == null:
+	if _commission == null or _clock == null:
 		push_error("CommissionUi: 依赖未注入")
 		return
-	_state.ensure_for(_clock.date)
 	_rebuild()
 	visible = true
 
@@ -56,12 +54,12 @@ func _rebuild() -> void:
 	title_label.text = Text.key(&"COMMISSION_TITLE")
 	date_label.text = Text.date_text(_clock.date)
 
-	for commission_id: StringName in _offers():
+	for commission_id: StringName in _commission.offers():
 		var data := Database.get_commission(commission_id)
 		if data == null:
 			continue
 		_entries.append(commission_id)
-		var done: bool = _state.is_completed(commission_id)
+		var done: bool = _commission.is_completed(commission_id)
 		list.add_item(_row_text(data, done))
 		var item := Database.get_item(data.item_id)
 		if item != null and item.icon != null:
@@ -70,13 +68,6 @@ func _rebuild() -> void:
 	if not _entries.is_empty():
 		list.select(0)
 	_refresh_info()
-
-
-func _offers() -> Array[StringName]:
-	var pool: Array[StringName] = []
-	for data: CommissionData in Database.commission_list():
-		pool.append(data.id)
-	return CommissionRules.offers_for(_clock.date, pool)
 
 
 func _row_text(data: CommissionData, done: bool) -> String:
@@ -150,33 +141,24 @@ func _deliver() -> void:
 		return
 	var commission_id: StringName = _entries[index]
 	var data := Database.get_commission(commission_id)
-	var inventory := _player_inventory()
-	if data == null or inventory == null:
-		return
-	if _state.is_completed(commission_id):
-		EventBus.ui.notification_requested.emit(&"NOTIFY_COMMISSION_ALREADY", {})
-		return
-	if not inventory.has(data.item_id, data.amount):
-		EventBus.ui.notification_requested.emit(&"NOTIFY_COMMISSION_INCOMPLETE", {})
-		return
-	if not inventory.remove(data.item_id, data.amount):
-		return
-	if _profile != null:
-		_profile.earn(CommissionRules.reward_of(data))
-	_state.complete(commission_id)
-	EventBus.ui.notification_requested.emit(
-		&"NOTIFY_COMMISSION_DELIVERED",
-		{"title": Text.key(data.title_key), "reward": CommissionRules.reward_of(data)}
-	)
-	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
-	_rebuild()
+	match _commission.deliver(commission_id):
+		Commission.Result.DELIVERED:
+			if data != null:
+				EventBus.ui.notification_requested.emit(
+					&"NOTIFY_COMMISSION_DELIVERED",
+					{
+						"title": Text.key(data.title_key),
+						"reward": CommissionRules.reward_of(data),
+					}
+				)
+			EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
+			_rebuild()
+		Commission.Result.ALREADY_DONE:
+			EventBus.ui.notification_requested.emit(&"NOTIFY_COMMISSION_ALREADY", {})
+		Commission.Result.INSUFFICIENT:
+			EventBus.ui.notification_requested.emit(&"NOTIFY_COMMISSION_INCOMPLETE", {})
 
 
 func _selected_index() -> int:
 	var selected := list.get_selected_items()
 	return selected[0] if not selected.is_empty() else -1
-
-
-func _player_inventory() -> Inventory:
-	var player := get_tree().get_first_node_in_group(Player.GROUP) as Player
-	return player.inventory if player != null else null

@@ -47,10 +47,10 @@ var weather_state: WeatherState = WeatherState.new()
 var relationship_store: RelationshipStore = RelationshipStore.new()
 ## 本局节日 / 事件进度；由 Main 作为组合根持有。
 var calendar_progress: CalendarProgress = CalendarProgress.new()
-## 本局博物馆图鉴；由 Main 持有，背包变化时补充记录。
-var museum_state: MuseumState = MuseumState.new()
-## 本局委托板进度；由 Main 持有，跨天时由日期键自动刷新。
-var commission_state: CommissionState = CommissionState.new()
+## 本局博物馆单元；持有图鉴状态并在新道具入包时自动入册。
+var museum: Museum = Museum.new()
+## 本局委托单元；持有委托板状态，负责出题、刷新与交付结算。
+var commission: Commission = Commission.new()
 
 ## 天气服务；由 Main 创建为子节点，不再是 Autoload。
 var weather_service: WeatherService
@@ -168,8 +168,8 @@ func _bind_dependencies() -> void:
 	save_sections.append(SaveSection.new(weather_service, &"WeatherSystem", 30, true))
 	save_sections.append(SaveSection.new(relationship_service, &"Relationships", 40, true))
 	save_sections.append(SaveSection.new(calendar_service, &"Calendar", 50, true))
-	save_sections.append(SaveSection.new(museum_state, &"Museum", 55, true))
-	save_sections.append(SaveSection.new(commission_state, &"Commissions", 56, true))
+	save_sections.append(SaveSection.new(museum.state, &"Museum", 55, true))
+	save_sections.append(SaveSection.new(commission.state, &"Commissions", 56, true))
 	if host != null:
 		save_sections.append(SaveSection.new(host, &"SceneRouter", 60, true))
 	SaveManager.set_core_sections(save_sections)
@@ -193,9 +193,10 @@ func _bind_dependencies() -> void:
 	if not player_profile.money_changed.is_connected(_on_profile_money_changed):
 		player_profile.money_changed.connect(_on_profile_money_changed)
 
-	# 图鉴：背包一有变化就把新道具记进去（钓到 / 收获 / 买到 / 采集都会经过背包）。
-	if not EventBus.player.inventory_changed.is_connected(_on_inventory_changed):
-		EventBus.player.inventory_changed.connect(_on_inventory_changed)
+	# 图鉴：订阅被注入的玩家事件，新道具一入包就入册（钓到 / 收获 / 买到 / 采集都会经过背包）。
+	museum.bind(player_profile.events, clock_state)
+	# 委托：注入档案 / 时钟 / "当前背包"提供者；出题与结算都由委托单元负责。
+	commission.bind(player_profile, clock_state, Callable(self, &"_current_inventory"))
 
 	# 本局服务：状态 Resource 与彼此依赖全部在 Main 显式注入。
 	weather_service.bind_dependencies(clock_state, weather_state)
@@ -224,7 +225,9 @@ func _bind_dependencies() -> void:
 	if ui_root != null and ui_root.has_method(&"bind_services"):
 		ui_root.call(&"bind_services", weather_service, relationship_service, calendar_service)
 	if ui_root != null and ui_root.has_method(&"bind_progress"):
-		ui_root.call(&"bind_progress", museum_state, commission_state)
+		ui_root.call(&"bind_progress", museum.state, commission.state)
+	if ui_root != null and ui_root.has_method(&"bind_commission"):
+		ui_root.call(&"bind_commission", commission)
 	if ui_root != null and scene_audio != null and ui_root.has_method(&"bind_audio"):
 		ui_root.call(&"bind_audio", scene_audio)
 
@@ -252,8 +255,8 @@ func _boot_new_game() -> void:
 	clock_state.reset()
 	weather_service.reroll(clock_state.date.season)
 	calendar_service.reset()
-	museum_state.reset()
-	commission_state.reset()
+	museum.state.reset()
+	commission.state.reset()
 	# 开局也要让 HUD / 音频节点看到完整状态，而不依赖某次日结转。
 	clock_state.refresh_observers()
 	world_host.clear_world_cache()
@@ -290,12 +293,13 @@ func _on_pause_menu_requested() -> void:
 	pass
 
 
-## 背包变化时把新道具记进图鉴。
-func _on_inventory_changed() -> void:
-	var player := get_tree().get_first_node_in_group(Player.GROUP) as Player
-	if player == null:
-		return
-	museum_state.discover_inventory(player.inventory, clock_state.date.absolute_day())
+## 当前世界里的玩家背包；在世界宿主持有的那张图内查找，不做全树搜索。
+func _current_inventory() -> Inventory:
+	if world_host == null:
+		return null
+	var player := world_host.current_player()
+	return player.inventory if player != null else null
+
 
 
 # ---------------------------------------------------------------- 信号转发
