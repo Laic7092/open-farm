@@ -18,6 +18,8 @@ signal close_requested()
 @onready var sfx_label: Label = %SfxLabel
 @onready var music_slider: HSlider = %MusicSlider
 @onready var sfx_slider: HSlider = %SfxSlider
+@onready var touch_toggle: Button = %TouchToggle
+@onready var touch_hint: Label = %TouchHint
 
 ## 本场景的音频节点；由 [UiRoot] 注入，独立预览时按分组兜底。
 var _audio: SceneAudio
@@ -38,6 +40,8 @@ func _ready() -> void:
 	title_button.text = Text.key(&"MENU_TITLE")
 	music_label.text = Text.key(&"MENU_MUSIC")
 	sfx_label.text = Text.key(&"MENU_SFX")
+	_refresh_touch_toggle(TouchSettings.is_enabled())
+	touch_toggle.toggled.connect(_on_touch_toggled)
 
 	# 未注入时（单场景预览）退化到按分组找场景音频节点。
 	if _audio == null:
@@ -67,11 +71,31 @@ func open() -> void:
 	if _audio != null:
 		music_slider.set_value_no_signal(_audio.bgm_volume)
 		sfx_slider.set_value_no_signal(_audio.sfx_volume)
+	_refresh_touch_toggle(TouchSettings.is_enabled())
 	resume_button.grab_focus()
 
 
 func close() -> void:
 	visible = false
+
+
+## 存进 [TouchSettings] 并广播，让触控层与指针策略当场生效。
+func _on_touch_toggled(toggled_on: bool) -> void:
+	TouchSettings.set_enabled(toggled_on)
+	_refresh_touch_toggle(toggled_on)
+	EventBus.ui.touch_controls_toggled.emit(toggled_on)
+
+
+## 文案跟着状态走，所以是"虚拟摇杆：开 / 关"而不是一个复选框。
+##
+## 顺便把 ABXY 的键位写在这里：圆里塞不下中文，屏幕上的摇杆自己说不清楚。
+func _refresh_touch_toggle(enabled: bool) -> void:
+	touch_toggle.set_pressed_no_signal(enabled)
+	touch_toggle.text = Text.format(&"MENU_TOUCH_CONTROLS", {
+		"state": Text.key(&"MENU_ON" if enabled else &"MENU_OFF"),
+	})
+	touch_hint.text = Text.key(&"TOUCH_HINT")
+	touch_hint.visible = enabled
 
 
 ## 手动存档收敛成"存当前这一局"：槽位由 [SaveManager] 自己管理，菜单不再手选。

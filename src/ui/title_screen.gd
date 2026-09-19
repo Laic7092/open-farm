@@ -60,7 +60,7 @@ var _saves: Array[Dictionary] = []
 
 
 func _ready() -> void:
-	PointerInput.hide_cursor()
+	PointerInput.sync_cursor()
 	_clouds = [_cloud_1, _cloud_2, _cloud_3]
 
 	_continue_button.pressed.connect(_on_continue_pressed)
@@ -91,8 +91,9 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	# 纯键盘操作：指针事件一律吞掉，避免隐藏的光标误触按钮。
-	if PointerInput.is_pointer(event):
+	# 纯键盘操作：指针事件一律吞掉，避免隐藏的光标误触按钮；
+	# 触控模式下放行，标题页 / 存档列表的按钮才能点。
+	if PointerInput.swallows_pointer() and PointerInput.is_pointer(event):
 		get_viewport().set_input_as_handled()
 
 

@@ -229,6 +229,63 @@ func _check_ui() -> void:
 		commission_ui.close()
 		_check(not commission_ui.visible, "委托板界面应当能关闭")
 
+	_check_touch_controls()
+
+
+## 触控层：开关要能整层显隐，摇杆方向要真的落进 [Input]。
+##
+## 不模拟真实触摸（无头环境没有触点），而是直接调公开接口：
+## 它和手指拖动走的是同一条 [code]_gui_input → set_stick[/code] 路径。
+func _check_touch_controls() -> void:
+	var touch := get_tree().root.find_child("TouchControls", true, false) as TouchControls
+	_check(touch != null, "应当存在触控控件层")
+	if touch == null:
+		return
+
+	var enabled_before := TouchSettings.is_enabled()
+	touch.apply_enabled(true)
+	_check(touch.visible, "打开设置后触控控件应当可见")
+	touch.set_stick(Vector2.RIGHT)
+	_check(Input.get_action_strength(&"move_right") > 0.0, "摇杆应当把方向写进输入动作")
+	touch.set_stick(Vector2.ZERO)
+	_check_eq(Input.get_action_strength(&"move_right"), 0.0, "摇杆回中应当松开方向")
+
+	touch.apply_enabled(enabled_before)
+	_check_eq(touch.visible, enabled_before, "关掉设置后触控控件应当隐藏")
+
+	# 屏幕按钮走的是另一条注入路径（InputEventAction）：这里直接给 X（换具）按钮
+	# 送一个合成触摸事件，走完整的 _gui_input → pressed → hold_action。
+	# 不手调 hold_action，否则"按钮没接上线"这类改动就漏了。
+	# 无头环境不会传送真实输入事件，所以自己造一个（Input.flush_buffered_events()
+	# 是主循环每帧自己做的那步，手动调一次就能在同一帧里断言结果）。
+	var player := get_tree().get_first_node_in_group(Player.GROUP) as Player
+	_check(player != null, "应当存在玩家")
+	var x_button := touch.get_node_or_null("%XButton") as TouchButton
+	_check(x_button != null, "右上角应当有 X（换具）键")
+	if player == null or x_button == null:
+		return
+	touch.apply_enabled(true)
+	var hand_before := player.item_bar.hand_index()
+	_tap(x_button, true)
+	Input.flush_buffered_events()
+	_tap(x_button, false)
+	Input.flush_buffered_events()
+	_check(
+		player.item_bar.hand_index() != hand_before,
+		"屏幕按钮应当把事件驱动的动作送到 _unhandled_input"
+	)
+	_check(not x_button.is_held(), "松开后按钮应当回到未按下状态")
+	touch.apply_enabled(enabled_before)
+
+
+## 合成一次按下 / 松开：位置用控件中心（本函数里位置本身不影响结果）。
+func _tap(button: TouchButton, pressed: bool) -> void:
+	var event := InputEventScreenTouch.new()
+	event.index = 0
+	event.pressed = pressed
+	event.position = button.size * 0.5
+	button._gui_input(event)
+
 
 func _check_audio() -> void:
 	_check(AudioServer.get_bus_index(SceneAudio.BGM_BUS) >= 0, "应当存在 BGM 总线")

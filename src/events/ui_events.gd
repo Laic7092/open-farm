@@ -31,6 +31,8 @@ signal notification_requested(text_key: StringName, args: Dictionary)
 signal inventory_toggle_requested()
 ## 请求打开 / 关闭系统菜单。
 signal pause_menu_toggle_requested()
+## 触控控件（虚拟摇杆 / 屏幕按钮）开 / 关被改变。
+signal touch_controls_toggled(enabled: bool)
 ## 请求打开博物馆图鉴。
 signal museum_requested()
 ## 请求打开委托板。

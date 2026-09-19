@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://src/ui/ui_root.gd" id="1_ui_root"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -9,12 +9,16 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/fishing_ui.tscn" id="7_fishing"]
 [ext_resource type="PackedScene" path="res://scenes/ui/museum_ui.tscn" id="8_museum"]
 [ext_resource type="PackedScene" path="res://scenes/ui/commission_ui.tscn" id="9_commission"]
+[ext_resource type="PackedScene" path="res://scenes/ui/touch_controls.tscn" id="10_touch"]
 
 [node name="UiRoot" type="CanvasLayer"]
 layer = 10
 script = ExtResource("1_ui_root")
 
 [node name="Hud" parent="." instance=ExtResource("2_hud")]
+unique_name_in_owner = true
+
+[node name="TouchControls" parent="." instance=ExtResource("10_touch")]
 unique_name_in_owner = true
 
 [node name="DialogueBox" parent="." instance=ExtResource("3_dialogue")]

@@ -16,12 +16,15 @@ LOCALE_NAME_EN,English,English
 LOCALE_NAME_ZH_CN,中文,中文
 MENU_LOAD,读取进度,Load
 MENU_MUSIC,音乐,Music
+MENU_OFF,关,Off
+MENU_ON,开,On
 MENU_PAUSED,游戏已暂停,Paused
 MENU_QUIT,退出,Quit
 MENU_RESUME,继续游戏,Resume
 MENU_SAVE,保存进度,Save
 MENU_SFX,音效,Sound
 MENU_TITLE,回到标题,Back to Title
+MENU_TOUCH_CONTROLS,虚拟摇杆：{state},Touch controls: {state}
 MUSEUM_CAT_ALL,全部,All
 MUSEUM_CAT_CROP,作物,Crops
 MUSEUM_CAT_FOOD,食物,Food
@@ -149,3 +152,4 @@ MINE_SURFACE,地面,Surface
 MINE_FLOOR,第{n}层,Floor {n}
 MINE_CURRENT,（当前）, (current)
 NOTIFY_MINE_STRATUM,进入{name}（第{depth}层）,Entering {name} (Floor {depth})
+TOUCH_HINT,A 工具 · B 交互 · X 换具 · Y 背包,A Tool · B Use · X Swap · Y Bag

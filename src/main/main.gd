@@ -95,9 +95,10 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	PointerInput.hide_cursor()
+	PointerInput.sync_cursor()
 	player_profile.set_playtime_counting(true)
 	EventBus.ui.pause_menu_toggle_requested.connect(_on_pause_menu_requested)
+	EventBus.ui.touch_controls_toggled.connect(_on_touch_controls_toggled)
 
 	if boot_mode == BootMode.LOAD_SLOT and await _boot_from_save():
 		return
@@ -111,9 +112,15 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	# 纯键盘操作：指针事件一律吞掉，避免隐藏的光标误触 UI。
-	if PointerInput.is_pointer(event):
+	# 纯键盘操作：指针事件一律吞掉，避免隐藏的光标误触 UI；
+	# 触控模式下必须放行，否则虚拟摇杆与屏幕按钮收不到任何指针事件。
+	if PointerInput.swallows_pointer() and PointerInput.is_pointer(event):
 		get_viewport().set_input_as_handled()
+
+
+## 触控开关可能在游戏里被改（系统菜单），光标要跟着切。
+func _on_touch_controls_toggled(_enabled: bool) -> void:
+	PointerInput.sync_cursor()
 
 
 func _unhandled_input(event: InputEvent) -> void:

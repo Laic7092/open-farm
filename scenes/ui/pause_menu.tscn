@@ -26,9 +26,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -104.0
-offset_top = -118.0
+offset_top = -150.0
 offset_right = 104.0
-offset_bottom = 118.0
+offset_bottom = 150.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -90,6 +90,19 @@ size_flags_vertical = 0
 max_value = 1.0
 step = 0.05
 value = 0.85
+
+[node name="TouchToggle" type="Button" parent="Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+text = "虚拟摇杆：开"
+
+[node name="TouchHint" type="Label" parent="Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.78, 1)
+text = "A 工具 · B 交互 · X 换具 · Y 背包"
+horizontal_alignment = 1
 
 [node name="TitleButton" type="Button" parent="Panel/Margin/VBox"]
 unique_name_in_owner = true

@@ -21,6 +21,12 @@ const ITEM_BAR_SIZE: int = ItemBar.SIZE
 ## 物品栏格子场景。
 const HUD_SLOT_SCENE: PackedScene = preload("res://scenes/ui/hud_slot.tscn")
 
+## 左下角信息块（体力 / 手持）的基准偏移，与 [code]hud.tscn[/code] 里一致。
+const BOTTOM_LEFT_TOP: float = -46.0
+const BOTTOM_LEFT_BOTTOM: float = -6.0
+## 触控模式下左下角让给虚拟摇杆的抬升量（摇杆直径 + 边距）。
+const TOUCH_LIFT: float = 64.0
+
 @onready var date_label: Label = %DateLabel
 @onready var festival_label: Label = %FestivalLabel
 @onready var time_label: Label = %TimeLabel
@@ -35,6 +41,7 @@ const HUD_SLOT_SCENE: PackedScene = preload("res://scenes/ui/hud_slot.tscn")
 @onready var inventory_bar: HBoxContainer = %InventoryBar
 @onready var prompt_label: Label = %PromptLabel
 @onready var toast_label: Label = %ToastLabel
+@onready var bottom_left: VBoxContainer = %BottomLeft
 
 var _toast_tween: Tween
 ## 天气图标缓存：贴着同一个文件反复 load 会让每帧的 HUD 刷新变成磁盘 IO。
@@ -56,6 +63,15 @@ func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
 	_clock = clock
 	if is_node_ready():
 		_refresh_all()
+
+
+## 触控模式：把左下角信息块抬到虚拟摇杆上方，避免与摇杆叠在一起。
+##
+## 位置由常量推导、不读当前值，所以重复调用或与 [TouchControls] 的初始化乱序都安全。
+func set_touch_layout(enabled: bool) -> void:
+	var lift: float = TOUCH_LIFT if enabled else 0.0
+	bottom_left.offset_top = BOTTOM_LEFT_TOP - lift
+	bottom_left.offset_bottom = BOTTOM_LEFT_BOTTOM - lift
 
 
 ## 由 [UiRoot] 在 UI 进入树前下发领域服务；HUD 只读。
