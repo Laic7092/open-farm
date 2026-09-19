@@ -73,6 +73,8 @@ var _season: Season.Type = SeasonPalette.BASE_SEASON
 var _nodes: Dictionary[Vector2i, Flora] = {}
 var _species: Array[FloraData] = []
 var _rng := RandomNumberGenerator.new()
+## 本植被场自己的音效播放器。
+var sfx: SfxPlayer
 var _last_day: int = 0
 var _initialized: bool = false
 var _loaded: bool = false
@@ -128,6 +130,7 @@ func _ready() -> void:
 	_rng.seed = maxi(world_seed, 1) * 7919 + 104729
 	_last_day = _clock.date.absolute_day() if _clock != null else 0
 	_initialized = true
+	sfx = SfxPlayer.attach(self)
 	_schedule_initial_generation()
 
 
@@ -215,6 +218,8 @@ func clear(
 	var flora_id: StringName = state.flora_id
 	_remove_silently(cell)
 	EventBus.world.flora_cleared.emit(cell, flora_id, item_id, amount)
+	if sfx != null:
+		sfx.play(AudioCatalog.SFX_CHOP)
 	return {"item_id": item_id, "amount": amount, "quality": quality, "flora_id": flora_id}
 
 

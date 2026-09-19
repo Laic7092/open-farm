@@ -286,20 +286,8 @@ func _hook_events() -> void:
 		_connect_once(EventBus.hour_changed, _on_hour_changed)
 
 	if listen_gameplay_sfx:
-		_connect_once(EventBus.farm.crop_planted, _on_crop_planted)
-		_connect_once(EventBus.farm.crop_harvested, _on_crop_harvested)
-		_connect_once(EventBus.farm.crop_died, _on_crop_died)
-		_connect_once(EventBus.farm.animal_placed, _on_animal_placed)
-		_connect_once(EventBus.farm.animal_fed, _on_animal_fed)
-		_connect_once(EventBus.farm.animal_petted, _on_animal_petted)
-		_connect_once(EventBus.farm.animal_product_collected, _on_animal_product_collected)
-		_connect_once(EventBus.farm.animal_matured, _on_animal_matured)
 		_connect_once(EventBus.farm.fish_cast, _on_fish_cast)
-		_connect_once(EventBus.farm.fish_bite, _on_fish_bite)
-		_connect_once(EventBus.farm.fish_reel_tick, _on_fish_reel_tick)
 		_connect_once(EventBus.farm.fish_ended, _on_fish_ended)
-		_connect_once(EventBus.farm.fish_caught, _on_fish_caught)
-		_connect_once(EventBus.world.flora_cleared, _on_flora_cleared)
 		_connect_once(EventBus.day_changed, _on_day_changed)
 
 	if listen_ui_sfx:
@@ -333,62 +321,13 @@ func _hour() -> int:
 	return int(_clock.minute_of_day / GameDateClock.MINUTES_PER_HOUR)
 
 
-func _on_crop_died(_cell: Vector2i) -> void:
-	play_sfx(Catalog.SFX_ERROR, 0.7)
-
-
-func _on_animal_placed(_building_id: StringName, _animal_id: StringName) -> void:
-	play_sfx(Catalog.SFX_ANIMAL_HAPPY)
-
-
-func _on_animal_fed(_building_id: StringName, _count: int) -> void:
-	play_sfx(Catalog.SFX_ANIMAL_EAT)
-
-
-func _on_animal_product_collected(
-	_building_id: StringName, _animal_id: StringName, _item_id: StringName, _amount: int
-) -> void:
-	play_sfx(Catalog.SFX_HARVEST, 1.1)
-
-
-func _on_animal_matured(_building_id: StringName, _animal_id: StringName) -> void:
-	play_sfx(Catalog.SFX_MATURE)
-
-
-func _on_crop_planted(_cell: Vector2i, _crop_id: StringName) -> void:
-	play_sfx(Catalog.SFX_PLANT)
-
-
-func _on_crop_harvested(_cell: Vector2i, _item_id: StringName, _amount: int) -> void:
-	play_sfx(Catalog.SFX_HARVEST)
-
-
-func _on_flora_cleared(_cell: Vector2i, _flora_id: StringName, _item_id: StringName, _amount: int) -> void:
-	play_sfx(Catalog.SFX_CHOP)
-
-
-func _on_fish_cast(power: float, _distance: float) -> void:
-	# 蓄力越满，出力声越尖；同时用钓鱼曲接管世界 BGM。
-	play_sfx(Catalog.SFX_FISH_CHARGE, 0.88 + 0.35 * clampf(power, 0.0, 1.0), -5.0)
-	play_sfx(Catalog.SFX_FISH_CAST, 1.0, -4.0)
+func _on_fish_cast(_power: float, _distance: float) -> void:
+	# 钓鱼用专属曲目接管世界 BGM（音效已由鱼竿所在的玩家播放）。
 	push_bgm_override(Catalog.BGM_FISHING)
-
-
-func _on_fish_bite(_fish_id: StringName) -> void:
-	play_sfx(Catalog.SFX_FISH_BITE)
-	play_sfx(Catalog.SFX_FISH_FIGHT, 1.0, -7.0)
-
-
-func _on_fish_reel_tick() -> void:
-	play_sfx(Catalog.SFX_FISH_REEL, 1.0, -10.0)
 
 
 func _on_fish_ended() -> void:
 	pop_bgm_override()
-
-
-func _on_fish_caught(_fish_id: StringName, _item_id: StringName, _size_cm: int) -> void:
-	play_sfx(Catalog.SFX_FISH_CATCH)
 
 
 func _on_dialogue_line_shown() -> void:
@@ -397,10 +336,6 @@ func _on_dialogue_line_shown() -> void:
 
 func _on_ui_sound_requested(sound_id: StringName, pitch: float, volume_db: float) -> void:
 	play_sfx(sound_id, pitch, volume_db)
-
-
-func _on_animal_petted(_building: StringName, _animal: StringName, _affection: int) -> void:
-	play_sfx(Catalog.SFX_ANIMAL_HAPPY, 1.08)
 
 
 func _on_transaction(_item: StringName, _count: int, _total: int, is_purchase: bool) -> void:

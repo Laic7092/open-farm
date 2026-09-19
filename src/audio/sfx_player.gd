@@ -27,6 +27,14 @@ func _ready() -> void:
 		_players.append(player)
 
 
+## 在 [param host] 下挂一个播放器节点。宿主动不动在 [method Node._ready] 里调一次即可。
+static func attach(host: Node, node_name: StringName = &"Sfx") -> SfxPlayer:
+	var player := SfxPlayer.new()
+	player.name = node_name
+	host.add_child(player)
+	return player
+
+
 ## 播放一次音效；缺资源时静默跳过（首次会警告）。
 func play(sound_id: StringName, pitch: float = 1.0, volume_db: float = 0.0) -> void:
 	if _players.is_empty():

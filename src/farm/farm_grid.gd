@@ -56,6 +56,8 @@ var tiles: Dictionary[Vector2i, FarmTile] = {}
 
 var _crop_nodes: Dictionary[Vector2i, Crop] = {}
 var _rng := RandomNumberGenerator.new()
+## 本网格自己的音效播放器：谁制造声音，谁持有播放器。
+var sfx: SfxPlayer
 ## 组合根注入的时钟；日结转钩子注册在它上面。
 var _clock: GameDateClock
 ## 组合根注入的天气服务；日结转时决定作物是否自动浇水。
@@ -93,11 +95,17 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	_rng.randomize()
+	sfx = SfxPlayer.attach(self)
 	if paint_ground_on_ready:
 		paint_ground()
 	if decorate_on_ready:
 		paint_decorations()
 	_rebuild_soil_visuals()
+
+
+func _play(sound_id: StringName, pitch: float = 1.0, volume_db: float = 0.0) -> void:
+	if sfx != null:
+		sfx.play(sound_id, pitch, volume_db)
 
 
 # ---------------------------------------------------------------- 查询
@@ -197,6 +205,7 @@ func plant(cell: Vector2i, seed_item_id: StringName, season: Season.Type) -> boo
 	tile.crop = CropState.new(data.id)
 	_spawn_crop_node(cell)
 	EventBus.farm.crop_planted.emit(cell, data.id)
+	_play(AudioCatalog.SFX_PLANT)
 	return true
 
 
@@ -218,6 +227,7 @@ func harvest(cell: Vector2i) -> Dictionary:
 		return {}
 
 	EventBus.farm.crop_harvested.emit(cell, outcome["item_id"], amount)
+	_play(AudioCatalog.SFX_HARVEST)
 	if bool(outcome.get("removed", false)):
 		_remove_crop_node(cell)
 		tile.clear_crop()
@@ -448,6 +458,7 @@ func _advance_crop(
 	var change := CropGrowth.advance(data, tile.crop, watered, date.season)
 	if bool(change.get(CropGrowth.KEY_DIED, false)):
 		EventBus.farm.crop_died.emit(cell)
+		_play(AudioCatalog.SFX_ERROR, 0.7)
 		_refresh_crop(cell)
 		return
 	if bool(change.get(CropGrowth.KEY_STAGE_CHANGED, false)):

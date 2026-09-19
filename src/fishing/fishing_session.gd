@@ -172,6 +172,9 @@ func _cast() -> void:
 		_cast_power
 	)
 	EventBus.farm.fish_cast.emit(_cast_power, _cast_distance)
+	# 蓄力越满，出力声越尖。
+	_play(AudioCatalog.SFX_FISH_CHARGE, 0.88 + 0.35 * clampf(_cast_power, 0.0, 1.0), -5.0)
+	_play(AudioCatalog.SFX_FISH_CAST, 1.0, -4.0)
 
 
 func _begin_wait() -> void:
@@ -196,6 +199,8 @@ func _begin_fight() -> void:
 	_player.fishing_bobber.bite()
 	_player.fishing_bobber.set_fight(true)
 	EventBus.farm.fish_bite.emit(_fish.id if _fish != null else &"")
+	_play(AudioCatalog.SFX_FISH_BITE)
+	_play(AudioCatalog.SFX_FISH_FIGHT, 1.0, -7.0)
 	EventBus.ui.notification_requested.emit(&"NOTIFY_FISH_BITE", {})
 
 
@@ -208,6 +213,7 @@ func _step_fight(delta: float) -> void:
 		if _reel_tick <= 0.0:
 			_reel_tick = REEL_TICK_INTERVAL
 			EventBus.farm.fish_reel_tick.emit()
+			_play(AudioCatalog.SFX_FISH_REEL, 1.0, -10.0)
 	_player.fishing_bobber.set_tension(_fight.tension())
 	match _fight.step(delta, _reeling):
 		FishingFight.Status.LANDED:
@@ -256,6 +262,12 @@ func _end_fishing() -> void:
 	_ended = true
 	_player.fishing_bobber.reel_in()
 	EventBus.farm.fish_ended.emit()
+
+
+## 钓鱼音效由鱼竿所在的玩家播放器出声。
+func _play(sound_id: StringName, pitch: float = 1.0, volume_db: float = 0.0) -> void:
+	if _player != null and _player.sfx != null:
+		_player.sfx.play(sound_id, pitch, volume_db)
 
 
 func _tier() -> int:

@@ -291,6 +291,8 @@ func land_fish(fish: FishData, size_cm: int) -> bool:
 	if inventory.add(fish.item_id, 1) > 0:
 		return false
 	EventBus.farm.fish_caught.emit(fish.id, fish.item_id, size_cm)
+	if sfx != null:
+		sfx.play(AudioCatalog.SFX_FISH_CATCH)
 	EventBus.ui.notification_requested.emit(
 		&"NOTIFY_FISH_CAUGHT",
 		{"item": Text.item_name(Database.get_item(fish.item_id)), "size": size_cm}

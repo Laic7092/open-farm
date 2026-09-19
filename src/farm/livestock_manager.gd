@@ -28,6 +28,8 @@ var buildings: Dictionary[StringName, BuildingState] = {}
 var _pens: Dictionary[StringName, AnimalPen] = {}
 var _views: Dictionary[StringName, Array] = {}
 var _rng := RandomNumberGenerator.new()
+## 本畜舍系统自己的音效播放器。
+var sfx: SfxPlayer
 ## 组合根注入的时钟；日结转钩子注册在它上面。
 var _clock: GameDateClock
 
@@ -50,8 +52,14 @@ func _exit_tree() -> void:
 
 func _ready() -> void:
 	_rng.randomize()
+	sfx = SfxPlayer.attach(self)
 	_collect_pens()
 	_rebuild_visuals()
+
+
+func _play(sound_id: StringName, pitch: float = 1.0, volume_db: float = 0.0) -> void:
+	if sfx != null:
+		sfx.play(sound_id, pitch, volume_db)
 
 
 # ---------------------------------------------------------------- 查询
@@ -167,6 +175,7 @@ func feed(building_id: StringName, inventory: Inventory) -> int:
 			fed_count += 1
 	if fed_count > 0:
 		EventBus.farm.animal_fed.emit(building_id, fed_count)
+		_play(AudioCatalog.SFX_ANIMAL_EAT)
 	return fed_count
 
 
@@ -179,6 +188,7 @@ func pet(building_id: StringName, index: int) -> int:
 	var gained: int = AnimalHusbandry.pet(data, animal_state)
 	if gained > 0:
 		EventBus.farm.animal_petted.emit(building_id, animal_state.animal_id, animal_state.affection)
+		_play(AudioCatalog.SFX_ANIMAL_HAPPY, 1.08)
 	return gained
 
 
@@ -197,6 +207,7 @@ func collect(building_id: StringName, index: int) -> Dictionary:
 		EventBus.farm.animal_product_collected.emit(
 			building_id, animal_state.animal_id, outcome["item_id"], amount
 		)
+		_play(AudioCatalog.SFX_HARVEST, 1.1)
 		_refresh_views(building_id)
 	return outcome
 
@@ -221,6 +232,7 @@ func advance_day(_date: GameDate) -> void:
 			)
 			if bool(change.get(AnimalHusbandry.KEY_MATURED, false)):
 				EventBus.farm.animal_matured.emit(building_id, animal_state.animal_id)
+				_play(AudioCatalog.SFX_MATURE)
 		_try_breed(building_id, state)
 	_refresh_all()
 
@@ -296,6 +308,7 @@ func _add_animal(building_id: StringName, animal_id: StringName) -> void:
 	state.add(AnimalState.new(animal_id))
 	_spawn_view(building_id, state.animals.size() - 1)
 	EventBus.farm.animal_placed.emit(building_id, animal_id)
+	_play(AudioCatalog.SFX_ANIMAL_HAPPY)
 
 
 func _view_list(building_id: StringName) -> Array:
