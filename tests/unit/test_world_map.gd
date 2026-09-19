@@ -159,6 +159,19 @@ func test_road_wobble_keeps_road_two_to_four_wide() -> void:
 	assert_that(GroundPainter.road_span(0, 0, 0)).is_equal(Vector2i.ZERO)
 
 
+## 室内地图不跟着季节换地面：屋里下雪会很荒诞。
+## 与 [code]weather_effects = false[/code] 同款开关，写入 .tscn 的导出属性。
+func test_interior_maps_do_not_season_swap() -> void:
+	for path: String in [HOME, LIBRARY]:
+		var world := _map(path)
+		assert_bool(world.get(&"season_effects")).override_failure_message(
+			"%s 是室内图，应当 season_effects = false" % path
+		).is_false()
+	assert_bool(_map(FARM).get(&"season_effects")).override_failure_message(
+		"农场是户外图，应当跟着季节换地面"
+	).is_true()
+
+
 ## 像素风游戏必须避免相机非整数缩放：窗口的整数倍放大之上再叠 1.25×，
 ## 瓦片边缘会出现不均匀的 1px 抖动。这里把相机缩放钉在整数。
 func test_player_camera_zoom_is_integer() -> void:

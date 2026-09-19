@@ -29,6 +29,22 @@ func setup(p_state: FloraState, p_data: FloraData) -> void:
 	refresh()
 
 
+## 换成某个季节的贴图；没有变体时回退基础图。
+##
+## [b]季节只换贴图[/b]：不能借 [code]modulate[/code] 表达季节，
+## 那个字段在 [method refresh] 里表示"枯死偏黄"，两者会互相覆盖。
+func set_season(season: Season.Type) -> void:
+	if data == null or data.sprite_sheet == null:
+		return
+	var variant := SeasonPalette.variant_texture(data.sprite_sheet, season)
+	if variant == null:
+		return
+	texture = variant
+	hframes = AtlasLayout.FLORA_COLUMNS
+	_align_bottom_to_cell()
+	refresh()
+
+
 ## 让贴图的"底部"对齐格子的下边缘。
 ##
 ## 树有 48 像素高、石头只有 16 像素，如果都按中心摆在格子中心，

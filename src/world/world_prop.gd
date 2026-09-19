@@ -81,6 +81,8 @@ static var _light_texture: GradientTexture2D
 var _light: PointLight2D
 var _player: Node2D
 var _fade_active: bool = false
+## 首次 [method apply_season] 时缓存的基础贴图路径；之后一直从这个路径派生变体。
+var _base_texture_path: String = ""
 
 
 func _ready() -> void:
@@ -264,6 +266,28 @@ func _player_is_behind() -> bool:
 func apply_night_energy(factor: float) -> void:
 	if _light != null:
 		_light.energy = light_energy * factor
+
+
+# ---------------------------------------------------------------- 季节外观
+
+## 换成某个季节的贴图；没有变体时原样回退基础图。幂等。
+##
+## 基础路径只在首次调用时缓存：一旦贴上冬季变体，
+## [code]texture.resource_path[/code] 就不再是基础路径了。
+## 变体与基础图同尺寸，所以假影子、脚印碰撞盒与遮挡多边形都不用重建。
+func apply_season(season: Season.Type) -> void:
+	if texture == null:
+		return
+	if _base_texture_path.is_empty():
+		_base_texture_path = texture.resource_path
+	if _base_texture_path.is_empty():
+		return
+	var base := load(_base_texture_path) as Texture2D
+	if base == null:
+		return
+	var variant := SeasonPalette.variant_texture(base, season)
+	if variant != null and variant != texture:
+		texture = variant
 
 
 # ---------------------------------------------------------------- 灯光

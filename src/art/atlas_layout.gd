@@ -29,6 +29,10 @@ const TILE: int = 16
 
 ## [code]assets/sprites/tileset_farm.png[/code]
 const TILESET_PATH: String = "res://assets/sprites/tileset_farm.png"
+## 由 [code]tools/generate_resources.gd[/code] 组装出的 TileSet；
+## 季节变体是 [code]farm_tileset_<key>.tres[/code]（见 [code]SeasonPalette[/code]）。
+## 放在这里是因为生成器与运行时 [code]SeasonLook[/code] 都要用同一份路径。
+const TILESET_RESOURCE_PATH: String = "res://assets/tilesets/farm_tileset.tres"
 ## 从地形图集抽出的独立装饰贴图目录。
 ##
 ## Ground TileMap 只画地板；花、蘑菇、栅栏这类摆件由

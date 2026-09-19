@@ -15,6 +15,8 @@ extends Node2D
 @export var weather_effects: bool = true
 ## 是否自动挂载昼夜光照（环境光染色与路灯）。室内场景可以关掉。
 @export var lighting_effects: bool = true
+## 是否跟着季节换地面与树木外观。室内场景关掉（室外换季、屋里不能下雪）。
+@export var season_effects: bool = true
 ## 是否自动挂载 NPC 行走网格。没有 NPC 的地图可以关掉省一点探测。
 @export var navigation_enabled: bool = true
 ## 本场景白天播放的 BGM id；由 [SceneAudio] 读取，地图自己声明自己听起来什么样。
@@ -32,6 +34,8 @@ var clock_state: GameDateClock
 var weather_service: WeatherService
 var relationship_service: RelationshipService
 var calendar_service: CalendarService
+## 季节外观服务；[member season_effects] 为 false 时始终为空。
+var _season_look: SeasonLook
 
 
 ## 由 [SceneRouter] 在世界场景 [method Node.add_child] 之前调用。
@@ -66,6 +70,8 @@ func _ready() -> void:
 		_ensure_weather_fx()
 	if lighting_effects:
 		_ensure_lighting()
+	if season_effects:
+		_ensure_season_look()
 	if navigation_enabled:
 		_ensure_navigator()
 	if _has_water():
@@ -94,6 +100,20 @@ func _ensure_lighting() -> void:
 	lighting.bind_dependencies(player_profile, clock_state)
 	lighting.bind_services(weather_service, relationship_service, calendar_service)
 	add_child(lighting)
+
+
+## 季节外观同样由基类挂载：
+## 新地图只要不显式关掉 [member season_effects]，"冬天地面变雪"就自动成立。
+func _ensure_season_look() -> void:
+	var existing := get_node_or_null(^"SeasonLook") as SeasonLook
+	if existing != null:
+		_season_look = existing
+		return
+	var look := SeasonLook.new()
+	look.name = "SeasonLook"
+	look.bind_dependencies(player_profile, clock_state)
+	add_child(look)
+	_season_look = look
 
 
 ## 水面同样由基类自动挂载：水体形状写在 [WaterLayout] 里（那张图的唯一事实来源），
@@ -134,6 +154,9 @@ func on_world_enter(spawn_id: StringName) -> void:
 	_distribute_dependencies()
 	_distribute_services()
 	_apply_camera_limits()
+	# 场景会被缓存复用，_ready() 只跑一次；这里才是“每次进图都要对齐季节”的位置。
+	if _season_look != null:
+		_season_look.refresh()
 	EventBus.world_entered.emit(world_id)
 
 

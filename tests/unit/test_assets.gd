@@ -9,6 +9,7 @@ extends GdUnitTestSuite
 
 const Layout := preload("res://src/art/atlas_layout.gd")
 const Palette := preload("res://src/art/palette.gd")
+const SeasonPalette := preload("res://src/art/season_palette.gd")
 const TileCollision := preload("res://src/world/tile_collision.gd")
 const Decor := preload("res://src/world/decor_painter.gd")
 const Interior := preload("res://src/world/interior_walls.gd")
@@ -22,6 +23,25 @@ const TILESET_PATH: String = "res://assets/tilesets/farm_tileset.tres"
 ## 两栋住宅的剪影至少要有多少行不同，才算"两栋不同的房子"（半幅以上）。
 ## 阈值定得松：要挡的是"换个配色就算新建筑"，不是禁止两栋房子有相似的坡顶。
 const SILHOUETTE_MIN_DIFFERENT_ROWS: int = 32
+
+## 季节性变体的基础贴图清单；新增带叶物件时同步在这里登记，
+## 否则"冬季没换色"只能等玩家看见冬天才发现。
+const SEASONAL_BASES: Array[String] = [
+	"res://assets/sprites/tileset_farm.png",
+	"res://assets/sprites/flora/tree_oak.png",
+	"res://assets/sprites/flora/tree_pine.png",
+	"res://assets/sprites/flora/weed.png",
+	"res://assets/sprites/props/tree.png",
+	"res://assets/sprites/props/tree_pine.png",
+]
+
+## 变体命名检查：目录 → 该目录里的"基础名"清单。
+## 带 [code]_<key>[/code] 后缀的文件里，key 必须是合法季节 key（防手写 [code]_winter2[/code]）。
+const SEASONAL_DIRS: Dictionary = {
+	"res://assets/sprites": ["tileset_farm"],
+	"res://assets/sprites/flora": ["tree_oak", "tree_pine", "weed"],
+	"res://assets/sprites/props": ["tree", "tree_pine"],
+}
 
 ## 所有生成器都必须产出的文件。
 const REQUIRED_ASSETS: Array[String] = [
@@ -518,6 +538,145 @@ func test_palette_is_usable() -> void:
 	# shade() 是生成器做明暗档唯一的工具，压暗/提亮方向不能反。
 	assert_bool(Palette.shade(Palette.GRASS, -0.5).get_luminance() < Palette.GRASS.get_luminance()).is_true()
 	assert_bool(Palette.shade(Palette.GRASS, 0.5).get_luminance() > Palette.GRASS.get_luminance()).is_true()
+
+
+# ---------------------------------------------------------------- 季节变体
+
+## 冬季变体与基础图同尺寸、同 alpha 掩码，而且不能残留任何基础材质色。
+##
+## 最后一条专抓"某个取色函数忘了走 [code]SeasonPalette[/code]"：
+## 漏掉的地方会原样保留基础色，而形状仍然对得上。
+func test_season_variants_keep_shape_and_drop_base_colors() -> void:
+	var base_lookup := _base_material_lookup()
+	for base_path: String in SEASONAL_BASES:
+		var variant_path := SeasonPalette.variant_suffix_path(base_path, Season.Type.WINTER)
+		assert_bool(ResourceLoader.exists(variant_path)).override_failure_message(
+			"缺少冬季变体 %s（跑一次 ./tools/build_assets.sh）" % variant_path
+		).is_true()
+		if not ResourceLoader.exists(variant_path):
+			continue
+		var base_texture := load(base_path) as Texture2D
+		var variant_texture := load(variant_path) as Texture2D
+		assert_object(variant_texture).is_not_null()
+		if base_texture == null or variant_texture == null:
+			continue
+		var base_image := base_texture.get_image()
+		var variant_image := variant_texture.get_image()
+		assert_int(variant_image.get_width()).override_failure_message(
+			"%s 与基础图宽度不一致" % variant_path
+		).is_equal(base_image.get_width())
+		assert_int(variant_image.get_height()).is_equal(base_image.get_height())
+		_assert_same_alpha_mask(base_image, variant_image, variant_path)
+		_assert_no_base_material_color(variant_image, base_lookup, variant_path)
+
+
+## 每个 [code]_<key>[/code] 后缀都必须是合法季节 key。
+func test_season_variant_suffixes_are_valid_season_keys() -> void:
+	var valid: Array[String] = []
+	for season: Season.Type in Season.all():
+		valid.append(String(Season.to_key(season)))
+	for dir_path: String in SEASONAL_DIRS:
+		var bases: Array = SEASONAL_DIRS[dir_path]
+		for file_name: String in DirAccess.get_files_at(dir_path):
+			if not file_name.ends_with(".png"):
+				continue
+			var stem := file_name.trim_suffix(".png")
+			# tree_pine 这类"另一个基础名"不是 tree 的变体，跳过。
+			if bases.has(stem):
+				continue
+			# 取最长的匹配基础名：tree_pine_winter 应按 tree_pine 拆，而不是 tree。
+			var matched := ""
+			for base: String in bases:
+				if stem.begins_with("%s_" % base) and base.length() > matched.length():
+					matched = base
+			if matched.is_empty():
+				continue
+			var suffix := stem.substr(matched.length() + 1)
+			assert_bool(valid.has(suffix)).override_failure_message(
+				"%s/%s 的后缀 '%s' 不是合法季节 key" % [dir_path, file_name, suffix]
+			).is_true()
+
+
+## 冬季 TileSet 的瓦片数、坐标与碰撞必须与基础表一致：
+## 换季只该换图，不该把碰撞一起换掉。
+func test_winter_tileset_matches_base_structure() -> void:
+	var winter_path := SeasonPalette.variant_path(
+		Layout.TILESET_RESOURCE_PATH, Season.Type.WINTER
+	)
+	var base := load(Layout.TILESET_RESOURCE_PATH) as TileSet
+	var winter := load(winter_path) as TileSet
+	assert_object(winter).override_failure_message(
+		"缺少冬季 TileSet %s" % winter_path
+	).is_not_null()
+	if base == null or winter == null:
+		return
+	assert_int(winter.get_physics_layers_count()).is_equal(base.get_physics_layers_count())
+	var base_source := base.get_source(0) as TileSetAtlasSource
+	var winter_source := winter.get_source(0) as TileSetAtlasSource
+	assert_object(winter_source).is_not_null()
+	if base_source == null or winter_source == null:
+		return
+	assert_int(winter_source.get_tiles_count()).is_equal(base_source.get_tiles_count())
+	for index: int in base_source.get_tiles_count():
+		var atlas: Vector2i = base_source.get_tile_id(index)
+		assert_bool(winter_source.has_tile(atlas)).override_failure_message(
+			"冬季 TileSet 缺少瓦片 %s" % atlas
+		).is_true()
+		var base_data := base_source.get_tile_data(atlas, 0)
+		var winter_data := winter_source.get_tile_data(atlas, 0)
+		if base_data == null or winter_data == null:
+			continue
+		assert_int(winter_data.get_collision_polygons_count(0)).override_failure_message(
+			"瓦片 %s 的碰撞与基础表不一致" % atlas
+		).is_equal(base_data.get_collision_polygons_count(0))
+
+
+func _assert_same_alpha_mask(base_image: Image, variant_image: Image, path: String) -> void:
+	var base_data := base_image.get_data()
+	var variant_data := variant_image.get_data()
+	assert_int(variant_data.size()).is_equal(base_data.size())
+	if variant_data.size() != base_data.size():
+		return
+	var mismatch := -1
+	for index: int in range(3, base_data.size(), 4):
+		if (base_data[index] > 127) != (variant_data[index] > 127):
+			mismatch = index >> 2
+			break
+	assert_int(mismatch).override_failure_message(
+		"%s 的形状变了：第 %d 像素的透明度与基础图不同" % [path, mismatch]
+	).is_equal(-1)
+
+
+func _base_material_lookup() -> Dictionary:
+	var lookup: Dictionary = {}
+	for color: Color in SeasonPalette.base_colors():
+		lookup[_rgb_key(color)] = true
+	return lookup
+
+
+func _rgb_key(color: Color) -> int:
+	return (
+		(int(round(color.r * 255.0)) << 16)
+		| (int(round(color.g * 255.0)) << 8)
+		| int(round(color.b * 255.0))
+	)
+
+
+func _assert_no_base_material_color(image: Image, lookup: Dictionary, path: String) -> void:
+	var data := image.get_data()
+	var hit := -1
+	for index: int in range(0, data.size(), 4):
+		if data[index + 3] <= 127:
+			continue
+		var key := (
+			(int(data[index]) << 16) | (int(data[index + 1]) << 8) | int(data[index + 2])
+		)
+		if lookup.has(key):
+			hit = key
+			break
+	assert_int(hit).override_failure_message(
+		"%s 残留基础材质色 #%06x：某个取色没走 SeasonPalette" % [path, hit]
+	).is_equal(-1)
 
 
 # ---------------------------------------------------------------- 内部

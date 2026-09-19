@@ -221,6 +221,55 @@ const WEATHER_RAINY := Color(0.7, 0.76, 0.88)
 const WEATHER_STORMY := Color(0.54, 0.6, 0.76)
 const WEATHER_SNOWY := Color(0.93, 0.95, 1.0)
 
+# ---------------------------------------------------------------- 季节：冬季
+#
+# 冬季只换色盘、不换画法（映射表见 src/art/season_palette.gd）：
+# 同一套像素画用下面这些颜色重画一遍就是雪景，形状与透明度掩码逐像素不变。
+# 雪地同样需要三档明暗，纯白一色会糊成一片，所以每个材质照旧给 base / dark / light。
+#
+# 保持不变：描边、影子、树干与木料、花与果实、水面与 UI。
+const WINTER_GRASS := Color8(232, 238, 246)
+const WINTER_GRASS_DARK := Color8(196, 208, 224)
+const WINTER_GRASS_LIGHT := Color8(252, 252, 255)
+
+const WINTER_LEAF := Color8(96, 128, 104)
+const WINTER_LEAF_DARK := Color8(64, 92, 76)
+const WINTER_LEAF_LIGHT := Color8(132, 164, 136)
+
+const WINTER_DIRT := Color8(112, 100, 96)
+const WINTER_DIRT_DARK := Color8(84, 76, 74)
+const WINTER_DIRT_LIGHT := Color8(140, 128, 124)
+
+const WINTER_SAND := Color8(238, 236, 228)
+const WINTER_SAND_DARK := Color8(206, 204, 198)
+const WINTER_SAND_LIGHT := Color8(250, 250, 248)
+
+const WINTER_GRAVEL := Color8(196, 198, 206)
+const WINTER_GRAVEL_DARK := Color8(162, 166, 178)
+const WINTER_GRAVEL_LIGHT := Color8(224, 226, 232)
+
+const WINTER_PATH := Color8(206, 208, 216)
+const WINTER_PATH_DARK := Color8(172, 176, 188)
+const WINTER_PATH_LIGHT := Color8(232, 234, 240)
+
+const WINTER_PATH_STONE := Color8(190, 196, 208)
+const WINTER_PATH_STONE_DARK := Color8(156, 162, 176)
+const WINTER_PATH_STONE_LIGHT := Color8(216, 220, 228)
+
+const WINTER_STONE := Color8(140, 146, 160)
+const WINTER_STONE_DARK := Color8(104, 110, 126)
+const WINTER_STONE_LIGHT := Color8(178, 184, 198)
+## 崖壁再深一档：与石地区分开，矿洞与海边才有"背光"的层次。
+const WINTER_CLIFF := Color8(86, 90, 104)
+
+const WINTER_SOIL := Color8(88, 76, 72)
+const WINTER_SOIL_DARK := Color8(64, 54, 52)
+const WINTER_SOIL_LIGHT := Color8(114, 100, 96)
+
+const WINTER_SOIL_WET := Color8(58, 50, 50)
+const WINTER_SOIL_WET_DARK := Color8(40, 34, 34)
+const WINTER_SOIL_WET_LIGHT := Color8(80, 70, 68)
+
 
 ## 按 [param amount]（-1..1）把颜色压暗或提亮，用于快速生成明暗档。
 static func shade(color: Color, amount: float) -> Color:

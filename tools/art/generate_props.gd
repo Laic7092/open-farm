@@ -13,15 +13,20 @@ extends SceneTree
 const Art := preload("res://tools/art/art_lib.gd")
 const Layout := preload("res://src/art/atlas_layout.gd")
 const P := preload("res://src/art/palette.gd")
+const SeasonPalette := preload("res://src/art/season_palette.gd")
+const SeasonExport := preload("res://tools/art/season_export.gd")
 
 const DIR: String = "res://assets/sprites/props"
+
+## 当前这一遍在画哪个季节的叶色。
+var _season: Season.Type = SeasonPalette.BASE_SEASON
 
 
 func _initialize() -> void:
 	Art.save_png(_house(), DIR.path_join("house.png"))
 	Art.save_png(_barn(), DIR.path_join("barn.png"))
-	Art.save_png(_tree(0), DIR.path_join("tree.png"))
-	Art.save_png(_tree(1), DIR.path_join("tree_pine.png"))
+	_write_tree("tree", 0)
+	_write_tree("tree_pine", 1)
 	Art.save_png(_stump(), DIR.path_join("stump.png"))
 	Art.save_png(_rock(16, 16, 0), DIR.path_join("rock.png"))
 	Art.save_png(_rock(32, 24, 1), DIR.path_join("rock_big.png"))
@@ -59,6 +64,21 @@ func _initialize() -> void:
 	Art.save_png(_ripple(), DIR.path_join("ripple.png"))
 	print("场景道具生成完成 → ", DIR)
 	quit()
+
+
+## 当前这一遍在画哪个季节的叶色。
+func _mat(name: StringName) -> PackedColorArray:
+	return SeasonPalette.material(_season, name)
+
+
+## 导出一棵树的基础图与季节变体（目前只有 [code]tree[/code] / [code]tree_pine[/code] 带叶子）。
+func _write_tree(prop_id: String, variant: int) -> void:
+	SeasonExport.write(DIR.path_join("%s.png" % prop_id), _build_tree_for.bind(variant))
+
+
+func _build_tree_for(season: Season.Type, variant: int) -> Image:
+	_season = season
+	return _tree(variant)
 
 
 # ---------------------------------------------------------------- 建筑
@@ -246,30 +266,32 @@ func _tree_canopy(image: Image, variant: int) -> void:
 
 ## 阔叶树：三团错位树冠 + 顶部受光 + 底部阴影。
 func _oak_canopy(image: Image) -> void:
-	Art.ellipse(image, Vector2i(12, 21), Vector2i(9, 8), P.LEAF_DARK)
-	Art.ellipse(image, Vector2i(22, 20), Vector2i(9, 8), P.LEAF_DARK)
-	Art.ellipse(image, Vector2i(17, 15), Vector2i(10, 8), P.LEAF_DARK)
-	Art.ellipse(image, Vector2i(11, 19), Vector2i(8, 7), P.LEAF)
-	Art.ellipse(image, Vector2i(21, 18), Vector2i(8, 7), P.LEAF)
-	Art.ellipse(image, Vector2i(16, 13), Vector2i(9, 7), P.LEAF)
-	Art.ellipse(image, Vector2i(12, 12), Vector2i(6, 4), P.LEAF_LIGHT)
-	Art.ellipse(image, Vector2i(9, 17), Vector2i(4, 3), P.LEAF_LIGHT)
-	Art.ellipse(image, Vector2i(20, 23), Vector2i(7, 3), P.LEAF_DARK.lerp(P.OUTLINE, 0.18))
+	var leaf := _mat(&"leaf")
+	Art.ellipse(image, Vector2i(12, 21), Vector2i(9, 8), leaf[1])
+	Art.ellipse(image, Vector2i(22, 20), Vector2i(9, 8), leaf[1])
+	Art.ellipse(image, Vector2i(17, 15), Vector2i(10, 8), leaf[1])
+	Art.ellipse(image, Vector2i(11, 19), Vector2i(8, 7), leaf[0])
+	Art.ellipse(image, Vector2i(21, 18), Vector2i(8, 7), leaf[0])
+	Art.ellipse(image, Vector2i(16, 13), Vector2i(9, 7), leaf[0])
+	Art.ellipse(image, Vector2i(12, 12), Vector2i(6, 4), leaf[2])
+	Art.ellipse(image, Vector2i(9, 17), Vector2i(4, 3), leaf[2])
+	Art.ellipse(image, Vector2i(20, 23), Vector2i(7, 3), leaf[1].lerp(P.OUTLINE, 0.18))
 	Art.px(image, 9, 18, P.FRUIT_RED)
 	Art.px(image, 24, 17, P.FRUIT_RED)
 
 
 ## 松树：三层三角，每层左亮右暗，越往上越小。
 func _pine_canopy(image: Image) -> void:
+	var leaf := _mat(&"leaf")
 	for layer: int in 3:
 		var base: int = 30 - layer * 8
 		var half: int = 11 - layer * 3
 		var apex := Vector2(16, base - 12)
-		Art.triangle(image, apex, Vector2(16 - half, base), Vector2(16 + half, base), P.LEAF)
-		Art.triangle(image, apex, Vector2(16 - half, base), Vector2(16 - half / 3, base), P.LEAF_LIGHT)
-		Art.triangle(image, apex, Vector2(16, base), Vector2(16 + half, base), P.LEAF_DARK)
-		Art.h_line(image, 16 - half, base, half * 2, P.LEAF_DARK)
-	Art.v_line(image, 15, 2, 4, P.LEAF_LIGHT)
+		Art.triangle(image, apex, Vector2(16 - half, base), Vector2(16 + half, base), leaf[0])
+		Art.triangle(image, apex, Vector2(16 - half, base), Vector2(16 - half / 3, base), leaf[2])
+		Art.triangle(image, apex, Vector2(16, base), Vector2(16 + half, base), leaf[1])
+		Art.h_line(image, 16 - half, base, half * 2, leaf[1])
+	Art.v_line(image, 15, 2, 4, leaf[2])
 
 
 func _stump() -> Image:

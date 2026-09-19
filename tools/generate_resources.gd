@@ -15,11 +15,11 @@ extends SceneTree
 
 const Layout := preload("res://src/art/atlas_layout.gd")
 const Palette := preload("res://src/art/palette.gd")
+const SeasonPalette := preload("res://src/art/season_palette.gd")
 const TileCollision := preload("res://src/world/tile_collision.gd")
 
 const ACTOR_DIR: String = "res://assets/sprites/actors"
 const UI_DIR: String = "res://assets/ui"
-const TILESET_PATH: String = "res://assets/tilesets/farm_tileset.tres"
 const THEME_PATH: String = "res://assets/themes/game_theme.tres"
 const PIXEL_FONT: String = "res://assets/fonts/pixel_cjk.fnt"
 const SYSTEM_FONT: String = "res://assets/fonts/ui_font.tres"
@@ -34,7 +34,7 @@ func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute(
 		ProjectSettings.globalize_path("res://assets/themes")
 	)
-	_build_tileset()
+	_build_tilesets()
 	_build_player_frames()
 	for npc_id: StringName in _npc_ids():
 		_build_npc_frames(npc_id)
@@ -50,8 +50,23 @@ func _initialize() -> void:
 
 # ---------------------------------------------------------------- TileSet
 
-func _build_tileset() -> void:
-	var texture := _load_texture(Layout.TILESET_PATH)
+## 按季节各组装一份 TileSet：图集换色、结构与碰撞完全一致。
+##
+## 变体不额外登记碰撞：同一个 [code]Layout[/code] 与 [code]TileCollision[/code]，所以
+## "哪块地挡人"与"哪块地是雪"是两件互不影响的事。
+func _build_tilesets() -> void:
+	for season: Season.Type in SeasonPalette.seasons_to_build():
+		_build_tileset(season)
+
+
+func _build_tileset(season: Season.Type) -> void:
+	# 这里用 variant_suffix_path 而不是 variant_path：这是在决定"往哪写"，
+	# 变体文件此刻可能还不存在，存在性回退会把冬季写回基础路径。
+	var texture_path := SeasonPalette.variant_suffix_path(Layout.TILESET_PATH, season)
+	var resource_path := SeasonPalette.variant_suffix_path(
+		Layout.TILESET_RESOURCE_PATH, season
+	)
+	var texture := _load_texture(texture_path)
 	if texture == null:
 		return
 
@@ -69,7 +84,7 @@ func _build_tileset() -> void:
 	tileset.set_physics_layer_collision_mask(0, 0)
 	tileset.add_source(source, 0)
 	_apply_tile_collisions(source)
-	_save(tileset, TILESET_PATH)
+	_save(tileset, resource_path)
 
 
 ## 给实心装饰瓦片写满格碰撞；牧草等可穿过瓦片保持无碰撞。

@@ -5,6 +5,8 @@ extends GdUnitTestSuite
 ## 反而把"这条规则是否成立"和"节点能不能跑"混在一起。
 
 const HOUSE_TEXTURE: String = "res://assets/sprites/props/house.png"
+const TREE_TEXTURE: String = "res://assets/sprites/props/tree.png"
+const TREE_WINTER_TEXTURE: String = "res://assets/sprites/props/tree_winter.png"
 
 
 func _prop(solid: Vector2, building: bool = true) -> WorldProp:
@@ -74,4 +76,30 @@ func test_fade_can_be_disabled_per_building() -> void:
 	var house := _prop(Vector2(58, 14))
 	house.fade_when_behind = false
 	assert_bool(house._should_fade_behind()).is_false()
+	house.free()
+
+
+## 季节换贴图：有变体就换、同一季节幂等、回季后又回到基础图。
+func test_apply_season_uses_variant_and_is_idempotent() -> void:
+	var tree := WorldProp.new()
+	tree.texture = load(TREE_TEXTURE)
+
+	tree.apply_season(Season.Type.WINTER)
+	var winter := tree.texture
+	assert_str(winter.resource_path).is_equal(TREE_WINTER_TEXTURE)
+	tree.apply_season(Season.Type.WINTER)
+	assert_bool(tree.texture == winter).is_true()
+
+	tree.apply_season(Season.Type.SPRING)
+	assert_str(tree.texture.resource_path).is_equal(TREE_TEXTURE)
+	tree.free()
+
+
+## 没有变体的贴图（房子）原样保留；变体与基础图同尺寸，碰撞盒不变。
+func test_apply_season_keeps_textures_without_variant() -> void:
+	var house := WorldProp.new()
+	var base := load(HOUSE_TEXTURE) as Texture2D
+	house.texture = base
+	house.apply_season(Season.Type.WINTER)
+	assert_bool(house.texture == base).is_true()
 	house.free()

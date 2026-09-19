@@ -20,8 +20,19 @@ extends SceneTree
 const Art := preload("res://tools/art/art_lib.gd")
 const Layout := preload("res://src/art/atlas_layout.gd")
 const P := preload("res://src/art/palette.gd")
+const SeasonPalette := preload("res://src/art/season_palette.gd")
+const SeasonExport := preload("res://tools/art/season_export.gd")
 
 const DIR: String = "res://assets/sprites/flora"
+
+## 全部要导出的植被 id。
+const IDS: Array[String] = [
+	"tree_oak", "tree_pine", "weed", "rock", "boulder", "flower", "mushroom",
+]
+
+## 有叶子的植被 id：为它们额外出季节变体。
+## [b]新增带叶子的植被时记得把它加进来[/b]，否则冬季会残留绿色。
+const SEASONAL_IDS: Array[String] = ["tree_oak", "tree_pine", "weed"]
 
 ## 树干高度 / 宽度随阶段增长（树苗 → 老树）。
 const TREE_TRUNK_HEIGHTS: Array[int] = [7, 13, 19, 22]
@@ -29,25 +40,53 @@ const TREE_TRUNK_WIDTHS: Array[int] = [3, 4, 6, 7]
 ## 树冠半径随阶段增长。
 const TREE_CANOPY_RADII: Array[int] = [4, 6, 8, 9]
 
+## 当前这一遍在画哪个季节的叶色。
+var _season: Season.Type = SeasonPalette.BASE_SEASON
+
 
 func _initialize() -> void:
-	Art.save_png(_sheet(Layout.FLORA_TREE_CELL, _tree_stages(0)), _path("tree_oak"))
-	Art.save_png(_sheet(Layout.FLORA_TREE_CELL, _tree_stages(1)), _path("tree_pine"))
-	Art.save_png(
-		_sheet(Layout.FLORA_SMALL_CELL, [_weed(0), _weed(1), _weed(2)]), _path("weed")
-	)
-	Art.save_png(_sheet(Layout.FLORA_SMALL_CELL, [_rock_small()]), _path("rock"))
-	Art.save_png(_sheet(Layout.FLORA_ROCK_CELL, [_rock_big()]), _path("boulder"))
-	Art.save_png(
-		_sheet(Layout.FLORA_SMALL_CELL, [_flower(0), _flower(1)]), _path("flower")
-	)
-	Art.save_png(_sheet(Layout.FLORA_SMALL_CELL, [_mushroom()]), _path("mushroom"))
+	for flora_id: String in IDS:
+		var path := _path(flora_id)
+		if SEASONAL_IDS.has(flora_id):
+			SeasonExport.write(path, _build_for.bind(flora_id))
+		else:
+			Art.save_png(_build_for(SeasonPalette.BASE_SEASON, flora_id), path)
 	print("野生植被生成完成 → ", DIR)
 	quit()
 
 
 func _path(flora_id: String) -> String:
 	return DIR.path_join("%s.png" % flora_id)
+
+
+## 当前这一遍在画哪个季节的材质三色。
+func _mat(name: StringName) -> PackedColorArray:
+	return SeasonPalette.material(_season, name)
+
+
+## 把某个季节的某个植被画一遍；[code]SeasonExport.write[/code] 把 flora_id 绑在 season 后面。
+func _build_for(season: Season.Type, flora_id: String) -> Image:
+	_season = season
+	return _build(flora_id)
+
+
+## 单个植被 id 的阶段表；基础一遍与季节一遍共用它。
+func _build(flora_id: String) -> Image:
+	match flora_id:
+		"tree_oak":
+			return _sheet(Layout.FLORA_TREE_CELL, _tree_stages(0))
+		"tree_pine":
+			return _sheet(Layout.FLORA_TREE_CELL, _tree_stages(1))
+		"weed":
+			return _sheet(Layout.FLORA_SMALL_CELL, [_weed(0), _weed(1), _weed(2)])
+		"boulder":
+			return _sheet(Layout.FLORA_ROCK_CELL, [_rock_big()])
+		"flower":
+			return _sheet(Layout.FLORA_SMALL_CELL, [_flower(0), _flower(1)])
+		"mushroom":
+			return _sheet(Layout.FLORA_SMALL_CELL, [_mushroom()])
+		_:
+			return _sheet(Layout.FLORA_SMALL_CELL, [_rock_small()])
 
 
 ## 把若干张"一格一张"的图按列拼成阶段表。
@@ -100,13 +139,14 @@ func _oak_canopy(image: Image, top: int, level: int) -> void:
 	var center_y: int = top - radius + 2
 	var big := Vector2i(radius, radius)
 	var inner := Vector2i(maxi(radius - 2, 1), maxi(radius - 2, 1))
-	Art.ellipse(image, Vector2i(11, center_y + 2), big, P.LEAF_DARK)
-	Art.ellipse(image, Vector2i(21, center_y + 1), big, P.LEAF_DARK)
-	Art.ellipse(image, Vector2i(16, center_y - 2), big, P.LEAF_DARK)
-	Art.ellipse(image, Vector2i(11, center_y + 2), inner, P.LEAF)
-	Art.ellipse(image, Vector2i(21, center_y + 1), inner, P.LEAF)
-	Art.ellipse(image, Vector2i(16, center_y - 2), inner, P.LEAF)
-	Art.ellipse(image, Vector2i(14, center_y - 5), Vector2i(4, 2), P.LEAF_LIGHT)
+	var leaf := _mat(&"leaf")
+	Art.ellipse(image, Vector2i(11, center_y + 2), big, leaf[1])
+	Art.ellipse(image, Vector2i(21, center_y + 1), big, leaf[1])
+	Art.ellipse(image, Vector2i(16, center_y - 2), big, leaf[1])
+	Art.ellipse(image, Vector2i(11, center_y + 2), inner, leaf[0])
+	Art.ellipse(image, Vector2i(21, center_y + 1), inner, leaf[0])
+	Art.ellipse(image, Vector2i(16, center_y - 2), inner, leaf[0])
+	Art.ellipse(image, Vector2i(14, center_y - 5), Vector2i(4, 2), leaf[2])
 	if level >= 2:
 		Art.px(image, 10, center_y, P.FRUIT_RED)
 		Art.px(image, 22, center_y - 1, P.FRUIT_RED)
@@ -114,6 +154,7 @@ func _oak_canopy(image: Image, top: int, level: int) -> void:
 
 ## 松树：一层比一层小的三角，越大层数越多。
 func _pine_canopy(image: Image, top: int, level: int) -> void:
+	var leaf := _mat(&"leaf")
 	var layers: int = level + 1
 	var layer_height: int = 7 + level
 	var widest: int = 7 + level * 3
@@ -124,10 +165,10 @@ func _pine_canopy(image: Image, top: int, level: int) -> void:
 			var t := float(row) / float(maxi(layer_height - 1, 1))
 			var width: int = maxi(int(round(lerpf(1.0, float(half) * 2.0, t))), 1)
 			var row_y: int = bottom - layer_height + 1 + row
-			var color: Color = P.LEAF_DARK if (row / 3) % 2 == 0 else P.LEAF
+			var color: Color = leaf[1] if (row / 3) % 2 == 0 else leaf[0]
 			Art.h_line(image, 16 - width / 2, row_y, width, color)
-		Art.h_line(image, 16 - half, bottom, half * 2, P.LEAF_DARK)
-	Art.v_line(image, 15, top - 4, 4, P.LEAF_LIGHT)
+		Art.h_line(image, 16 - half, bottom, half * 2, leaf[1])
+	Art.v_line(image, 15, top - 4, 4, leaf[2])
 
 
 # ---------------------------------------------------------------- 杂草
@@ -136,27 +177,28 @@ func _pine_canopy(image: Image, top: int, level: int) -> void:
 func _weed(stage: int) -> Image:
 	var cell := Layout.FLORA_SMALL_CELL
 	var image := Art.new_image(cell.x, cell.y)
+	var leaf := _mat(&"leaf")
 	Art.ground_shadow(image, cell.x, cell.y, 4)
 	if stage == 0:
-		Art.v_line(image, 8, 9, 4, P.LEAF)
-		Art.px(image, 7, 9, P.LEAF_DARK)
-		Art.px(image, 9, 10, P.LEAF_DARK)
-		Art.px(image, 8, 8, P.LEAF_LIGHT)
+		Art.v_line(image, 8, 9, 4, leaf[0])
+		Art.px(image, 7, 9, leaf[1])
+		Art.px(image, 9, 10, leaf[1])
+		Art.px(image, 8, 8, leaf[2])
 	else:
 		for blade: int in 3:
 			var x: int = 5 + blade * 3
 			var height: int = 8 + (blade % 2) * 2
 			var top: int = 14 - height
-			Art.v_line(image, x, top, height, P.LEAF)
-			Art.px(image, x - 1, top + 1, P.LEAF_DARK)
-			Art.px(image, x + 1, top + 2, P.LEAF_DARK)
-			Art.px(image, x, top, P.LEAF_LIGHT)
+			Art.v_line(image, x, top, height, leaf[0])
+			Art.px(image, x - 1, top + 1, leaf[1])
+			Art.px(image, x + 1, top + 2, leaf[1])
+			Art.px(image, x, top, leaf[2])
 		if stage >= 2:
 			# 抽穗：顶上几粒种子，一眼能看出"该割了"。
 			Art.px(image, 8, 4, P.SEED_BROWN)
 			Art.px(image, 7, 5, P.SEED_BROWN)
 			Art.px(image, 9, 5, P.SEED_BROWN)
-			Art.px(image, 8, 3, P.LEAF_LIGHT)
+			Art.px(image, 8, 3, leaf[2])
 	Art.outline(image)
 	return image
 

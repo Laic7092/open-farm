@@ -67,6 +67,9 @@ const NEIGHBORS: Array[Vector2i] = [
 ## 格子状态表：只保存"长着东西"的格子，空字典代表一片干净的地。
 var flora: Dictionary[Vector2i, FloraState] = {}
 
+## 当前季节；新长出来的植被直接按它出图（否则冬天会冒出夏天的新芽）。
+var _season: Season.Type = SeasonPalette.BASE_SEASON
+
 var _nodes: Dictionary[Vector2i, Flora] = {}
 var _species: Array[FloraData] = []
 var _rng := RandomNumberGenerator.new()
@@ -170,6 +173,17 @@ func count_of(flora_id: StringName) -> int:
 
 
 # ---------------------------------------------------------------- 操作
+
+## 按 [param season] 换一遍所有植被的外观（跨季 / 进图时由 [SeasonLook] 调用）。
+##
+## 不能只刷"状态变了的格子"：季节变了但每株植被的状态可能一模一样，
+## 要换的是它们身上那张贴图。
+func apply_season(season: Season.Type) -> void:
+	_season = season
+	for node: Flora in _nodes.values():
+		if is_instance_valid(node):
+			node.set_season(season)
+
 
 ## 清除一格上的植被。
 ##
@@ -565,6 +579,7 @@ func _spawn_node(cell: Vector2i) -> void:
 	parent.add_child(node)
 	node.position = GridUtils.cell_to_world(cell)
 	node.setup(state, Database.get_flora(state.flora_id))
+	node.set_season(_season)
 	_nodes[cell] = node
 
 
