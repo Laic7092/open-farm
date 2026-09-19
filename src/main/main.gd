@@ -230,8 +230,6 @@ func _bind_dependencies() -> void:
 		ui_root.call(&"bind_commission", commission)
 	if ui_root != null and ui_root.has_method(&"bind_fishing"):
 		ui_root.call(&"bind_fishing", Callable(self, &"_current_fishing"))
-	if ui_root != null and scene_audio != null and ui_root.has_method(&"bind_audio"):
-		ui_root.call(&"bind_audio", scene_audio)
 
 
 # ---------------------------------------------------------------- 启动

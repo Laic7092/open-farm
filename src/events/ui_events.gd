@@ -21,10 +21,6 @@ signal shop_requested(shop_id: StringName)
 ## 商店开关。
 signal shop_opened(shop: ShopData)
 signal shop_closed()
-## 一笔交易完成；[param is_purchase] 为 true 表示玩家买入。
-signal transaction_completed(
-item_id: StringName, count: int, total_price: int, is_purchase: bool
-)
 ## 请求显示一条浮动提示。
 signal notification_requested(text_key: StringName, args: Dictionary)
 ## 请求打开 / 关闭背包。
@@ -39,5 +35,3 @@ signal museum_requested()
 signal commission_requested()
 ## 全局暂停状态变化（打开菜单 / 对话 / 商店时）。
 signal game_paused_changed(paused: bool)
-## 请求播放一条 UI 音效（UI 只发事件，由所在场景的 [SceneAudio] 订阅）。
-signal ui_sound_requested(sound_id: StringName, pitch: float, volume_db: float)

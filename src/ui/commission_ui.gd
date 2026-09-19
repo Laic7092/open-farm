@@ -15,12 +15,15 @@ extends Control
 
 ## 组合根注入的委托单元。
 var _commission: Commission
+## 本界面自己的音效播放器。
+var sfx: SfxPlayer
 var _clock: GameDateClock
 ## 当前列表里的委托 id，与 [member list] 的行一一对应。
 var _entries: Array[StringName] = []
 
 
 func _ready() -> void:
+	sfx = SfxPlayer.attach(self)
 	visible = false
 	hint_label.text = Text.key(&"COMMISSION_HINT")
 	list.item_selected.connect(func(_index: int) -> void: _refresh_info())
@@ -130,7 +133,7 @@ func _move(step: int) -> void:
 	list.select(next)
 	list.ensure_current_is_visible()
 	_refresh_info()
-	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
+	sfx.play(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
 
 
 # ---------------------------------------------------------------- 交付
@@ -151,7 +154,7 @@ func _deliver() -> void:
 						"reward": CommissionRules.reward_of(data),
 					}
 				)
-			EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
+			sfx.play(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 			_rebuild()
 		Commission.Result.ALREADY_DONE:
 			EventBus.ui.notification_requested.emit(&"NOTIFY_COMMISSION_ALREADY", {})

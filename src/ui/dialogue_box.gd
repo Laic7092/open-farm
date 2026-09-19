@@ -47,7 +47,12 @@ func bind_dependencies(profile: PlayerProfile, _clock: GameDateClock) -> void:
 	_profile = profile
 
 
+## 本界面自己的音效播放器（翻页声）。
+var sfx: SfxPlayer
+
+
 func _ready() -> void:
+	sfx = SfxPlayer.attach(self)
 	visible = false
 	choices_box.visible = false
 
@@ -122,6 +127,8 @@ func _show_line(index: int) -> void:
 	_apply_emotion(line.emotion)
 	hint_label.text = Text.key(&"DIALOGUE_ADVANCE_HINT")
 	EventBus.ui.dialogue_line_shown.emit()
+	if sfx != null:
+		sfx.play(AudioCatalog.SFX_DIALOGUE, 1.0, -3.0)
 	_start_typing()
 
 

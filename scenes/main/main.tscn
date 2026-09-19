@@ -19,5 +19,4 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 script = ExtResource("4_scene_audio")
 follow_world_bgm = true
-listen_ui_sfx = true
 listen_gameplay_sfx = true

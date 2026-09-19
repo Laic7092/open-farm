@@ -242,6 +242,7 @@ func _finish_land() -> void:
 func _escape() -> void:
 	_phase = Phase.DONE
 	_player.fishing_bobber.reel_in()
+	_play(AudioCatalog.SFX_FISH_LINE_BREAK)
 	EventBus.ui.notification_requested.emit(&"NOTIFY_FISH_ESCAPED", {})
 	_end_fishing()
 	finished.emit()

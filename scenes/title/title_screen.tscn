@@ -275,4 +275,3 @@ unique_name_in_owner = true
 script = ExtResource("6_scene_audio")
 bgm_track = &"title"
 autoplay_bgm = true
-listen_ui_sfx = true

@@ -30,6 +30,8 @@ var save_root: String = DEFAULT_SAVE_ROOT
 ##
 ## 手动存档 / 日结自动存档都写到这里，所以 UI 不需要（也不应该）手选槽位。
 var current_slot: int = -1
+## 存档服务自己的音效播放器：谁制造声音，谁持有。
+var sfx: SfxPlayer
 
 ## 最近一次读入的"场景内节点"存档数据。
 ##
@@ -61,7 +63,13 @@ func core_sections() -> Array[SaveSection]:
 
 
 func _ready() -> void:
+	sfx = SfxPlayer.attach(self)
 	_ensure_root()
+
+
+func _play(sound_id: StringName, pitch: float = 1.0, volume_db: float = 0.0) -> void:
+	if sfx != null:
+		sfx.play(sound_id, pitch, volume_db)
 
 
 # ---------------------------------------------------------------- 槽位
@@ -154,6 +162,7 @@ func save_game(slot: int) -> bool:
 		current_slot = slot
 	save_finished.emit(slot, success)
 	EventBus.save_completed.emit(slot, success)
+	_play(AudioCatalog.SFX_SAVE if success else AudioCatalog.SFX_ERROR)
 	return success
 
 
@@ -180,6 +189,7 @@ func load_game(slot: int) -> bool:
 		current_slot = slot
 	load_finished.emit(slot, success)
 	EventBus.load_completed.emit(slot, success)
+	_play(AudioCatalog.SFX_LOAD if success else AudioCatalog.SFX_ERROR)
 	return success
 
 

@@ -11,6 +11,18 @@ const SPAWN_GROUP: StringName = &"spawn_point"
 ## 世界场景宿主所在分组；与 [WorldHost.GROUP] 保持一致。
 const WORLD_HOST_GROUP: StringName = &"world_host"
 
+## 场景路由自己的音效播放器（切图过渡声）。
+var sfx: SfxPlayer
+
+
+func _ready() -> void:
+	sfx = SfxPlayer.attach(self)
+
+
+func _play(sound_id: StringName, pitch: float = 1.0, volume_db: float = 0.0) -> void:
+	if sfx != null:
+		sfx.play(sound_id, pitch, volume_db)
+
 
 ## 切换世界场景并把玩家放到 [param spawn_id] 对应的出生点。
 ##
@@ -34,6 +46,7 @@ func change_scene_to(
 
 	host.begin_transition()
 	EventBus.scene_transition_started.emit(spawn_id)
+	_play(AudioCatalog.SFX_TRANSITION, 1.0, -4.0)
 
 	var tree := host.get_tree()
 	if tree == null:

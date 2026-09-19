@@ -11,6 +11,15 @@ extends Control
 
 ## 浮动提示停留时长（秒）。
 const TOAST_DURATION: float = 2.2
+## 专属音效之后这段时间内的通用通知音会被抑制，避免"一个动作两声"（毫秒）。
+const NOTIFY_SUPPRESS_MS: int = 140
+## 这些通知意味着"没做成"，用低沉的失败音。
+const NEGATIVE_NOTIFICATIONS: Array[StringName] = [
+	&"NOTIFY_NOTHING_HAPPENED",
+	&"NOTIFY_NOTHING_TO_SHIP",
+	&"NOTIFY_NO_FEED",
+	&"NOTIFY_LOAD_FAILED",
+]
 
 ## 天气图标：与 [method Weather.to_key] 的返回值一一对应。
 const WEATHER_ICON_DIR: String = "res://assets/ui"
@@ -44,6 +53,8 @@ const TOUCH_LIFT: float = 64.0
 @onready var bottom_left: VBoxContainer = %BottomLeft
 
 var _toast_tween: Tween
+## 本界面自己的音效播放器：通知音由显示通知的界面发出。
+var sfx: SfxPlayer
 ## 天气图标缓存：贴着同一个文件反复 load 会让每帧的 HUD 刷新变成磁盘 IO。
 var _weather_icons: Dictionary[StringName, Texture2D] = {}
 ## 物品栏格子，按从左到右排列。
@@ -87,6 +98,7 @@ func bind_services(
 
 
 func _ready() -> void:
+	sfx = SfxPlayer.attach(self)
 	EventBus.minute_changed.connect(_on_minute_changed)
 	EventBus.day_changed.connect(_on_day_changed)
 	EventBus.season_changed.connect(func(_season: Season.Type) -> void: _refresh_date())
@@ -279,6 +291,12 @@ func _on_notification(text_key: StringName, args: Dictionary) -> void:
 		return
 
 	toast_label.text = message
+
+	if sfx != null and AudioBus.since_last_sfx_ms() >= NOTIFY_SUPPRESS_MS:
+		if NEGATIVE_NOTIFICATIONS.has(text_key):
+			sfx.play(AudioCatalog.SFX_ERROR, 1.0, -2.0)
+		else:
+			sfx.play(AudioCatalog.SFX_NOTIFY, 1.0, -3.0)
 
 	if _toast_tween != null and _toast_tween.is_valid():
 		_toast_tween.kill()

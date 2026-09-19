@@ -25,12 +25,15 @@ const CATEGORIES: Array[Dictionary] = [
 @onready var hint_label: Label = %HintLabel
 
 var _state: MuseumState
+## 本界面自己的音效播放器。
+var sfx: SfxPlayer
 var _category: int = 0
 ## 当前列表里的道具 id，与 [member list] 的行一一对应。
 var _entries: Array[StringName] = []
 
 
 func _ready() -> void:
+	sfx = SfxPlayer.attach(self)
 	visible = false
 	hint_label.text = Text.key(&"MUSEUM_HINT")
 	list.item_selected.connect(func(_index: int) -> void: _refresh_info())
@@ -148,13 +151,13 @@ func _move(step: int) -> void:
 	list.select(next)
 	list.ensure_current_is_visible()
 	_refresh_info()
-	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
+	sfx.play(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
 
 
 func _switch_category(step: int) -> void:
 	_category = wrapi(_category + step, 0, CATEGORIES.size())
 	_rebuild()
-	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
+	sfx.play(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
 
 
 func _selected_index() -> int:

@@ -20,6 +20,8 @@ extends CanvasLayer
 @onready var touch_controls: TouchControls = %TouchControls
 
 var _modals: Array[Control] = []
+## 本界面根节点的音效播放器（模态开合声）。
+var sfx: SfxPlayer
 ## 组合根注入的玩家档案；转发给 Hud / ShopUi。
 var _player_profile: PlayerProfile
 ## 组合根注入的时钟；转发给 Hud / ShopUi。
@@ -76,16 +78,10 @@ func bind_fishing(provider: Callable) -> void:
 			child.call(&"bind_fishing", provider)
 
 
-## 由 [Main] 注入本场景的音频节点；继续下发给需要音量控制的界面。
-func bind_audio(audio: SceneAudio) -> void:
-	for child: Node in get_children():
-		if child.has_method(&"bind_audio"):
-			child.call(&"bind_audio", audio)
-
-
 func _ready() -> void:
 	# 界面必须能在暂停时继续响应输入（否则暂停后就按不动了）。
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	sfx = SfxPlayer.attach(self)
 
 	# 组合根注入：界面层仍可使用 EventBus，但商店逻辑依赖由此显式传入。
 	shop_ui.configure(_player_profile, Database, EventBus, _clock_state)
@@ -168,6 +164,9 @@ func _sync_pause() -> void:
 	var paused := is_modal_open()
 	get_tree().paused = paused
 	EventBus.ui.game_paused_changed.emit(paused)
+	# 打开模态（暂停）= 向上滑音；关闭 = 向下滑音。
+	if sfx != null:
+		sfx.play(AudioCatalog.SFX_UI_OPEN if paused else AudioCatalog.SFX_UI_CLOSE, 1.0, -2.0)
 
 
 # ---------------------------------------------------------------- 事件

@@ -28,6 +28,8 @@ enum ShopSide {
 @onready var hint_label: Label = %HintLabel
 
 var _shop: Shop
+## 本界面自己的音效播放器。
+var sfx: SfxPlayer
 var _entries: Array[ShopStock] = []
 var _sellable_ids: Array[StringName] = []
 var _side: ShopSide = ShopSide.BUY
@@ -40,6 +42,7 @@ var _clock
 
 
 func _ready() -> void:
+	sfx = SfxPlayer.attach(self)
 	visible = false
 	hint_label.text = Text.key(&"SHOP_UI_HINT")
 	buy_list.item_selected.connect(func(_index: int) -> void: _refresh_info())
@@ -70,8 +73,8 @@ func open(shop_data: ShopData) -> void:
 		push_error("ShopUi: 未注入依赖，无法打开商店")
 		return
 	_shop = Shop.new(shop_data, _wallet, _catalog, _events)
-	_shop.purchased.connect(_on_transaction)
-	_shop.sold.connect(_on_transaction)
+	_shop.purchased.connect(_on_purchased)
+	_shop.sold.connect(_on_sold)
 	_shop.rejected.connect(_on_rejected)
 	title_label.text = Text.key(shop_data.display_name_key)
 	_side = ShopSide.BUY
@@ -239,7 +242,7 @@ func _move_cursor(step: int) -> void:
 	list.select(next)
 	list.ensure_current_is_visible()
 	_refresh_info_for_side()
-	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
+	sfx.play(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
 
 
 ## 左右切换列表；同一侧时什么也不做。
@@ -251,7 +254,7 @@ func _switch_side(side: ShopSide) -> void:
 	_restore_selection(list, _selected_index(list))
 	_focus_side()
 	_refresh_info_for_side()
-	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
+	sfx.play(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
 
 
 ## 把焦点交给当前列表，让金边焦点框落在正确的一侧。
@@ -305,7 +308,15 @@ func _on_sell_pressed() -> void:
 	_shop.sell(_sellable_ids[index], 1, inventory)
 
 
-func _on_transaction(_item_id: StringName, _count: int, _total: int) -> void:
+func _on_purchased(_item_id: StringName, _count: int, _total: int) -> void:
+	if sfx != null:
+		sfx.play(AudioCatalog.SFX_COIN, 1.0)
+	refresh()
+
+
+func _on_sold(_item_id: StringName, _count: int, _total: int) -> void:
+	if sfx != null:
+		sfx.play(AudioCatalog.SFX_COIN, 0.92)
 	refresh()
 
 

@@ -7,7 +7,7 @@ extends Node
 ## 里用导出字段声明"这个场景听起来是什么样"：
 ## [br]- [member bgm_track] / [member autoplay_bgm]：场景自己的曲目；
 ## [br]- [member follow_world_bgm]：跟随当前 [WorldScene] 声明的曲目与昼夜；
-## [br]- [member listen_ui_sfx] / [member listen_gameplay_sfx]：订阅哪几类既有事件。
+## [br]- [member listen_gameplay_sfx]：订阅玩法信号（钓鱼接管 BGM / 跨天晨鸣）。
 ##
 ## [b]总线与音量[/b]：总线创建、音量与设置文件都收在 [AudioBus] 这个极小共享点里；
 ## 玩家 / 工具 / 界面等发声者各自持有 [SfxPlayer] 直接播放，本节点只留场景自己的 BGM
@@ -31,16 +31,6 @@ const SFX_VOICES: int = 12
 const BGM_FADE: float = 0.7
 ## 同一音效在这个间隔内重复触发会被忽略（毫秒）。
 const SFX_COOLDOWN_MS: int = 22
-## 专属音效之后的这段时间内，通用通知音会被抑制，避免"一个动作两声"（毫秒）。
-const NOTIFY_SUPPRESS_MS: int = 140
-## 这些通知意味着"没做成"，用低沉的失败音。
-const NEGATIVE_NOTIFICATIONS: Array[StringName] = [
-	&"NOTIFY_NOTHING_HAPPENED",
-	&"NOTIFY_NOTHING_TO_SHIP",
-	&"NOTIFY_NO_FEED",
-	&"NOTIFY_LOAD_FAILED",
-]
-
 # ---------------------------------------------------------------- 场景声明
 
 ## 不跟随世界时播放的曲目；空表示这个场景没有自己的 BGM。
@@ -49,8 +39,6 @@ const NEGATIVE_NOTIFICATIONS: Array[StringName] = [
 @export var autoplay_bgm: bool = false
 ## 跟随当前世界场景声明的曲目，并在世界切换 / 小时变化时刷新。
 @export var follow_world_bgm: bool = false
-## 订阅 [signal EventBus.ui.ui_sound_requested] 及 UI / 存读档类音效。
-@export var listen_ui_sfx: bool = false
 ## 订阅农场 / 世界 / 玩家玩法信号。
 @export var listen_gameplay_sfx: bool = false
 
@@ -290,16 +278,6 @@ func _hook_events() -> void:
 		_connect_once(EventBus.farm.fish_ended, _on_fish_ended)
 		_connect_once(EventBus.day_changed, _on_day_changed)
 
-	if listen_ui_sfx:
-		_connect_once(EventBus.ui.ui_sound_requested, _on_ui_sound_requested)
-		_connect_once(EventBus.ui.transaction_completed, _on_transaction)
-		_connect_once(EventBus.ui.dialogue_line_shown, _on_dialogue_line_shown)
-		_connect_once(EventBus.ui.game_paused_changed, _on_game_paused_changed)
-		_connect_once(EventBus.ui.notification_requested, _on_notification)
-		_connect_once(EventBus.save_completed, _on_save_completed)
-		_connect_once(EventBus.load_completed, _on_load_completed)
-		_connect_once(EventBus.scene_transition_started, _on_scene_transition_started)
-
 
 func _on_world_entered(_world_id: StringName) -> void:
 	_refresh_world_bgm()
@@ -328,49 +306,6 @@ func _on_fish_cast(_power: float, _distance: float) -> void:
 
 func _on_fish_ended() -> void:
 	pop_bgm_override()
-
-
-func _on_dialogue_line_shown() -> void:
-	play_sfx(Catalog.SFX_DIALOGUE, 1.0, -3.0)
-
-
-func _on_ui_sound_requested(sound_id: StringName, pitch: float, volume_db: float) -> void:
-	play_sfx(sound_id, pitch, volume_db)
-
-
-func _on_transaction(_item: StringName, _count: int, _total: int, is_purchase: bool) -> void:
-	play_sfx(Catalog.SFX_COIN, 1.0 if is_purchase else 0.92)
-
-
-func _on_game_paused_changed(paused: bool) -> void:
-	# 打开模态（暂停）= 向上滑音；关闭 = 向下滑音。
-	play_sfx(Catalog.SFX_UI_OPEN if paused else Catalog.SFX_UI_CLOSE, 1.0, -2.0)
-
-
-func _on_notification(text_key: StringName, _args: Dictionary) -> void:
-	# 断线有专属音效，不再叠通用失败音。
-	if text_key == &"NOTIFY_FISH_ESCAPED":
-		play_sfx(Catalog.SFX_FISH_LINE_BREAK)
-		return
-	# 专属音效刚响过就不再叠一层通用提示音（时间戳是 [AudioBus] 共享点）。
-	if AudioBus.since_last_sfx_ms() < NOTIFY_SUPPRESS_MS:
-		return
-	if NEGATIVE_NOTIFICATIONS.has(text_key):
-		play_sfx(Catalog.SFX_ERROR, 1.0, -2.0)
-	else:
-		play_sfx(Catalog.SFX_NOTIFY, 1.0, -3.0)
-
-
-func _on_save_completed(_slot: int, success: bool) -> void:
-	play_sfx(Catalog.SFX_SAVE if success else Catalog.SFX_ERROR)
-
-
-func _on_load_completed(_slot: int, success: bool) -> void:
-	play_sfx(Catalog.SFX_LOAD if success else Catalog.SFX_ERROR)
-
-
-func _on_scene_transition_started(_target: StringName) -> void:
-	play_sfx(Catalog.SFX_TRANSITION, 1.0, -4.0)
 
 
 

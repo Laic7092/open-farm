@@ -50,6 +50,8 @@ const DELETE_KEY: Key = KEY_DELETE
 @onready var _cloud_3: TextureRect = %Cloud3
 
 var _clouds: Array[TextureRect] = []
+## 本页面自己的音效播放器。
+var sfx: SfxPlayer
 ## 标题底板的基准高度，用于做轻微的上下浮动。
 var _title_base_y: float = 0.0
 ## 是否已经记录过底板的基准位置（容器布局要等一帧才生效）。
@@ -61,6 +63,7 @@ var _saves: Array[Dictionary] = []
 
 func _ready() -> void:
 	PointerInput.sync_cursor()
+	sfx = SfxPlayer.attach(self)
 	_clouds = [_cloud_1, _cloud_2, _cloud_3]
 
 	_continue_button.pressed.connect(_on_continue_pressed)
@@ -221,7 +224,7 @@ func _delete_focused_save() -> void:
 	var slot := int(_saves[index].get("slot", -1)) if index < _saves.size() else -1
 	if slot < 0:
 		return
-	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
+	sfx.play(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 	SaveManager.delete_save(slot)
 	_saves = SaveManager.all_meta()
 	if _saves.is_empty():
@@ -240,24 +243,24 @@ func _focus_default() -> void:
 
 ## 焦点落到某个按钮上时的移动音效。
 func _on_menu_focus() -> void:
-	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
+	sfx.play(AudioCatalog.SFX_UI_MOVE, 1.0, -4.0)
 
 func _on_continue_pressed() -> void:
 	if _saves.is_empty():
 		return
-	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
+	sfx.play(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 	_open_save_panel()
 
 func _on_slot_chosen(slot: int) -> void:
-	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
+	sfx.play(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 	_start_game(Main.BootMode.LOAD_SLOT, slot)
 
 func _on_new_game_pressed() -> void:
-	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
+	sfx.play(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 	_start_game(Main.BootMode.NEW_GAME, 0)
 
 func _on_language_pressed() -> void:
-	EventBus.ui.ui_sound_requested.emit(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
+	sfx.play(AudioCatalog.SFX_UI_CONFIRM, 1.0, -3.0)
 	AppTheme.set_locale(_next_locale())
 	_refresh()
 	_focus_default()
