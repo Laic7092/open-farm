@@ -43,9 +43,8 @@ ground_area = Rect2i(0, 0, 24, 16)
 decor_root = NodePath("../Props")
 decor_enabled = false
 
-[node name="Walls" type="TileMapLayer" parent="."]
+[node name="Walls" type="Node2D" parent="."]
 z_index = -15
-tile_set = ExtResource("2_tileset")
 script = ExtResource("8_walls")
 ground_area = Rect2i(0, 0, 24, 16)
 wall_rows = 3

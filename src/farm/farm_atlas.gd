@@ -22,53 +22,18 @@ const GRASS_MEADOW := AtlasLayout.GRASS_MEADOW
 const PATH := AtlasLayout.PATH
 const SOIL_DRY := AtlasLayout.SOIL_DRY
 const SOIL_WET := AtlasLayout.SOIL_WET
+const DIRT := AtlasLayout.DIRT
+const GRAVEL := AtlasLayout.GRAVEL
+const SAND := AtlasLayout.SAND
 
-# ---- 水与石木
-const WATER := AtlasLayout.WATER
-const WATER_EDGE := AtlasLayout.WATER_EDGE
-const SHALLOW_WATER := AtlasLayout.SHALLOW_WATER
-
-## 这一格图集坐标是否属于水面（深水 / 水岸 / 浅滩）。
-##
-## [b]注意[/b]：水已经不在 [code]Ground[/code] 图层里了（见 [WaterField] 与
-## [code]AGENTS.md[/code]），这里只用来描述图集里的水瓦片，
-## "面前是不是水"改由 [code]WaterField.is_water(cell)[/code] 答。
-static func is_water(atlas: Vector2i) -> bool:
-	return atlas == WATER or atlas == WATER_EDGE or atlas == SHALLOW_WATER
+# ---- 石、木与地势
+#
+# 水不在图集里：水面是 [WaterField] 按 [WaterLayout] 摆的独立贴图。
 const STONE := AtlasLayout.STONE
 const CLIFF := AtlasLayout.CLIFF
 const WOOD := AtlasLayout.WOOD
 const PATH_STONE := AtlasLayout.PATH_STONE
 const PATH_STONE_ALT := AtlasLayout.PATH_STONE_ALT
-const GRAVEL := AtlasLayout.GRAVEL
-const SAND := AtlasLayout.SAND
-const DIRT := AtlasLayout.DIRT
-
-# ---- 植被与装饰
-const FLOWERS := AtlasLayout.FLOWERS
-const FLOWER_RED := AtlasLayout.FLOWER_RED
-const FLOWER_BLUE := AtlasLayout.FLOWER_BLUE
-const FLOWER_BED := AtlasLayout.FLOWER_BED
-const BUSH := AtlasLayout.BUSH
-const TALL_GRASS := AtlasLayout.TALL_GRASS
-const MUSHROOM := AtlasLayout.MUSHROOM
-const PEBBLE := AtlasLayout.PEBBLE
-const SAND_PEBBLE := AtlasLayout.SAND_PEBBLE
-const GRAVEL_ORE := AtlasLayout.GRAVEL_ORE
-const STUMP_TILE := AtlasLayout.STUMP_TILE
-const HAY := AtlasLayout.HAY
-const CRATE := AtlasLayout.CRATE
-
-# ---- 人造物
-const FENCE := AtlasLayout.FENCE
-const FENCE_GATE := AtlasLayout.FENCE_GATE
-const SIGN := AtlasLayout.SIGN
-const WELL_TOP := AtlasLayout.WELL_TOP
-const ROOF := AtlasLayout.ROOF
-const WALL := AtlasLayout.WALL
-const WINDOW := AtlasLayout.WINDOW
-const DOORWAY := AtlasLayout.DOORWAY
-
 
 # ---------------------------------------------------------------- 地表过渡
 
@@ -125,12 +90,10 @@ static func is_transition_of(surface: int, atlas: Vector2i) -> bool:
 
 ## 在草缘判定里，哪些瓦片的底色是草地。
 ##
-## 装饰瓦片（花 / 灌木 / 栅栏）自带草底，所以它们旁边同样应该有草缘；
-## 花圃 / 干草 / 木箱则属于「人摆过的东西」，不算草地。
+## 装饰（花 / 灌木 / 栅栏）不占图集格子，所以这里只剩草地本身：
+## 沙 / 土 / 石 / 木 / 路都不算草地，铺在它们旁边的路才会有草缘。
 const GRASS_LIKE: Array[Vector2i] = [
 	GRASS, GRASS_ALT, GRASS_LUSH, GRASS_DRY, GRASS_DAPPLED, GRASS_MEADOW,
-	TALL_GRASS, PEBBLE, FLOWERS, FLOWER_RED, FLOWER_BLUE, MUSHROOM,
-	BUSH, SIGN, FENCE, FENCE_GATE,
 ]
 
 

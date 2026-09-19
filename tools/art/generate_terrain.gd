@@ -1,11 +1,11 @@
 extends SceneTree
 ## 地形图集生成器 → [code]assets/sprites/tileset_farm.png[/code]
 ##
-## 同时从同一套装饰画法导出 [code]assets/sprites/decor/*.png[/code]，
-## 供 [code]DecorPainter[/code] 生成独立摆件；透明底，不带草 / 沙 / 砾石底色。
-## 8 列 × 15 行、每格 16×16，坐标全部来自 [AtlasLayout]。
-## 第 0 行的 8 格是骨架阶段就存在的坐标，[b]永远不能改[/b]——
-## 已铺好的场景与旧存档都引用它们；新素材一律往后追加。
+## 图集[b]只画地板[/b]：17 格地面单格 + 4 种基底的 16 向草缘过渡块（4×4）。
+## 花木、栅栏、墙面这些"站在地板上的东西"不占格子，而是从同一套像素
+## 画法导出成独立透明 PNG：[code]assets/sprites/decor/*.png[/code]（→ [code]DecorPainter[/code]）
+## 与 [code]assets/sprites/interior/*.png[/code]（→ [code]InteriorWalls[/code]）。
+## 9 列 × 9 行、每格 16×16，正好被内容填满，坐标全部来自 [AtlasLayout]。
 ##
 ## 用法：
 ## [codeblock]
@@ -23,69 +23,36 @@ enum Surface { PATH, STONE, SAND, DIRT }
 func _initialize() -> void:
 	var image := Art.new_image(Layout.TILESET_SIZE.x, Layout.TILESET_SIZE.y)
 
-	# ---- 第 0 行（历史坐标，不得移动）
+	# ---- 最后一列：常用的地面单格。
 	_grass(image, Layout.GRASS, false)
 	_grass(image, Layout.GRASS_ALT, true)
 	_path(image, Layout.PATH)
 	_soil(image, Layout.SOIL_DRY, false)
 	_soil(image, Layout.SOIL_WET, true)
-	_water(image, Layout.WATER)
 	_stone(image, Layout.STONE)
 	_wood_floor(image, Layout.WOOD)
+	_cliff(image, Layout.CLIFF)
 
-	# ---- 第 1 行
-	_flowers(image, Layout.FLOWERS, [P.FLOWER_PINK, P.FLOWER_YELLOW, P.FLOWER_WHITE])
-	_fence(image, Layout.FENCE, false)
-	_bush(image, Layout.BUSH)
-	_sign(image, Layout.SIGN)
-	_tall_grass(image, Layout.TALL_GRASS)
+	# ---- 最后一行：其余地面单格与草地变体。
 	_dirt(image, Layout.DIRT)
 	_gravel(image, Layout.GRAVEL)
 	_sand(image, Layout.SAND)
-
-	# ---- 第 2 行
-	_water_edge(image, Layout.WATER_EDGE)
 	_path_stone(image, Layout.PATH_STONE)
-	_roof(image, Layout.ROOF)
-	_wall(image, Layout.WALL)
-	_window(image, Layout.WINDOW)
-	_doorway(image, Layout.DOORWAY)
-	_fence(image, Layout.FENCE_GATE, true)
-	_flower_bed(image, Layout.FLOWER_BED)
-
-	# ---- 第 3 行
-	_flowers(image, Layout.FLOWER_RED, [P.FLOWER_RED, P.FLOWER_RED, P.FLOWER_YELLOW])
-	_flowers(image, Layout.FLOWER_BLUE, [P.FLOWER_BLUE, P.FLOWER_WHITE, P.FLOWER_BLUE])
-	_mushroom(image, Layout.MUSHROOM)
-	_pebbles(image, Layout.PEBBLE)
-	_stump_tile(image, Layout.STUMP_TILE)
-	_hay(image, Layout.HAY)
-	_crate(image, Layout.CRATE)
-	_well_top(image, Layout.WELL_TOP)
-
-	# ---- 第 4 行（世界扩建时追加；前三行坐标永不改动）
-	_shallow_water(image, Layout.SHALLOW_WATER)
 	_path_stone_alt(image, Layout.PATH_STONE_ALT)
-	_cliff(image, Layout.CLIFF)
-
-	# ---- 第 5 行（自带正确底色的点缀：沙滩 / 砾石）
-	_sand_pebble(image, Layout.SAND_PEBBLE)
-	_gravel_ore(image, Layout.GRAVEL_ORE)
-
-	# ---- 第 6~13 行：16 向草缘过渡块（每种基底 4×4）
-	_transition_block(image, Layout.PATH_TRANSITION_BLOCK, Surface.PATH)
-	_transition_block(image, Layout.STONE_TRANSITION_BLOCK, Surface.STONE)
-	_transition_block(image, Layout.SAND_TRANSITION_BLOCK, Surface.SAND)
-	_transition_block(image, Layout.DIRT_TRANSITION_BLOCK, Surface.DIRT)
-
-	# ---- 第 14 行：草地变体
 	_grass_lush(image, Layout.GRASS_LUSH)
 	_grass_dry(image, Layout.GRASS_DRY)
 	_grass_dappled(image, Layout.GRASS_DAPPLED)
 	_grass_meadow(image, Layout.GRASS_MEADOW)
 
+	# ---- 左上方 8×8：16 向草缘过渡块（每种基底 4×4）。
+	_transition_block(image, Layout.PATH_TRANSITION_BLOCK, Surface.PATH)
+	_transition_block(image, Layout.STONE_TRANSITION_BLOCK, Surface.STONE)
+	_transition_block(image, Layout.SAND_TRANSITION_BLOCK, Surface.SAND)
+	_transition_block(image, Layout.DIRT_TRANSITION_BLOCK, Surface.DIRT)
+
 	Art.save_png(image, Layout.TILESET_PATH)
 	_write_decor_sprites()
+	_write_interior_sprites()
 	print("地形图集生成完成（%d 格）" % (Layout.TILESET_COLUMNS * Layout.TILESET_ROWS))
 	quit()
 
@@ -156,6 +123,26 @@ func _write_decor_sprites() -> void:
 
 func _save_decor(name: String, image: Image) -> void:
 	Art.save_png(image, Layout.DECOR_DIR.path_join("%s.png" % name))
+
+
+## 室内墙面构件：尺寸与图集同格，但导出成独立贴图，
+## 让 [code]InteriorWalls[/code] 用 [Sprite2D] + [StaticBody2D] 摆墙面。
+func _write_interior_sprites() -> void:
+	var image := Art.new_image(Layout.TILE, Layout.TILE)
+	_roof(image, Vector2i.ZERO)
+	Art.save_png(image, Layout.INTERIOR_DIR.path_join("roof.png"))
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_wall(image, Vector2i.ZERO)
+	Art.save_png(image, Layout.INTERIOR_DIR.path_join("wall.png"))
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_window(image, Vector2i.ZERO)
+	Art.save_png(image, Layout.INTERIOR_DIR.path_join("window.png"))
+
+	image = Art.new_image(Layout.TILE, Layout.TILE)
+	_doorway(image, Vector2i.ZERO)
+	Art.save_png(image, Layout.INTERIOR_DIR.path_join("doorway.png"))
 
 
 func _decor_flowers(color_a: Color, color_b: Color, color_c: Color) -> Image:
@@ -310,46 +297,6 @@ func _soil(image: Image, cell: Vector2i, watered: bool) -> void:
 		Art.px(image, origin.x + 4, origin.y + 6, P.WATER_LIGHT)
 		Art.px(image, origin.x + 11, origin.y + 11, P.WATER_LIGHT)
 		Art.px(image, origin.x + 7, origin.y + 14, P.WATER_LIGHT)
-
-
-func _water(image: Image, cell: Vector2i) -> void:
-	var area := _cell_rect(cell)
-	var origin := _origin(cell)
-	Art.rect(image, area, P.WATER)
-	Art.h_line(image, origin.x, origin.y + 3, Layout.TILE, P.WATER_DARK)
-	Art.h_line(image, origin.x, origin.y + 10, Layout.TILE, P.WATER_DARK)
-	# 波光：短线 + 单点，避免大面积规律感。
-	for at: Vector2i in [Vector2i(2, 5), Vector2i(9, 7), Vector2i(5, 12), Vector2i(12, 13)]:
-		Art.bar(image, origin.x + at.x, origin.y + at.y, 4, P.WATER_LIGHT)
-	Art.px(image, origin.x + 6, origin.y + 1, P.WATER_FOAM)
-	Art.px(image, origin.x + 13, origin.y + 8, P.WATER_FOAM)
-
-
-func _water_edge(image: Image, cell: Vector2i) -> void:
-	var area := _cell_rect(cell)
-	var origin := _origin(cell)
-	# 上 2/3 是水，下 1/3 是沙滩 + 浪花。
-	Art.rect(image, Rect2i(origin.x, origin.y, Layout.TILE, 10), P.WATER)
-	Art.rect(image, Rect2i(origin.x, origin.y + 10, Layout.TILE, 6), P.SAND)
-	Art.scatter(image, Rect2i(origin.x, origin.y + 10, Layout.TILE, 6), P.SAND_DARK, 0.2, 83)
-	Art.h_line(image, origin.x, origin.y + 9, Layout.TILE, P.WATER_DARK)
-	Art.h_line(image, origin.x, origin.y + 10, Layout.TILE, P.WATER_FOAM)
-	Art.px(image, origin.x + 4, origin.y + 5, P.WATER_LIGHT)
-	Art.px(image, origin.x + 11, origin.y + 3, P.WATER_LIGHT)
-
-
-## 浅水：水与沙滩之间的过渡带，颜色比深水亮一档，浪线更密。
-func _shallow_water(image: Image, cell: Vector2i) -> void:
-	var area := _cell_rect(cell)
-	var origin := _origin(cell)
-	Art.rect(image, area, P.WATER.lerp(P.SAND, 0.28))
-	Art.scatter(image, area, P.WATER_LIGHT, 0.18, 191)
-	# 三道横向浪线：越靠下越密，读起来像退去的浪。
-	Art.h_line(image, origin.x + 1, origin.y + 4, 6, P.WATER_FOAM)
-	Art.h_line(image, origin.x + 9, origin.y + 7, 6, P.WATER_FOAM)
-	Art.h_line(image, origin.x + 3, origin.y + 11, 8, P.WATER_LIGHT)
-	Art.px(image, origin.x + 13, origin.y + 2, P.WATER_FOAM)
-	Art.px(image, origin.x + 2, origin.y + 14, P.WATER_FOAM)
 
 
 ## 石板路的第二版：把石块错位并缩小，与大块石板交替铺出广场的质感。

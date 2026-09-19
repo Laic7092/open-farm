@@ -16,9 +16,10 @@ const KEY_BECAME_SOLID: StringName = &"became_solid"
 
 ## 允许野生长东西的地表瓦片。
 ##
-## 用"白名单"而不是"黑名单"：路、石板、水、木地板、栅栏、花圃、干草、木箱
-## 这些被人摆过的地方自动不在列表里，于是"东西不会长在路上"这条规则
-## 不需要在代码里逐个枚举。
+## 用"白名单"而不是"黑名单"：路、石板、木地板这些被人铺过的地方
+## 自动不在列表里，于是"东西不会长在路上"这条规则不需要在代码里逐个枚举。
+## 装饰（花 / 栅栏 / 碎石）已不占图集格子，它们占住的格子由
+## [FloraField] 按 [code]decor_props[/code] 分组判掉。
 const NATURAL_GROUND: Array[Vector2i] = [
 	FarmAtlas.GRASS,
 	FarmAtlas.GRASS_ALT,
@@ -26,8 +27,6 @@ const NATURAL_GROUND: Array[Vector2i] = [
 	FarmAtlas.GRASS_DRY,
 	FarmAtlas.GRASS_DAPPLED,
 	FarmAtlas.GRASS_MEADOW,
-	FarmAtlas.TALL_GRASS,
-	FarmAtlas.PEBBLE,
 	FarmAtlas.DIRT,
 	FarmAtlas.GRAVEL,
 	FarmAtlas.SAND,

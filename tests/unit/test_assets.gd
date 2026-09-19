@@ -11,6 +11,7 @@ const Layout := preload("res://src/art/atlas_layout.gd")
 const Palette := preload("res://src/art/palette.gd")
 const TileCollision := preload("res://src/world/tile_collision.gd")
 const Decor := preload("res://src/world/decor_painter.gd")
+const Interior := preload("res://src/world/interior_walls.gd")
 const WaterLayout := preload("res://src/world/water_layout.gd")
 
 const I18N_DIR: String = "res://assets/i18n"
@@ -335,8 +336,8 @@ func test_decor_sprites_match_layout() -> void:
 		).is_equal(Layout.DECOR_SPRITE_SIZE.y)
 
 
-## 实心装饰瓦片必须有物理碰撞；牧草等可穿过瓦片必须没有。
-func test_solid_decor_tiles_have_collision() -> void:
+## 图集里只有崖壁带碰撞：装饰与墙面已改由 [WorldProp] / [InteriorWalls] 自己挡人。
+func test_only_solid_ground_tiles_have_collision() -> void:
 	var tileset := load(TILESET_PATH) as TileSet
 	assert_object(tileset).is_not_null()
 	if tileset == null:
@@ -347,29 +348,23 @@ func test_solid_decor_tiles_have_collision() -> void:
 	assert_object(source).is_not_null()
 	if source == null:
 		return
-	for atlas: Vector2i in TileCollision.SOLID_TILES:
+	for index: int in source.get_tiles_count():
+		var atlas: Vector2i = source.get_tile_id(index)
 		var data := source.get_tile_data(atlas, 0)
-		assert_object(data).override_failure_message(
-			"实心装饰瓦片 %s 没有 TileData" % atlas
-		).is_not_null()
+		assert_object(data).override_failure_message("瓦片 %s 没有 TileData" % atlas).is_not_null()
 		if data == null:
 			continue
-		assert_int(data.get_collision_polygons_count(0)).override_failure_message(
-			"实心装饰瓦片 %s 没有碰撞多边形" % atlas
-		).is_greater(0)
-	for atlas: Vector2i in TileCollision.PASSABLE_TILES:
-		var data := source.get_tile_data(atlas, 0)
-		assert_object(data).override_failure_message(
-			"可穿过瓦片 %s 没有 TileData" % atlas
-		).is_not_null()
-		if data == null:
-			continue
-		assert_int(data.get_collision_polygons_count(0)).override_failure_message(
-			"可穿过瓦片 %s 不应有碰撞多边形" % atlas
-		).is_equal(0)
+		if TileCollision.is_solid(atlas):
+			assert_int(data.get_collision_polygons_count(0)).override_failure_message(
+				"实心地形 %s 没有碰撞多边形" % atlas
+			).is_greater(0)
+		else:
+			assert_int(data.get_collision_polygons_count(0)).override_failure_message(
+				"地板瓦片 %s 不该有碰撞" % atlas
+			).is_equal(0)
 
 
-## 图集排版表声明的格子必须都在 TileSet 里——否则脚本铺地时会画到空处。
+## 图集的每一格都必须是真地面：声明的地面格都在，且没有全透明占位格。
 func test_tileset_contains_every_declared_tile() -> void:
 	var tileset := load(TILESET_PATH) as TileSet
 	assert_object(tileset).is_not_null()
@@ -382,12 +377,8 @@ func test_tileset_contains_every_declared_tile() -> void:
 		return
 	var declared: Array[Vector2i] = [
 		Layout.GRASS, Layout.GRASS_ALT, Layout.PATH, Layout.SOIL_DRY, Layout.SOIL_WET,
-		Layout.WATER, Layout.STONE, Layout.WOOD, Layout.FLOWERS, Layout.FENCE,
-		Layout.BUSH, Layout.SIGN, Layout.TALL_GRASS, Layout.DIRT, Layout.GRAVEL,
-		Layout.SAND, Layout.WATER_EDGE, Layout.PATH_STONE, Layout.ROOF, Layout.WALL,
-		Layout.WINDOW, Layout.DOORWAY, Layout.FENCE_GATE, Layout.FLOWER_BED,
-		Layout.FLOWER_RED, Layout.FLOWER_BLUE, Layout.MUSHROOM, Layout.PEBBLE,
-		Layout.STUMP_TILE, Layout.HAY, Layout.CRATE, Layout.WELL_TOP,
+		Layout.STONE, Layout.WOOD, Layout.CLIFF, Layout.DIRT, Layout.GRAVEL,
+		Layout.SAND, Layout.PATH_STONE, Layout.PATH_STONE_ALT,
 		Layout.GRASS_LUSH, Layout.GRASS_DRY, Layout.GRASS_DAPPLED, Layout.GRASS_MEADOW,
 	]
 	for block: Vector2i in [
@@ -400,6 +391,57 @@ func test_tileset_contains_every_declared_tile() -> void:
 		assert_bool(source.has_tile(cell)).override_failure_message(
 			"TileSet 缺少瓦片 %s" % cell
 		).is_true()
+	assert_int(source.get_tiles_count()).is_equal(Layout.TILESET_COLUMNS * Layout.TILESET_ROWS)
+	_assert_tileset_has_no_placeholder_cell()
+
+
+## 占位格（整格透明）是旧布局的残留；图集应当正好被地面瓦片填满。
+func _assert_tileset_has_no_placeholder_cell() -> void:
+	var texture := load(Layout.TILESET_PATH) as Texture2D
+	assert_object(texture).is_not_null()
+	if texture == null:
+		return
+	var image := texture.get_image()
+	assert_object(image).is_not_null()
+	if image == null:
+		return
+	for row: int in Layout.TILESET_ROWS:
+		for column: int in Layout.TILESET_COLUMNS:
+			assert_bool(_has_opaque_pixel(image, Vector2i(column, row))).override_failure_message(
+				"图集第 %s 格是空的：地面图集不该留占位格" % Vector2i(column, row)
+			).is_true()
+
+
+func _has_opaque_pixel(image: Image, cell: Vector2i) -> bool:
+	for y: int in Layout.TILE:
+		for x: int in Layout.TILE:
+			var at := Vector2i(cell.x * Layout.TILE + x, cell.y * Layout.TILE + y)
+			if image.get_pixelv(at).a > 0.0:
+				return true
+	return false
+
+
+## 室内墙面构件同样不占图集格子：每张一张，被 [InteriorWalls] 登记。
+func test_interior_sprites_match_layout() -> void:
+	assert_int(Interior.TEXTURES.size()).override_failure_message(
+		"InteriorWalls 的贴图表与 AtlasLayout.INTERIOR_SPRITES 数量不一致"
+	).is_equal(Layout.INTERIOR_SPRITES.size())
+	for name: String in Layout.INTERIOR_SPRITES:
+		var id := StringName(name)
+		assert_bool(Interior.TEXTURES.has(id)).override_failure_message(
+			"InteriorWalls 缺少构件 id %s" % name
+		).is_true()
+		var path: String = Layout.INTERIOR_DIR.path_join("%s.png" % name)
+		var texture := load(path) as Texture2D
+		assert_object(texture).override_failure_message("缺少墙面贴图 %s" % path).is_not_null()
+		if texture == null:
+			continue
+		assert_int(texture.get_width()).override_failure_message(
+			"墙面贴图 %s 宽度应为一格" % path
+		).is_equal(Layout.TILE)
+		assert_int(texture.get_height()).override_failure_message(
+			"墙面贴图 %s 高度应为一格" % path
+		).is_equal(Layout.TILE)
 
 
 # ---------------------------------------------------------------- 像素中文字体

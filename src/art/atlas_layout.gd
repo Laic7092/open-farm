@@ -9,8 +9,16 @@ extends RefCounted
 ##
 ## [b]规范[/b]：
 ## [br]1. 坐标常量只允许定义在本文件，其它脚本一律 [code]const X := AtlasLayout.Y[/code]。
-## [br]2. 新增或调整排版后，跑一次 [code]./tools/build_assets.sh[/code]。
-## [br]3. [code]tests/unit/test_assets.gd[/code] 会校验 PNG 尺寸与这里的常量一致。
+## [br]2. [code]tileset_farm.png[/code] [b]只放地板[/b]：花木 / 栅栏 / 墙面这类
+## "站在地板上的东西"一律导出成独立透明 PNG，由 [code]DecorPainter[/code]
+## 或 [code]InteriorWalls[/code] 生成节点，不再占图集格子。
+## [br]3. 新增或调整排版后，跑一次 [code]./tools/build_assets.sh[/code]。
+## [br]4. [code]tests/unit/test_assets.gd[/code] 会校验 PNG 尺寸、
+## "每格都有像素"、以及 TileSet 里的瓦片与这里的常量一致。
+##
+## 坐标是 [code]AtlasLayout[/code] 的内部约定：场景里没有烘死的瓦片数据
+## （TileMapLayer 全靠脚本铺），存档只存农场格状态，都不引用它们。
+## 所以调整网格只需要重跑构建，不涉及兼容。
 
 # ---------------------------------------------------------------- 通用
 
@@ -36,91 +44,62 @@ const DECOR_SPRITES: Array[String] = [
 	"sand_pebble", "gravel_ore", "stump_tile", "hay",
 	"crate", "well_top", "fence", "fence_gate", "sign",
 ]
-const TILESET_COLUMNS: int = 8
-const TILESET_ROWS: int = 15
+
+## 室内墙面构件的贴图目录。
+##
+## 屋顶压顶 / 白墙 / 窗 / 门廊由 [code]InteriorWalls[/code] 摆成 [Sprite2D]，
+## 碰撞由它自己的 [StaticBody2D] 提供，同样不占图集格子。
+const INTERIOR_DIR: String = "res://assets/sprites/interior"
+## 全部室内构件 id；生成器与 [code]InteriorWalls[/code] 共同引用这一份名单。
+const INTERIOR_SPRITES: Array[String] = ["roof", "wall", "window", "doorway"]
+
+# 网格正好被内容填满：64 格过渡块 + 17 格地面单格 = 9×9，没有空备用格。
+const TILESET_COLUMNS: int = 9
+const TILESET_ROWS: int = 9
 const TILESET_SIZE := Vector2i(TILE * TILESET_COLUMNS, TILE * TILESET_ROWS)
 
-# 第 0 行：骨架阶段就存在的 8 格。坐标永不改变，旧场景 / 存档不受影响。
-const GRASS := Vector2i(0, 0)
-const GRASS_ALT := Vector2i(1, 0)
-const PATH := Vector2i(2, 0)
-const SOIL_DRY := Vector2i(3, 0)
-const SOIL_WET := Vector2i(4, 0)
-const WATER := Vector2i(5, 0)
-const STONE := Vector2i(6, 0)
-const WOOD := Vector2i(7, 0)
+# ---- 地面单格：0~7 列被过渡块占满，单格排在最后一列与最后一行（L 形）。
+const GRASS := Vector2i(8, 0)
+const GRASS_ALT := Vector2i(8, 1)
+const PATH := Vector2i(8, 2)
+const SOIL_DRY := Vector2i(8, 3)
+const SOIL_WET := Vector2i(8, 4)
+const STONE := Vector2i(8, 5)
+const WOOD := Vector2i(8, 6)
+const CLIFF := Vector2i(8, 7)
 
-# 第 1 行：装饰与新地表。
-const FLOWERS := Vector2i(0, 1)
-const FENCE := Vector2i(1, 1)
-const BUSH := Vector2i(2, 1)
-const SIGN := Vector2i(3, 1)
-const TALL_GRASS := Vector2i(4, 1)
-const DIRT := Vector2i(5, 1)
-const GRAVEL := Vector2i(6, 1)
-const SAND := Vector2i(7, 1)
+const DIRT := Vector2i(0, 8)
+const GRAVEL := Vector2i(1, 8)
+const SAND := Vector2i(2, 8)
+const PATH_STONE := Vector2i(3, 8)
+const PATH_STONE_ALT := Vector2i(4, 8)
 
-# 第 2 行：建筑构件与水岸。
-const WATER_EDGE := Vector2i(0, 2)
-const PATH_STONE := Vector2i(1, 2)
-const ROOF := Vector2i(2, 2)
-const WALL := Vector2i(3, 2)
-const WINDOW := Vector2i(4, 2)
-const DOORWAY := Vector2i(5, 2)
-const FENCE_GATE := Vector2i(6, 2)
-const FLOWER_BED := Vector2i(7, 2)
-
-# 第 3 行：细碎点缀。
-const FLOWER_RED := Vector2i(0, 3)
-const FLOWER_BLUE := Vector2i(1, 3)
-const MUSHROOM := Vector2i(2, 3)
-const PEBBLE := Vector2i(3, 3)
-const STUMP_TILE := Vector2i(4, 3)
-const HAY := Vector2i(5, 3)
-const CRATE := Vector2i(6, 3)
-const WELL_TOP := Vector2i(7, 3)
-
-# 第 4 行：世界扩建时追加的地表。
-# 追加而不是改动前三行：旧场景与旧存档引用的坐标必须永远有效。
-const SHALLOW_WATER := Vector2i(0, 4)
-const PATH_STONE_ALT := Vector2i(1, 4)
-const CLIFF := Vector2i(2, 4)
-
-# 第 5 行：非草地的点缀。
-#
-# 第 1~3 行的装饰瓦片（花 / 蘑菇 / 碎石）都带一层草地底，
-# 铺在沙滩或砾石上会露出一个方方正正的绿块。所以给沙地与砾石各补一格
-# "自带正确底色"的点缀，而不是让地图作者去记"哪种地面不能用哪些瓦片"。
-const SAND_PEBBLE := Vector2i(0, 5)
-const GRAVEL_ORE := Vector2i(1, 5)
+# ---- 草地变体：用低频噪声按「片」选，而不是相邻格交替，地图里才会出现
+# 大块明暗与色相变化；再加一层高频细节决定单片里的具体形态。
+const GRASS_LUSH := Vector2i(5, 8)
+const GRASS_DRY := Vector2i(6, 8)
+const GRASS_DAPPLED := Vector2i(7, 8)
+const GRASS_MEADOW := Vector2i(8, 8)
 
 # ---------------------------------------------------------------- 地表过渡与变体
 #
 # 16 向「草缘」过渡：一块 4×4 的瓦片矩阵，按 4 邻边是否是草地编码成 mask。
 # 生成器把基底材质画好后，再按 mask 在对应边压上参差的草缘；
 # GroundPainter.transitions() 在铺完地后按同样的规则替换边界格。
-#
-# 追加在最后几段行，不回改第 0~5 行：坐标是场景与存档的隐式契约。
 const TRANSITION_N: int = 1
 const TRANSITION_E: int = 2
 const TRANSITION_S: int = 4
 const TRANSITION_W: int = 8
 
-const PATH_TRANSITION_BLOCK := Vector2i(0, 6)
-const STONE_TRANSITION_BLOCK := Vector2i(4, 6)
-const SAND_TRANSITION_BLOCK := Vector2i(0, 10)
-const DIRT_TRANSITION_BLOCK := Vector2i(4, 10)
+## 四种可过渡基底的 4×4 块：左上方 8×8 铺满，正好占掉网格的一半。
+const PATH_TRANSITION_BLOCK := Vector2i(0, 0)
+const STONE_TRANSITION_BLOCK := Vector2i(4, 0)
+const SAND_TRANSITION_BLOCK := Vector2i(0, 4)
+const DIRT_TRANSITION_BLOCK := Vector2i(4, 4)
 
 ## 过渡块内的第 [param mask] 格（mask 0~15，位含义见 TRANSITION_N/E/S/W）。
 static func transition_cell(block: Vector2i, mask: int) -> Vector2i:
 	return block + Vector2i(mask & 0b0011, (mask >> 2) & 0b0011)
-
-## 草地变体：用低频噪声按「片」选，而不是相邻格交替，地图里才会出现
-## 大块明暗与色相变化；再加一层高频细节决定单片里的具体形态。
-const GRASS_LUSH := Vector2i(0, 14)
-const GRASS_DRY := Vector2i(1, 14)
-const GRASS_DAPPLED := Vector2i(2, 14)
-const GRASS_MEADOW := Vector2i(3, 14)
 
 # ---------------------------------------------------------------- 作物图集
 

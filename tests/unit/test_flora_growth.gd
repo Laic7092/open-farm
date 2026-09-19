@@ -179,7 +179,8 @@ func test_only_natural_ground_can_grow() -> void:
 	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.GRASS_DRY)).is_true()
 	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.GRASS_DAPPLED)).is_true()
 	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.GRASS_MEADOW)).is_true()
-	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.TALL_GRASS)).is_true()
+	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.DIRT)).is_true()
+	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.SAND)).is_true()
 	# 沙地 / 裸土的过渡格基底仍是自然地表，也要能长东西。
 	assert_bool(
 		FloraGrowth.is_natural_ground(FarmAtlas.transition_atlas(FarmAtlas.Surface.SAND, 5))
@@ -187,13 +188,12 @@ func test_only_natural_ground_can_grow() -> void:
 	assert_bool(
 		FloraGrowth.is_natural_ground(FarmAtlas.transition_atlas(FarmAtlas.Surface.DIRT, 9))
 	).is_true()
-	# 人摆过的地方不长东西。
+	# 人铺过 / 建过的地方不长东西；装饰占住的格子由 FloraField 按 decor_props 判。
 	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.PATH)).is_false()
 	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.PATH_STONE)).is_false()
 	assert_bool(
 		FloraGrowth.is_natural_ground(FarmAtlas.transition_atlas(FarmAtlas.Surface.PATH, 5))
 	).is_false()
-	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.WATER)).is_false()
-	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.FENCE)).is_false()
-	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.FLOWER_BED)).is_false()
+	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.WOOD)).is_false()
+	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.CLIFF)).is_false()
 	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.SOIL_DRY)).is_false()

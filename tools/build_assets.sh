@@ -10,10 +10,23 @@
 #     4. 再 --import 一次，让新的 .tres 也被索引
 #
 # 用法：GODOT_BIN=/path/to/godot ./tools/build_assets.sh
+#
+# 输出约定：控制台打 6 行左右——阶段小结 + 失败明细 + 结尾统计；终端里另有一行原地刷新的
+# 当前步骤。完整 Godot 输出写进 .tmp/check/build/*.log（逐张图的 INFO 行上千行，会污染
+# 上下文，详见 AGENTS.md）。
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 GODOT_BIN="${GODOT_BIN:-./godot}"
+
+LOG_DIR=".tmp/check/build"
+rm -rf "$LOG_DIR"
+mkdir -p "$LOG_DIR"
+
+# 把 Godot 的 ANSI 彩色控制符去掉，便于在日志里 grep / tail。
+strip_ansi() {
+	sed 's/\x1b\[[0-9;]*m//g'
+}
 
 if [ ! -x "$GODOT_BIN" ]; then
 	echo "找不到可执行的 Godot：$GODOT_BIN（可用 GODOT_BIN 环境变量指定）" >&2
@@ -50,24 +63,71 @@ GENERATORS=(
 
 step=0
 total=$(( ${#GENERATORS[@]} + 3 ))
+started=$SECONDS
+echo "重建资源：${#GENERATORS[@]} 个生成器 + 导入 + 组装"
 
+# 进度只占一行：终端里原地刷新，重定向到文件时完全不动。
+progress() {
+	[ -t 1 ] || return 0
+	printf '\r  [%d/%d] %s\033[K' "$step" "$total" "$1"
+}
+done_line() {
+	[ -t 1 ] || return 0
+	printf '\r\033[K'
+}
+
+# 阶段小结：清掉进度行，报该阶段用了几秒。
+phase() {
+	done_line
+	echo "  ✓ $1（$((SECONDS - $2))s）"
+}
+
+# 全部 Godot 输出进日志；控制台只在失败时补日志末尾。
+# 返回 Godot 的退出码，配合 set -e 保持原来的“失败即中止”语义。
+run_quiet() {
+	local label="$1"; shift
+	local log="$LOG_DIR/$(printf '%s' "$label" | tr '/ ' '__').log"
+	local code=0
+	progress "$label"
+	set +e
+	timeout "$TIMEOUT" "$GODOT_BIN" --headless --path . "$@" >"$log" 2>&1
+	code=$?
+	set -e
+	if [ "$code" -ne 0 ]; then
+		done_line
+		echo "✗ $label 退出码 $code（124 = 超时 $TIMEOUT s），日志末尾：" >&2
+		strip_ansi <"$log" | tail -15 | sed 's/^/    /' >&2
+		echo "  完整日志：$log" >&2
+	fi
+	return "$code"
+}
+
+# --import 在 Godot 里偶有非零退出但缓存已刷新，按原行为只记日志不中断。
+run_quiet_soft() {
+	run_quiet "$@" || true
+}
+
+# timeout 是外部兜底（卡在 _initialize 时连主循环都到不了），--quit-after 让 Godot 自己收尾。
+phase_start=$SECONDS
 for generator in "${GENERATORS[@]}"; do
 	step=$(( step + 1 ))
-	echo "==> [$step/$total] 生成 $generator"
-	# timeout 是外部兜底（卡在 _initialize 时连主循环都到不了），--quit-after 让 Godot 自己收尾。
-	timeout "$TIMEOUT" "$GODOT_BIN" --headless --path . --quit-after 3 -s "res://$generator"
+	run_quiet "$generator" --quit-after 3 -s "res://$generator"
 done
+phase "生成美术与音频（${#GENERATORS[@]} 项）" "$phase_start"
 
 step=$(( step + 1 ))
-echo "==> [$step/$total] 导入贴图、字体与音频"
-timeout "$TIMEOUT" "$GODOT_BIN" --headless --path . --import >/dev/null 2>&1 || true
+phase_start=$SECONDS
+run_quiet_soft "import-assets" --import
+phase "导入贴图 / 字体 / 音频" "$phase_start"
 
 step=$(( step + 1 ))
-echo "==> [$step/$total] 组装 TileSet / SpriteFrames / Theme"
-timeout "$TIMEOUT" "$GODOT_BIN" --headless --path . --quit-after 3 -s res://tools/generate_resources.gd
+phase_start=$SECONDS
+run_quiet "generate_resources" --quit-after 3 -s res://tools/generate_resources.gd
+phase "组装 TileSet / SpriteFrames / Theme" "$phase_start"
 
 step=$(( step + 1 ))
-echo "==> [$step/$total] 刷新导入缓存"
-timeout "$TIMEOUT" "$GODOT_BIN" --headless --path . --import >/dev/null 2>&1 || true
+phase_start=$SECONDS
+run_quiet_soft "import-cache" --import
+phase "刷新导入缓存" "$phase_start"
 
-echo "完成。"
+echo "完成：$total 步 / $(( SECONDS - started ))s，日志 $LOG_DIR"
