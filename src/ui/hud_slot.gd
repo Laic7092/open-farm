@@ -13,12 +13,17 @@ const SELECTED_TEXTURE: Texture2D = preload("res://assets/ui/slot_selected.png")
 
 var _normal_style: StyleBoxTexture
 var _selected_style: StyleBoxTexture
+## 图标左上角的品质星（普通品质时自动隐藏）。
+var _stars: QualityStars
 
 
 func _ready() -> void:
 	_normal_style = _make_style(SLOT_TEXTURE)
 	_selected_style = _make_style(SELECTED_TEXTURE)
 	add_theme_stylebox_override(&"panel", _normal_style)
+	_stars = QualityStars.new()
+	_stars.name = "Stars"
+	icon.add_child(_stars)
 	clear()
 
 
@@ -37,6 +42,7 @@ func set_item(item_id: StringName, count: int, selected: bool = false, quality: 
 	if grade > 0:
 		display_name = "%s(%s)" % [display_name, Text.key(QualityRules.label_key(grade))]
 	tooltip_text = display_name
+	_stars.set_grade(grade)
 	_set_selected(selected)
 
 
@@ -46,6 +52,7 @@ func clear(selected: bool = false) -> void:
 	icon.visible = false
 	count_label.text = ""
 	tooltip_text = ""
+	_stars.set_grade(QualityRules.Grade.NORMAL)
 	_set_selected(selected)
 
 

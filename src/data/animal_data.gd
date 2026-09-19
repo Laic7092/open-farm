@@ -71,8 +71,10 @@ func validate() -> PackedStringArray:
 		problems.append("mature_days 必须 >= 1")
 	if produce_days < 1:
 		problems.append("produce_days 必须 >= 1")
-	if breed_days >= 0 and breed_affection < 0:
-		problems.append("breed_affection 不能为负")
+	if breed_days < 0:
+		problems.append("breed_days 不能为负")
+	if breed_affection < 0:
+		problems.append("breed_affection 不能为负。")
 	return problems
 
 

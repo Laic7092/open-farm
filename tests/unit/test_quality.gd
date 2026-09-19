@@ -46,3 +46,12 @@ func test_inventory_roundtrip_preserves_quality() -> void:
 	restored.from_dict(inventory.to_dict())
 	assert_int(restored.slots[0].count).is_equal(4)
 	assert_int(restored.slots[0].quality).is_equal(QualityRules.Grade.SILVER)
+
+
+func test_stars_match_grade() -> void:
+	assert_int(QualityRules.stars(QualityRules.Grade.NORMAL)).is_equal(0)
+	assert_int(QualityRules.stars(QualityRules.Grade.SILVER)).is_equal(1)
+	assert_int(QualityRules.stars(QualityRules.Grade.GOLD)).is_equal(2)
+	# 越界的等级要收敛到合法区间，不能越界取 STARS。
+	assert_int(QualityRules.stars(99)).is_equal(2)
+	assert_int(QualityRules.stars(-1)).is_equal(0)

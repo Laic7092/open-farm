@@ -15,7 +15,7 @@ extends RefCounted
 const INDEXED: Array[String] = [
 	"CropData", "AnimalData", "BuildingData", "FloraData", "FishData",
 	"ItemData", "ToolData", "NpcData", "ShopData", "DialogueData",
-	"FestivalData", "EventData", "CommissionData",
+	"FestivalData", "EventData", "CommissionData", "MineStratumData",
 ]
 
 
@@ -50,6 +50,8 @@ static func value(input: Variant) -> Variant:
 			return {"x": input.x, "y": input.y}
 		TYPE_VECTOR2I:
 			return {"x": input.x, "y": input.y}
+		TYPE_COLOR:
+			return {"r": input.r, "g": input.g, "b": input.b, "a": input.a}
 		TYPE_ARRAY:
 			var list: Array = []
 			for item: Variant in input:

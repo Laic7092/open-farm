@@ -15,13 +15,23 @@ extends FloraField
 
 ## 矿洞场景路径（换层时重新切到它）。
 const MINE_SCENE: String = "res://scenes/world/mine.tscn"
+## 从地面门读不到目标时的兜底：回海滩（矿洞的唯一入口）。
+const SURFACE_SCENE: String = "res://scenes/world/beach.tscn"
+const SURFACE_SPAWN: StringName = &"from_mine"
 
 var _profile: PlayerProfile
 var _depth: int = 1
 var _exit_root: Node2D
 var _spawn_root: Node
-var _surface_door: Interactable
+## 地面出口门；类型用 [SceneDoor] 以便坐电梯回地面时复用它的目标场景。
+var _surface_door: SceneDoor
 var _elevator_ui: MineElevatorUi
+## 当前深度所属矿层（由 [method _find_stratum] 解析）；决定画面染色与掉落偏好。
+var _stratum: MineStratumData
+## 最近一次提示过的矿层 id；只在跨层时弹一次提示。
+var _last_stratum_id: StringName = &""
+## 场景根上唯一的 [WorldLighting]；按需解析（子节点 _ready 早于父节点）。
+var _lighting: WorldLighting
 
 
 func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
@@ -47,7 +57,7 @@ func _ready() -> void:
 	_spawn_root = world.get_node_or_null("Spawns") if world != null else null
 	if _spawn_root == null:
 		_spawn_root = self
-	_surface_door = world.get_node_or_null("Interactables/ToBeach") as Interactable
+	_surface_door = world.get_node_or_null("Interactables/ToBeach") as SceneDoor
 	_create_spawn_point(&"from_ladder", _ladder_cell())
 	_create_spawn_point(&"from_elevator", _elevator_cell())
 	_elevator_ui = MineElevatorUi.new()
@@ -77,8 +87,13 @@ func _build_floor() -> void:
 	if not is_inside_tree():
 		return
 	_depth = _profile.mine_depth if _profile != null else 1
+	# 矿石按天重生：不能只依赖日结转钩子——玩家在农场睡觉过夜时，
+	# 矿洞场景并不在场景树里（钩子已注销），重建时补一次刷新。
+	if _profile != null and _clock != null:
+		_profile.mine_refresh_for_day(_clock.date.absolute_day())
 	_clear_floor()
 	_build_exits()
+	_apply_stratum()
 
 	var candidates: Array[FloraData] = []
 	for flora_id: StringName in Database.floras():
@@ -89,11 +104,12 @@ func _build_floor() -> void:
 		return
 
 	_rng.seed = MineRules.seed_for(_depth)
-	var budget: int = MineRules.ore_budget(_depth)
+	var budget: int = MineRules.ore_budget(_depth, _stratum.ore_bonus if _stratum != null else 0)
 	var placed: int = 0
 	var misses: int = 0
 	while placed < budget and misses < budget * 8:
-		var data := MineRules.pick_ore(candidates, _depth, _rng)
+		var loot_bias: float = _stratum.loot_bias if _stratum != null else 1.0
+		var data := MineRules.pick_ore(candidates, _depth, _rng, loot_bias)
 		if data == null:
 			break
 		var cell: Vector2i = _random_cell()
@@ -128,6 +144,53 @@ func _update_surface_door() -> void:
 		return
 	_surface_door.visible = _depth == 1
 	_surface_door.enabled = _depth == 1
+
+
+# ---------------------------------------------------------------- 矿层
+
+## 取当前深度的矿层：给画面染色、定掉落偏好，并在首次进入该矿层时提示。
+func _apply_stratum() -> void:
+	_stratum = _find_stratum(_depth)
+	if _stratum == null:
+		return
+	if _lighting == null:
+		var world := get_parent()
+		if world != null:
+			_lighting = world.get_node_or_null("WorldLighting") as WorldLighting
+	if _lighting != null:
+		_lighting.set_world_tint(_blended_tint())
+	if _stratum.id == _last_stratum_id:
+		return
+	_last_stratum_id = _stratum.id
+	EventBus.ui.notification_requested.emit(&"NOTIFY_MINE_STRATUM", {
+		"name": Text.key(_stratum.display_name_key),
+		"depth": _depth,
+	})
+
+
+## 按深度找覆盖它的矿层；区间重叠时取起点最深的一个。
+func _find_stratum(depth: int) -> MineStratumData:
+	var best: MineStratumData = null
+	for stratum_id: StringName in Database.strata():
+		var stratum := Database.get_stratum(stratum_id)
+		if stratum == null or not stratum.covers(depth):
+			continue
+		if best == null or stratum.depth_min > best.depth_min:
+			best = stratum
+	return best
+
+
+## 当前层的染色：在本层颜色与下一层颜色之间按深度插值，
+## 于是同一矿层里每层也有细微变化，不会 100 层一个色。
+func _blended_tint() -> Color:
+	if _stratum == null:
+		return Color.WHITE
+	var next := _find_stratum(_stratum.depth_max + 1)
+	if next == null:
+		return _stratum.tint
+	var span: float = maxf(float(_stratum.depth_max - _stratum.depth_min + 1), 1.0)
+	var t: float = clampf(float(_depth - _stratum.depth_min) / span, 0.0, 1.0)
+	return _stratum.tint.lerp(next.tint, t * 0.6)
 
 
 # ---------------------------------------------------------------- 出口
@@ -185,7 +248,26 @@ func open_elevator() -> void:
 
 
 func _on_elevator_floor_selected(depth: int) -> void:
+	if depth <= MineElevatorUi.SURFACE_DEPTH:
+		_leave_mine()
+		return
 	_go_to(depth, &"from_elevator")
+
+
+## 坐电梯回地面：优先用地面门声明的场景 / 出生点，避免写死。
+func _leave_mine() -> void:
+	if _profile == null:
+		return
+	_profile.mine_leave()
+	var host := get_tree().get_first_node_in_group(WorldHost.GROUP) as WorldHost
+	if host == null:
+		return
+	var scene: String = SURFACE_SCENE
+	var spawn: StringName = SURFACE_SPAWN
+	if _surface_door != null and not _surface_door.target_scene.is_empty():
+		scene = _surface_door.target_scene
+		spawn = _surface_door.target_spawn_id
+	SceneRouter.change_scene_to(host, scene, spawn)
 
 
 ## 记录目标层并让 [SceneRouter] 重挂矿洞场景（缓存复用，原地重建）。
@@ -218,6 +300,9 @@ func clear(
 	if _profile != null:
 		_profile.mine_mark_mined(_depth, cell)
 	var bonus: float = MineRules.quality_bonus(_depth)
+	if _stratum != null:
+		bonus += _stratum.quality_bonus
+	bonus = minf(bonus, 1.0)
 	outcome["quality"] = QualityRules.roll(
 		_rng, data.quality_silver_chance + bonus, data.quality_gold_chance + bonus
 	)

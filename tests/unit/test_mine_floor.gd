@@ -101,3 +101,31 @@ func test_tier_gate_blocks_low_tools() -> void:
 	assert_bool(floor.clear(copper_cell, ToolData.Kind.PICKAXE, false, 0).is_empty()).is_true()
 	assert_bool(floor.occupied(copper_cell)).is_true()
 	assert_bool(floor.clear(copper_cell, ToolData.Kind.PICKAXE, false, 1).is_empty()).is_false()
+
+
+func test_elevator_starts_locked_until_five() -> void:
+	var profile := PlayerProfile.new()
+	assert_int(profile.mine_elevator_depth).is_equal(0)
+	profile.mine_enter(4)
+	assert_int(profile.mine_elevator_depth).is_equal(0)
+	profile.mine_enter(5)
+	assert_int(profile.mine_elevator_depth).is_equal(5)
+
+
+## 回归：玩家在农场睡觉过夜（矿洞不在场景树里）时，重建楼层也要刷新已挖记录。
+func test_rebuild_refreshes_ores_on_new_day() -> void:
+	var profile := PlayerProfile.new()
+	profile.mine_enter(1)
+	var floor := _make(profile)
+	var clock := GameDateClock.new()
+	clock.set_date(GameDate.new(1, Season.Type.SPRING, 1))
+	floor.bind_dependencies(profile, clock)
+	await _settle()
+	assert_bool(floor.flora.is_empty()).is_false()
+	var cell: Vector2i = floor.flora.keys()[0]
+	profile.mine_mark_mined(1, cell)
+	assert_bool(profile.mine_is_mined(1, cell)).is_true()
+
+	clock.set_date(GameDate.new(1, Season.Type.SPRING, 2))
+	floor._build_floor()
+	assert_bool(profile.mine_is_mined(1, cell)).is_false()

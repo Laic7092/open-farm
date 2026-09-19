@@ -21,9 +21,9 @@ static func elevator_floor(depth: int) -> int:
 	return (clampi(depth, 0, MAX_DEPTH) / ELEVATOR_EVERY) * ELEVATOR_EVERY
 
 
-## 该楼层要生成多少个矿石节点；越深越挤。
-static func ore_budget(depth: int) -> int:
-	return mini(10 + clampi(depth, 1, MAX_DEPTH) / 2, 60)
+## 该楼层要生成多少个矿石节点；越深越挤，[param bonus] 是矿层给的额外数量。
+static func ore_budget(depth: int, bonus: int = 0) -> int:
+	return mini(10 + clampi(depth, 1, MAX_DEPTH) / 2 + maxi(bonus, 0), 90)
 
 
 ## 该楼层的确定性随机种子；同一层每次生成同样的布局。
@@ -47,8 +47,10 @@ static func allows(data: FloraData, depth: int) -> bool:
 	return true
 
 
-## 抽一次矿洞物种；[param depth] 越深，高价值矿石的权重越高。
-static func pick_ore(candidates: Array[FloraData], depth: int, rng: RandomNumberGenerator) -> FloraData:
+## 抽一次矿洞物种；[param depth] 越深、[param loot_bias] 越大，高价值矿石的权重越高。
+static func pick_ore(
+	candidates: Array[FloraData], depth: int, rng: RandomNumberGenerator, loot_bias: float = 1.0
+) -> FloraData:
 	if candidates.is_empty():
 		return null
 	var weights: Array[float] = []
@@ -59,7 +61,7 @@ static func pick_ore(candidates: Array[FloraData], depth: int, rng: RandomNumber
 		if data.mine_min_depth > 1:
 			var span: float = maxf(float(MAX_DEPTH - data.mine_min_depth), 1.0)
 			var t: float = clampf(float(depth - data.mine_min_depth) / span, 0.0, 1.0)
-			weight *= 1.0 + 2.0 * t
+			weight *= 1.0 + maxf(loot_bias, 0.0) * t
 		total += weight
 		weights.append(total)
 	if total <= 0.0:

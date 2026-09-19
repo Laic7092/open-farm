@@ -9,8 +9,14 @@ extends PanelContainer
 @onready var icon: TextureRect = %Icon
 @onready var label: Label = %Label
 
+## 图标左上角的品质星（普通品质时自动隐藏）。
+var _stars: QualityStars
+
 
 func _ready() -> void:
+	_stars = QualityStars.new()
+	_stars.name = "Stars"
+	icon.add_child(_stars)
 	clear()
 
 
@@ -32,6 +38,7 @@ func set_item(item_id: StringName, count: int, quality: int = 0) -> void:
 	# 数量只在大于 1 时显示，否则一格萝卜写着"×1"很吵。
 	label.text = ("%s×%d" % [display_name, count]) if count > 1 else display_name
 	tooltip_text = display_name
+	_stars.set_grade(grade)
 
 
 ## 显示为空格子。
@@ -41,3 +48,4 @@ func clear() -> void:
 	icon.visible = false
 	label.text = Text.key(&"INVENTORY_EMPTY")
 	tooltip_text = ""
+	_stars.set_grade(QualityRules.Grade.NORMAL)

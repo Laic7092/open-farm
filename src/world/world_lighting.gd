@@ -42,6 +42,8 @@ var _flash_tween: Tween
 var _clock: GameDateClock
 ## 组合根注入的天气服务；只读当前天气。
 var _weather: WeatherService
+## 地图自带的固定染色（例如矿洞按深度变暗）；与昼夜 / 天气相乘。
+var _world_tint: Color = Color.WHITE
 
 
 func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
@@ -107,6 +109,15 @@ func tint_color() -> Color:
 	return _tint.color if _tint != null else Color.WHITE
 
 
+## 地图自带的固定染色（例如矿洞按深度变暗 / 变色）。
+##
+## 由地图在自己的重建逻辑里调用（矿洞每次换层都会重设），
+## 因为每张地图有各自的 [WorldLighting]，不会串色。
+func set_world_tint(color: Color) -> void:
+	_world_tint = color
+	_refresh_tint()
+
+
 # ---------------------------------------------------------------- 内部
 
 func _refresh() -> void:
@@ -125,6 +136,7 @@ func _refresh_tint() -> void:
 	var minute := _clock.minute_of_day if _clock != null else GameDateClock.DAY_START_HOUR * 60
 	var color := DayNight.ambient_color(minute)
 	color *= WEATHER_TINTS.get(_current_weather(), ArtPalette.WEATHER_SUNNY)
+	color *= _world_tint
 	if flash_strength > 0.0:
 		color = color.lerp(FLASH_COLOR, flash_strength)
 	_tint.color = color

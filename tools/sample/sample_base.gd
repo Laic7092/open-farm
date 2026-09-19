@@ -18,6 +18,7 @@ const SHOP_DIR: String = "res://data/shops"
 const COMMISSION_DIR: String = "res://data/commissions"
 const FESTIVAL_DIR: String = "res://data/festivals"
 const EVENT_DIR: String = "res://data/events"
+const MINE_DIR: String = "res://data/mine"
 
 ## 美术资源目录（由 tools/art/*.gd 生成，这里只负责"把图挂到数据上"）。
 const CROP_SHEET_DIR: String = "res://assets/sprites/crops"
@@ -35,7 +36,7 @@ static func ensure_dirs() -> void:
 	for directory: String in [
 		CROP_DIR, ANIMAL_DIR, BUILDING_DIR, FLORA_DIR, FISH_DIR,
 		ITEM_DIR, TOOL_DIR, DIALOGUE_DIR, NPC_DIR, SCHEDULE_DIR, SHOP_DIR,
-		FESTIVAL_DIR, EVENT_DIR, COMMISSION_DIR
+		FESTIVAL_DIR, EVENT_DIR, COMMISSION_DIR, MINE_DIR
 	]:
 		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(directory))
 

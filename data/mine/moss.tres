@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="MineStratumData" format=3]
+
+[ext_resource type="Script" path="res://src/data/mine_stratum_data.gd" id="1_ciswe"]
+
+[resource]
+script = ExtResource("1_ciswe")
+id = &"moss"
+display_name_key = &"MINE_STRATUM_MOSS"
+depth_max = 19
+tint = Color(0.94, 0.98, 0.94, 1)

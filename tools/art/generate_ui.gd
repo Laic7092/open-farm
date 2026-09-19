@@ -37,6 +37,7 @@ func _initialize() -> void:
 	Art.save_png(_icon_coin(), DIR.path_join("icon_coin.png"))
 	Art.save_png(_icon_stamina(), DIR.path_join("icon_stamina.png"))
 	Art.save_png(_icon_clock(), DIR.path_join("icon_clock.png"))
+	Art.save_png(_star(), DIR.path_join("star.png"))
 	# 钓鱼拉扯小游戏：水槽 / 判定区 / 鱼 / 钩子 / 张力条。
 	Art.save_png(_fish_track(), DIR.path_join("fish_track.png"))
 	Art.save_png(_fish_zone(), DIR.path_join("fish_zone.png"))
@@ -235,6 +236,23 @@ func _icon_clock() -> Image:
 
 
 # ---------------------------------------------------------------- 天气图标（16×16）
+
+## 品质星（12×12）：五角星的 10 个顶点（外 / 内半径交替）与中心连成 10 个小三角。
+func _star() -> Image:
+	var image := _icon_blank()
+	var center := Vector2(float(Layout.UI_ICON_SIZE.x) * 0.5, float(Layout.UI_ICON_SIZE.y) * 0.5)
+	var outer: float = float(Layout.UI_ICON_SIZE.x) * 0.45
+	var inner: float = outer * 0.42
+	var points: Array[Vector2] = []
+	for i: int in 10:
+		var radius: float = outer if i % 2 == 0 else inner
+		var angle: float = -PI * 0.5 + PI * float(i) / 5.0
+		points.append(center + Vector2(cos(angle), sin(angle)) * radius)
+	for i: int in 10:
+		Art.triangle(image, center, points[i], points[(i + 1) % 10], P.UI_GOLD)
+	Art.outline(image)
+	return image
+
 
 func _weather_blank() -> Image:
 	return Art.new_image(Layout.TILE, Layout.TILE)

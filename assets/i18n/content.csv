@@ -172,3 +172,8 @@ TOOL_AXE_COPPER_DESC,砍树更快更省力,Chops faster with less stamina
 TOOL_AXE_IRON_DESC,一挥就能清掉一片,Clears a swath in one swing
 TOOL_PICKAXE_COPPER_DESC,能砸开铁矿,Frees iron ore
 TOOL_PICKAXE_IRON_DESC,能砸开金矿范围更大,Frees gold ore over a wider area
+MINE_STRATUM_MOSS,苔岩层,Mossy Rock
+MINE_STRATUM_IRON,铁矿脉,Iron Vein
+MINE_STRATUM_CRYSTAL,幽晶层,Glimmering Crystal
+MINE_STRATUM_MAGMA,熔岩层,Magma Chamber
+MINE_STRATUM_ABYSS,深渊,Abyss

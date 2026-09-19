@@ -37,8 +37,8 @@ var flags: Dictionary[StringName, int] = {}
 
 ## 矿洞：当前所在楼层（1 起）。
 var mine_depth: int = 1
-## 已解锁的最深电梯楼层（每 5 层一个，始终是 5 的倍数，最小为 5）。
-var mine_elevator_depth: int = 5
+## 已解锁的最深电梯楼层（每 5 层一个，始终是 5 的倍数）；0 表示还没到过电梯层。
+var mine_elevator_depth: int = 0
 ## 已挖掉的矿石格，键为 "depth:x:y"；每日重置（矿石次日重新生成）。
 var mine_mined: Dictionary = {}
 ## 上次生成矿洞的绝对日；跨天时清空已挖记录。
@@ -58,7 +58,7 @@ func reset() -> void:
 	play_seconds = 0.0
 	counting_playtime = false
 	mine_depth = 1
-	mine_elevator_depth = 5
+	mine_elevator_depth = 0
 	mine_mined.clear()
 	mine_day = -1
 	money_changed.emit(money, 0)
@@ -203,7 +203,7 @@ func from_dict(data: Dictionary) -> void:
 	total_shipped = maxi(int(data.get("total_shipped", 0)), 0)
 	play_seconds = maxf(float(data.get("play_seconds", 0.0)), 0.0)
 	mine_depth = maxi(int(data.get("mine_depth", 1)), 1)
-	mine_elevator_depth = maxi(int(data.get("mine_elevator_depth", 5)), 5)
+	mine_elevator_depth = maxi(int(data.get("mine_elevator_depth", 0)), 0)
 	mine_day = int(data.get("mine_day", -1))
 	mine_mined.clear()
 	var mined: Variant = data.get("mine_mined", {})

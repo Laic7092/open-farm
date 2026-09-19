@@ -59,3 +59,10 @@ func test_pick_ore_is_deterministic() -> void:
 func test_quality_bonus_increases_with_depth() -> void:
 	assert_bool(MineRules.quality_bonus(1) < MineRules.quality_bonus(50)).is_true()
 	assert_float(MineRules.quality_bonus(100)).is_less_equal(0.4)
+
+
+func test_ore_budget_accepts_stratum_bonus() -> void:
+	assert_int(MineRules.ore_budget(1, 0)).is_equal(10)
+	assert_int(MineRules.ore_budget(1, 5)).is_equal(15)
+	# 负数按 0 处理，避免矿层数据写错时把矿量抽成 0。
+	assert_int(MineRules.ore_budget(1, -3)).is_equal(10)

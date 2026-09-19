@@ -28,6 +28,7 @@ const DIALOGUE_DIR: String = "res://data/dialogue"
 const FESTIVAL_DIR: String = "res://data/festivals"
 const EVENT_DIR: String = "res://data/events"
 const COMMISSION_DIR: String = "res://data/commissions"
+const MINE_DIR: String = "res://data/mine"
 
 ## 数据装载完成后发出。
 signal reloaded()
@@ -45,6 +46,7 @@ var _dialogues: Dictionary[StringName, DialogueData] = {}
 var _festivals: Dictionary[StringName, FestivalData] = {}
 var _events: Dictionary[StringName, EventData] = {}
 var _commissions: Dictionary[StringName, CommissionData] = {}
+var _strata: Dictionary[StringName, MineStratumData] = {}
 
 
 func _ready() -> void:
@@ -66,6 +68,7 @@ func reload() -> void:
 	_festivals.clear()
 	_events.clear()
 	_commissions.clear()
+	_strata.clear()
 
 	_index(CROP_DIR, _crops, "CropData")
 	_index(ANIMAL_DIR, _animals, "AnimalData")
@@ -80,6 +83,7 @@ func reload() -> void:
 	_index(FESTIVAL_DIR, _festivals, "FestivalData")
 	_index(EVENT_DIR, _events, "EventData")
 	_index(COMMISSION_DIR, _commissions, "CommissionData")
+	_index(MINE_DIR, _strata, "MineStratumData")
 
 	reloaded.emit()
 
@@ -135,6 +139,10 @@ func get_event(id: StringName) -> EventData:
 
 func get_commission(id: StringName) -> CommissionData:
 	return _commissions.get(id) as CommissionData
+
+
+func get_stratum(id: StringName) -> MineStratumData:
+	return _strata.get(id) as MineStratumData
 
 
 ## 全部数据桶的只读快照；调用方不应直接迭代内部字典。
@@ -276,6 +284,16 @@ func commissions() -> Dictionary:
 	return _commissions.duplicate()
 
 
+## 全部矿层，键为 id。
+func strata() -> Dictionary:
+	return _strata.duplicate()
+
+
+## 是否存在指定 id 的矿层数据。
+func has_stratum(id: StringName) -> bool:
+	return _strata.has(id)
+
+
 ## 是否存在指定 id 的 commission 数据。
 func has_commission(id: StringName) -> bool:
 	return _commissions.has(id)
@@ -386,6 +404,7 @@ func total_count() -> int:
 		_crops.size() + _animals.size() + _buildings.size() + _floras.size()
 		+ _fish.size() + _items.size() + _tools.size() + _npcs.size() + _shops.size()
 		+ _dialogues.size() + _festivals.size() + _events.size() + _commissions.size()
+		+ _strata.size()
 	)
 
 
@@ -394,7 +413,7 @@ func validate_all() -> PackedStringArray:
 	var problems := PackedStringArray()
 	for bucket: Dictionary in [
 		_crops, _animals, _buildings, _floras, _fish, _items, _tools, _npcs, _shops,
-		_dialogues, _festivals, _events, _commissions
+		_dialogues, _festivals, _events, _commissions, _strata
 	]:
 		for key: StringName in bucket:
 			var resource: Resource = bucket[key]

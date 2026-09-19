@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MineStratumData" format=3]
+
+[ext_resource type="Script" path="res://src/data/mine_stratum_data.gd" id="1_m4sis"]
+
+[resource]
+script = ExtResource("1_m4sis")
+id = &"abyss"
+display_name_key = &"MINE_STRATUM_ABYSS"
+depth_min = 80
+depth_max = 100
+tint = Color(0.68, 0.68, 0.86, 1)
+loot_bias = 5.0
+ore_bonus = 16
+quality_bonus = 0.12

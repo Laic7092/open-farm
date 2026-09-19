@@ -148,3 +148,4 @@ MINE_ELEVATOR_HINT,选择要去的楼层,Choose a floor
 MINE_SURFACE,地面,Surface
 MINE_FLOOR,第{n}层,Floor {n}
 MINE_CURRENT,（当前）, (current)
+NOTIFY_MINE_STRATUM,进入{name}（第{depth}层）,Entering {name} (Floor {depth})
