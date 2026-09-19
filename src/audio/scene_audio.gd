@@ -7,12 +7,11 @@ extends Node
 ## 里用导出字段声明"这个场景听起来是什么样"：
 ## [br]- [member bgm_track] / [member autoplay_bgm]：场景自己的曲目；
 ## [br]- [member follow_world_bgm]：跟随当前 [WorldScene] 声明的曲目与昼夜；
-## [br]- [member listen_ui_sfx] / [member listen_gameplay_sfx]：订阅哪几类既有事件；
-## [br]- [member drive_footsteps]：玩家移动时按走过的距离触发脚步。
+## [br]- [member listen_ui_sfx] / [member listen_gameplay_sfx]：订阅哪几类既有事件。
 ##
-## [b]总线[/b]：仍然只有 [code]Master → BGM / SFX[/code] 两条，第一个实例启动时确保存在；
-## 音量滑杆只改总线，不碰 [member AudioStreamPlayer.volume_db]。设置写在
-## [code]user://audio_settings.cfg[/code]，读不到 / 写不进都静默降级。
+## [b]总线与音量[/b]：总线创建、音量与设置文件都收在 [AudioBus] 这个极小共享点里；
+## 玩家 / 工具 / 界面等发声者各自持有 [SfxPlayer] 直接播放，本节点只留场景自己的 BGM
+## 与尚未归位的跨场景音效。
 ##
 ## [b]为什么不写死世界 → 曲目[/b]：农场 / 小镇 / 夜晚的对应关系属于地图自己，
 ## 因此这里只读 [member WorldScene.bgm_track] / [member WorldScene.bgm_night_track] /
@@ -22,18 +21,14 @@ const Catalog := preload("res://src/audio/audio_catalog.gd")
 
 ## 场景音频节点所在分组；界面找不到注入引用时按它兜底。
 const GROUP: StringName = &"scene_audio"
-const PlayerGroup: StringName = &"player"
-
-## BGM / SFX 两条总线的名字。
+## BGM / SFX 两条总线的名字（与 [AudioBus] 一致）。
 const BGM_BUS: StringName = &"BGM"
 const SFX_BUS: StringName = &"SFX"
 
-## 同时能叠加播放的音效数量（脚步声 + 交互 + UI 足够用了）。
+## 同时能叠加播放的音效数量。
 const SFX_VOICES: int = 12
 ## BGM 默认交叉淡入淡出时长（秒）。
 const BGM_FADE: float = 0.7
-## 脚步：每走这么多像素响一声。
-const STEP_DISTANCE: float = 34.0
 ## 同一音效在这个间隔内重复触发会被忽略（毫秒）。
 const SFX_COOLDOWN_MS: int = 22
 ## 专属音效之后的这段时间内，通用通知音会被抑制，避免"一个动作两声"（毫秒）。
@@ -45,9 +40,6 @@ const NEGATIVE_NOTIFICATIONS: Array[StringName] = [
 	&"NOTIFY_NO_FEED",
 	&"NOTIFY_LOAD_FAILED",
 ]
-
-## 音量设置保存在用户目录；读不到或写不进都按默认值继续跑。
-const SETTINGS_PATH: String = "user://audio_settings.cfg"
 
 # ---------------------------------------------------------------- 场景声明
 
@@ -61,19 +53,23 @@ const SETTINGS_PATH: String = "user://audio_settings.cfg"
 @export var listen_ui_sfx: bool = false
 ## 订阅农场 / 世界 / 玩家玩法信号。
 @export var listen_gameplay_sfx: bool = false
-## 玩家移动时按走过的距离触发脚步。
-@export var drive_footsteps: bool = false
 
-## BGM 音量（0 ~ 1）。
-var bgm_volume: float = 0.7
-## 音效音量（0 ~ 1）。
-var sfx_volume: float = 0.85
+## BGM 音量（0 ~ 1）；实际存储在 [AudioBus] 共享点里。
+var bgm_volume: float:
+	get:
+		return AudioBus.bgm_volume
+	set(value):
+		AudioBus.set_bgm_volume(value)
+## 音效音量（0 ~ 1）；实际存储在 [AudioBus] 共享点里。
+var sfx_volume: float:
+	get:
+		return AudioBus.sfx_volume
+	set(value):
+		AudioBus.set_sfx_volume(value)
 
 var _bgm_player: AudioStreamPlayer
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _sfx_next: int = 0
-var _bgm_bus: int = 0
-var _sfx_bus: int = 0
 var _streams: Dictionary = {}
 var _last_played: Dictionary = {}
 ## 当前 BGM 曲目 id；空表示没在放。
@@ -83,29 +79,20 @@ var _bgm_override: StringName = &""
 ## 组合根注入的时钟状态；本节点只读，不推进时间。
 var _clock: GameDateClock
 var _bgm_tween: Tween
-var _step_accum: float = 0.0
-var _step_index: int = 0
-## 最近一次"专属音效"的时刻（毫秒），用于抑制随后紧跟的通用通知音。
-var _last_effect_ms: int = 0
 
 
 func _ready() -> void:
 	# 菜单 / 对话会把整棵树暂停，音频必须继续走（否则暂停后 BGM 也停了）。
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group(GROUP)
-	_ensure_buses()
+	AudioBus.ensure_buses()
 	_build_players()
-	_load_settings()
+	AudioBus.load_settings()
 	_hook_events()
-	set_process(drive_footsteps)
 	if autoplay_bgm and bgm_track != &"":
 		play_bgm(bgm_track)
 	elif follow_world_bgm:
 		_refresh_world_bgm()
-
-
-func _process(delta: float) -> void:
-	_update_footsteps(delta)
 
 
 # ---------------------------------------------------------------- 对外接口
@@ -166,7 +153,7 @@ func play_sfx(sound_id: StringName, pitch: float = 1.0, volume_db: float = 0.0) 
 	if now - last < SFX_COOLDOWN_MS:
 		return
 	_last_played[sound_id] = now
-	_last_effect_ms = now
+	AudioBus.note_sfx()
 	var player := _sfx_players[_sfx_next]
 	_sfx_next = (_sfx_next + 1) % _sfx_players.size()
 	player.stop()
@@ -176,18 +163,14 @@ func play_sfx(sound_id: StringName, pitch: float = 1.0, volume_db: float = 0.0) 
 	player.play()
 
 
-## 设置 BGM 音量（0 ~ 1）。
+## 设置 BGM 音量（0 ~ 1）；落在 [AudioBus] 共享点上。
 func set_bgm_volume(value: float) -> void:
-	bgm_volume = clampf(value, 0.0, 1.0)
-	_apply_volumes()
-	_save_settings()
+	AudioBus.set_bgm_volume(value)
 
 
-## 设置音效音量（0 ~ 1）。
+## 设置音效音量（0 ~ 1）；落在 [AudioBus] 共享点上。
 func set_sfx_volume(value: float) -> void:
-	sfx_volume = clampf(value, 0.0, 1.0)
-	_apply_volumes()
-	_save_settings()
+	AudioBus.set_sfx_volume(value)
 
 
 ## 当前 BGM 曲目 id（可能在淡出中）。
@@ -277,23 +260,6 @@ func _stream(kind: StringName, id: StringName) -> AudioStream:
 
 # ---------------------------------------------------------------- 内部：基础设施
 
-func _ensure_buses() -> void:
-	_bgm_bus = _ensure_bus(BGM_BUS)
-	_sfx_bus = _ensure_bus(SFX_BUS)
-	_apply_volumes()
-
-
-func _ensure_bus(name: StringName) -> int:
-	var index := AudioServer.get_bus_index(name)
-	if index != -1:
-		return index
-	AudioServer.add_bus()
-	index = AudioServer.bus_count - 1
-	AudioServer.set_bus_name(index, name)
-	AudioServer.set_bus_send(index, &"Master")
-	return index
-
-
 func _build_players() -> void:
 	_bgm_player = AudioStreamPlayer.new()
 	_bgm_player.name = "BgmPlayer"
@@ -305,15 +271,6 @@ func _build_players() -> void:
 		player.bus = SFX_BUS
 		add_child(player)
 		_sfx_players.append(player)
-
-
-func _apply_volumes() -> void:
-	AudioServer.set_bus_volume_db(_bgm_bus, _volume_db(bgm_volume))
-	AudioServer.set_bus_volume_db(_sfx_bus, _volume_db(sfx_volume))
-
-
-static func _volume_db(value: float) -> float:
-	return -80.0 if value <= 0.001 else linear_to_db(value)
 
 
 # ---------------------------------------------------------------- 内部：事件
@@ -343,8 +300,6 @@ func _hook_events() -> void:
 		_connect_once(EventBus.farm.fish_ended, _on_fish_ended)
 		_connect_once(EventBus.farm.fish_caught, _on_fish_caught)
 		_connect_once(EventBus.world.flora_cleared, _on_flora_cleared)
-		_connect_once(EventBus.player.inventory_full, _on_inventory_full)
-		_connect_once(EventBus.player.stamina_depleted, _on_stamina_depleted)
 		_connect_once(EventBus.day_changed, _on_day_changed)
 
 	if listen_ui_sfx:
@@ -440,10 +395,6 @@ func _on_dialogue_line_shown() -> void:
 	play_sfx(Catalog.SFX_DIALOGUE, 1.0, -3.0)
 
 
-func _on_inventory_full(_item_id: StringName) -> void:
-	play_sfx(Catalog.SFX_ERROR)
-
-
 func _on_ui_sound_requested(sound_id: StringName, pitch: float, volume_db: float) -> void:
 	play_sfx(sound_id, pitch, volume_db)
 
@@ -466,8 +417,8 @@ func _on_notification(text_key: StringName, _args: Dictionary) -> void:
 	if text_key == &"NOTIFY_FISH_ESCAPED":
 		play_sfx(Catalog.SFX_FISH_LINE_BREAK)
 		return
-	# 专属音效刚响过就不再叠一层通用提示音。
-	if Time.get_ticks_msec() - _last_effect_ms < NOTIFY_SUPPRESS_MS:
+	# 专属音效刚响过就不再叠一层通用提示音（时间戳是 [AudioBus] 共享点）。
+	if AudioBus.since_last_sfx_ms() < NOTIFY_SUPPRESS_MS:
 		return
 	if NEGATIVE_NOTIFICATIONS.has(text_key):
 		play_sfx(Catalog.SFX_ERROR, 1.0, -2.0)
@@ -483,54 +434,8 @@ func _on_load_completed(_slot: int, success: bool) -> void:
 	play_sfx(Catalog.SFX_LOAD if success else Catalog.SFX_ERROR)
 
 
-func _on_stamina_depleted() -> void:
-	play_sfx(Catalog.SFX_STAMINA_DEPLETED)
-
-
 func _on_scene_transition_started(_target: StringName) -> void:
 	play_sfx(Catalog.SFX_TRANSITION, 1.0, -4.0)
 
 
-# ---------------------------------------------------------------- 内部：脚步
 
-## 玩家移动时按走过的距离触发脚步，不侵入移动状态机。
-func _update_footsteps(delta: float) -> void:
-	if get_tree() == null or get_tree().paused:
-		return
-	var player := get_tree().get_first_node_in_group(PlayerGroup) as CharacterBody2D
-	if player == null or player.velocity.length() < 8.0:
-		# 停下时把累积量留在"差一步"的位置，起步立刻有声音。
-		_step_accum = STEP_DISTANCE * 0.75
-		return
-	_step_accum += player.velocity.length() * delta
-	if _step_accum < STEP_DISTANCE:
-		return
-	_step_accum = 0.0
-	_step_index += 1
-	play_sfx(_current_footstep_id(), 1.04 if (_step_index % 2) == 0 else 0.96, -6.0)
-
-
-## 脚步音由当前世界场景声明；没有世界时退回草地。
-func _current_footstep_id() -> StringName:
-	var world := _current_world()
-	if world != null and world.footstep_sfx != &"":
-		return world.footstep_sfx
-	return Catalog.SFX_FOOTSTEP_GRASS
-
-
-# ---------------------------------------------------------------- 内部：设置
-
-func _load_settings() -> void:
-	var config := ConfigFile.new()
-	if config.load(SETTINGS_PATH) == OK:
-		bgm_volume = clampf(float(config.get_value("audio", "bgm", bgm_volume)), 0.0, 1.0)
-		sfx_volume = clampf(float(config.get_value("audio", "sfx", sfx_volume)), 0.0, 1.0)
-	_apply_volumes()
-
-
-func _save_settings() -> void:
-	var config := ConfigFile.new()
-	config.set_value("audio", "bgm", bgm_volume)
-	config.set_value("audio", "sfx", sfx_volume)
-	# 写不进去（只读用户目录 / 沙箱）不应该打断游戏，静默忽略即可。
-	config.save(SETTINGS_PATH)

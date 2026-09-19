@@ -23,7 +23,7 @@ extends Node2D
 @export var bgm_track: StringName = &"farm"
 ## 本场景夜晚播放的 BGM id；空表示夜晚也沿用白天曲。
 @export var bgm_night_track: StringName = &"night"
-## 本场景的脚步音效 id；由 [SceneAudio] 按玩家走过的距离触发。
+## 本场景的脚步音效 id；由 [Player] 按走过的距离触发。
 @export var footstep_sfx: StringName = &"footstep_grass"
 
 ## 组合根注入的玩家档案；世界节点在进入树前就会收到。

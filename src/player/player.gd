@@ -21,6 +21,9 @@ const DEFAULT_TOOLS: Array[StringName] = [
 	&"hoe", &"watering_can", &"sickle", &"seed_bag", &"axe", &"pickaxe", &"fishing_rod",
 ]
 
+## 脚步：每走这么多像素响一声。
+const STEP_DISTANCE: float = 34.0
+
 ## 走路速度（像素/秒）。
 @export var walk_speed: float = 52.0
 ## 奔跑速度（像素/秒）。
@@ -38,6 +41,11 @@ var inventory: Inventory
 var item_bar: ItemBar
 ## 钓鱼单元：一次垂钓的完整时序与随机源；随机源可固定种子复现冒烟测试。
 var fishing: FishingSession
+## 玩家自己的音效播放器（脚步 / 体力 / 背包满）；谁发声谁持有。
+var sfx: SfxPlayer
+## 脚步累积距离与左右脚交替计数。
+var _step_accum: float = 0.0
+var _step_index: int = 0
 ## 手动选中的种子；为空时自动取背包里的第一种种子。
 var selected_seed_id: StringName = &""
 
@@ -95,6 +103,9 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	interactor.setup(self)
+	sfx = SfxPlayer.new()
+	sfx.name = "Sfx"
+	add_child(sfx)
 
 	interaction_area.area_entered.connect(_on_area_entered)
 	interaction_area.area_exited.connect(_on_area_exited)
@@ -109,6 +120,44 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if _clock != null:
 		_clock.unregister_day_hook(_on_day_rollover)
+
+
+# ---------------------------------------------------------------- 脚步
+
+## 按走过的距离触发脚步；不侵入移动状态机。
+func _process(delta: float) -> void:
+	var tree := get_tree()
+	if tree == null or tree.paused:
+		return
+	if velocity.length() < 8.0:
+		# 停下时把累积量留在"差一步"的位置，起步立刻有声音。
+		_step_accum = STEP_DISTANCE * 0.75
+		return
+	_step_accum += velocity.length() * delta
+	if _step_accum < STEP_DISTANCE:
+		return
+	_step_accum = 0.0
+	_step_index += 1
+	if sfx != null:
+		sfx.play(_footstep_id(), 1.04 if (_step_index % 2) == 0 else 0.96, -6.0)
+
+
+## 脚步音由玩家所在的世界场景声明；没有世界时退回草地。
+func _footstep_id() -> StringName:
+	var world := _world_scene()
+	if world != null and world.footstep_sfx != &"":
+		return world.footstep_sfx
+	return AudioCatalog.SFX_FOOTSTEP_GRASS
+
+
+## 玩家所属的世界场景根；不在世界里时返回 null。
+func _world_scene() -> WorldScene:
+	var node: Node = get_parent()
+	while node != null:
+		if node is WorldScene:
+			return node
+		node = node.get_parent()
+	return null
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -450,9 +499,11 @@ func _on_stats_changed(current: int, maximum: int) -> void:
 	EventBus.player.stamina_changed.emit(current, maximum)
 
 
-## 力竭后转发给音频。
+## 力竭：广播给域事件，并由玩家自己的播放器出声。
 func _on_stats_depleted() -> void:
 	EventBus.player.stamina_depleted.emit()
+	if sfx != null:
+		sfx.play(AudioCatalog.SFX_STAMINA_DEPLETED)
 
 
 ## 背包内容变化后转发给 UI（物品栏与背包界面都订阅 [signal EventBus.player.inventory_changed]）。
@@ -465,9 +516,11 @@ func _on_item_added(item_id: StringName) -> void:
 	EventBus.player.item_obtained.emit(item_id)
 
 
-## 背包满时转发给音频。
+## 背包满：广播给域事件，并由玩家自己的播放器出声。
 func _on_inventory_full(item_id: StringName) -> void:
 	EventBus.player.inventory_full.emit(item_id)
+	if sfx != null:
+		sfx.play(AudioCatalog.SFX_ERROR)
 
 
 func _emit_all() -> void:

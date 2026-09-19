@@ -21,4 +21,3 @@ script = ExtResource("4_scene_audio")
 follow_world_bgm = true
 listen_ui_sfx = true
 listen_gameplay_sfx = true
-drive_footsteps = true

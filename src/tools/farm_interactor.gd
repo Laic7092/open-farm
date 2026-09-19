@@ -153,11 +153,11 @@ func _tool_for(kind: ToolData.Kind) -> Tool:
 			return _fishing
 
 
-## 工具自己的音效；空串不出声。
+## 工具自己的音效——由"手"所在的玩家持有播放器直接播放，空串不出声。
 func _play_sfx(impl: Tool) -> void:
-	var sfx := impl.sfx_id()
-	if sfx != &"":
-		EventBus.ui.ui_sound_requested.emit(sfx, 1.0, -3.0)
+	var sfx_id := impl.sfx_id()
+	if sfx_id != &"" and player != null and player.sfx != null:
+		player.sfx.play(sfx_id, 1.0, -3.0)
 
 
 func consume_stamina(tool: ToolData) -> void:
