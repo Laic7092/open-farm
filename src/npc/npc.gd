@@ -106,6 +106,9 @@ func bind_npc_field(field: NpcField) -> void:
 
 
 func _enter_tree() -> void:
+	# 基类会把节点加进 flora_blocker：NPC 站着的地方不该冒出野树把它卡住。
+	# 生命周期回调不会自动向父类串，必须显式调一次。
+	super._enter_tree()
 	add_to_group(GROUP)
 	refresh_availability()
 

@@ -56,3 +56,61 @@ func test_domain_events_have_a_single_owner() -> void:
 	# 领域事件对象由 EventBus 单点持有；状态 / 宿主上的字段只是同一实例的别名。
 	var profile := PlayerProfile.new()
 	assert_bool(profile.events == EventBus.player).is_true()
+
+
+## 覆写了 [code]_enter_tree()[/code] 的 [Interactable] 子类必须显式调 [code]super[/code]。
+##
+## Godot 的生命周期回调不会自动向父类串。漏掉 [code]super._enter_tree()[/code]，
+## 基类那句 [code]add_to_group(FLORA_BLOCKER_GROUP)[/code] 就不会跑，
+## 野树会长到它身上（NPC 就这么漏了很久）。
+func test_interactable_subclasses_chain_enter_tree() -> void:
+	var scripts := _script_bases()
+	var offenders := PackedStringArray()
+	for class_id: String in scripts:
+		if class_id == "Interactable" or not _extends_interactable(class_id, scripts):
+			continue
+		var path: String = scripts[class_id].get("path", "")
+		var source := FileAccess.get_file_as_string(path)
+		if source.contains("func _enter_tree") and not source.contains("super._enter_tree()"):
+			offenders.append(path)
+	assert_array(offenders).override_failure_message(
+		"覆写了 _enter_tree() 却没调 super._enter_tree()：%s" % ", ".join(offenders)
+	).is_empty()
+
+
+## 扫描 [code]src/[/code] 下所有脚本，收集[code]class_name[/code] → {基类名, 路径}。
+func _script_bases() -> Dictionary:
+	var found: Dictionary = {}
+	for path: String in _files_under("res://src"):
+		var class_id := ""
+		var base := ""
+		for line: String in FileAccess.get_file_as_string(path).split("\n"):
+			if class_id.is_empty() and line.begins_with("class_name "):
+				class_id = line.trim_prefix("class_name ").split(" ")[0].strip_edges()
+			elif base.is_empty() and line.begins_with("extends "):
+				base = line.trim_prefix("extends ").strip_edges()
+		if not class_id.is_empty():
+			found[class_id] = {"base": base, "path": path}
+	return found
+
+
+## 沿继承链看 [param class_id] 是不是 [Interactable] 的后代。
+func _extends_interactable(class_id: String, scripts: Dictionary) -> bool:
+	var cursor := class_id
+	for _step: int in 16:
+		if cursor == "Interactable":
+			return true
+		if not scripts.has(cursor):
+			return false
+		cursor = String(scripts[cursor].get("base", ""))
+	return false
+
+
+func _files_under(dir_path: String) -> PackedStringArray:
+	var paths := PackedStringArray()
+	for entry: String in DirAccess.get_files_at(dir_path):
+		if entry.ends_with(".gd"):
+			paths.append("%s/%s" % [dir_path, entry])
+	for sub: String in DirAccess.get_directories_at(dir_path):
+		paths.append_array(_files_under("%s/%s" % [dir_path, sub]))
+	return paths
