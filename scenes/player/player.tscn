@@ -6,7 +6,7 @@
 [ext_resource type="Script" path="res://src/player/states/player_state_idle.gd" id="4_idle"]
 [ext_resource type="Script" path="res://src/player/states/player_state_walk.gd" id="5_walk"]
 [ext_resource type="Script" path="res://src/player/states/player_state_use_tool.gd" id="6_use_tool"]
-[ext_resource type="Script" path="res://src/farm/farm_interactor.gd" id="7_interactor"]
+[ext_resource type="Script" path="res://src/tools/farm_interactor.gd" id="7_interactor"]
 [ext_resource type="Script" path="res://src/fishing/player_state_fishing.gd" id="8_fishing"]
 [ext_resource type="Script" path="res://src/fishing/fishing_bobber.gd" id="9_bobber"]
 

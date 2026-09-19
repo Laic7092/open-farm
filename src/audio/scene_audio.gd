@@ -329,9 +329,6 @@ func _hook_events() -> void:
 		_connect_once(EventBus.hour_changed, _on_hour_changed)
 
 	if listen_gameplay_sfx:
-		_connect_once(EventBus.farm.tool_used, _on_tool_used)
-		_connect_once(EventBus.farm.tile_tilled, _on_tile_tilled)
-		_connect_once(EventBus.farm.tile_watered, _on_tile_watered)
 		_connect_once(EventBus.farm.crop_planted, _on_crop_planted)
 		_connect_once(EventBus.farm.crop_harvested, _on_crop_harvested)
 		_connect_once(EventBus.farm.crop_died, _on_crop_died)
@@ -379,20 +376,6 @@ func _hour() -> int:
 	if _clock == null:
 		return 0
 	return int(_clock.minute_of_day / GameDateClock.MINUTES_PER_HOUR)
-
-
-func _on_tool_used(_tool_id: StringName, _cell: Vector2i, success: bool) -> void:
-	# 失败的尝试由 NOTIFY_* 统一发失败音，这里避免重复。
-	if success:
-		play_sfx(Catalog.SFX_TOOL_SWING, 1.0, -3.0)
-
-
-func _on_tile_tilled(_cell: Vector2i) -> void:
-	play_sfx(Catalog.SFX_TILL)
-
-
-func _on_tile_watered(_cell: Vector2i) -> void:
-	play_sfx(Catalog.SFX_WATER)
 
 
 func _on_crop_died(_cell: Vector2i) -> void:

@@ -164,7 +164,6 @@ func till(cell: Vector2i) -> bool:
 		return false
 	tile.tilled = true
 	_refresh_soil(cell)
-	EventBus.farm.tile_tilled.emit(cell)
 	return true
 
 
@@ -177,7 +176,6 @@ func water(cell: Vector2i) -> bool:
 		return false
 	tile.watered = true
 	_refresh_soil(cell)
-	EventBus.farm.tile_watered.emit(cell)
 	return true
 
 

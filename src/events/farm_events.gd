@@ -6,10 +6,6 @@ extends RefCounted
 ## 在 [code]_enter_tree()[/code] 连接、[code]_exit_tree()[/code] 断开，避免
 ## 资源对象持有场景节点造成生命周期泄漏。
 
-## 成功翻地。
-signal tile_tilled(cell: Vector2i)
-## 成功浇水。
-signal tile_watered(cell: Vector2i)
 ## 播种成功。
 signal crop_planted(cell: Vector2i, crop_id: StringName)
 ## 作物生长阶段变化。
