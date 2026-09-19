@@ -6,7 +6,7 @@ extends Node
 ## 物品栏不存放任何道具，所以这里也只做"读背包 + 标出当前手持格"。
 ##
 ## 物品栏由组合根注入的提供者给出：地图与世界是换来换去的，物品栏跟着玩家走，
-## 所以这里不自己去场景树里找玩家（见 [code]docs/decisions/world-context-access.md[/code]）。
+## 所以这里不自己去场景树里找玩家（见 `AGENTS.md` 的"归属"一节）。
 
 ## 物品栏格子场景。
 const HUD_SLOT_SCENE: PackedScene = preload("res://scenes/ui/hud_slot.tscn")
