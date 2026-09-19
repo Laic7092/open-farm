@@ -8,6 +8,20 @@ func test_all_expected_crops_are_loaded() -> void:
 	assert_bool(Database.crops().has(&"tomato")).is_true()
 
 
+## v0.5「内容广度」：每季必须有 6 种可种作物。
+func test_every_season_has_six_crops() -> void:
+	var per_season: Dictionary[int, int] = {}
+	for crop_id: StringName in Database.crops():
+		var crop := Database.get_crop(crop_id)
+		for season: Season.Type in crop.seasons:
+			per_season[int(season)] = per_season.get(int(season), 0) + 1
+	for season: Season.Type in Season.all():
+		assert_int(per_season.get(int(season), 0)).override_failure_message(
+			"%s 只有 %d 种作物（每季应有 6 种）"
+				% [Text.season_name(season), per_season.get(int(season), 0)]
+		).is_equal(6)
+
+
 func test_all_expected_flora_are_loaded() -> void:
 	for flora_id: StringName in [
 		&"tree_oak", &"tree_pine", &"weed", &"rock", &"boulder", &"flower", &"mushroom"

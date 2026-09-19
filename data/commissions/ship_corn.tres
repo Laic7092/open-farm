@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CommissionData" format=3]
+
+[ext_resource type="Script" path="res://src/data/commission_data.gd" id="1_fuw61"]
+
+[resource]
+script = ExtResource("1_fuw61")
+id = &"ship_corn"
+title_key = &"COMMISSION_SHIP_CORN_TITLE"
+item_id = &"corn"
+amount = 3
+reward_money = 380

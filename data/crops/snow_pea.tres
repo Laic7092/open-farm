@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CropData" format=3]
+
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_atttp"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/snow_pea.png" id="2_wpl0e"]
+
+[resource]
+script = ExtResource("1_atttp")
+id = &"snow_pea"
+display_name_key = &"CROP_SNOW_PEA"
+seed_item_id = &"snow_pea_seed"
+harvest_item_id = &"snow_pea"
+days_per_stage = Array[int]([2, 2, 2])
+seasons = Array[int]([3])
+regrow_days = 3
+seed_price = 45
+base_sell_price = 90
+sprite_sheet = ExtResource("2_wpl0e")

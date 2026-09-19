@@ -22,6 +22,7 @@ const BuildDialogues := preload("res://tools/sample/build_dialogues.gd")
 const BuildSchedules := preload("res://tools/sample/build_schedules.gd")
 const BuildNpcs := preload("res://tools/sample/build_npcs.gd")
 const BuildShops := preload("res://tools/sample/build_shops.gd")
+const BuildCommissions := preload("res://tools/sample/build_commissions.gd")
 const BuildFestivals := preload("res://tools/sample/build_festivals.gd")
 const BuildEvents := preload("res://tools/sample/build_events.gd")
 
@@ -40,6 +41,7 @@ func _initialize() -> void:
 	BuildSchedules.new().build()
 	BuildNpcs.new().build()
 	BuildShops.new().build()
+	BuildCommissions.new().build()
 	# 节日与事件引用对白资源，必须排在 BuildDialogues 之后。
 	BuildFestivals.new().build()
 	BuildEvents.new().build()

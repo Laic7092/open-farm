@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CommissionData" format=3]
+
+[ext_resource type="Script" path="res://src/data/commission_data.gd" id="1_xgjel"]
+
+[resource]
+script = ExtResource("1_xgjel")
+id = &"ship_pumpkin"
+title_key = &"COMMISSION_SHIP_PUMPKIN_TITLE"
+item_id = &"pumpkin"
+amount = 2
+reward_money = 420

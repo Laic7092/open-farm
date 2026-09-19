@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CropData" format=3]
+
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_mtbx7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/grape.png" id="2_6gjdj"]
+
+[resource]
+script = ExtResource("1_mtbx7")
+id = &"grape"
+display_name_key = &"CROP_GRAPE"
+seed_item_id = &"grape_seed"
+harvest_item_id = &"grape"
+days_per_stage = Array[int]([2, 2, 2, 3])
+seasons = Array[int]([2])
+regrow_days = 4
+seed_price = 85
+base_sell_price = 160
+sprite_sheet = ExtResource("2_6gjdj")

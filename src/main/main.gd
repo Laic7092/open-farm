@@ -47,6 +47,10 @@ var weather_state: WeatherState = WeatherState.new()
 var relationship_store: RelationshipStore = RelationshipStore.new()
 ## 本局节日 / 事件进度；由 Main 作为组合根持有。
 var calendar_progress: CalendarProgress = CalendarProgress.new()
+## 本局博物馆图鉴；由 Main 持有，背包变化时补充记录。
+var museum_state: MuseumState = MuseumState.new()
+## 本局委托板进度；由 Main 持有，跨天时由日期键自动刷新。
+var commission_state: CommissionState = CommissionState.new()
 
 ## 天气服务；由 Main 创建为子节点，不再是 Autoload。
 var weather_service: WeatherService
@@ -171,6 +175,8 @@ func _bind_dependencies() -> void:
 	save_sections.append(SaveSection.new(weather_service, &"WeatherSystem", 30, true))
 	save_sections.append(SaveSection.new(relationship_service, &"Relationships", 40, true))
 	save_sections.append(SaveSection.new(calendar_service, &"Calendar", 50, true))
+	save_sections.append(SaveSection.new(museum_state, &"Museum", 55, true))
+	save_sections.append(SaveSection.new(commission_state, &"Commissions", 56, true))
 	if host != null:
 		save_sections.append(SaveSection.new(host, &"SceneRouter", 60, true))
 	SaveManager.set_core_sections(save_sections)
@@ -193,6 +199,10 @@ func _bind_dependencies() -> void:
 		clock_state.year_changed.connect(_on_clock_year_changed)
 	if not player_profile.money_changed.is_connected(_on_profile_money_changed):
 		player_profile.money_changed.connect(_on_profile_money_changed)
+
+	# 图鉴：背包一有变化就把新道具记进去（钓到 / 收获 / 买到 / 采集都会经过背包）。
+	if not EventBus.player.inventory_changed.is_connected(_on_inventory_changed):
+		EventBus.player.inventory_changed.connect(_on_inventory_changed)
 
 	# 本局服务：状态 Resource 与彼此依赖全部在 Main 显式注入。
 	weather_service.bind_dependencies(clock_state, weather_state)
@@ -220,6 +230,8 @@ func _bind_dependencies() -> void:
 		ui_root.call(&"bind_dependencies", player_profile, clock_state)
 	if ui_root != null and ui_root.has_method(&"bind_services"):
 		ui_root.call(&"bind_services", weather_service, relationship_service, calendar_service)
+	if ui_root != null and ui_root.has_method(&"bind_progress"):
+		ui_root.call(&"bind_progress", museum_state, commission_state)
 	if ui_root != null and scene_audio != null and ui_root.has_method(&"bind_audio"):
 		ui_root.call(&"bind_audio", scene_audio)
 
@@ -247,6 +259,8 @@ func _boot_new_game() -> void:
 	clock_state.reset()
 	weather_service.reroll(clock_state.date.season)
 	calendar_service.reset()
+	museum_state.reset()
+	commission_state.reset()
 	# 开局也要让 HUD / 音频节点看到完整状态，而不依赖某次日结转。
 	clock_state.refresh_observers()
 	world_host.clear_world_cache()
@@ -281,6 +295,14 @@ func _on_day_rollover_autosave(_date: GameDate) -> void:
 func _on_pause_menu_requested() -> void:
 	# UiRoot 已经负责开关菜单与暂停，这里只留一个扩展点。
 	pass
+
+
+## 背包变化时把新道具记进图鉴。
+func _on_inventory_changed() -> void:
+	var player := get_tree().get_first_node_in_group(Player.GROUP) as Player
+	if player == null:
+		return
+	museum_state.discover_inventory(player.inventory, clock_state.date.absolute_day())
 
 
 # ---------------------------------------------------------------- 信号转发

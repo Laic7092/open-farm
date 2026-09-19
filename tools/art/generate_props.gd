@@ -51,6 +51,9 @@ func _initialize() -> void:
 	Art.save_png(_stove(), DIR.path_join("stove.png"))
 	Art.save_png(_wardrobe(), DIR.path_join("wardrobe.png"))
 	Art.save_png(_rug(), DIR.path_join("rug.png"))
+	# 图鉴与委托：广场上的博物馆展台、村口的委托板。
+	Art.save_png(_museum_stand(), DIR.path_join("museum_stand.png"))
+	Art.save_png(_notice_board(), DIR.path_join("notice_board.png"))
 	# 钓鱼：水面浮标与水花。
 	Art.save_png(_bobber(), DIR.path_join("bobber.png"))
 	Art.save_png(_ripple(), DIR.path_join("ripple.png"))
@@ -702,6 +705,51 @@ func _rug() -> Image:
 	Art.ellipse(image, Vector2i(16, 8), Vector2i(13, 6), P.ROOF_ROSE)
 	Art.ellipse(image, Vector2i(16, 8), Vector2i(7, 3), P.ROOF_ROSE_LIGHT)
 	Art.ellipse(image, Vector2i(16, 8), Vector2i(4, 2), P.ROOF_ROSE)
+	return image
+
+
+# ---------------------------------------------------------------- 图鉴 / 委托
+
+## 博物馆展台：玻璃罩下的陈列品——图鉴台。
+func _museum_stand() -> Image:
+	var image := Art.new_image(32, 32)
+	Art.ground_shadow(image, 32, 32, 6)
+	# 底座。
+	Art.rect(image, Rect2i(6, 22, 20, 8), P.WOOD)
+	Art.rect(image, Rect2i(6, 22, 20, 2), P.WOOD_LIGHT)
+	Art.frame_rect(image, Rect2i(6, 22, 20, 8), P.WOOD_DARK)
+	Art.h_line(image, 9, 26, 14, P.WOOD_DARK)
+	# 玻璃罩。
+	Art.rect(image, Rect2i(8, 6, 16, 16), Color(P.GLASS, 0.55))
+	Art.frame_rect(image, Rect2i(8, 6, 16, 16), P.GLASS_DARK)
+	Art.v_line(image, 9, 7, 14, P.WALL_LIGHT)
+	# 罩里的陈列品：一枚发光的展品。
+	Art.ellipse(image, Vector2i(16, 16), Vector2i(4, 4), P.COIN)
+	Art.ellipse(image, Vector2i(16, 15), Vector2i(3, 3), P.UI_GOLD)
+	Art.px(image, 15, 14, P.WHITE)
+	Art.outline(image, P.OUTLINE)
+	return image
+
+
+## 委托板：木架上的告示板，钉着几张待办纸条。
+func _notice_board() -> Image:
+	var image := Art.new_image(32, 32)
+	Art.ground_shadow(image, 32, 32, 5)
+	# 两根立柱。
+	Art.rect(image, Rect2i(5, 14, 3, 17), P.WOOD_DARK)
+	Art.rect(image, Rect2i(24, 14, 3, 17), P.WOOD_DARK)
+	# 板面。
+	Art.rect(image, Rect2i(2, 4, 28, 14), P.WOOD)
+	Art.frame_rect(image, Rect2i(2, 4, 28, 14), P.WOOD_DARK)
+	Art.h_line(image, 3, 5, 26, P.WOOD_LIGHT)
+	# 钉上去的纸条。
+	Art.rect(image, Rect2i(5, 7, 8, 7), P.WALL_LIGHT)
+	Art.rect(image, Rect2i(15, 6, 7, 6), P.FLOWER_YELLOW)
+	Art.rect(image, Rect2i(23, 8, 5, 6), P.WALL_LIGHT)
+	Art.px(image, 9, 7, P.FRUIT_RED)
+	Art.px(image, 18, 6, P.FRUIT_RED)
+	Art.px(image, 25, 8, P.FRUIT_RED)
+	Art.outline(image, P.OUTLINE)
 	return image
 
 

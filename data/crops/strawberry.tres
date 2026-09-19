@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CropData" format=3]
+
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_dsia0"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/strawberry.png" id="2_q6gvl"]
+
+[resource]
+script = ExtResource("1_dsia0")
+id = &"strawberry"
+display_name_key = &"CROP_STRAWBERRY"
+seed_item_id = &"strawberry_seed"
+harvest_item_id = &"strawberry"
+days_per_stage = Array[int]([2, 2, 2, 2])
+regrow_days = 2
+seed_price = 60
+base_sell_price = 110
+sprite_sheet = ExtResource("2_q6gvl")

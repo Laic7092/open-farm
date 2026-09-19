@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/sweet_potato.png" id="1_sossc"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_bm7uu"]
+
+[resource]
+script = ExtResource("2_bm7uu")
+id = &"sweet_potato"
+display_name_key = &"ITEM_SWEET_POTATO"
+category = 1
+sell_price = 140
+icon = ExtResource("1_sossc")

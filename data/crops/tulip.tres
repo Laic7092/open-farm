@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CropData" format=3]
+
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_puvls"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/tulip.png" id="2_ycmhn"]
+
+[resource]
+script = ExtResource("1_puvls")
+id = &"tulip"
+display_name_key = &"CROP_TULIP"
+seed_item_id = &"tulip_seed"
+harvest_item_id = &"tulip"
+days_per_stage = Array[int]([2, 2, 2])
+seed_price = 30
+base_sell_price = 70
+sprite_sheet = ExtResource("2_ycmhn")

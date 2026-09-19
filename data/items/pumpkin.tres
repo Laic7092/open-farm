@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/pumpkin.png" id="1_3wn73"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_j7t5u"]
+
+[resource]
+script = ExtResource("2_j7t5u")
+id = &"pumpkin"
+display_name_key = &"ITEM_PUMPKIN"
+category = 1
+sell_price = 220
+icon = ExtResource("1_3wn73")

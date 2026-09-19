@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/wintersweet_seed.png" id="1_dxaxl"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_vqkng"]
+
+[resource]
+script = ExtResource("2_vqkng")
+id = &"wintersweet_seed"
+display_name_key = &"ITEM_WINTERSWEET_SEED"
+category = 0
+buy_price = 55
+sell_price = 18
+icon = ExtResource("1_dxaxl")
+crop_id = &"wintersweet"

@@ -9,6 +9,6 @@ id = &"potato_seed"
 display_name_key = &"ITEM_POTATO_SEED"
 category = 0
 buy_price = 35
-sell_price = 12
+sell_price = 11
 icon = ExtResource("1_vu617")
 crop_id = &"potato"

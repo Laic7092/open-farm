@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/white_radish_seed.png" id="1_0yo4y"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_6dphn"]
+
+[resource]
+script = ExtResource("2_6dphn")
+id = &"white_radish_seed"
+display_name_key = &"ITEM_WHITE_RADISH_SEED"
+category = 0
+buy_price = 40
+sell_price = 13
+icon = ExtResource("1_0yo4y")
+crop_id = &"white_radish"

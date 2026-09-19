@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CommissionData" format=3]
+
+[ext_resource type="Script" path="res://src/data/commission_data.gd" id="1_xvcdm"]
+
+[resource]
+script = ExtResource("1_xvcdm")
+id = &"ship_milk"
+title_key = &"COMMISSION_SHIP_MILK_TITLE"
+item_id = &"milk"
+amount = 2
+reward_money = 320

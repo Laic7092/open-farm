@@ -16,8 +16,9 @@
 
 | 任务 | 入口 |
 | --- | --- |
-| 加内容 | 同名 `data/<域>/` + `tools/art/generate_<域>.gd`，重跑 `build_assets.sh` |
-| 加道具 / 上架 | `data/items/` / `data/shops/` |
+| 加物品 | `data/items/`（全游戏可持有物品的**总表**；图标 = `assets/sprites/items/<id>.png`）|
+| 加对象 / 系统内容 | 同名 `data/<域>/` + `tools/art/generate_<域>.gd`，重跑 `build_assets.sh` |
+| 上架 / 定价 | `data/shops/` |
 | 加文案 / 汉字 | `assets/i18n/*.csv` |
 | 加地图 | `SceneDoor` / `SpawnPoint` + `test_world_map.gd` 的 `MAPS` |
 | 改数值 | `data/**/*.tres` |

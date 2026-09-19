@@ -15,25 +15,145 @@ price_override = 35
 
 [sub_resource type="Resource" id="Resource_ujkte"]
 script = ExtResource("2_iac7g")
+item_id = &"strawberry_seed"
+price_override = 60
+
+[sub_resource type="Resource" id="Resource_5itjm"]
+script = ExtResource("2_iac7g")
+item_id = &"cabbage_seed"
+price_override = 45
+
+[sub_resource type="Resource" id="Resource_3nb23"]
+script = ExtResource("2_iac7g")
+item_id = &"onion_seed"
+price_override = 25
+
+[sub_resource type="Resource" id="Resource_nmlny"]
+script = ExtResource("2_iac7g")
+item_id = &"tulip_seed"
+price_override = 30
+
+[sub_resource type="Resource" id="Resource_aitru"]
+script = ExtResource("2_iac7g")
 item_id = &"tomato_seed"
 price_override = 50
 
-[sub_resource type="Resource" id="Resource_5itjm"]
+[sub_resource type="Resource" id="Resource_bymqa"]
+script = ExtResource("2_iac7g")
+item_id = &"corn_seed"
+price_override = 80
+
+[sub_resource type="Resource" id="Resource_egiws"]
+script = ExtResource("2_iac7g")
+item_id = &"melon_seed"
+price_override = 90
+
+[sub_resource type="Resource" id="Resource_u3s64"]
+script = ExtResource("2_iac7g")
+item_id = &"eggplant_seed"
+price_override = 55
+
+[sub_resource type="Resource" id="Resource_stgfh"]
+script = ExtResource("2_iac7g")
+item_id = &"sunflower_seed"
+price_override = 45
+
+[sub_resource type="Resource" id="Resource_q0bkd"]
+script = ExtResource("2_iac7g")
+item_id = &"pineapple_seed"
+price_override = 120
+
+[sub_resource type="Resource" id="Resource_056a0"]
+script = ExtResource("2_iac7g")
+item_id = &"pumpkin_seed"
+price_override = 70
+
+[sub_resource type="Resource" id="Resource_uege1"]
+script = ExtResource("2_iac7g")
+item_id = &"carrot_seed"
+price_override = 30
+
+[sub_resource type="Resource" id="Resource_hfbs8"]
+script = ExtResource("2_iac7g")
+item_id = &"spinach_seed"
+price_override = 35
+
+[sub_resource type="Resource" id="Resource_pttq3"]
+script = ExtResource("2_iac7g")
+item_id = &"sweet_potato_seed"
+price_override = 55
+
+[sub_resource type="Resource" id="Resource_2k0o8"]
+script = ExtResource("2_iac7g")
+item_id = &"grape_seed"
+price_override = 85
+
+[sub_resource type="Resource" id="Resource_1p5cg"]
+script = ExtResource("2_iac7g")
+item_id = &"chrysanthemum_seed"
+price_override = 40
+
+[sub_resource type="Resource" id="Resource_a6s08"]
+script = ExtResource("2_iac7g")
+item_id = &"bok_choy_seed"
+price_override = 30
+
+[sub_resource type="Resource" id="Resource_ukqiv"]
+script = ExtResource("2_iac7g")
+item_id = &"broccoli_seed"
+price_override = 50
+
+[sub_resource type="Resource" id="Resource_gdxk1"]
+script = ExtResource("2_iac7g")
+item_id = &"snow_pea_seed"
+price_override = 45
+
+[sub_resource type="Resource" id="Resource_k21s2"]
+script = ExtResource("2_iac7g")
+item_id = &"white_radish_seed"
+price_override = 40
+
+[sub_resource type="Resource" id="Resource_qswcp"]
+script = ExtResource("2_iac7g")
+item_id = &"kale_seed"
+price_override = 45
+
+[sub_resource type="Resource" id="Resource_lkjs2"]
+script = ExtResource("2_iac7g")
+item_id = &"wintersweet_seed"
+price_override = 55
+
+[sub_resource type="Resource" id="Resource_048he"]
+script = ExtResource("2_iac7g")
+item_id = &"wood"
+price_override = 25
+
+[sub_resource type="Resource" id="Resource_yi5vf"]
+script = ExtResource("2_iac7g")
+item_id = &"stone"
+price_override = 18
+
+[sub_resource type="Resource" id="Resource_bsdtt"]
+script = ExtResource("2_iac7g")
+item_id = &"fiber"
+price_override = 10
+
+[sub_resource type="Resource" id="Resource_fc2g6"]
 script = ExtResource("2_iac7g")
 item_id = &"hay"
 price_override = 20
 
-[sub_resource type="Resource" id="Resource_3nb23"]
+[sub_resource type="Resource" id="Resource_2v0pu"]
 script = ExtResource("2_iac7g")
 item_id = &"chicken"
 price_override = 500
 
-[sub_resource type="Resource" id="Resource_nmlny"]
+[sub_resource type="Resource" id="Resource_a4btl"]
 script = ExtResource("2_iac7g")
 item_id = &"cow"
 price_override = 1200
 
-[sub_resource type="Resource" id="Resource_aitru"]
+[sub_resource type="Resource" id="Resource_ap1yq"]
 script = ExtResource("2_iac7g")
 item_id = &"blue_feather"
 price_override = 1000
@@ -42,4 +162,4 @@ price_override = 1000
 script = ExtResource("1_41vot")
 id = &"general_store"
 display_name_key = &"SHOP_GENERAL_STORE"
-stock = Array[ExtResource("2_iac7g")]([SubResource("Resource_t0k2w"), SubResource("Resource_x45wp"), SubResource("Resource_ujkte"), SubResource("Resource_5itjm"), SubResource("Resource_3nb23"), SubResource("Resource_nmlny"), SubResource("Resource_aitru")])
+stock = Array[ExtResource("2_iac7g")]([SubResource("Resource_t0k2w"), SubResource("Resource_x45wp"), SubResource("Resource_ujkte"), SubResource("Resource_5itjm"), SubResource("Resource_3nb23"), SubResource("Resource_nmlny"), SubResource("Resource_aitru"), SubResource("Resource_bymqa"), SubResource("Resource_egiws"), SubResource("Resource_u3s64"), SubResource("Resource_stgfh"), SubResource("Resource_q0bkd"), SubResource("Resource_056a0"), SubResource("Resource_uege1"), SubResource("Resource_hfbs8"), SubResource("Resource_pttq3"), SubResource("Resource_2k0o8"), SubResource("Resource_1p5cg"), SubResource("Resource_a6s08"), SubResource("Resource_ukqiv"), SubResource("Resource_gdxk1"), SubResource("Resource_k21s2"), SubResource("Resource_qswcp"), SubResource("Resource_lkjs2"), SubResource("Resource_048he"), SubResource("Resource_yi5vf"), SubResource("Resource_bsdtt"), SubResource("Resource_fc2g6"), SubResource("Resource_2v0pu"), SubResource("Resource_a4btl"), SubResource("Resource_ap1yq")])

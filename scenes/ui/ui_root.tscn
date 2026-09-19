@@ -7,6 +7,8 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/shop_ui.tscn" id="5_shop"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="6_pause"]
 [ext_resource type="PackedScene" path="res://scenes/ui/fishing_ui.tscn" id="7_fishing"]
+[ext_resource type="PackedScene" path="res://scenes/ui/museum_ui.tscn" id="8_museum"]
+[ext_resource type="PackedScene" path="res://scenes/ui/commission_ui.tscn" id="9_commission"]
 
 [node name="UiRoot" type="CanvasLayer"]
 layer = 10
@@ -28,4 +30,10 @@ unique_name_in_owner = true
 unique_name_in_owner = true
 
 [node name="FishingUi" parent="." instance=ExtResource("7_fishing")]
+unique_name_in_owner = true
+
+[node name="MuseumUi" parent="." instance=ExtResource("8_museum")]
+unique_name_in_owner = true
+
+[node name="CommissionUi" parent="." instance=ExtResource("9_commission")]
 unique_name_in_owner = true

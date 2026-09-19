@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/strawberry_seed.png" id="1_5kqvy"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_uuox3"]
+
+[resource]
+script = ExtResource("2_uuox3")
+id = &"strawberry_seed"
+display_name_key = &"ITEM_STRAWBERRY_SEED"
+category = 0
+buy_price = 60
+sell_price = 20
+icon = ExtResource("1_5kqvy")
+crop_id = &"strawberry"

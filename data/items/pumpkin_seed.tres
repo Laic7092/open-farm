@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/pumpkin_seed.png" id="1_d8g8c"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_cy4wq"]
+
+[resource]
+script = ExtResource("2_cy4wq")
+id = &"pumpkin_seed"
+display_name_key = &"ITEM_PUMPKIN_SEED"
+category = 0
+buy_price = 70
+sell_price = 23
+icon = ExtResource("1_d8g8c")
+crop_id = &"pumpkin"

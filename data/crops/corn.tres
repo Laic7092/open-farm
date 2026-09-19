@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CropData" format=3]
+
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_qssv6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/corn.png" id="2_xvhwi"]
+
+[resource]
+script = ExtResource("1_qssv6")
+id = &"corn"
+display_name_key = &"CROP_CORN"
+seed_item_id = &"corn_seed"
+harvest_item_id = &"corn"
+days_per_stage = Array[int]([2, 2, 2, 2, 2])
+seasons = Array[int]([1])
+regrow_days = 4
+seed_price = 80
+base_sell_price = 150
+sprite_sheet = ExtResource("2_xvhwi")

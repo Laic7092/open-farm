@@ -16,42 +16,17 @@ extends SceneTree
 const Art := preload("res://tools/art/art_lib.gd")
 const Layout := preload("res://src/art/atlas_layout.gd")
 const P := preload("res://src/art/palette.gd")
+## 外观表与道具图标生成器共用，见 crop_looks.gd。
+const Looks := preload("res://src/art/crop_looks.gd")
 
 const DIR: String = "res://assets/sprites/crops"
 
-## 作物外观表：id → 形状 + 颜色。
-## 形状只有三种（球根 / 丛生 / 藤架），足够覆盖当前作物；
-## 新增作物时先挑一个形状，再调颜色即可。
-const CROPS := {
-	&"turnip": {
-		"shape": "bulb",
-		"leaf": P.LEAF,
-		"leaf_dark": P.LEAF_DARK,
-		"fruit": P.FLOWER_WHITE,
-		"fruit_dark": P.APRON,
-	},
-	&"potato": {
-		"shape": "bush",
-		"leaf": P.LEAF,
-		"leaf_dark": P.LEAF_DARK,
-		"fruit": P.SOIL_LIGHT,
-		"fruit_dark": P.SOIL_DARK,
-	},
-	&"tomato": {
-		"shape": "vine",
-		"leaf": P.LEAF_DARK,
-		"leaf_dark": P.LEAF,
-		"fruit": P.FRUIT_RED,
-		"fruit_dark": P.ROOF_DARK,
-	},
-}
-
 
 func _initialize() -> void:
-	for crop_id: StringName in CROPS:
-		var config: Dictionary = CROPS[crop_id]
+	for crop_id: StringName in Looks.LOOKS:
+		var config: Dictionary = Looks.LOOKS[crop_id]
 		Art.save_png(_build_crop(config), DIR.path_join("%s.png" % crop_id))
-	print("作物图集生成完成（%d 种）→ %s" % [CROPS.size(), DIR])
+	print("作物图集生成完成（%d 种）→ %s" % [Looks.LOOKS.size(), DIR])
 	quit()
 
 

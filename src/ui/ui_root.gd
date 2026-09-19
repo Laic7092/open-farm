@@ -12,6 +12,8 @@ extends CanvasLayer
 @onready var dialogue_box: DialogueBox = %DialogueBox
 @onready var inventory_ui: InventoryUi = %InventoryUi
 @onready var shop_ui: ShopUi = %ShopUi
+@onready var museum_ui: MuseumUi = %MuseumUi
+@onready var commission_ui: CommissionUi = %CommissionUi
 @onready var pause_menu: PauseMenu = %PauseMenu
 @onready var fishing_ui: FishingUi = %FishingUi
 
@@ -51,6 +53,13 @@ func bind_services(
 			child.call(&"bind_services", weather, relationships, calendar)
 
 
+## 由 [Main] 注入本局进度状态（图鉴 / 委托）；下发给需要它们的界面。
+func bind_progress(museum: MuseumState, commissions: CommissionState) -> void:
+	for child: Node in get_children():
+		if child.has_method(&"bind_progress"):
+			child.call(&"bind_progress", museum, commissions)
+
+
 ## 由 [Main] 注入本场景的音频节点；继续下发给需要音量控制的界面。
 func bind_audio(audio: SceneAudio) -> void:
 	for child: Node in get_children():
@@ -67,6 +76,8 @@ func _ready() -> void:
 
 	EventBus.ui.dialogue_requested.connect(_on_dialogue_requested)
 	EventBus.ui.shop_requested.connect(_on_shop_requested)
+	EventBus.ui.museum_requested.connect(_on_museum_requested)
+	EventBus.ui.commission_requested.connect(_on_commission_requested)
 	EventBus.ui.inventory_toggle_requested.connect(_on_inventory_toggle)
 	EventBus.ui.pause_menu_toggle_requested.connect(_on_pause_menu_toggle)
 
@@ -89,6 +100,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if shop_ui.visible:
 		_close_shop()
 		return
+	if museum_ui.visible:
+		museum_ui.close()
+		_close(museum_ui)
+		return
+	if commission_ui.visible:
+		commission_ui.close()
+		_close(commission_ui)
+		return
 	_on_pause_menu_toggle()
 
 
@@ -106,6 +125,8 @@ func close_all() -> void:
 	dialogue_box.visible = false
 	inventory_ui.close()
 	shop_ui.close()
+	museum_ui.close()
+	commission_ui.close()
 	pause_menu.close()
 	_modals.clear()
 	_sync_pause()
@@ -156,6 +177,20 @@ func _on_shop_requested(shop_id: StringName) -> void:
 	_open(shop_ui)
 	shop_ui.open(shop_data)
 	EventBus.ui.shop_opened.emit(shop_data)
+
+
+func _on_museum_requested() -> void:
+	if museum_ui.visible:
+		return
+	_open(museum_ui)
+	museum_ui.open()
+
+
+func _on_commission_requested() -> void:
+	if commission_ui.visible:
+		return
+	_open(commission_ui)
+	commission_ui.open()
 
 
 func _close_shop() -> void:

@@ -213,6 +213,22 @@ func _check_ui() -> void:
 	var money_label := hud.find_child("MoneyLabel", true, false) as Label
 	_check(money_label != null and not money_label.text.is_empty(), "HUD 金钱标签应当有内容")
 
+	# v0.5：图鉴 / 委托界面能构建、能开关；直接调 open/close，不走模态以避免暂停场景树。
+	var museum_ui := get_tree().root.find_child("MuseumUi", true, false) as MuseumUi
+	_check(museum_ui != null, "应当存在博物馆图鉴界面")
+	if museum_ui != null:
+		museum_ui.open()
+		_check(museum_ui.visible, "图鉴界面应当能打开")
+		museum_ui.close()
+		_check(not museum_ui.visible, "图鉴界面应当能关闭")
+	var commission_ui := get_tree().root.find_child("CommissionUi", true, false) as CommissionUi
+	_check(commission_ui != null, "应当存在委托板界面")
+	if commission_ui != null:
+		commission_ui.open()
+		_check(commission_ui.visible, "委托板界面应当能打开")
+		commission_ui.close()
+		_check(not commission_ui.visible, "委托板界面应当能关闭")
+
 
 func _check_audio() -> void:
 	_check(AudioServer.get_bus_index(SceneAudio.BGM_BUS) >= 0, "应当存在 BGM 总线")

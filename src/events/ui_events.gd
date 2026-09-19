@@ -31,6 +31,10 @@ signal notification_requested(text_key: StringName, args: Dictionary)
 signal inventory_toggle_requested()
 ## 请求打开 / 关闭系统菜单。
 signal pause_menu_toggle_requested()
+## 请求打开博物馆图鉴。
+signal museum_requested()
+## 请求打开委托板。
+signal commission_requested()
 ## 全局暂停状态变化（打开菜单 / 对话 / 商店时）。
 signal game_paused_changed(paused: bool)
 ## 请求播放一条 UI 音效（UI 只发事件，由所在场景的 [SceneAudio] 订阅）。

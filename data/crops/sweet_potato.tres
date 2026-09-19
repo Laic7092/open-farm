@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CropData" format=3]
+
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_77hou"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/sweet_potato.png" id="2_g3luw"]
+
+[resource]
+script = ExtResource("1_77hou")
+id = &"sweet_potato"
+display_name_key = &"CROP_SWEET_POTATO"
+seed_item_id = &"sweet_potato_seed"
+harvest_item_id = &"sweet_potato"
+days_per_stage = Array[int]([2, 2, 3, 2])
+seasons = Array[int]([2])
+seed_price = 55
+base_sell_price = 140
+sprite_sheet = ExtResource("2_g3luw")

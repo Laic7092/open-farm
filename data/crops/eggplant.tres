@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CropData" format=3]
+
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_ec4gi"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/eggplant.png" id="2_h0qv7"]
+
+[resource]
+script = ExtResource("1_ec4gi")
+id = &"eggplant"
+display_name_key = &"CROP_EGGPLANT"
+seed_item_id = &"eggplant_seed"
+harvest_item_id = &"eggplant"
+days_per_stage = Array[int]([2, 2, 2])
+seasons = Array[int]([1])
+regrow_days = 3
+seed_price = 55
+base_sell_price = 95
+sprite_sheet = ExtResource("2_h0qv7")

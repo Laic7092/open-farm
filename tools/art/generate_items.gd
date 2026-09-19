@@ -13,17 +13,17 @@ extends SceneTree
 const Art := preload("res://tools/art/art_lib.gd")
 const Layout := preload("res://src/art/atlas_layout.gd")
 const P := preload("res://src/art/palette.gd")
+## 收获物 / 种子袋图标与生长图共用一份外观表，见 crop_looks.gd。
+const Looks := preload("res://src/art/crop_looks.gd")
 
 const DIR: String = "res://assets/sprites/items"
 
 
 func _initialize() -> void:
-	Art.save_png(_turnip(), _path("turnip"))
-	Art.save_png(_packet(&"turnip"), _path("turnip_seed"))
-	Art.save_png(_potato(), _path("potato"))
-	Art.save_png(_packet(&"potato"), _path("potato_seed"))
-	Art.save_png(_tomato(), _path("tomato"))
-	Art.save_png(_packet(&"tomato"), _path("tomato_seed"))
+	for crop_id: StringName in Looks.LOOKS:
+		var look: Dictionary = Looks.LOOKS[crop_id]
+		Art.save_png(_crop_icon(look), _path(String(crop_id)))
+		Art.save_png(_packet(look), _path("%s_seed" % crop_id))
 	Art.save_png(_tool_hoe(), _path("hoe"))
 	Art.save_png(_tool_axe(), _path("axe"))
 	Art.save_png(_tool_pickaxe(), _path("pickaxe"))
@@ -66,60 +66,53 @@ func _blank() -> Image:
 
 # ---------------------------------------------------------------- 收获物
 
-func _turnip() -> Image:
+## 收获物图标：同一作物在田里与背包里长得像——形状与配色都来自 [crop_looks.gd]。
+func _crop_icon(look: Dictionary) -> Image:
 	var image := _blank()
-	Art.ellipse(image, Vector2i(8, 10), Vector2i(5, 4), P.APRON)
-	Art.ellipse(image, Vector2i(8, 11), Vector2i(4, 3), P.WHITE)
-	Art.h_line(image, 5, 8, 2, P.WALL_DARK)
-	Art.px(image, 8, 13, P.WALL_DARK)
-	# 顶上的叶子
-	Art.v_line(image, 8, 3, 4, P.LEAF_DARK)
-	Art.px(image, 6, 3, P.LEAF)
-	Art.px(image, 5, 2, P.LEAF)
-	Art.px(image, 10, 3, P.LEAF)
-	Art.px(image, 11, 2, P.LEAF)
-	Art.px(image, 8, 2, P.LEAF_LIGHT)
-	Art.outline(image)
-	return image
+	var fruit: Color = look["fruit"]
+	var fruit_dark: Color = look["fruit_dark"]
+	var leaf: Color = look["leaf"]
+	var leaf_dark: Color = look["leaf_dark"]
 
-
-func _potato() -> Image:
-	var image := _blank()
-	Art.ellipse(image, Vector2i(8, 9), Vector2i(5, 4), P.SOIL_LIGHT)
-	Art.ellipse(image, Vector2i(7, 8), Vector2i(3, 2), P.PATH)
-	Art.px(image, 5, 9, P.SOIL_DARK)
-	Art.px(image, 9, 6, P.SOIL_DARK)
-	Art.px(image, 10, 11, P.SOIL_DARK)
-	Art.px(image, 6, 12, P.SOIL_DARK)
-	Art.h_line(image, 6, 5, 3, P.SAND)
-	Art.outline(image)
-	return image
-
-
-func _tomato() -> Image:
-	var image := _blank()
-	Art.circle(image, Vector2i(8, 9), 5, P.ROOF_DARK)
-	Art.circle(image, Vector2i(8, 9), 4, P.FRUIT_RED)
-	Art.ellipse(image, Vector2i(6, 7), Vector2i(2, 1), P.FLOWER_PINK)
-	# 蒂
-	Art.h_line(image, 6, 4, 5, P.LEAF_DARK)
-	Art.px(image, 8, 3, P.LEAF)
-	Art.px(image, 5, 3, P.LEAF)
-	Art.px(image, 11, 3, P.LEAF)
+	match String(look.get("shape", "bush")):
+		"bulb":
+			Art.ellipse(image, Vector2i(8, 10), Vector2i(5, 4), fruit_dark)
+			Art.ellipse(image, Vector2i(8, 10), Vector2i(4, 3), fruit)
+			Art.v_line(image, 8, 3, 4, leaf_dark)
+			Art.px(image, 6, 3, leaf)
+			Art.px(image, 5, 2, leaf)
+			Art.px(image, 10, 3, leaf)
+			Art.px(image, 11, 2, leaf)
+			Art.px(image, 8, 2, P.LEAF_LIGHT)
+		"vine":
+			Art.ellipse(image, Vector2i(7, 9), Vector2i(4, 5), fruit_dark)
+			Art.ellipse(image, Vector2i(7, 9), Vector2i(3, 4), fruit)
+			Art.px(image, 6, 7, P.WHITE)
+			Art.v_line(image, 11, 4, 6, leaf_dark)
+			Art.px(image, 10, 5, leaf)
+			Art.px(image, 9, 6, leaf)
+			Art.px(image, 12, 6, leaf)
+			Art.px(image, 13, 7, leaf)
+		_:
+			Art.ellipse(image, Vector2i(8, 9), Vector2i(5, 4), fruit_dark)
+			Art.ellipse(image, Vector2i(8, 9), Vector2i(4, 3), fruit)
+			Art.px(image, 7, 8, P.WHITE)
+			Art.h_line(image, 6, 4, 5, leaf_dark)
+			Art.px(image, 8, 3, leaf)
+			Art.px(image, 5, 3, leaf)
+			Art.px(image, 11, 3, leaf)
 	Art.outline(image)
 	return image
 
 
 # ---------------------------------------------------------------- 种子袋
 
-## 种子包：一个纸袋 + 中间的作物小图。
-func _packet(crop_id: StringName) -> Image:
+## 种子包：一个纸袋 + 中间的作物小图；标识色就是该作物的果实色。
+func _packet(look: Dictionary) -> Image:
 	var image := _blank()
-	var accent: Color = {
-		&"turnip": P.APRON,
-		&"potato": P.SOIL_LIGHT,
-		&"tomato": P.FRUIT_RED,
-	}.get(crop_id, P.SEED_BROWN)
+	var accent: Color = look.get("fruit", P.SEED_BROWN)
+	var leaf: Color = look.get("leaf", P.LEAF)
+	var leaf_dark: Color = look.get("leaf_dark", P.LEAF_DARK)
 
 	Art.rect(image, Rect2i(3, 4, 10, 10), P.PATH)
 	Art.frame_rect(image, Rect2i(3, 4, 10, 10), P.PATH_DARK)
@@ -129,15 +122,9 @@ func _packet(crop_id: StringName) -> Image:
 	Art.rect(image, Rect2i(3, 5, 10, 1), P.PATH_DARK)
 	# 中间的作物标识
 	Art.ellipse(image, Vector2i(8, 10), Vector2i(3, 3), accent)
-	if crop_id == &"tomato":
-		Art.h_line(image, 6, 7, 5, P.LEAF_DARK)
-	elif crop_id == &"turnip":
-		Art.px(image, 8, 6, P.LEAF)
-		Art.px(image, 7, 6, P.LEAF_DARK)
-		Art.px(image, 9, 6, P.LEAF_DARK)
-	else:
-		Art.px(image, 7, 9, P.SOIL_DARK)
-		Art.px(image, 9, 11, P.SOIL_DARK)
+	Art.v_line(image, 8, 6, 2, leaf_dark)
+	Art.px(image, 7, 6, leaf)
+	Art.px(image, 9, 6, leaf)
 	# 几粒露出来的种子
 	Art.px(image, 5, 13, P.SEED_BROWN)
 	Art.px(image, 11, 13, P.SEED_BROWN)

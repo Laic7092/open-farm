@@ -9,6 +9,6 @@ id = &"turnip_seed"
 display_name_key = &"ITEM_TURNIP_SEED"
 category = 0
 buy_price = 20
-sell_price = 8
+sell_price = 6
 icon = ExtResource("1_r37rj")
 crop_id = &"turnip"

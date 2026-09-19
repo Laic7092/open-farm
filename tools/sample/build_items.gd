@@ -1,13 +1,22 @@
 extends "res://tools/sample/sample_base.gd"
 ## items：由 tools/generate_sample_data.gd 调用；公共工具在 sample_base.gd。
 
+## 种子 / 收获物的数值与季节都来自 build_crops.gd 的同一张表，避免两处各写一遍。
+const BuildCrops := preload("res://tools/sample/build_crops.gd")
+
+
 func build() -> void:
-	_seed_item(&"turnip_seed", &"ITEM_TURNIP_SEED", &"turnip", 20, 8)
-	_crop_item(&"turnip", &"ITEM_TURNIP", 45)
-	_seed_item(&"potato_seed", &"ITEM_POTATO_SEED", &"potato", 35, 12)
-	_crop_item(&"potato", &"ITEM_POTATO", 90)
-	_seed_item(&"tomato_seed", &"ITEM_TOMATO_SEED", &"tomato", 50, 20)
-	_crop_item(&"tomato", &"ITEM_TOMATO", 70)
+	for entry: Dictionary in BuildCrops.CROPS:
+		var crop_id: StringName = entry["id"]
+		var seed_price: int = int(entry["seed"])
+		_seed_item(
+			StringName("%s_seed" % crop_id),
+			_item_name_key(StringName("%s_seed" % crop_id)),
+			crop_id,
+			seed_price,
+			maxi(seed_price / 3, 1)
+		)
+		_crop_item(crop_id, _item_name_key(crop_id), int(entry["sell"]))
 
 	var wood := ItemData.new()
 	wood.id = &"wood"
@@ -75,6 +84,11 @@ func build() -> void:
 	seed_bag.sellable = false
 	seed_bag.icon = _item_icon(&"seed_bag")
 	_save(seed_bag, ITEM_DIR.path_join("seed_bag.tres"))
+
+
+## 道具显示名翻译键；与 i18n 的 ITEM_<ID> 约定一致。
+static func _item_name_key(item_id: StringName) -> StringName:
+	return StringName("ITEM_%s" % String(item_id).to_upper())
 
 
 func _seed_item(

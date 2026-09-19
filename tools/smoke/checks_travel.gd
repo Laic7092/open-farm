@@ -46,6 +46,34 @@ func _check_town() -> void:
 	_check_door_target(world, "ToTwon", "res://scenes/world/twon.tscn", &"from_town")
 	_check_door_target(world, "ToBeach", "res://scenes/world/beach.tscn", &"from_town")
 
+	# v0.5 内容广度：广场上的博物馆展台与委托板应当是可用交互物。
+	_check(world.find_child("Museum", true, false) is MuseumStand, "集市应当有博物馆展台")
+	_check(
+		world.find_child("CommissionBoard", true, false) is CommissionBoard,
+		"集市应当有委托板"
+	)
+	var museum := world.find_child("Museum", true, false) as MuseumStand
+	if museum != null:
+		_check(museum.can_interact(), "博物馆展台应当可以交互")
+	var board := world.find_child("CommissionBoard", true, false) as CommissionBoard
+	if board != null:
+		_check(board.can_interact(), "委托板应当可以交互")
+
+	# 委托出题与图鉴记录：纯逻辑在单元测试覆盖，这里验证组合根真的持有状态。
+	_check(_main.museum_state != null, "组合根应当持有博物馆图鉴状态")
+	_check(_main.commission_state != null, "组合根应当持有委托板状态")
+	var pool: Array[StringName] = []
+	for data: CommissionData in Database.commission_list():
+		pool.append(data.id)
+	var offers := CommissionRules.offers_for(_clock.date, pool)
+	_check_eq(
+		offers.size(), CommissionRules.DAILY_COUNT,
+		"委托板今天应当出 %d 个委托" % CommissionRules.DAILY_COUNT
+	)
+	if _main.museum_state != null:
+		_main.museum_state.discover(&"turnip")
+		_check(_main.museum_state.is_discovered(&"turnip"), "图鉴应当记录萝卜")
+
 	# 在别的地图上过一天：农场不在场景树里，它的日结转钩子是注销的，
 	# 所以农场的植被只能靠"重新进图时补算"追上——这正是最后一步要验证的。
 	_clock.sleep_until_morning()

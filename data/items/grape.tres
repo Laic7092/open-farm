@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/grape.png" id="1_4vu7w"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_2d86r"]
+
+[resource]
+script = ExtResource("2_2d86r")
+id = &"grape"
+display_name_key = &"ITEM_GRAPE"
+category = 1
+sell_price = 160
+icon = ExtResource("1_4vu7w")

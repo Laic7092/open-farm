@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/melon_seed.png" id="1_q05od"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_muu6d"]
+
+[resource]
+script = ExtResource("2_muu6d")
+id = &"melon_seed"
+display_name_key = &"ITEM_MELON_SEED"
+category = 0
+buy_price = 90
+sell_price = 30
+icon = ExtResource("1_q05od")
+crop_id = &"melon"

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/spinach.png" id="1_gbgmc"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_m5ub6"]
+
+[resource]
+script = ExtResource("2_m5ub6")
+id = &"spinach"
+display_name_key = &"ITEM_SPINACH"
+category = 1
+sell_price = 85
+icon = ExtResource("1_gbgmc")

@@ -1,4 +1,6 @@
 keys,zh_CN,en
+COMMISSION_HINT,方向键选择 · E 交付 · Esc 离开,Arrows to select · E to deliver · Esc to close
+COMMISSION_TITLE,委托板,Request Board
 DATE_FORMAT,第 {year} 年 {season} {day} 日,Year {year} {season} {day}
 GAME_SUBTITLE,一个用 Godot 4 搭建的农场生活模拟原型,A farming-life prototype built with Godot 4
 GAME_TITLE,牧场物语 · 复刻,Open Farm
@@ -20,6 +22,15 @@ MENU_RESUME,继续游戏,Resume
 MENU_SAVE,保存进度,Save
 MENU_SFX,音效,Sound
 MENU_TITLE,回到标题,Back to Title
+MUSEUM_CAT_ALL,全部,All
+MUSEUM_CAT_CROP,作物,Crops
+MUSEUM_CAT_FOOD,食物,Food
+MUSEUM_CAT_MATERIAL,素材,Materials
+MUSEUM_CAT_SEED,种子,Seeds
+MUSEUM_HINT,方向键选择 · A / D 换分类 · Esc 离开,Arrows to select · A / D switch list · Esc to close
+MUSEUM_PROGRESS,已收集 {found} / {total},Collected {found} / {total}
+MUSEUM_TITLE,博物馆图鉴,Museum Collection
+MUSEUM_UNKNOWN,???,???
 NOTIFY_AFFECTION_GAIN,{npc} 好感 +{amount},{npc} affection +{amount}
 NOTIFY_ALREADY_GIFTED,今天已经给{npc}送过礼物了,Already gave {npc} a gift today
 NOTIFY_ANIMALS_CONTENT,牲畜们今天都吃饱了,Everyone has eaten today
@@ -31,6 +42,9 @@ NOTIFY_ANIMAL_PRODUCT,收到了 {item} ×{count},Collected {item} x{count}
 NOTIFY_AUTO_SAVED,已自动保存,Auto-saved
 NOTIFY_CANNOT_TILL,这里不能翻地,Cannot till here
 NOTIFY_CHILD_BORN,你们有了一个孩子！,A child is born to your family!
+NOTIFY_COMMISSION_ALREADY,这个委托今天已经完成了,This request is already done today
+NOTIFY_COMMISSION_DELIVERED,完成委托 {title}，获得 {reward}G,Finished {title} for {reward}G
+NOTIFY_COMMISSION_INCOMPLETE,道具数量不够,Not enough items
 NOTIFY_CONFESSED,你和{npc}开始交往了！,You are now dating {npc}!
 NOTIFY_CROP_DIED,作物枯死了,A crop withered
 NOTIFY_CROP_HARVESTED,收获了 {item} ×{count},Harvested {item} x{count}
@@ -70,10 +84,12 @@ NOTIFY_TILE_TILLED,翻好了土,Soil tilled
 NOTIFY_TILE_WATERED,浇好了水,Watered
 PROMPT_ANIMAL_PEN,按 E 放入牲畜,Press E to place livestock
 PROMPT_BED,按 E 睡觉,Press E to sleep
+PROMPT_COMMISSION,按 E 查看委托,Press E for requests
 PROMPT_ENTER,按 E 进入,Press E to enter
 PROMPT_FEED_TROUGH,按 E 喂食,Press E to feed
 PROMPT_FESTIVAL,按 E 参加祭典,Press E to join the festival
 PROMPT_INTERACT,按 E 交互,Press E to interact
+PROMPT_MUSEUM,按 E 查看图鉴,Press E for the museum
 PROMPT_SHIPPING_BIN,按 E 出货,Press E to ship
 PROMPT_SHOP,按 E 进入商店,Press E to shop
 PROMPT_TALK,按 E 交谈,Press E to talk

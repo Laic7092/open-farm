@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/grape_seed.png" id="1_choeo"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_u40tr"]
+
+[resource]
+script = ExtResource("2_u40tr")
+id = &"grape_seed"
+display_name_key = &"ITEM_GRAPE_SEED"
+category = 0
+buy_price = 85
+sell_price = 28
+icon = ExtResource("1_choeo")
+crop_id = &"grape"

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CropData" format=3]
+
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_mnm1a"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/melon.png" id="2_lvnw5"]
+
+[resource]
+script = ExtResource("1_mnm1a")
+id = &"melon"
+display_name_key = &"CROP_MELON"
+seed_item_id = &"melon_seed"
+harvest_item_id = &"melon"
+days_per_stage = Array[int]([3, 3, 3, 3])
+seasons = Array[int]([1])
+seed_price = 90
+base_sell_price = 250
+sprite_sheet = ExtResource("2_lvnw5")

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CommissionData" format=3]
+
+[ext_resource type="Script" path="res://src/data/commission_data.gd" id="1_lytn8"]
+
+[resource]
+script = ExtResource("1_lytn8")
+id = &"ship_mushroom"
+title_key = &"COMMISSION_SHIP_MUSHROOM_TITLE"
+item_id = &"mushroom"
+amount = 3
+reward_money = 180

@@ -57,6 +57,8 @@ const REQUIRED_ASSETS: Array[String] = [
 	"res://assets/sprites/props/cave.png",
 	"res://assets/sprites/props/bookshelf.png",
 	"res://assets/sprites/props/counter.png",
+	"res://assets/sprites/props/museum_stand.png",
+	"res://assets/sprites/props/notice_board.png",
 	"res://assets/sprites/props/forge.png",
 	"res://assets/sprites/props/flower_stand.png",
 	"res://assets/sprites/flora/tree_oak.png",

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CropData" format=3]
+
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_aeglk"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/sunflower.png" id="2_rufc7"]
+
+[resource]
+script = ExtResource("1_aeglk")
+id = &"sunflower"
+display_name_key = &"CROP_SUNFLOWER"
+seed_item_id = &"sunflower_seed"
+harvest_item_id = &"sunflower"
+days_per_stage = Array[int]([2, 2, 2, 2])
+seasons = Array[int]([1])
+seed_price = 45
+base_sell_price = 105
+sprite_sheet = ExtResource("2_rufc7")

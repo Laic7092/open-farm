@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/sunflower.png" id="1_4qulp"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_xpc6o"]
+
+[resource]
+script = ExtResource("2_xpc6o")
+id = &"sunflower"
+display_name_key = &"ITEM_SUNFLOWER"
+category = 1
+sell_price = 105
+icon = ExtResource("1_4qulp")

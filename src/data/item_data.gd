@@ -1,9 +1,15 @@
 @tool
 class_name ItemData
 extends Resource
-## 道具 / 物品的静态定义。
+## 全游戏可持有物品的静态定义（物品总表）。
 ##
-## 背包、商店、出货箱都以 [member id] 互相引用，避免任何硬编码的字符串常量散落各处。
+## [b]物品[/b] = 任何能被拥有 / 堆叠 / 买卖 / 展示的东西；背包、商店、出货箱、
+## 图鉴、委托板都只认 [member id]，避免硬编码字符串常量散落各处。
+##
+## [b]区别于「对象 / 定义」[/b]：[CropData] / [FishData] / [AnimalData] 等描述的是
+## 怎么种 / 怎么钓 / 怎么养，并通过 [code]harvest_item_id[/code] / [code]item_id[/code] 等
+## 字段[b]产出[/b]这里的一条物品。同一个东西可能两边各有一条记录（萝卜 = 1 条作物 +
+## 种子 / 收获 2 条物品），按 id 关联，不是重复。
 
 enum Category {
 	SEED,      ## 种子

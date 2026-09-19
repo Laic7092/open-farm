@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/cabbage_seed.png" id="1_6vaw0"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_eohfd"]
+
+[resource]
+script = ExtResource("2_eohfd")
+id = &"cabbage_seed"
+display_name_key = &"ITEM_CABBAGE_SEED"
+category = 0
+buy_price = 45
+sell_price = 15
+icon = ExtResource("1_6vaw0")
+crop_id = &"cabbage"

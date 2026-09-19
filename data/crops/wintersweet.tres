@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CropData" format=3]
+
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_41yk6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/wintersweet.png" id="2_eg1x2"]
+
+[resource]
+script = ExtResource("1_41yk6")
+id = &"wintersweet"
+display_name_key = &"CROP_WINTERSWEET"
+seed_item_id = &"wintersweet_seed"
+harvest_item_id = &"wintersweet"
+days_per_stage = Array[int]([2, 2, 3])
+seasons = Array[int]([3])
+seed_price = 55
+base_sell_price = 130
+sprite_sheet = ExtResource("2_eg1x2")

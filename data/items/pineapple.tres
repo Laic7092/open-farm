@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/pineapple.png" id="1_ssdhy"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_r186a"]
+
+[resource]
+script = ExtResource("2_r186a")
+id = &"pineapple"
+display_name_key = &"ITEM_PINEAPPLE"
+category = 1
+sell_price = 300
+icon = ExtResource("1_ssdhy")

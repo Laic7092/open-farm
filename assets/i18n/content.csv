@@ -3,9 +3,42 @@ ANIMAL_CHICKEN,鸡,Chicken
 ANIMAL_COW,奶牛,Cow
 BUILDING_BARN,牛舍,Barn
 BUILDING_COOP,鸡舍,Coop
+COMMISSION_SHIP_CORN_TITLE,收购玉米,Corn Order
+COMMISSION_SHIP_EGG_TITLE,收购鸡蛋,Egg Order
+COMMISSION_SHIP_FIBER_TITLE,收购纤维,Fiber Order
+COMMISSION_SHIP_FLOWER_TITLE,收购野花,Wildflower Order
+COMMISSION_SHIP_MILK_TITLE,收购牛奶,Milk Order
+COMMISSION_SHIP_MUSHROOM_TITLE,收购蘑菇,Mushroom Order
+COMMISSION_SHIP_POTATO_TITLE,收购土豆,Potato Order
+COMMISSION_SHIP_PUMPKIN_TITLE,收购南瓜,Pumpkin Order
+COMMISSION_SHIP_STONE_TITLE,收购石材,Stone Order
+COMMISSION_SHIP_TOMATO_TITLE,收购番茄,Tomato Order
+COMMISSION_SHIP_TURNIP_TITLE,收购萝卜,Turnip Order
+COMMISSION_SHIP_WOOD_TITLE,收购木材,Wood Order
+CROP_BOK_CHOY,小白菜,Bok Choy
+CROP_BROCCOLI,西兰花,Broccoli
+CROP_CABBAGE,卷心菜,Cabbage
+CROP_CARROT,胡萝卜,Carrot
+CROP_CHRYSANTHEMUM,菊花,Chrysanthemum
+CROP_CORN,玉米,Corn
+CROP_EGGPLANT,茄子,Eggplant
+CROP_GRAPE,葡萄,Grape
+CROP_KALE,羽衣甘蓝,Kale
+CROP_MELON,甜瓜,Melon
+CROP_ONION,洋葱,Onion
+CROP_PINEAPPLE,菠萝,Pineapple
 CROP_POTATO,土豆,Potato
+CROP_PUMPKIN,南瓜,Pumpkin
+CROP_SNOW_PEA,雪豆,Snow Pea
+CROP_SPINACH,菠菜,Spinach
+CROP_STRAWBERRY,草莓,Strawberry
+CROP_SUNFLOWER,向日葵,Sunflower
+CROP_SWEET_POTATO,红薯,Sweet Potato
 CROP_TOMATO,番茄,Tomato
+CROP_TULIP,郁金香,Tulip
 CROP_TURNIP,萝卜,Turnip
+CROP_WHITE_RADISH,白萝卜,White Radish
+CROP_WINTERSWEET,腊梅,Wintersweet
 EVENT_FIRST_SNOW,初雪落下了，冬天到了。农场也安静下来。,The first snow fell. Winter has come.
 EVENT_HARVEST_BLESSING,镇公所送来了丰收的谢礼 {money}G,The town hall sent {money}G for the good harvest
 EVENT_LIBRARIAN_VISIT,书雅带了几本书来，想和你聊聊。,Shuyai brought some books and wants to talk.
@@ -26,37 +59,79 @@ FLORA_WEED,杂草,Weed
 ITEM_AXE,斧头,Axe
 ITEM_BLUE_FEATHER,蓝色羽毛,Blue Feather
 ITEM_BLUE_FEATHER_DESC,传说中用来求婚的信物，送给心爱的人。,A legendary token used to propose to your beloved.
+ITEM_BOK_CHOY,小白菜,Bok Choy
+ITEM_BOK_CHOY_SEED,小白菜种子,Bok Choy Seeds
+ITEM_BROCCOLI,西兰花,Broccoli
+ITEM_BROCCOLI_SEED,西兰花种子,Broccoli Seeds
+ITEM_CABBAGE,卷心菜,Cabbage
+ITEM_CABBAGE_SEED,卷心菜种子,Cabbage Seeds
 ITEM_CARP,鲤鱼,Carp
+ITEM_CARROT,胡萝卜,Carrot
+ITEM_CARROT_SEED,胡萝卜种子,Carrot Seeds
 ITEM_CATFISH,鲶鱼,Catfish
 ITEM_CHICKEN,鸡,Chicken
+ITEM_CHRYSANTHEMUM,菊花,Chrysanthemum
+ITEM_CHRYSANTHEMUM_SEED,菊花种子,Chrysanthemum Seeds
+ITEM_CORN,玉米,Corn
+ITEM_CORN_SEED,玉米种子,Corn Seeds
 ITEM_COW,奶牛,Cow
 ITEM_CRUCIAN,鲫鱼,Crucian Carp
 ITEM_EGG,鸡蛋,Egg
+ITEM_EGGPLANT,茄子,Eggplant
+ITEM_EGGPLANT_SEED,茄子种子,Eggplant Seeds
 ITEM_FIBER,纤维,Fiber
 ITEM_FISHING_ROD,钓竿,Fishing Rod
 ITEM_FLOWER,野花,Wildflower
 ITEM_GOLDEN_CARP,金鲤,Golden Carp
+ITEM_GRAPE,葡萄,Grape
+ITEM_GRAPE_SEED,葡萄种子,Grape Seeds
 ITEM_HAY,干草,Hay
 ITEM_HOE,锄头,Hoe
+ITEM_KALE,羽衣甘蓝,Kale
+ITEM_KALE_SEED,羽衣甘蓝种子,Kale Seeds
 ITEM_MACKEREL,鲭鱼,Mackerel
+ITEM_MELON,甜瓜,Melon
+ITEM_MELON_SEED,甜瓜种子,Melon Seeds
 ITEM_MILK,牛奶,Milk
 ITEM_MUSHROOM,蘑菇,Mushroom
 ITEM_OCTOPUS,章鱼,Octopus
+ITEM_ONION,洋葱,Onion
+ITEM_ONION_SEED,洋葱种子,Onion Seeds
 ITEM_PICKAXE,镐子,Pickaxe
+ITEM_PINEAPPLE,菠萝,Pineapple
+ITEM_PINEAPPLE_SEED,菠萝种子,Pineapple Seeds
 ITEM_POTATO,土豆,Potato
 ITEM_POTATO_SEED,土豆种子,Potato Seeds
+ITEM_PUMPKIN,南瓜,Pumpkin
+ITEM_PUMPKIN_SEED,南瓜种子,Pumpkin Seeds
 ITEM_SARDINE,沙丁鱼,Sardine
 ITEM_SEA_BREAM,鲷鱼,Sea Bream
 ITEM_SEED_BAG,种子袋,Seed Bag
 ITEM_SICKLE,镰刀,Sickle
+ITEM_SNOW_PEA,雪豆,Snow Pea
+ITEM_SNOW_PEA_SEED,雪豆种子,Snow Pea Seeds
+ITEM_SPINACH,菠菜,Spinach
+ITEM_SPINACH_SEED,菠菜种子,Spinach Seeds
 ITEM_SQUID,鱿鱼,Squid
 ITEM_STONE,石材,Stone
+ITEM_STRAWBERRY,草莓,Strawberry
+ITEM_STRAWBERRY_SEED,草莓种子,Strawberry Seeds
+ITEM_SUNFLOWER,向日葵,Sunflower
+ITEM_SUNFLOWER_SEED,向日葵种子,Sunflower Seeds
+ITEM_SWEET_POTATO,红薯,Sweet Potato
+ITEM_SWEET_POTATO_SEED,红薯种子,Sweet Potato Seeds
 ITEM_TOMATO,番茄,Tomato
 ITEM_TOMATO_SEED,番茄种子,Tomato Seeds
 ITEM_TUNA,金枪鱼,Tuna
+ITEM_TULIP,郁金香,Tulip
+ITEM_TULIP_SEED,郁金香种子,Tulip Seeds
 ITEM_TURNIP,萝卜,Turnip
 ITEM_TURNIP_SEED,萝卜种子,Turnip Seeds
 ITEM_WATERING_CAN,洒水壶,Watering Can
+ITEM_WHITE_RADISH,白萝卜,White Radish
+ITEM_WHITE_RADISH_SEED,白萝卜种子,White Radish Seeds
+ITEM_WINTERSWEET,腊梅,Wintersweet
+ITEM_WINTERSWEET_SEED,腊梅种子,Wintersweet Seeds
 ITEM_WOOD,木材,Wood
 NPC_BLACKSMITH,铁匠,Blacksmith
 NPC_CHILD,小满,May

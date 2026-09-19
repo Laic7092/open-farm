@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/items/bok_choy_seed.png" id="1_340sk"]
+[ext_resource type="Script" path="res://src/data/item_data.gd" id="2_hbu7w"]
+
+[resource]
+script = ExtResource("2_hbu7w")
+id = &"bok_choy_seed"
+display_name_key = &"ITEM_BOK_CHOY_SEED"
+category = 0
+buy_price = 30
+sell_price = 10
+icon = ExtResource("1_340sk")
+crop_id = &"bok_choy"

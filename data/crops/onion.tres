@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CropData" format=3]
+
+[ext_resource type="Script" path="res://src/data/crop_data.gd" id="1_ttlfm"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/onion.png" id="2_v25r7"]
+
+[resource]
+script = ExtResource("1_ttlfm")
+id = &"onion"
+display_name_key = &"CROP_ONION"
+seed_item_id = &"onion_seed"
+harvest_item_id = &"onion"
+days_per_stage = Array[int]([1, 2, 2])
+seed_price = 25
+base_sell_price = 60
+bonus_yield_chance = 0.15
+sprite_sheet = ExtResource("2_v25r7")

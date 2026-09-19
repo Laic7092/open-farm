@@ -5,6 +5,14 @@ extends Node
 ## 按 [code]id[/code] 建索引。业务代码只通过 id 取数据，永远不写死文件路径，
 ## 于是"新增一种作物"就只是往目录里丢一个资源文件。
 ##
+## [b]两层数据[/b]——别把「物品」和「对象」混为一谈：
+## [br]- [b]物品[/b]（[ItemData]，[constant ITEM_DIR]）：全游戏可持有物品的[b]总表[/b]。
+##   背包 / 商店 / 出货箱 / 图鉴 / 委托板只认这里的 id。
+## [br]- [b]对象 / 定义[/b]（[CropData] / [FishData] / [AnimalData] / [FloraData] /
+##   [ToolData]…）：有生长或行为规则的领域实体，通过 [code]harvest_item_id[/code] /
+##   [code]item_id[/code] / [code]product_item_id[/code] 等字段[b]产出或引用[/b]物品。
+## [br]所以「鱼」不是物品，「钓上来的那条鱼」才是；两者按 id 关联，不是重复。
+##
 ## 该节点不持有任何运行时状态，可以安全地在单元测试里反复调用 [method reload]。
 
 const CROP_DIR: String = "res://data/crops"
@@ -19,6 +27,7 @@ const SHOP_DIR: String = "res://data/shops"
 const DIALOGUE_DIR: String = "res://data/dialogue"
 const FESTIVAL_DIR: String = "res://data/festivals"
 const EVENT_DIR: String = "res://data/events"
+const COMMISSION_DIR: String = "res://data/commissions"
 
 ## 数据装载完成后发出。
 signal reloaded()
@@ -35,6 +44,7 @@ var _shops: Dictionary[StringName, ShopData] = {}
 var _dialogues: Dictionary[StringName, DialogueData] = {}
 var _festivals: Dictionary[StringName, FestivalData] = {}
 var _events: Dictionary[StringName, EventData] = {}
+var _commissions: Dictionary[StringName, CommissionData] = {}
 
 
 func _ready() -> void:
@@ -55,6 +65,7 @@ func reload() -> void:
 	_dialogues.clear()
 	_festivals.clear()
 	_events.clear()
+	_commissions.clear()
 
 	_index(CROP_DIR, _crops, "CropData")
 	_index(ANIMAL_DIR, _animals, "AnimalData")
@@ -68,6 +79,7 @@ func reload() -> void:
 	_index(DIALOGUE_DIR, _dialogues, "DialogueData")
 	_index(FESTIVAL_DIR, _festivals, "FestivalData")
 	_index(EVENT_DIR, _events, "EventData")
+	_index(COMMISSION_DIR, _commissions, "CommissionData")
 
 	reloaded.emit()
 
@@ -119,6 +131,10 @@ func get_festival(id: StringName) -> FestivalData:
 
 func get_event(id: StringName) -> EventData:
 	return _events.get(id) as EventData
+
+
+func get_commission(id: StringName) -> CommissionData:
+	return _commissions.get(id) as CommissionData
 
 
 ## 全部数据桶的只读快照；调用方不应直接迭代内部字典。
@@ -256,6 +272,26 @@ func festivals() -> Dictionary:
 	return _festivals.duplicate()
 
 
+func commissions() -> Dictionary:
+	return _commissions.duplicate()
+
+
+## 是否存在指定 id 的 commission 数据。
+func has_commission(id: StringName) -> bool:
+	return _commissions.has(id)
+
+
+## 全部委托，按 id 排序（委托板出题要求稳定，不依赖字典迭代顺序）。
+func commission_list() -> Array[CommissionData]:
+	var result: Array[CommissionData] = []
+	for id: StringName in _commissions:
+		result.append(_commissions[id])
+	result.sort_custom(func(a: CommissionData, b: CommissionData) -> bool:
+		return String(a.id) < String(b.id)
+	)
+	return result
+
+
 ## [method festivals] 的 get_* 别名。
 func get_festivals() -> Dictionary:
 	return festivals()
@@ -349,7 +385,7 @@ func total_count() -> int:
 	return (
 		_crops.size() + _animals.size() + _buildings.size() + _floras.size()
 		+ _fish.size() + _items.size() + _tools.size() + _npcs.size() + _shops.size()
-		+ _dialogues.size() + _festivals.size() + _events.size()
+		+ _dialogues.size() + _festivals.size() + _events.size() + _commissions.size()
 	)
 
 
@@ -358,7 +394,7 @@ func validate_all() -> PackedStringArray:
 	var problems := PackedStringArray()
 	for bucket: Dictionary in [
 		_crops, _animals, _buildings, _floras, _fish, _items, _tools, _npcs, _shops,
-		_dialogues, _festivals, _events
+		_dialogues, _festivals, _events, _commissions
 	]:
 		for key: StringName in bucket:
 			var resource: Resource = bucket[key]
