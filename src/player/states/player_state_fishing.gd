@@ -144,7 +144,7 @@ func target_fish() -> FishData:
 ## 蓄力：按住空格涨条，松手（或按满）就抛出去。
 ##
 ## 直接读 [method Input.is_action_pressed] 而不是等一条"松开"事件，
-## 是因为进入本状态的那次按下已经被 [PlayerStateIdle] 消费掉了。
+## 是因为进入本状态的那次按下已经被 [code]PlayerStateIdle[/code] 消费掉了。
 func _update_charge(delta: float) -> void:
 	if Input.is_action_pressed(&"use_tool"):
 		_held = minf(_held + delta, FishingRules.CAST_CHARGE_TIME)

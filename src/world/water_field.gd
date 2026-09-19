@@ -10,7 +10,7 @@ extends Node2D
 ## [br]- 逐帧画会动的东西：岸边浪花呼吸、向岸扩散的水波、水面碎光
 ##
 ## 与 [FloraField] 同一套做法：按分组被查询，
-## [FarmInteractor] 用 [method Node.get_first_node_in_group] 找到当前地图的水域。
+## [FarmInteractor] 用 [method SceneTree.get_first_node_in_group] 找到当前地图的水域。
 
 ## 加入该分组后，玩家与工具可以找到当前场景的水面。
 const GROUP: StringName = &"water_field"

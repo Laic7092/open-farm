@@ -100,7 +100,7 @@ static func plaza(layer: TileMapLayer, area: Rect2i) -> void:
 
 static func _pave(layer: TileMapLayer, cell: Vector2i, offset: int, style: Style) -> void:
 	# 土路一律用 PATH：DIRT 属于"自然地表"，野生植被会长在上面（见
-	# [code]FloraGrowth.NATURAL_GROUND[/code]），路面上冒树就不是路了。
+	# FloraGrowth.NATURAL_GROUND），路面上冒树就不是路了。
 	var atlas: Vector2i = FarmAtlas.PATH
 	if style == Style.STONE:
 		# 中线铺大石板、两侧铺小块石，街道因此有一条能看出来的走向。

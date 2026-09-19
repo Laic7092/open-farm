@@ -9,7 +9,7 @@ extends SceneTree
 ## 而不是四张各画各的图：这样调整"树的形状"只用改一处。
 ##
 ## 规范（见 AGENTS.md）：颜色只来自调色板、坐标只来自 AtlasLayout、
-## 禁止 RandomNumberGenerator（质感一律用 [method ArtLib.noise] 的坐标哈希），
+## 禁止 RandomNumberGenerator（质感一律用 [code]Art.noise[/code] 的坐标哈希），
 ## 保证连跑两次得到逐像素相同的结果。
 ##
 ## 用法：

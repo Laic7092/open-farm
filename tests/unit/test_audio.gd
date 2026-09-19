@@ -9,7 +9,7 @@ extends GdUnitTestSuite
 
 const Catalog := preload("res://src/audio/audio_catalog.gd")
 
-## 采样率 / 位深 / 声道的唯一事实来源在 [AudioCatalog] 与 [constant Synth.SR]，
+## 采样率 / 位深 / 声道的唯一事实来源在 [AudioCatalog] 与 [code]Synth.SR[/code]，
 ## 这里只做"落盘结果是否符合声明"的核对。
 const EXPECTED_RATE: int = 22050
 const EXPECTED_BITS: int = 16

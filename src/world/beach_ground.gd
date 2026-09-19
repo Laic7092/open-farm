@@ -61,7 +61,7 @@ func paint() -> void:
 	)
 
 	# 木栈桥：从沙滩一路铺进海里，渔夫的落点在桥头。
-	# 铺在 [member pier_layer] 上，桥面才会盖在水面之上；
+	# 铺在 pier_layer 上，桥面才会盖在水面之上；
 	# [WaterLayout.BEACH_PIER] 会把碰撞在桥面处挖空，不然上不了桥。
 	if pier_layer != null:
 		pier_layer.clear()

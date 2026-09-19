@@ -18,7 +18,7 @@ var state_machine: StateMachine
 var actor: Node
 
 
-## 进入该状态；[param previous] 为切换前的状态，首次进入时为 [code]null[/code]。
+## 进入该状态；[param _previous] 为切换前的状态，首次进入时为 [code]null[/code]。
 func enter(_previous: State) -> void:
 	pass
 

@@ -109,7 +109,7 @@ static func triangle(
 			var px_y := float(y) + 0.5
 			var w0 := ((b.y - c.y) * (px_x - c.x) + (c.x - b.x) * (px_y - c.y)) / area
 			var w1 := ((c.y - a.y) * (px_x - c.x) + (a.x - c.x) * (px_y - c.y)) / area
-			# 容差让共用边的两个三角形不留缝；顶点越界时靠 [method px] 静默裁掉。
+			# 容差让共用边的两个三角形不留缝；顶点越界时靠 px() 静默裁掉。
 			if w0 >= -0.03 and w1 >= -0.03 and (w0 + w1) <= 1.03:
 				px(image, x, y, color)
 

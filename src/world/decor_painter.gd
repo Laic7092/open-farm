@@ -104,7 +104,7 @@ static func spawn_many(
 static func spawn(root: Node2D, cell: Vector2i, decor_id: StringName) -> WorldProp:
 	if root == null or not TEXTURES.has(decor_id):
 		return null
-	# 编辑器里的 [code]@tool[/code] 地面脚本只负责画地板，不要把运行时装饰写进场景。
+	# 编辑器里的 @tool 地面脚本只负责画地板，不要把运行时装饰写进场景。
 	if Engine.is_editor_hint():
 		return null
 	var texture := load(TEXTURES[decor_id]) as Texture2D
