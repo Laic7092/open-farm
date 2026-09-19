@@ -5,6 +5,7 @@
 
 ## 铁律（测试兜不住，靠自觉）
 
+0. **禁止直接读取整个文件**: 了解结构,然后按需读取。
 1. **只加数据，不改结构**：内容进 `res://data/**/*.tres`，脚本只认 id；`XxxData`（`Resource`）↔ `XxxState`（`RefCounted`），规则写成纯静态函数。
 2. **不再新增 Autoload**：全局只留跨域时间 / 场景 / 存档信号，领域信号走 `EventBus.player/farm/world/ui`；其余状态与服务挂 `Main` 组合根注入。
 3. **日结转按显式顺序**：`GameDateClock.register_day_hook(callable, DayPipeline.PRIORITY_*)`，在 `_exit_tree` 注销；不依赖信号回调顺序。
