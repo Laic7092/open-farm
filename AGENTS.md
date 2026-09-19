@@ -22,6 +22,7 @@
 | 加文案 / 汉字 | `assets/i18n/*.csv` |
 | 加地图 | `SceneDoor` / `SpawnPoint` + `test_world_map.gd` 的 `MAPS` |
 | 改数值 | `data/**/*.tres` |
+| 审阅内容 | `./tools/build_wiki.sh --open`（Godot 导出 `.tmp/wiki/data.json` → `build_wiki.py` 渲染静态 HTML）|
 | 读 / 改大文件 | `python3 tools/outline.py map / outline / sym / callers` |
 
 ## Godot 坑（4.7.2 实测，代码里没有）

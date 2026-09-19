@@ -16,6 +16,10 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 
 `GODOT_BIN=/path/to/godot` 指定引擎，`GODOT_TIMEOUT=120` 覆盖默认 60s 命令超时。
 
+审阅游戏内容（不启动游戏）：`./tools/build_wiki.sh --open` 把 `data/**/*.tres` 与文案渲染成
+静态 HTML（`.tmp/wiki/index.html`），含各系统卡片、对白分支、商店货架、文案对照与图片墙；
+`--strict` 可在有缺译 / 悬空引用时非零退出。
+
 ## 操作
 
 纯键盘，鼠标隐藏；菜单 / 商店 / 标题页可用方向键或 `WASD` 导航，回车 / 空格 / `E` 确认，`Esc` 返回。
