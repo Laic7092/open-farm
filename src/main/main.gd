@@ -228,6 +228,8 @@ func _bind_dependencies() -> void:
 		ui_root.call(&"bind_progress", museum.state, commission.state)
 	if ui_root != null and ui_root.has_method(&"bind_commission"):
 		ui_root.call(&"bind_commission", commission)
+	if ui_root != null and ui_root.has_method(&"bind_fishing"):
+		ui_root.call(&"bind_fishing", Callable(self, &"_current_fishing"))
 	if ui_root != null and scene_audio != null and ui_root.has_method(&"bind_audio"):
 		ui_root.call(&"bind_audio", scene_audio)
 
@@ -299,6 +301,14 @@ func _current_inventory() -> Inventory:
 		return null
 	var player := world_host.current_player()
 	return player.inventory if player != null else null
+
+
+## 当前世界里的钓鱼单元；同上，供界面只读快照。
+func _current_fishing() -> FishingSession:
+	if world_host == null:
+		return null
+	var player := world_host.current_player()
+	return player.fishing if player != null else null
 
 
 

@@ -2,9 +2,9 @@ class_name FishingUi
 extends Control
 ## 钓鱼小游戏界面：蓄力条 / 拉扯水槽 / 上钩横幅。
 ##
-## 和 [Hud] 同一套单向数据流：它[b]只订阅[/b] [EventBus] 的钓鱼事件、只读玩家状态机的
-## 只读快照，从不反向调用玩法代码。[method _process] 每帧问一次"玩家此刻在钓鱼吗、
-## 处于哪个阶段"，命中就画，离开就整块隐藏——因此它不需要知道钓鱼状态何时开始何时结束。
+## 和 [Hud] 同一套单向数据流：它[b]只订阅[/b] [EventBus] 的钓鱼事件、
+## 只读注入进来的 [FishingSession] 快照，从不反向调用玩法代码，也不去翻玩家状态机。
+## [method _process] 每帧问一次"当前钓鱼单元处于哪个阶段"，命中就画，离开就整块隐藏。
 ##
 ## 拉扯水槽的竖直轴与 [FishingFight] 的深度轴一一对应（0 = 水面）：
 ## 浅色带是判定区（跟着鱼走），红白点是钩子，右侧两条横条分别是上钩进度与鱼线张力。
@@ -33,6 +33,8 @@ const CATCH_DURATION: float = 1.8
 @onready var catch_label: Label = %CatchLabel
 
 var _catch_timer: float = 0.0
+## 组合根注入的"当前钓鱼单元"提供者；没有它时整块不显示。
+var _session_provider: Callable = Callable()
 
 
 func _ready() -> void:
@@ -48,23 +50,28 @@ func _ready() -> void:
 	EventBus.farm.fish_caught.connect(_on_fish_caught)
 
 
+## 组合根注入"当前钓鱼单元"的提供者；界面只读它，不去翻玩家状态机。
+func bind_fishing(provider: Callable) -> void:
+	_session_provider = provider
+
+
 func _process(delta: float) -> void:
 	_tick_catch(delta)
 
-	var state := _fishing_state()
-	if state == null:
+	var session := _current_fishing()
+	if session == null:
 		charge_box.visible = false
 		fight_box.visible = false
 		return
 
-	match state.phase():
-		PlayerStateFishing.Phase.CHARGE:
+	match session.phase():
+		FishingSession.Phase.CHARGE:
 			fight_box.visible = false
 			charge_box.visible = true
-			charge_bar.value = state.charge_ratio() * 100.0
-		PlayerStateFishing.Phase.FIGHT:
+			charge_bar.value = session.charge_ratio() * 100.0
+		FishingSession.Phase.FIGHT:
 			charge_box.visible = false
-			_draw_fight(state.fight())
+			_draw_fight(session.fight())
 		_:
 			charge_box.visible = false
 			fight_box.visible = false
@@ -72,14 +79,11 @@ func _process(delta: float) -> void:
 
 # ---------------------------------------------------------------- 内部
 
-## 当前玩家是否处于钓鱼状态；不是则返回 null。
-func _fishing_state() -> PlayerStateFishing:
-	if get_tree() == null:
+## 当前钓鱼单元；组合根没有注入提供者时返回 null。
+func _current_fishing() -> FishingSession:
+	if not _session_provider.is_valid():
 		return null
-	var player := get_tree().get_first_node_in_group(Player.GROUP) as Player
-	if player == null or player.state_machine == null:
-		return null
-	return player.state_machine.current_state as PlayerStateFishing
+	return _session_provider.call() as FishingSession
 
 
 ## 把 [FishingFight] 的深度快照画到水槽上。

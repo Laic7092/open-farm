@@ -36,8 +36,8 @@ var stats: PlayerStats
 var inventory: Inventory
 ## 物品栏：背包前几格的快捷访问视图，不存放任何道具。
 var item_bar: ItemBar
-## 钓鱼用的随机源；冒烟测试会固定种子来复现整条时序。
-var fishing_rng := RandomNumberGenerator.new()
+## 钓鱼单元：一次垂钓的完整时序与随机源；随机源可固定种子复现冒烟测试。
+var fishing: FishingSession
 ## 手动选中的种子；为空时自动取背包里的第一种种子。
 var selected_seed_id: StringName = &""
 
@@ -77,6 +77,7 @@ func _init() -> void:
 	inventory = Inventory.new()
 	inventory.set_stack_limit_provider(Callable(Database, &"get_item"))
 	item_bar = ItemBar.new(inventory)
+	fishing = FishingSession.new(self)
 	# 纯数据对象只发本地信号；由 Player 这个拥有者统一转发到 EventBus。
 	stats.changed.connect(_on_stats_changed)
 	stats.depleted.connect(_on_stats_depleted)
@@ -99,7 +100,6 @@ func _ready() -> void:
 	interaction_area.area_exited.connect(_on_area_exited)
 
 	sprite.flip_h = Facing.flip_h(facing)
-	fishing_rng.randomize()
 	_grant_default_tools()
 	if not inventory.has(&"turnip_seed"):
 		inventory.add(&"turnip_seed", 5)

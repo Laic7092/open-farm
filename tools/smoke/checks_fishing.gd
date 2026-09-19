@@ -61,7 +61,7 @@ func _start_fishing_check() -> void:
 	_fishing_frames = 0
 	_fish_bit = false
 	# 固定随机源，让咬钩时间与整场拉扯在 CI 里可复现。
-	player.fishing_rng.seed = 20240601
+	player.fishing.rng.seed = 20240601
 	if not EventBus.farm.fish_bite.is_connected(_on_smoke_fish_bite):
 		EventBus.farm.fish_bite.connect(_on_smoke_fish_bite)
 	player.state_machine.transition_to(&"fishing")
@@ -85,8 +85,8 @@ func _advance_fishing_check() -> bool:
 		return true
 
 	# 拉扯小游戏里模拟“鱼往哪游就往哪收线”，直到上岸。
-	var fishing := _fishing_state as PlayerStateFishing
-	if fishing != null and fishing.phase() == PlayerStateFishing.Phase.FIGHT:
+	var fishing := player.fishing
+	if fishing != null and fishing.phase() == FishingSession.Phase.FIGHT:
 		_fish_bit = true
 		_drive_reel(fishing)
 
@@ -103,7 +103,7 @@ func _advance_fishing_check() -> bool:
 
 
 ## 钩子沉在鱼下方就收线，否则松手——和真人“把钩子压在鱼身上”一个意思。
-func _drive_reel(fishing: PlayerStateFishing) -> void:
+func _drive_reel(fishing: FishingSession) -> void:
 	var fight := fishing.fight()
 	if fight == null:
 		return

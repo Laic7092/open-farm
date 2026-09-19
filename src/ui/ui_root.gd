@@ -69,6 +69,13 @@ func bind_commission(commission: Commission) -> void:
 			child.call(&"bind_commission", commission)
 
 
+## 由 [Main] 注入"当前钓鱼单元"的提供者；下发给需要它的界面。
+func bind_fishing(provider: Callable) -> void:
+	for child: Node in get_children():
+		if child.has_method(&"bind_fishing"):
+			child.call(&"bind_fishing", provider)
+
+
 ## 由 [Main] 注入本场景的音频节点；继续下发给需要音量控制的界面。
 func bind_audio(audio: SceneAudio) -> void:
 	for child: Node in get_children():
