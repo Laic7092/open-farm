@@ -35,6 +35,7 @@ KINDS: dict[str, tuple[str, str]] = {
     "RecipeData": ("recipes", "食谱"),
     "FestivalGameData": ("festival_games", "节日小游戏"),
     "VillageGoalData": ("village_goals", "村庄目标"),
+    "MineStratumData": ("strata", "矿层"),
 }
 
 ## 字段名 →（被引用资源的类名）。用于把裸 id 渲染成链接、以及反查索引。
@@ -52,11 +53,13 @@ REF_FIELDS: dict[str, str] = {
     "item_id": "ItemData",
     "output_item_id": "ItemData",
     "game_id": "FestivalGameData",
+    "next_id": "ToolData",
 }
 
 ## 字段名 → 被引用资源列表的类名。
 REF_LIST_FIELDS: dict[str, str] = {
     "npc_ids": "NpcData",
+    "allowed_species": "AnimalData",
     "loved_gifts": "ItemData",
     "liked_gifts": "ItemData",
     "disliked_gifts": "ItemData",
@@ -249,6 +252,13 @@ FIELD_LABELS: dict[str, str] = {
     "stack_limit": "堆叠上限", "sellable": "可卖出", "display_name_key": "名称",
     "description_key": "描述", "icon": "图标", "tool_id": "工具", "crop_id": "作物",
     "animal_id": "动物", "seed_item_id": "种子", "harvest_item_id": "收获物",
+    "breed_days": "繁殖天数", "breed_affection": "繁殖所需好感",
+    "quality_silver_chance": "银星概率", "quality_gold_chance": "金星概率",
+    "next_id": "升级为", "upgrade_money": "升级花费", "upgrade_cost": "升级材料",
+    "depth_min": "起始深度", "depth_max": "最深层", "ore_bonus": "每层额外矿石",
+    "loot_bias": "稀有掉落偏向", "quality_bonus": "品质加成", "tint": "环境色",
+    "mine_min_depth": "矿洞起始层", "mine_max_depth": "矿洞最深层", "mine_weight": "矿洞权重",
+    "required_tier": "需要工具等级",
     "harvest_amount": "收获数量", "days_per_stage": "各阶段天数", "seasons": "季节",
     "regrow_days": "复收天数", "days_without_water_tolerance": "缺水枯死天数",
     "seed_price": "种子价", "base_sell_price": "基础售价", "bonus_yield_chance": "额外产出概率",

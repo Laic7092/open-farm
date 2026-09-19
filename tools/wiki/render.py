@@ -3,7 +3,7 @@
 """tools/wiki/render.py — wiki 渲染层：字段格式化、卡片、对白 / 日程 / 货架等专用块。
 
 只依赖 content.Context 提供的查询能力，不懂 HTML 之外的任何业务：
-新增一个数据字段时，这里最多需要往 FIELD_LABELS / PRIMARY 补一行。
+新增一个数据字段时，这里最多需要往 FIELD_LABELS / PRIMARY / TABLE_COLUMNS 补一行。
 """
 from __future__ import annotations
 
@@ -27,11 +27,20 @@ SPECIAL_FIELDS = {
     "ShopData": {"stock"},
     "NpcData": {"schedule"},
 }
+## 已经用作卡片标题的字段，不再在「全部字段」里重复。
+TITLE_FIELDS = {"display_name_key", "title_key"}
 MONEY_FIELDS = {
     "buy_price", "sell_price", "seed_price", "base_sell_price",
-    "price_override", "reward_money", "grant_money",
+    "price_override", "reward_money", "grant_money", "upgrade_money",
 }
-PERCENT_FIELDS = {"bonus_yield_chance", "bonus_product_chance", "drop_chance", "sell_multiplier"}
+PERCENT_FIELDS = {
+    "bonus_yield_chance", "bonus_product_chance", "drop_chance", "sell_multiplier",
+    "quality_silver_chance", "quality_gold_chance", "quality_bonus",
+}
+## 空值但语义明确、必须保留展示的字段（如「不限季节」）。
+MEANINGFUL_EMPTY = {"seasons", "grow_seasons", "weathers", "water"}
+## 对白分组里不是 NPC 的前缀 → 分组显示名。
+DIALOGUE_GROUP_LABELS = {"festival": "节日活动"}
 
 ## 卡片正面展示的字段（其余字段收进「全部字段」）。
 PRIMARY: dict[str, list[str]] = {
@@ -39,18 +48,23 @@ PRIMARY: dict[str, list[str]] = {
                  "tool_id", "crop_id", "animal_id", "description_key"],
     "CropData": ["seed_item_id", "harvest_item_id", "harvest_amount", "seasons",
                  "days_per_stage", "regrow_days", "days_without_water_tolerance",
-                 "seed_price", "base_sell_price", "bonus_yield_chance"],
+                 "seed_price", "base_sell_price", "bonus_yield_chance",
+                 "quality_silver_chance", "quality_gold_chance"],
     "FishData": ["item_id", "water", "seasons", "weathers", "min_hour", "max_hour",
                  "weight", "difficulty", "size_cm"],
     "AnimalData": ["species", "mature_days", "produce_days", "product_item_id",
                    "product_amount", "feed_item_id", "max_affection", "affection_per_pet",
-                   "affection_decay_per_day", "bonus_affection_threshold", "bonus_product_chance"],
+                   "affection_decay_per_day", "bonus_affection_threshold", "bonus_product_chance",
+                   "breed_days", "breed_affection", "quality_silver_chance", "quality_gold_chance"],
     "BuildingData": ["capacity", "allowed_species"],
     "FloraData": ["kind", "drop_item_id", "drop_amount", "drop_chance", "tool_kind",
                   "stamina_cost", "days_per_stage", "grow_seasons", "spawn_weight",
                   "rain_bonus", "initial_weight", "max_per_world", "min_spacing",
-                  "passable", "solid_from_stage", "grows_on_farmland", "pickable_by_hand"],
-    "ToolData": ["kind", "stamina_cost", "reach", "area_size", "tier"],
+                  "passable", "solid_from_stage", "grows_on_farmland", "pickable_by_hand",
+                  "required_tier", "mine_min_depth", "mine_max_depth", "mine_weight",
+                  "quality_silver_chance", "quality_gold_chance"],
+    "ToolData": ["kind", "stamina_cost", "reach", "area_size", "tier",
+                 "next_id", "upgrade_money", "upgrade_cost"],
     "NpcData": ["shop_id", "max_affection", "move_speed", "romanceable",
                 "confession_affection", "marriage_affection", "loved_gifts",
                 "liked_gifts", "disliked_gifts"],
@@ -58,10 +72,55 @@ PRIMARY: dict[str, list[str]] = {
     "CommissionData": ["item_id", "amount", "reward_money"],
     "FestivalData": ["season", "day", "start_hour", "end_hour", "world_path", "gather_point",
                      "npc_ids", "attendance_affection", "attendance_flag", "required_flag",
-                     "intro_dialogue"],
+                     "game_id", "intro_dialogue"],
     "EventData": ["season", "day", "weather", "required_flag", "forbidden_flag",
                   "required_npc", "required_affection", "grant_money", "set_flag",
                   "dialogue", "once"],
+    "RecipeData": ["output_item_id", "output_amount", "ingredients", "required_flag"],
+    "FestivalGameData": ["item_ids", "min_score", "reward_money", "consolation_money"],
+    "VillageGoalData": ["metric", "target", "reward_money", "reward_flag",
+                        "required_flag", "order"],
+    "MineStratumData": ["depth_min", "depth_max", "ore_bonus", "loot_bias",
+                        "quality_bonus", "tint"],
+}
+
+## 每种数据在「表格」视图里对比的列（缺省则只提供卡片视图）。
+## 这里刻意只放可排序的标量 / 短引用，方便横向审阅数值平衡。
+TABLE_COLUMNS: dict[str, list[str]] = {
+    "ItemData": ["category", "buy_price", "sell_price", "stack_limit", "sellable",
+                 "tool_id", "crop_id", "animal_id"],
+    "CropData": ["seed_item_id", "harvest_item_id", "harvest_amount", "seasons",
+                 "days_per_stage", "regrow_days", "seed_price", "base_sell_price",
+                 "bonus_yield_chance", "quality_silver_chance", "quality_gold_chance",
+                 "days_without_water_tolerance"],
+    "FishData": ["water", "seasons", "weathers", "min_hour", "max_hour",
+                 "weight", "difficulty", "size_cm", "item_id"],
+    "AnimalData": ["species", "mature_days", "produce_days", "product_item_id",
+                   "product_amount", "feed_item_id", "max_affection", "affection_per_pet",
+                   "affection_decay_per_day", "bonus_affection_threshold",
+                   "bonus_product_chance", "breed_days", "breed_affection",
+                   "quality_silver_chance", "quality_gold_chance"],
+    "BuildingData": ["capacity", "allowed_species"],
+    "FloraData": ["kind", "drop_item_id", "drop_amount", "drop_chance", "tool_kind",
+                  "stamina_cost", "grow_seasons", "spawn_weight", "rain_bonus",
+                  "initial_weight", "max_per_world", "min_spacing", "passable",
+                  "grows_on_farmland", "pickable_by_hand", "required_tier",
+                  "mine_min_depth", "mine_max_depth", "mine_weight"],
+    "ToolData": ["kind", "tier", "stamina_cost", "reach", "area_size", "next_id",
+                 "upgrade_money", "upgrade_cost"],
+    "NpcData": ["shop_id", "max_affection", "move_speed", "romanceable",
+                "confession_affection", "marriage_affection", "loved_gifts",
+                "liked_gifts", "disliked_gifts"],
+    "ShopData": ["buys_from_player", "sell_multiplier"],
+    "CommissionData": ["item_id", "amount", "reward_money"],
+    "FestivalData": ["season", "day", "start_hour", "end_hour", "world_path",
+                     "gather_point", "npc_ids", "attendance_affection", "game_id"],
+    "EventData": ["season", "day", "weather", "required_npc", "required_affection",
+                  "grant_money", "required_flag", "forbidden_flag", "set_flag", "once"],
+    "RecipeData": ["output_item_id", "output_amount", "ingredients", "required_flag"],
+    "FestivalGameData": ["item_ids", "min_score", "reward_money", "consolation_money"],
+    "VillageGoalData": ["metric", "target", "reward_money", "reward_flag", "required_flag", "order"],
+    "MineStratumData": ["depth_min", "depth_max", "ore_bonus", "loot_bias", "quality_bonus", "tint"],
 }
 
 
@@ -103,7 +162,34 @@ def _format_dict(ctx: Context, value: dict) -> str:
         return _nested(ctx, value)
     if "x" in value and "y" in value:
         return esc(f'({number(value["x"])}, {number(value["y"])})')
-    return esc(value)
+    if {"r", "g", "b"} <= set(value):
+        return _color(value)
+    keys = list(value)
+    # 季节下标 → 对白引用（NpcData.seasonal_dialogue）。
+    if keys and all(k.isdigit() for k in keys) and all(
+        isinstance(v, dict) and "$ref" in v for v in value.values()
+    ):
+        return " ".join(
+            f'{ctx.tr(SEASON_KEYS[int(k)])} {ctx.chip(value[k]["$ref"], value[k]["id"])}'
+            for k in sorted(keys, key=int)
+            if int(k) < len(SEASON_KEYS)
+        )
+    # 物品 id → 数量（升级材料 / 合成 / 掉落表）。
+    if keys and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in value.values()):
+        return " ".join(
+            f'{ctx.chip("ItemData", k)} <span class="dim">×{number(v)}</span>'
+            for k, v in value.items()
+        )
+    return _nested(ctx, value)
+
+
+def _color(value: dict) -> str:
+    channels = [int(round(max(0.0, min(1.0, float(value[c]))) * 255)) for c in ("r", "g", "b")]
+    hexcode = "#%02x%02x%02x" % tuple(channels)
+    return (
+        f'<span class="swatch" style="background:{hexcode}"></span>'
+        f'<span class="dim">{hexcode}</span>'
+    )
 
 
 def _format_list(ctx: Context, value: list) -> str:
@@ -138,6 +224,16 @@ def format_field(ctx: Context, kind: str, name: str, value: object) -> str:
         return " ".join(ctx.chip(REF_LIST_FIELDS[name], i) for i in value) if value else DIM
     if name in FLAG_FIELDS:
         return f'<span class="flag">{esc(value)}</span>' if value else DIM
+    if name == "ingredients":
+        if not value:
+            return DIM
+        return " ".join(
+            f'{ctx.chip("ItemData", entry.get("item_id", ""))}'
+            f' <span class="dim">×{number(entry.get("amount", 1))}</span>'
+            for entry in value
+        )
+    if name in ("depth_min", "depth_max", "mine_min_depth", "mine_max_depth"):
+        return f'{esc(number(value))} 层'
 
     if name in ("seasons", "grow_seasons"):
         if not value:
@@ -176,6 +272,8 @@ def format_field(ctx: Context, kind: str, name: str, value: object) -> str:
     if name == "start_minute":
         return f'<span class="time">{int(value) // 60:02d}:{int(value) % 60:02d}</span>'
     if name == "days_per_stage":
+        if not value:
+            return '<span class="dim">无阶段</span>'
         total = sum(value)
         return f'{esc(", ".join(str(v) for v in value))} <span class="dim">共 {total} 天</span>'
     if name in ("size_cm", "drop_amount") and isinstance(value, dict):
@@ -213,6 +311,7 @@ def card(ctx: Context, kind: str, rid: str, res: dict) -> str:
         title, cid = esc(rid), ""
     else:
         title, cid = esc(ctx.name(kind, rid)), f' <span class="cid">{esc(rid)}</span>'
+    search = esc(f"{rid} {ctx.name(kind, rid)} {ctx.label(kind)}".lower())
     body = [
         '<header class="card-head">',
         _thumb(ctx, kind, res),
@@ -221,11 +320,18 @@ def card(ctx: Context, kind: str, rid: str, res: dict) -> str:
         "</header>",
     ]
     body.append(_special(ctx, kind, rid, res))
-    primary = {n: res[n] for n in PRIMARY.get(kind, []) if n in res}
+    primary_names = PRIMARY.get(kind, [])
+    primary = {
+        n: res[n] for n in primary_names
+        if n in res and not _blank(n, res[n])
+    }
     if primary:
         body.append(_table(ctx, kind, primary))
-    skip = set(primary) | SPECIAL_FIELDS.get(kind, set()) | {"id"}
-    rest = {k: v for k, v in res.items() if k != "$class" and k not in skip}
+    skip = set(primary_names) | SPECIAL_FIELDS.get(kind, set()) | TITLE_FIELDS | {"id"}
+    rest = {
+        k: v for k, v in res.items()
+        if k != "$class" and k not in skip and v not in (None, "")
+    }
     if rest:
         body.append(
             '<details class="more"><summary>全部字段（%d）</summary>%s</details>'
@@ -233,13 +339,26 @@ def card(ctx: Context, kind: str, rid: str, res: dict) -> str:
         )
     refs = ctx.refs.get((kind, rid))
     if refs:
+        unique = _unique(refs)
         chips = " ".join(
             f'<a class="chip ref" href="{ctx.url(src_kind, src_id)}">'
             f'{esc(ctx.label(src_kind))}·{esc(ctx.name(src_kind, src_id))}</a>'
-            for src_kind, src_id, _ in _unique(refs)
+            for src_kind, src_id, _ in unique
         )
-        body.append(f'<footer class="refs">被引用：{chips}</footer>')
-    return f'<article class="card" id="{ctx.slug(kind)}-{rid}">{"".join(body)}</article>'
+        body.append(f'<footer class="refs"><span class="refs-n">被引用 {len(unique)}</span>{chips}</footer>')
+    return (
+        f'<article class="card" id="{ctx.slug(kind)}-{rid}" data-kind="{ctx.slug(kind)}"'
+        f' data-search="{search}">{"".join(body)}</article>'
+    )
+
+
+def _blank(name: str, value: object) -> bool:
+    """字段是否应该从卡片正面隐去（保留有语义的空值，如「任意季节」）。"""
+    if name in MEANINGFUL_EMPTY:
+        return False
+    if value is None or value == "":
+        return True
+    return isinstance(value, (list, dict)) and not value
 
 
 def _unique(refs: list[tuple[str, str, str]]) -> list[tuple[str, str, str]]:
@@ -387,8 +506,70 @@ def stock_block(ctx: Context, res: dict) -> str:
 
 def section(ctx: Context, kind: str) -> str:
     items = ctx.items(kind)
-    cards = "".join(card(ctx, kind, rid, res) for rid, res in items.items())
+    if not items:
+        return ""
+    toggle = (
+        '<div class="viewtoggle" role="group">'
+        '<button type="button" data-view="cards" class="on">卡片</button>'
+        '<button type="button" data-view="table">表格</button></div>'
+        if kind in TABLE_COLUMNS else ""
+    )
     return (
-        f'<section id="{ctx.slug(kind)}" class="sec"><h2>{esc(ctx.label(kind))}'
-        f' <span class="count">{len(items)}</span></h2><div class="grid">{cards}</div></section>'
+        f'<section id="{ctx.slug(kind)}" class="sec" data-kind="{ctx.slug(kind)}">'
+        f'<header class="sec-head"><h2>{esc(ctx.label(kind))}'
+        f' <span class="count">{len(items)}</span></h2>{toggle}</header>'
+        f'<div class="view view-cards">{_cards_block(ctx, kind, items)}</div>'
+        f'{data_table(ctx, kind)}'
+        "</section>"
+    )
+
+
+def _cards_block(ctx: Context, kind: str, items: dict[str, dict]) -> str:
+    """对白按持有者分组，其余每种数据一个卡片网格。"""
+    if kind == "DialogueData":
+        return "".join(
+            f'<div class="dgroup"><h3 class="dgroup-head">{esc(label)}'
+            f' <span class="count">{len(rids)}</span></h3>'
+            f'<div class="grid">{"".join(card(ctx, kind, rid, items[rid]) for rid in rids)}</div></div>'
+            for label, rids in _dialogue_groups(ctx, items)
+        )
+    return f'<div class="grid">{"".join(card(ctx, kind, rid, res) for rid, res in items.items())}</div>'
+
+
+def _dialogue_groups(ctx: Context, items: dict[str, dict]) -> list[tuple[str, list[str]]]:
+    npc_ids = sorted(ctx.items("NpcData"), key=len, reverse=True)
+    buckets: dict[str, list[str]] = {}
+    for rid in sorted(items):
+        owner = next((nid for nid in npc_ids if rid.startswith(nid + "_")), None)
+        key = owner or rid.split("_", 1)[0]
+        buckets.setdefault(key, []).append(rid)
+    grouped: list[tuple[str, list[str]]] = []
+    for key in sorted(buckets):
+        label = ctx.name("NpcData", key) if key in npc_ids else DIALOGUE_GROUP_LABELS.get(key, key)
+        grouped.append((label, buckets[key]))
+    return grouped
+
+
+def data_table(ctx: Context, kind: str) -> str:
+    """表格视图：一列一个字段，可点表头排序，便于横向对比数值。"""
+    columns = TABLE_COLUMNS.get(kind)
+    items = ctx.items(kind)
+    if not columns or not items:
+        return ""
+    head = "".join(f"<th>{esc(field_label(name))}</th>" for name in columns)
+    rows = []
+    for rid, res in items.items():
+        name = ctx.name(kind, rid)
+        search = esc(f"{rid} {name}".lower())
+        cells = "".join(
+            f"<td>{format_field(ctx, kind, c, res.get(c))}</td>" for c in columns
+        )
+        rows.append(
+            f'<tr class="data-row" data-search="{search}">'
+            f'<td class="name"><a href="{ctx.url(kind, rid)}">{esc(name)}</a>'
+            f' <span class="cid">{esc(rid)}</span></td>{cells}</tr>'
+        )
+    return (
+        '<div class="view view-table hidden"><table class="data-table"><thead><tr>'
+        f'<th>名称</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
     )

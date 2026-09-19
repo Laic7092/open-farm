@@ -1,0 +1,85 @@
+name: Deploy wiki to GitHub Pages
+
+# 把「游戏内容 wiki」自动发布到 GitHub Pages：
+#   data/**（.tres）→ Godot 无头导出 data.json → Python 渲染静态站点 → Pages
+# 只改这些内容才触发，避免纯代码改动反复重发布。
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/**"
+      - "assets/i18n/**"
+      - "assets/sprites/**"
+      - "src/autoload/database.gd"
+      - "src/data/**"
+      - "src/art/atlas_layout.gd"
+      - "tools/build_wiki.py"
+      - "tools/build_wiki.sh"
+      - "tools/wiki/**"
+      - "tools/wiki_dump.gd"
+      - "tools/wiki_dump.tscn"
+      - "project.godot"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只跑一次发布；新推送取消排队中的旧任务。
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Godot 仅用于把 .tres 导出成 data.json；官方便携版静态链接，
+      # 无需额外系统库。
+      - name: 安装 Godot 4.7.2
+        run: |
+          curl -fsSL -o godot.zip \
+            https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          unzip -q godot.zip
+          mv Godot_v4.7.2-stable_linux.x86_64 godot
+          chmod +x godot
+          ./godot --version
+
+      - name: 安装 Python 依赖
+        run: pip install --quiet pillow
+
+      - name: 刷新 Godot 导入缓存
+        run: ./godot --headless --path . --import
+
+      - name: 构建 wiki
+        run: ./tools/build_wiki.sh
+
+      - name: 禁用 Jekyll
+        run: touch .tmp/wiki/.nojekyll
+
+      - uses: actions/configure-pages@v5
+        with:
+          # 仓库首次发布时自动开启 Pages（无需先到 Settings 里手动选源）。
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .tmp/wiki
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
