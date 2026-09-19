@@ -656,3 +656,6 @@ func from_dict(data: Dictionary) -> void:
 	if rng_state > 0:
 		_rng.state = rng_state
 	_rebuild_visuals()
+	# 回灌的是“离开时”的旧状态：把缺掉的天数补算回来。
+	# 新实例的 _enter_tree() 因 _initialized 尚未为 true 不会自我补算，必须在这里补。
+	call_deferred(&"_catch_up")

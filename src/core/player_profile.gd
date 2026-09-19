@@ -11,8 +11,11 @@ extends Resource
 ## 开局资金。
 const STARTING_MONEY: int = 500
 
-## 玩家域事件对象；由本档案持有，供节点在进入场景树时连接。
-var events: PlayerEvents = PlayerEvents.new()
+## 玩家域事件对象；与 [code]EventBus.player[/code] 是同一实例，这里只是便捷别名。
+##
+## 生命周期由 [EventBus] 单点持有：生产者与消费者分属不同域，谁都不该多留一份，
+## 否则常驻订阅者会连着被替换掉的旧对象收不到事件。
+var events: PlayerEvents = EventBus.player
 
 ## 金钱变化；由拥有者（[Main]）转发到 [EventBus]。
 signal money_changed(money: int, delta: int)

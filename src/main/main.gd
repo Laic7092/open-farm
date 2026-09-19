@@ -58,10 +58,6 @@ var weather_service: WeatherService
 var relationship_service: RelationshipService
 ## 日历服务；由 Main 创建为子节点，不再是 Autoload。
 var calendar_service: CalendarService
-## 农场域事件；世界生产节点共享，生命周期跟随本局 Main。
-var farm_events: FarmEvents = FarmEvents.new()
-## 世界域事件；优先绑定到 WorldHost.events，找不到宿主时用本对象兜底。
-var world_events: WorldEvents = WorldEvents.new()
 ## 本场景自带的音频节点；由 main.tscn 放置，Main 只负责注入时钟与共享引用。
 var scene_audio: SceneAudio
 ## 本局核心存档节；Main 是唯一注册入口，SaveManager 只消费 [SaveSection]。
@@ -162,20 +158,10 @@ func _bind_dependencies() -> void:
 	var host := get_node_or_null(^"WorldHost") as WorldHost
 	var ui_root := get_node_or_null(^"UiRoot")
 
-	# EventBus 的领域对象生命周期与 Autoload 一致；状态 / 宿主只持有同一引用。
-	# 不在这里替换实例，避免音频 / UI 等常驻订阅者连着旧对象收不到事件。
-	player_profile.events = EventBus.player
-	farm_events = EventBus.farm
-	world_events = EventBus.world
-	if host != null:
-		host.events = EventBus.world
-	if ui_root != null:
-		ui_root.set(&"events", EventBus.ui)
+	# 领域事件对象由 [EventBus] 单点持有；[PlayerProfile] / [WorldHost] / [UiRoot]
+	# 上的 events 字段只是同一实例的别名，这里不再替换，避免常驻订阅者连着旧对象。
 
-	Persistence.register_core_resource(clock_state, &"GameClock", 10)
-	Persistence.register_core_resource(player_profile, &"GameState", 20)
-
-	# 本局核心存档节由 Main 显式注册；旧 [Persistence] 注册只作为兼容回退。
+	# 本局核心存档节只由组合根这一处声明；服务不再各自注册一遍。
 	save_sections.clear()
 	save_sections.append(SaveSection.new(clock_state, &"GameClock", 10, true))
 	save_sections.append(SaveSection.new(player_profile, &"GameState", 20, true))

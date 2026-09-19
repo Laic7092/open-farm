@@ -39,11 +39,6 @@ var child_born: bool:
 		return _store.child_born
 
 
-func _ready() -> void:
-	# 存档键名继续保持 "Relationships"，兼容旧存档。
-	Persistence.register_core(self, &"Relationships", 40)
-
-
 func _exit_tree() -> void:
 	if _clock != null:
 		_clock.unregister_day_hook(_on_day_rollover)

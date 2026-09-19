@@ -14,13 +14,6 @@ extends RefCounted
 ## 参与存档的节点所属分组。
 const GROUP: StringName = &"persistent"
 
-## 参与存档的核心单例所属分组。
-##
-## 与 [constant GROUP] 区分开，避免核心状态与场景节点被写进同一个
-## [code]payload["nodes"][/code] 段。核心单例按 [constant META_CORE_ORDER]
-## 升序恢复，顺序本身就是读档依赖。
-const CORE_GROUP: StringName = &"persistent_core"
-
 ## 存储持久化 id 的元数据键。
 const META_ID: StringName = &"persistence_id"
 
@@ -39,20 +32,11 @@ static func register(node: Node, id: StringName) -> void:
 	node.set_meta(META_ID, id)
 
 
-## 声明核心单例参与存档；[param order] 决定 [method SaveManager.apply] 的恢复顺序。
-##
-## 核心单例在 [code]_ready()[/code] 里自注册，[SaveManager] 不再硬编码
-## [code]/root/<Name>[/code] 或参与者名单。
-static func register_core(node: Node, id: StringName, order: int) -> void:
-	node.add_to_group(CORE_GROUP)
-	node.set_meta(META_ID, id)
-	node.set_meta(META_CORE_ORDER, order)
-
-
 ## 声明一个 Resource / 普通对象作为核心存档节。
 ##
-## [PlayerProfile] / [GameDateClock] 不进入场景树，不能加入 Group；组合根用
-## 这个接口把状态 Resource 注册到同一套核心节契约里。
+## [PlayerProfile] / [GameDateClock] 这类不进入场景树的状态用本接口注册；
+## 游戏本体的核心节由组合根 [method SaveManager.set_core_sections] 一次性声明，
+## 于是“哪些状态参与存档、按什么顺序恢复”只有一处真相。
 static func register_core_resource(resource: Object, id: StringName, order: int) -> void:
 	resource.set_meta(META_ID, id)
 	resource.set_meta(META_CORE_ORDER, order)

@@ -15,10 +15,21 @@ const GROUP: StringName = &"world_host"
 ## 遮罩颜色。
 @export var fade_color: Color = Color(0.0, 0.0, 0.0, 1.0)
 
-## 世界域事件；由本宿主持有。
-var events: WorldEvents = WorldEvents.new()
+## 世界域事件；与 [code]EventBus.world[/code] 是同一实例。
+var events: WorldEvents = EventBus.world
+
+## 世界实例缓存上限；超出后按最近最少使用淘汰。
+##
+## 淘汰前先把地图内持久化节点的状态快照下来，重新进入时回灌，
+## 于是“地图卸载”不会丢进度，也不会让所有地图永久常驻内存。
+const MAX_CACHED_WORLDS: int = 4
 
 var _cache: Dictionary[String, Node] = {}
+## 每张地图最近一次被挂载的序号，用于 LRU 淘汰。
+var _last_used: Dictionary[String, int] = {}
+## 被淘汰地图的持久化节点快照；重新实例化时回灌，随后丢弃。
+var _evicted_state: Dictionary[String, Dictionary] = {}
+var _use_counter: int = 0
 var _current_world: Node
 var _transitioning: bool = false
 ## 最近一次落地的出生点，存档时要记下来。
@@ -105,20 +116,33 @@ func current_world_path() -> String:
 func install_world(scene_path: String, packed: PackedScene, spawn_id: StringName) -> void:
 	_detach_current_world()
 
+	# 被 LRU 淘汰过的地图：先取出快照，等实例 _ready() 跑完再回灌。
+	var restored: Dictionary = {}
 	if not _cache.has(scene_path):
 		_cache[scene_path] = packed.instantiate()
-	_current_world = _cache[scene_path]
+		restored = _evicted_state.get(scene_path, {})
+		_evicted_state.erase(scene_path)
+	var world: Node = _cache[scene_path]
+	_current_world = world
 	# 世界子节点的 _enter_tree() 会在 add_child() 时立即执行，因此必须在
 	# 挂载前把组合根状态注入场景根；缓存复用也一样。
-	_inject_world_dependencies(_current_world)
-	add_child(_current_world)
+	_inject_world_dependencies(world)
+	add_child(world)
+
+	_use_counter += 1
+	_last_used[scene_path] = _use_counter
+	_evict_excess()
 
 	# 等两帧，确保新场景的 _ready() 全部跑完、节点进入场景树。
 	await get_tree().process_frame
 	await get_tree().process_frame
 
-	if _current_world.has_method(&"on_world_enter"):
-		_current_world.call(&"on_world_enter", spawn_id)
+	# 回灌快照：此刻节点引用（crop_scene 等）已齐，from_dict() 才能重建。
+	if not restored.is_empty():
+		_apply_node_snapshot(world, restored)
+
+	if world.has_method(&"on_world_enter"):
+		world.call(&"on_world_enter", spawn_id)
 
 
 ## 把当前世界摘出场景树但保留实例。
@@ -140,6 +164,9 @@ func discard_world(scene_path: String) -> void:
 		return
 	var world: Node = _cache[scene_path]
 	_cache.erase(scene_path)
+	# 显式丢弃意味着“这局不再要这份状态”，连同淘汰快照一起清掉。
+	_evicted_state.erase(scene_path)
+	_last_used.erase(scene_path)
 	if not is_instance_valid(world):
 		return
 	if world == _current_world:
@@ -155,7 +182,67 @@ func clear_world_cache() -> void:
 	for path: String in _cache.keys():
 		discard_world(path)
 	_cache.clear()
+	_evicted_state.clear()
+	_last_used.clear()
 	_current_world = null
+
+
+## 缓存超过上限时淘汰最久未使用的地图（当前地图永不淘汰）。
+func _evict_excess() -> void:
+	while _cache.size() > MAX_CACHED_WORLDS:
+		var victim := _least_recently_used()
+		if victim.is_empty():
+			return
+		_evict_world(victim)
+
+
+## 找一张最久没被切换到的缓存地图；没有可淘汰的（只剩当前地图）时返回空串。
+func _least_recently_used() -> String:
+	var victim: String = ""
+	var oldest: int = 2147483647
+	for path: String in _cache.keys():
+		if _cache[path] == _current_world:
+			continue
+		var used: int = _last_used.get(path, 0)
+		if used < oldest:
+			oldest = used
+			victim = path
+	return victim
+
+
+## 淘汰一张地图：先把持久化节点状态快照下来，再释放实例。
+func _evict_world(scene_path: String) -> void:
+	var world: Node = _cache.get(scene_path) as Node
+	if world == null:
+		return
+	var snapshot := _snapshot_world(world)
+	discard_world(scene_path)
+	_evicted_state[scene_path] = snapshot
+
+
+## 收集地图内持久化节点的当前状态（与节点存档同一套 to_dict 契约）。
+func _snapshot_world(world: Node) -> Dictionary:
+	var snapshot: Dictionary = {}
+	for node: Node in world.find_children("*", "", true, false):
+		if not node.is_in_group(Persistence.GROUP) or not node.has_method(&"to_dict"):
+			continue
+		var id := Persistence.id_of(node)
+		if id != &"":
+			snapshot[String(id)] = node.call(&"to_dict")
+	return snapshot
+
+
+## 把淘汰时保存的节点状态回灌到新实例上（与节点存档同一套 from_dict 契约）。
+func _apply_node_snapshot(world: Node, snapshot: Dictionary) -> void:
+	for node: Node in world.find_children("*", "", true, false):
+		if not node.is_in_group(Persistence.GROUP) or not node.has_method(&"from_dict"):
+			continue
+		var id := Persistence.id_of(node)
+		if id == &"":
+			continue
+		var data: Variant = snapshot.get(String(id), null)
+		if data is Dictionary:
+			node.call(&"from_dict", data)
 
 
 ## 把组合根状态注入世界场景；必须发生在 [method Node.add_child] 之前。

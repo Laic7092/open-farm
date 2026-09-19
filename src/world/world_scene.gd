@@ -42,7 +42,6 @@ var _season_look: SeasonLook
 func bind_dependencies(profile: PlayerProfile, clock: GameDateClock) -> void:
 	player_profile = profile
 	clock_state = clock
-	_distribute_dependencies()
 
 
 ## 由 [SceneRouter] 在世界场景 [method Node.add_child] 之前调用。
@@ -54,12 +53,12 @@ func bind_services(
 	weather_service = weather
 	relationship_service = relationships
 	calendar_service = calendar
-	_distribute_services()
 
 
 func _enter_tree() -> void:
-	# 父节点的 _enter_tree 先于子节点执行；在这里把状态推给场景里的服务节点，
-	# 它们的 _enter_tree / _ready 就能立即使用组合根依赖。
+	# 父节点的 _enter_tree 先于子节点执行；组合根已在 add_child 前调完 bind_*，
+	# 这里一次遍历把状态与服务推下去，子节点的 _enter_tree / _ready 就能用。
+	# 注入只在这里做一遍：换图一定会触发 _enter_tree，重复下发纯属浪费。
 	_distribute_dependencies()
 	_distribute_services()
 
@@ -151,8 +150,6 @@ func _ensure_navigator() -> void:
 func on_world_enter(spawn_id: StringName) -> void:
 	if spawn_id == &"":
 		spawn_id = default_spawn_id
-	_distribute_dependencies()
-	_distribute_services()
 	_apply_camera_limits()
 	# 场景会被缓存复用，_ready() 只跑一次；这里才是“每次进图都要对齐季节”的位置。
 	if _season_look != null:

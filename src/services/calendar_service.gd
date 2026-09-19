@@ -44,8 +44,6 @@ var _tables_loaded: bool = false
 
 
 func _ready() -> void:
-	# 存档键名继续保持 "Calendar"，兼容旧存档。
-	Persistence.register_core(self, &"Calendar", 50)
 	if not Database.reloaded.is_connected(reload):
 		Database.reloaded.connect(reload)
 	if not _tables_loaded:

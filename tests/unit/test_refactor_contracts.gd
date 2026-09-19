@@ -50,3 +50,9 @@ func test_world_target_roundtrip() -> void:
 	var restored := WorldTarget.from_dict(target.to_dict())
 	assert_str(restored.scene_path).is_equal(target.scene_path)
 	assert_str(String(restored.spawn_id)).is_equal("start")
+
+
+func test_domain_events_have_a_single_owner() -> void:
+	# 领域事件对象由 EventBus 单点持有；状态 / 宿主上的字段只是同一实例的别名。
+	var profile := PlayerProfile.new()
+	assert_bool(profile.events == EventBus.player).is_true()

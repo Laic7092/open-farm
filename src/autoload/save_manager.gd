@@ -15,8 +15,8 @@ extends Node
 ##
 ## [b]扩展方式[/b]：任何节点只要加入 [constant Persistence.GROUP] 组
 ## 并实现 [code]to_dict()[/code] / [code]from_dict()[/code]，就会被自动存档，
-## 不需要修改本脚本。核心单例则用 [method Persistence.register_core]
-## 声明恢复顺序，[SaveManager] 不硬编码节点名。
+## 不需要修改本脚本。核心状态由组合根用 [method set_core_sections] 一次性声明
+## 恢复顺序，[SaveManager] 不硬编码节点名。
 
 ## 当前存档结构版本。字段语义发生不兼容变化时才递增。
 const SAVE_VERSION: int = 1
@@ -303,7 +303,7 @@ func apply_node_state() -> void:
 
 # ---------------------------------------------------------------- 内部
 
-## 显式核心节 + 旧接口注册的 Resource / 核心节点，统一去重、排序。
+## 显式核心节 + [method Persistence.register_core_resource] 注册的 Resource，统一去重、排序。
 func _resolved_core_sections() -> Array[SaveSection]:
 	var result: Array[SaveSection] = []
 	var seen: Dictionary = {}
@@ -311,10 +311,6 @@ func _resolved_core_sections() -> Array[SaveSection]:
 		_append_section(result, seen, section)
 	for object: Object in Persistence.core_resources():
 		_append_section(result, seen, SaveSection.from_object(object, true))
-	if is_inside_tree():
-		for node: Node in get_tree().get_nodes_in_group(Persistence.CORE_GROUP):
-			if is_instance_valid(node):
-				_append_section(result, seen, SaveSection.from_object(node, true))
 	result.sort_custom(_sort_sections)
 	return result
 

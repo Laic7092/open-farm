@@ -28,8 +28,8 @@ var _clock_state: GameDateClock
 var _weather_service: WeatherService
 var _relationship_service: RelationshipService
 var _calendar_service: CalendarService
-## UI / 交互域事件对象；由 UiRoot 持有，Main 会把它绑定到 EventBus.ui。
-var events: UiEvents = UiEvents.new()
+## UI / 交互域事件对象；与 [code]EventBus.ui[/code] 是同一实例，常驻订阅者共用一份。
+var events: UiEvents = EventBus.ui
 
 
 ## 由 [Main] 在 UI 子树进入树之前调用；依赖会继续下发给各界面。

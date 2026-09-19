@@ -18,13 +18,13 @@ extends Node
 
 # ---------------------------------------------------------------- 领域事件对象
 
-## 玩家域事件；游戏运行时由 [Main] 绑定到 [member PlayerProfile.events]。
+## 玩家域事件；单点持有，[PlayerProfile] 上的同名字段是它的别名。
 var player: PlayerEvents = PlayerEvents.new()
-## 农场域事件；游戏运行时由 [Main] 创建并注入世界。
+## 农场域事件；单点持有，世界生产者直接引用本对象。
 var farm: FarmEvents = FarmEvents.new()
-## 世界域事件；游戏运行时由 [Main] 绑定到 [WorldHost.events]。
+## 世界域事件；单点持有，[WorldHost] 上的同名字段是它的别名。
 var world: WorldEvents = WorldEvents.new()
-## UI 域事件；游戏运行时由 [Main] 绑定到 [UiRoot.events]。
+## UI 域事件；单点持有，[UiRoot] 上的同名字段是它的别名。
 var ui: UiEvents = UiEvents.new()
 
 # ---------------------------------------------------------------- 时间 / 日历

@@ -28,8 +28,6 @@ var _clock: GameDateClock
 
 
 func _ready() -> void:
-	# 存档键名继续保持 "WeatherSystem"，兼容旧存档。
-	Persistence.register_core(self, &"WeatherSystem", 30)
 	_rng.randomize()
 
 
