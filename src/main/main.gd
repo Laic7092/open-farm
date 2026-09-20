@@ -99,6 +99,7 @@ func _ready() -> void:
 	player_profile.set_playtime_counting(true)
 	EventBus.ui.pause_menu_toggle_requested.connect(_on_pause_menu_requested)
 	EventBus.ui.touch_controls_toggled.connect(_on_touch_controls_toggled)
+	EventBus.ui.view_zoom_changed.connect(_on_view_zoom_changed)
 
 	if boot_mode == BootMode.LOAD_SLOT and await _boot_from_save():
 		return
@@ -121,6 +122,13 @@ func _input(event: InputEvent) -> void:
 ## 触控开关可能在游戏里被改（系统菜单），光标要跟着切。
 func _on_touch_controls_toggled(_enabled: bool) -> void:
 	PointerInput.sync_cursor()
+
+
+## 画面大小在系统菜单里改；组合根只把请求转给当前世界里的玩家。
+func _on_view_zoom_changed(zoom: float) -> void:
+	var player := get_tree().get_first_node_in_group(Player.GROUP) as Player
+	if player != null:
+		player.apply_view_zoom(zoom)
 
 
 # ---------------------------------------------------------------- 组合根

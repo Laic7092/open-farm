@@ -26,8 +26,11 @@ const NEGATIVE_NOTIFICATIONS: Array[StringName] = [
 ## 左下角信息块（体力 / 手持）的基准偏移，与 [code]hud.tscn[/code] 里一致。
 const BOTTOM_LEFT_TOP: float = -46.0
 const BOTTOM_LEFT_BOTTOM: float = -6.0
-## 触控模式下左下角让给虚拟摇杆的抬升量（摇杆直径 + 边距）。
-const TOUCH_LIFT: float = 64.0
+## 触控模式下左下角让给虚拟摇杆的抬升量：摇杆控件高 96 + 下边距 8。
+##
+## 与 [code]touch_controls.tscn[/code] 的 Joystick 尺寸保持一致，
+## 否则 HUD 会和摇杆叠在一起。
+const TOUCH_LIFT: float = 104.0
 
 @onready var prompt_label: Label = %PromptLabel
 @onready var toast_label: Label = %ToastLabel

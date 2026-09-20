@@ -111,6 +111,17 @@ func _ready() -> void:
 	if not inventory.has(&"turnip_seed"):
 		inventory.add(&"turnip_seed", 5)
 	_emit_all()
+	apply_view_zoom(ViewSettings.zoom())
+
+
+## 相机归玩家，所以画面大小（缩放）也只由玩家应用到自己的相机。
+##
+## 显示设置本身是纯数据（[ViewSettings]）：系统菜单改它，组合根转达，玩家落地。
+func apply_view_zoom(zoom: float) -> void:
+	if camera == null:
+		return
+	camera.zoom = Vector2(zoom, zoom)
+	camera.reset_smoothing()
 
 
 func _exit_tree() -> void:

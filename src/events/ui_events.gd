@@ -29,6 +29,8 @@ signal inventory_toggle_requested()
 signal pause_menu_toggle_requested()
 ## 触控控件（虚拟摇杆 / 屏幕按钮）开 / 关被改变。
 signal touch_controls_toggled(enabled: bool)
+## 相机缩放（画面大小）被改变；系统菜单发出，相机的主人（玩家）应用。
+signal view_zoom_changed(zoom: float)
 ## 请求打开博物馆图鉴。
 signal museum_requested()
 ## 请求打开委托板。
