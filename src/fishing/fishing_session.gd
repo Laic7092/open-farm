@@ -7,10 +7,10 @@ extends RefCounted
 ## 宿主是 [Player]，提供竿尖 / 落点 / 水面 / 时钟等上下文；
 ## [PlayerStateFishing] 只是模式锁壳，把移动锁住并把输入转给本单元。
 ##
-## [b]按键[/b]（全部与普通工具一致，只有空格）：
-## [br]- 蓄力阶段[b]按住[/b]空格决定抛多远，松手即抛出；
+## [b]按键[/b]（全部复用主操作键，E / 空格 / 回车）：
+## [br]- 蓄力阶段[b]按住[/b]主操作键决定抛多远，松手即抛出；
 ## [br]- 等鱼时按一下 = 提前收竿；
-## [br]- 拉扯时[b]按住[/b]空格收线、松开让钩子下沉，把钩子压在鱼身上攒满进度。
+## [br]- 拉扯时[b]按住[/b]主操作键收线、松开让钩子下沉，把钩子压在鱼身上攒满进度。
 
 ## 本次垂钓结束（成功 / 逃脱 / 取消都一样）；宿主据此切回待机。
 signal finished()
@@ -22,7 +22,7 @@ const REEL_DURATION: float = 0.42
 const REEL_TICK_INTERVAL: float = 0.16
 
 enum Phase {
-	CHARGE,  ## 按住空格蓄力
+	CHARGE,  ## 按住主操作键蓄力
 	CAST,    ## 抛竿动作
 	WAIT,    ## 浮标入水，等鱼咬钩
 	FIGHT,   ## 拉扯小游戏
@@ -98,13 +98,13 @@ func update(delta: float) -> void:
 
 
 func handle_input(event: InputEvent) -> void:
-	if event.is_action_pressed(&"use_tool"):
+	if event.is_action_pressed(&"primary_action"):
 		match _phase:
 			Phase.WAIT:
 				_cancel()
 			Phase.FIGHT:
 				_reeling = true
-	elif event.is_action_released(&"use_tool"):
+	elif event.is_action_released(&"primary_action"):
 		if _phase == Phase.FIGHT:
 			_reeling = false
 
@@ -148,12 +148,12 @@ func target_fish() -> FishData:
 
 # ---------------------------------------------------------------- 内部：三个阶段
 
-## 蓄力：按住空格涨条，松手（或按满）就抛出去。
+## 蓄力：按住主操作键涨条，松手（或按满）就抛出去。
 ##
 ## 直接读 [method Input.is_action_pressed] 而不是等一条"松开"事件，
 ## 是因为进入本单元的那次按下已经被 [code]PlayerStateIdle[/code] 消费掉了。
 func _update_charge(delta: float) -> void:
-	if Input.is_action_pressed(&"use_tool"):
+	if Input.is_action_pressed(&"primary_action"):
 		_held = minf(_held + delta, FishingRules.CAST_CHARGE_TIME)
 		return
 	_cast()
@@ -196,8 +196,8 @@ func _begin_fight() -> void:
 	_phase = Phase.FIGHT
 	_timer = 0.0
 	_fight = FishingFight.new(_fish, _tier(), rng)
-	# 咬钩时玩家可能还按着空格，那就当作一开始就在收线。
-	_reeling = Input.is_action_pressed(&"use_tool")
+	# 咬钩时玩家可能还按着主操作键，那就当作一开始就在收线。
+	_reeling = Input.is_action_pressed(&"primary_action")
 	_reel_tick = 0.0
 	_player.play_animation(&"use")
 	_player.fishing_bobber.bite()

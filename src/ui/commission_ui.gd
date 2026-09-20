@@ -116,7 +116,7 @@ func _navigate(event: InputEvent) -> bool:
 		_move(-1)
 	elif event.is_action_pressed(&"ui_down", true):
 		_move(1)
-	elif event.is_action_pressed(&"interact") or event.is_action_pressed(&"use_tool"):
+	elif event.is_action_pressed(&"ui_accept"):
 		_deliver()
 	else:
 		return false

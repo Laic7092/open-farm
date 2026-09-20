@@ -163,14 +163,9 @@ func world_scene() -> WorldScene:
 
 func _unhandled_input(event: InputEvent) -> void:
 	# 状态机（子节点）先收到事件并可能消费掉；这里只处理"随时可用"的快捷键。
+	# 背包 / 菜单由 [UiRoot] 统一处理：它即使在暂停态也能收到输入。
 	if event.is_action_pressed(&"tool_next"):
 		item_bar.next()
-	elif event.is_action_pressed(&"tool_prev"):
-		item_bar.prev()
-	elif event.is_action_pressed(&"open_inventory"):
-		EventBus.ui.inventory_toggle_requested.emit()
-	elif event.is_action_pressed(&"give_gift"):
-		try_give_gift()
 
 
 # ---------------------------------------------------------------- 能力
@@ -331,37 +326,32 @@ func current_interactable() -> Interactable:
 	return best
 
 
-## 按下交互键时的完整意图解析。
-func try_interact() -> bool:
+## 主操作键的完整意图解析：收获 → NPC 送礼 → 交互。
+##
+## 返回 false 表示面前没有可交互目标，状态机可以继续尝试钓鱼 / 使用工具。
+func try_primary_action() -> bool:
 	if _try_harvest():
 		return true
 	var target := current_interactable()
-	if target != null:
-		target.interact(self)
-		return true
-	EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
-	return false
-
-
-## 把背包里最合适的一件礼物送给面前的 NPC（G 键）。
-##
-## "最合适"= 对该 NPC 好感收益最高的可赠道具：优先 GIFT 分类，
-## 其次是 NPC 偏好表里明确提到过的道具。求婚信物永远不会被当作普通礼物送掉。
-func try_give_gift() -> bool:
-	if _clock == null:
+	if target == null:
 		return false
-	var npc := current_interactable() as Npc
-	if npc == null:
-		EventBus.ui.notification_requested.emit(&"NOTIFY_NO_GIFT_TARGET", {})
+	if _try_gift(target):
+		return true
+	target.interact(self)
+	return true
+
+
+## 如果目标是 NPC、今天还没送礼、背包里也有可赠道具，就自动挑最好的送出去。
+##
+## "有可以送的东西时，和 NPC 交互就是送礼"；送完 / 没得送时交回普通交互。
+func _try_gift(target: Interactable) -> bool:
+	var npc := target as Npc
+	if npc == null or _relationships == null:
 		return false
 	if not _relationships.can_gift(npc.npc_id):
-		EventBus.ui.notification_requested.emit(
-			&"NOTIFY_ALREADY_GIFTED", {"npc": npc.display_name()}
-		)
 		return false
 	var item_id := _pick_gift(npc)
 	if item_id == &"":
-		EventBus.ui.notification_requested.emit(&"NOTIFY_NO_GIFT", {})
 		return false
 	if not inventory.remove(item_id, 1):
 		return false

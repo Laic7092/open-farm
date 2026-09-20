@@ -144,7 +144,7 @@ NPC_OUR_CHILD,宝宝,Little One
 SHOP_FLOWER_SHOP,花店,Flower Shop
 SHOP_GENERAL_STORE,杂货店,General Store
 TOOL_AXE_DESC,砍倒树木，得到木材。,Chops trees down for wood.
-TOOL_FISHING_ROD_DESC,对着水面按空格抛竿，咬钩时再按一次收竿,Pull it out at the water and reel in on the bite
+TOOL_FISHING_ROD_DESC,对着水面按 E / 空格 抛竿，咬钩后按住收线,Press E / Space at the water to cast; hold to reel in on the bite
 TOOL_HOE_DESC,用来翻地，把草地变成可耕种的土地。,Tills grass into farmable soil.
 TOOL_PICKAXE_DESC,砸碎石头，得到石材。,Smashes rocks for stone.
 TOOL_SICKLE_DESC,清除枯死的作物，也可以割草。,Clears withered crops and cuts weeds.

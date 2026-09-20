@@ -101,7 +101,7 @@ text = "虚拟摇杆：开"
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.72, 0.78, 1)
-text = "A 工具 · B 交互 · X 换具 · Y 背包"
+text = "A 动作 · B 菜单/返回 · X 换具 · Y 背包"
 horizontal_alignment = 1
 
 [node name="TitleButton" type="Button" parent="Panel/Margin/VBox"]

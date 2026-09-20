@@ -54,6 +54,7 @@ func open(current: int, deepest: int) -> void:
 
 	visible = true
 	get_tree().paused = true
+	EventBus.ui.game_paused_changed.emit(true)
 	if focus_target != null:
 		focus_target.grab_focus()
 
@@ -62,6 +63,7 @@ func open(current: int, deepest: int) -> void:
 func close() -> void:
 	visible = false
 	get_tree().paused = false
+	EventBus.ui.game_paused_changed.emit(false)
 
 
 ## 往列表里加一个楼层按钮；返回它，方便调用方决定焦点。
@@ -81,16 +83,18 @@ func _on_floor_pressed(depth: int) -> void:
 func _build() -> void:
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_root.mouse_filter = Control.MOUSE_FILTER_STOP
+	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_root)
 
 	var dim := ColorRect.new()
 	dim.color = Color(0.0, 0.0, 0.0, 0.55)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(dim)
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(center)
 
 	var panel := PanelContainer.new()

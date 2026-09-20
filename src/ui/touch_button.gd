@@ -13,9 +13,9 @@ extends Control
 ## [b]与 [Button] 的差异[/b]：没有焦点。触控按钮一旦能拿焦点，
 ## 方向键就会先在按钮之间跳，游戏里的移动 / 菜单导航会被抢。
 
-## 圆里的图标：字母（ABXY）或菜单三条杠。
+## 圆里的图标：当前使用 ABXY 字母；菜单键已并入 B。
 ##
-## 菜单不用文字是因为它要跨语言：三条杠在哪个语言里都读作"菜单"。
+## [constant Glyph.MENU] 保留给未来可能重新加入的独立菜单键。
 enum Glyph {
 	LETTER,
 	MENU,
@@ -25,7 +25,7 @@ enum Glyph {
 signal pressed()
 signal released()
 
-## [constant Glyph.LETTER] 时圆里显示的字母。
+## [constant Glyph.LETTER] 时圆里显示的字母（当前只使用这一种）。
 @export var text: String = ""
 @export var glyph: Glyph = Glyph.LETTER
 
@@ -42,6 +42,17 @@ func _ready() -> void:
 ## 当前是否处于按下状态。
 func is_held() -> bool:
 	return _held
+
+
+## 强制回到未按下状态（界面切上下文 / 隐藏时调用）。
+##
+## 与 [signal released] 不同：这里不发出松开信号，因为上层已经统一释放过动作，
+## 只把按钮自己的高亮和内部状态清掉，避免"手指还没抬界面就切走"导致下次按不动。
+func reset_held() -> void:
+	if not _held:
+		return
+	_held = false
+	queue_redraw()
 
 
 func _gui_input(event: InputEvent) -> void:

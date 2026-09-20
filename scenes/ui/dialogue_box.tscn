@@ -60,5 +60,5 @@ theme_override_constants/separation = 2
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.72, 0.78, 1)
-text = "按 E 继续"
+text = "按 E / 空格 继续"
 horizontal_alignment = 2

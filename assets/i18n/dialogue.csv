@@ -1,5 +1,5 @@
 keys,zh_CN,en
-DIALOGUE_ADVANCE_HINT,按 E 继续,Press E to continue
+DIALOGUE_ADVANCE_HINT,按 E / 空格 继续,Press E / Space to continue
 DIALOGUE_BLACKSMITH_CHOICE_FLIRT,你打铁的样子真帅。,You look great at the anvil.
 DIALOGUE_BLACKSMITH_CHOICE_WORK,最近生意怎么样？,How is business lately?
 DIALOGUE_BLACKSMITH_CONFESSION_1,我嘴笨，敲铁比说话利索。,I am clumsy with words but handy with a hammer.
@@ -49,7 +49,7 @@ DIALOGUE_CHILD_WINTER_CHOICE_B,小心别冻感冒。,Don't catch a cold.
 DIALOGUE_CHILD_WINTER_GREETING,下雪啦！堆雪人堆雪人！,It's snowing! Let's build a snowman!
 DIALOGUE_CHILD_WINTER_REPLY_A,太好了，你来堆头！,Yay! You do the head!
 DIALOGUE_CHILD_WINTER_REPLY_B,我都戴围巾了，不怕！,I have my scarf on. No worries!
-DIALOGUE_CHOOSE_HINT,↑↓ 选择，E 确认,"↑↓ to choose, E to confirm"
+DIALOGUE_CHOOSE_HINT,↑↓ 选择，E / 空格 确认,"↑↓ to choose, E / Space to confirm"
 DIALOGUE_FESTIVAL_FIREWORKS_1,快看快看，烟花要开始了！,"Look, the fireworks are about to start!"
 DIALOGUE_FESTIVAL_FIREWORKS_2,夏天的晚上，就该和大家一起看烟花。,Summer nights are for fireworks with friends.
 DIALOGUE_FESTIVAL_FLOWER_1,今年的花祭，来看看婆婆新剪的花吧。,Come see my freshly cut flowers for the flower festival.

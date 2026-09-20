@@ -67,11 +67,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.is_action_pressed(&"ui_down"):
 			_move_choice(1)
 			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed(&"interact") or event.is_action_pressed(&"use_tool"):
+		elif event.is_action_pressed(&"ui_accept"):
 			get_viewport().set_input_as_handled()
 			choose(_choice_index)
 		return
-	if event.is_action_pressed(&"interact") or event.is_action_pressed(&"use_tool"):
+	if event.is_action_pressed(&"ui_accept"):
 		get_viewport().set_input_as_handled()
 		advance()
 

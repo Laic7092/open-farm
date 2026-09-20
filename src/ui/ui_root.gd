@@ -135,7 +135,23 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed(&"open_menu"):
+	# 背包 / 菜单都在本层处理：即使模态已经暂停场景树，本节点仍能收到输入。
+	if event.is_action_pressed(&"open_inventory"):
+		get_viewport().set_input_as_handled()
+		# 对话不能被背包打断；其他模态也不允许再叠一层背包。
+		if dialogue_box.visible:
+			return
+		if is_modal_open() and not inventory_ui.visible:
+			return
+		_on_inventory_toggle()
+		return
+
+	# 世界里的菜单键与界面里的取消键共用同一个物理键（Esc / 触控 B），
+	# 但进入这里后都按“关闭当前模态，没有模态就开菜单”处理。
+	var menu_pressed := (
+		event.is_action_pressed(&"open_menu") or event.is_action_pressed(&"ui_cancel")
+	)
+	if not menu_pressed:
 		return
 	get_viewport().set_input_as_handled()
 

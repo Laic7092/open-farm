@@ -123,15 +123,6 @@ func _on_touch_controls_toggled(_enabled: bool) -> void:
 	PointerInput.sync_cursor()
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed(&"quick_save"):
-		get_viewport().set_input_as_handled()
-		_quick_save()
-	elif event.is_action_pressed(&"quick_load"):
-		get_viewport().set_input_as_handled()
-		_quick_load()
-
-
 # ---------------------------------------------------------------- 组合根
 
 ## 创建本局服务节点；服务在 _ready() 里注册自己的核心存档节。
@@ -282,25 +273,6 @@ func _boot_new_game() -> void:
 	clock_state.refresh_observers()
 	world_host.clear_world_cache()
 	await SceneRouter.change_scene_to(world_host, FIRST_WORLD, FIRST_SPAWN)
-
-
-## 快捷存档：写到本局槽位；新游戏第一次存档时才分配槽位号。
-func _quick_save() -> void:
-	if SaveManager.save_current():
-		EventBus.ui.notification_requested.emit(
-			&"NOTIFY_SAVED", {"slot": SaveManager.current_slot + 1}
-		)
-	else:
-		EventBus.ui.notification_requested.emit(&"NOTIFY_SAVE_FAILED", {})
-
-
-func _quick_load() -> void:
-	if not await SaveManager.load_current_and_restore_world():
-		EventBus.ui.notification_requested.emit(&"NOTIFY_LOAD_FAILED", {})
-		return
-	EventBus.ui.notification_requested.emit(
-		&"NOTIFY_LOADED", {"slot": SaveManager.current_slot + 1}
-	)
 
 
 ## 日结自动存档：日结转流水线的最后一棒，存下的是"新一天刚开始"的状态。

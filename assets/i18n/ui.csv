@@ -54,7 +54,7 @@ NOTIFY_CROP_HARVESTED,收获了 {item} ×{count},Harvested {item} x{count}
 NOTIFY_FESTIVAL_ALREADY,今年已经参加过{festival}了,Already joined the {festival} this year
 NOTIFY_FESTIVAL_ATTENDED,参加了{festival}，大家的好感 +{amount},Joined the {festival}! Everyone +{amount} affection
 NOTIFY_FESTIVAL_TODAY,今天是{festival}！,Today is the {festival}!
-NOTIFY_FISH_BITE,咬钩了！按住空格收线，别让鱼跑掉,It is biting! Hold Space to reel it in
+NOTIFY_FISH_BITE,咬钩了！按住 E / 空格 收线，别让鱼跑掉,It is biting! Hold E / Space to reel it in
 NOTIFY_FISH_CANCELLED,收竿了,Reeled in
 NOTIFY_FISH_CAUGHT,钓到了 {item}（{size} 厘米）,Caught {item} ({size} cm)
 NOTIFY_FISH_ESCAPED,线绷断了，鱼跑掉了……,The line snapped and the fish got away...
@@ -152,7 +152,7 @@ MINE_SURFACE,地面,Surface
 MINE_FLOOR,第{n}层,Floor {n}
 MINE_CURRENT,（当前）, (current)
 NOTIFY_MINE_STRATUM,进入{name}（第{depth}层）,Entering {name} (Floor {depth})
-TOUCH_HINT,A 工具 · B 交互 · X 换具 · Y 背包,A Tool · B Use · X Swap · Y Bag
+TOUCH_HINT,A 动作 · B 菜单/返回 · X 换具 · Y 背包,A Action · B Menu/Back · X Swap · Y Bag
 PROMPT_COOK,按 E 做饭,Cook
 PROMPT_GOALS,按 E 查看村庄目标,Village goals
 COOKING_TITLE,料理台,Kitchen
@@ -178,5 +178,5 @@ NOTIFY_CONTEST_LOST,{item} 得了 {score} 分，下次再来。,{item} scored {s
 NOTIFY_CONTEST_ALREADY,今年这场已经评过了,Already entered this year
 NOTIFY_CONTEST_NOT_ACCEPTED,这件东西不能参赛,That cannot be entered
 NOTIFY_CONTEST_MISSING,背包里没有这件东西,Not in your bag
-NOTIFY_GOAL_CLAIMED,完成「{title}」，获得 {money}G,Completed "{title}" for {money}G
+NOTIFY_GOAL_CLAIMED,完成「{title}」，获得 {money}G,"Completed ""{title}"" for {money}G"
 NOTIFY_GOAL_NOT_READY,还没达成目标,Goal not reached yet

@@ -111,7 +111,7 @@ func _drive_reel(fishing: FishingSession) -> void:
 	if want == fishing.reeling():
 		return
 	var event := InputEventAction.new()
-	event.action = &"use_tool"
+	event.action = &"primary_action"
 	event.pressed = want
 	fishing.handle_input(event)
 

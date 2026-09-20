@@ -223,7 +223,7 @@ func _navigate(event: InputEvent) -> bool:
 		_switch_side(ShopSide.BUY)
 	elif event.is_action_pressed(&"ui_right", true):
 		_switch_side(ShopSide.SELL)
-	elif event.is_action_pressed(&"interact") or event.is_action_pressed(&"use_tool"):
+	elif event.is_action_pressed(&"ui_accept"):
 		_confirm()
 	else:
 		return false

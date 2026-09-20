@@ -19,8 +19,8 @@ func physics_update(_delta: float) -> void:
 
 
 func handle_input(event: InputEvent) -> void:
-	if event.is_action_pressed(&"use_tool"):
-		# 手持钓竿且面前是水：走钓鱼时序；否则走普通挥工具。
+	if event.is_action_pressed(&"primary_action"):
+		# 先尝试收获 / 送礼 / 交互；没有目标才进入钓鱼或使用工具。
+		if player.try_primary_action():
+			return
 		request_transition(&"fishing" if player.can_fish() else &"use_item")
-	elif event.is_action_pressed(&"interact"):
-		player.try_interact()
