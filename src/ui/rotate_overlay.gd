@@ -3,8 +3,9 @@ extends CanvasLayer
 ## 竖屏提示遮罩：本作只服务横屏，窗口「高 ≥ 宽」时盖住画面并吞掉输入，
 ## 提示玩家旋转设备。[Main] 与标题页各自在 [code]_ready()[/code] 里挂一个。
 ##
-## 归属：它是「窗口方向」这个全局显示事实的 UI 投影——自己读 [method Window.size]
-## 并监听 [signal Window.size_changed]，不依赖任何域，也不新增 Autoload。
+## 归属：它是「窗口方向」这个全局显示事实的 UI 投影——自己读 [method Window.size]，
+## 监听 [signal Window.size_changed] 并逐帧比对兜底（Web 旋转时信号可能漏报），
+## 不依赖任何域，也不新增 Autoload。
 ## [ScreenScale] 只管视口怎么铺、不管提示，两者互不引用，只在同一处挂载点并存。
 
 ## 压在常驻 UI 之上（[code]UiRoot[/code] 是 10），保证竖屏时盖住一切。
@@ -16,6 +17,8 @@ const HINT_KEY: StringName = &"ROTATE_DEVICE_HINT"
 var _dim: ColorRect
 ## 登录过的窗口，用于进出树时连 / 断尺寸变化。
 var _window: Window
+## 上一次看到的窗口尺寸；[method _process] 用它兜底补一次信号漏报。
+var _last_size: Vector2i = Vector2i.ZERO
 
 
 ## 纯函数：窗口是否需要提示旋转（竖屏与正方形都算非横屏）。
@@ -27,12 +30,23 @@ static func should_show(window_size: Vector2i) -> bool:
 
 
 func _ready() -> void:
+	# 旋转提示和暂停无关：模态界面暂停整棵树时也要能弹出来。
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = LAYER
 	_build()
 	_window = get_window()
-	if _window != null and not _window.size_changed.is_connected(_refresh):
-		_window.size_changed.connect(_refresh)
+	if _window != null:
+		_last_size = _window.size
+		if not _window.size_changed.is_connected(_refresh):
+			_window.size_changed.connect(_refresh)
 	_refresh()
+
+
+func _process(_delta: float) -> void:
+	# Web / 移动端旋转屏幕时 [signal Window.size_changed] 可能漏报，
+	# 逐帧比对窗口尺寸兜底；信号正常时这里不会重复刷新。
+	if _window != null and _window.size != _last_size:
+		_refresh()
 
 
 func _exit_tree() -> void:
@@ -50,6 +64,8 @@ func _input(event: InputEvent) -> void:
 func _refresh() -> void:
 	if _dim == null:
 		return
+	if _window != null:
+		_last_size = _window.size
 	# 无头环境没有真实屏幕方向（测试窗口往往是方块），一律不提示，
 	# 否则会盖住画面、吞掉合成输入，把冒烟测试打成假红。
 	var headless := DisplayServer.get_name() == "headless"
