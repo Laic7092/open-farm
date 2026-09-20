@@ -97,6 +97,7 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	ScreenScale.apply(get_window())
 	get_window().size_changed.connect(_on_window_resized)
+	add_child(RotateOverlay.new())
 	PointerInput.sync_cursor()
 	player_profile.set_playtime_counting(true)
 	EventBus.ui.pause_menu_toggle_requested.connect(_on_pause_menu_requested)

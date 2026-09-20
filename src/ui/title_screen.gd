@@ -67,6 +67,7 @@ var _saves: Array[Dictionary] = []
 func _ready() -> void:
 	ScreenScale.apply(get_window())
 	get_window().size_changed.connect(_on_window_resized)
+	add_child(RotateOverlay.new())
 	PointerInput.sync_cursor()
 	sfx = SfxPlayer.attach(self)
 	_clouds = [_cloud_1, _cloud_2, _cloud_3]

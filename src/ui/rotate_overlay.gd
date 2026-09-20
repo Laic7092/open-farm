@@ -1,0 +1,75 @@
+class_name RotateOverlay
+extends CanvasLayer
+## 竖屏提示遮罩：本作只服务横屏，窗口「高 ≥ 宽」时盖住画面并吞掉输入，
+## 提示玩家旋转设备。[Main] 与标题页各自在 [code]_ready()[/code] 里挂一个。
+##
+## 归属：它是「窗口方向」这个全局显示事实的 UI 投影——自己读 [method Window.size]
+## 并监听 [signal Window.size_changed]，不依赖任何域，也不新增 Autoload。
+## [ScreenScale] 只管视口怎么铺、不管提示，两者互不引用，只在同一处挂载点并存。
+
+## 压在常驻 UI 之上（[code]UiRoot[/code] 是 10），保证竖屏时盖住一切。
+const LAYER: int = 100
+## 提示文案的翻译键。
+const HINT_KEY: StringName = &"ROTATE_DEVICE_HINT"
+
+## 遮罩本体；它的 [member CanvasItem.visible] 即「是否正在提示旋转」。
+var _dim: ColorRect
+## 登录过的窗口，用于进出树时连 / 断尺寸变化。
+var _window: Window
+
+
+## 纯函数：窗口是否需要提示旋转（竖屏与正方形都算非横屏）。
+## 尺寸为 0（窗口未就绪）不算竖屏，否则会误弹遮罩吞掉输入。
+static func should_show(window_size: Vector2i) -> bool:
+	if window_size.x <= 0 or window_size.y <= 0:
+		return false
+	return window_size.x <= window_size.y
+
+
+func _ready() -> void:
+	layer = LAYER
+	_build()
+	_window = get_window()
+	if _window != null and not _window.size_changed.is_connected(_refresh):
+		_window.size_changed.connect(_refresh)
+	_refresh()
+
+
+func _exit_tree() -> void:
+	if _window != null and _window.size_changed.is_connected(_refresh):
+		_window.size_changed.disconnect(_refresh)
+	_window = null
+
+
+func _input(event: InputEvent) -> void:
+	# 竖屏下也可能有键盘输入；遮罩可见时吞掉，别让玩家在不受支持的构图里操作。
+	if _dim != null and _dim.visible and event.is_pressed() and not event.is_echo():
+		get_viewport().set_input_as_handled()
+
+
+func _refresh() -> void:
+	if _dim == null:
+		return
+	# 无头环境没有真实屏幕方向（测试窗口往往是方块），一律不提示，
+	# 否则会盖住画面、吞掉合成输入，把冒烟测试打成假红。
+	var headless := DisplayServer.get_name() == "headless"
+	_dim.visible = not headless and _window != null and should_show(_window.size)
+
+
+func _build() -> void:
+	_dim = ColorRect.new()
+	_dim.color = Color(0.05, 0.06, 0.08, 1.0)
+	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# STOP：盖住时同时吞掉触控，避免点到底下的按钮。
+	_dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	_dim.visible = false
+	add_child(_dim)
+
+	var hint := Label.new()
+	hint.text = Text.key(HINT_KEY)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hint.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hint.add_theme_font_size_override("font_size", 16)
+	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dim.add_child(hint)

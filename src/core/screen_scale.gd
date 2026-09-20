@@ -11,11 +11,10 @@ extends RefCounted
 ## 绝大多数横向手机 / 桌面分辨率都能整除（iPhone 2532×1170 → N=3 → 844×390 正好 3×）；
 ## 不整除时最多裁 1~N-1 px，像素仍是 N×。
 ##
-## 竖屏 / 窗口小于基准：整数覆盖无解——例如手机竖屏 390×844，继续套公式会得到
-## 根视口 390×844，把为 640×360 横向构图写死的布局塞进窄高画布，横向裁切、纵向拉爆。
-## 因此只在"横向且两个方向都容得下基准"时才做 integer cover；其余走 [method fallback_aspect]：
-## 横向窗口用 EXPAND 等比铺满（不引入左右黑边），竖屏 / 方屏用 KEEP 保住 16:9 构图
-## （代价是黑边，竖屏本就不是本作支持的构图）。横屏整数路径不受影响。
+## 竖屏 / 窗口小于基准：整数覆盖无解——例如竖屏 390×844，继续套公式会得到又高又窄的
+## 画布，把为 640×360 横向构图写死的布局拉爆。本作只服务横屏，竖屏不入构图：这里一律用
+## [constant Window.CONTENT_SCALE_ASPECT_EXPAND] 等比铺满（不出黑边），再由 [RotateOverlay]
+## 盖上「请旋转设备」遮罩。横屏整数路径不受影响。
 ##
 ## 归属：这里只做纯计算，不碰场景树。"什么时候应用到 [Window]（含窗口尺寸变化）"
 ## 由场景壳决定——标题页与 [Main] 各自在 [code]_ready()[/code] 里应用并监听
@@ -47,13 +46,6 @@ static func can_integer_cover(window_size: Vector2i, base: Vector2i = BASE_FALLB
 	return window_size.x > window_size.y
 
 
-## 非整数覆盖时用哪种 aspect 兜底：横向窗口用 EXPAND 等比铺满，竖屏 / 方屏用 KEEP。
-static func fallback_aspect(window_size: Vector2i) -> int:
-	if window_size.x > window_size.y:
-		return Window.CONTENT_SCALE_ASPECT_EXPAND
-	return Window.CONTENT_SCALE_ASPECT_KEEP
-
-
 ## 纯函数：窗口像素尺寸 → 整数覆盖下的根视口尺寸；方便脱离设备跑规范。
 ## 窗口不满足 [method can_integer_cover] 时返回 [param base]，调用方应改用等比回退。
 static func cover_size(window_size: Vector2i, base: Vector2i = BASE_FALLBACK) -> Vector2i:
@@ -82,6 +74,6 @@ static func apply(window: Window) -> void:
 		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_IGNORE
 		window.content_scale_size = cover_size(window.size, base)
 	else:
-		# 横向窗口用 EXPAND 无黑边铺满；竖屏 / 方屏用 KEEP 保住横向构图。
-		window.content_scale_aspect = fallback_aspect(window.size)
+		# 非横屏 / 小于基准：等比铺满、不出黑边；竖屏由 [RotateOverlay] 盖住提示。
+		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 		window.content_scale_size = base
