@@ -97,6 +97,7 @@
 - 每张画布只允许一个 `CanvasModulate`；子节点 `_ready()` 先于父节点，初始状态切换用 `call_deferred()`。
 - `user://` 可能不可写，存档 / 音频要静默降级；`.godot/` 不入库，新 clone 先 `--import`。
 - `PackedFloat32Array` 传参可原地改；`PackedByteArray.encode_u32/_u16/_s16` 可手写二进制；`AudioStreamWAV` 默认 QOA；`ItemList` focus 样式只能画边。
+- 音频总线必须在 `default_bus_layout.tres` 里预先建好：运行时 `AudioServer.add_bus()` 新增的总线在 Web 导出上不生效（还可能触发越界，godot#115560）；代码里只按名字查找。
 
 ## 测试 / 大文件 / 提交
 

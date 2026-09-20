@@ -1,0 +1,20 @@
+[gd_resource type="AudioBusLayout" format=3]
+
+; BGM / SFX 两条总线必须在这里预先建好，不能在运行时 AudioServer.add_bus()：
+; Web 导出下运行时新增的总线不生效（见 AGENTS.md「Godot 坑」）。
+; volume_db 与 AudioBus.bgm_volume / sfx_volume 的默认值一致，运行时仍由
+; AudioBus.apply_volumes() 覆盖。
+
+[resource]
+bus/1/name = &"BGM"
+bus/1/solo = false
+bus/1/mute = false
+bus/1/bypass_fx = false
+bus/1/volume_db = -3.098
+bus/1/send = &"Master"
+bus/2/name = &"SFX"
+bus/2/solo = false
+bus/2/mute = false
+bus/2/bypass_fx = false
+bus/2/volume_db = -1.412
+bus/2/send = &"Master"

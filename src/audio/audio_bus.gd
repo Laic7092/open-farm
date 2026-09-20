@@ -5,6 +5,9 @@ extends RefCounted
 ## 只承载真正跨归属的东西：BGM / SFX 两条总线、音量设置，以及"刚响过一声"的时间戳
 ## （通知音据此抑制"一个动作两声"）。不持有播放器、不认识任何域、不订阅任何事件。
 ## 发声者各自持有 [SfxPlayer] 直接播放，音量则统一走这里的两条总线。
+##
+## 两条总线在 [code]res://default_bus_layout.tres[/code] 里预先建好：运行时
+## [method AudioServer.add_bus] 在 Web 导出上不生效，所以这里只查找、不创建。
 
 ## BGM / SFX 两条总线的名字。
 const BGM_BUS: StringName = &"BGM"
@@ -22,10 +25,17 @@ static var sfx_volume: float = 0.85
 static var _last_effect_ms: int = 0
 
 
-## 确保两条总线存在并应用当前音量；可重复调用。
+## 确保两条总线就位并应用当前音量；可重复调用。
+##
+## 总线由 [code]res://default_bus_layout.tres[/code] 提供，这里只查找不创建：
+## 运行时 [method AudioServer.add_bus] 在 Web 导出上不生效（见 AGENTS.md「Godot 坑」）。
+## 缺总线时只告警，不阻断发声者。
 static func ensure_buses() -> void:
-	_ensure_bus(BGM_BUS)
-	_ensure_bus(SFX_BUS)
+	for bus_name: StringName in [BGM_BUS, SFX_BUS]:
+		if AudioServer.get_bus_index(bus_name) == -1:
+			push_warning(
+				"AudioBus：缺少 %s 总线（检查 res://default_bus_layout.tres）" % bus_name
+			)
 	apply_volumes()
 
 
@@ -83,14 +93,3 @@ static func save_settings() -> void:
 ## 线性音量（0 ~ 1）转分贝。
 static func volume_db(value: float) -> float:
 	return -80.0 if value <= 0.001 else linear_to_db(value)
-
-
-static func _ensure_bus(bus_name: StringName) -> int:
-	var index := AudioServer.get_bus_index(bus_name)
-	if index != -1:
-		return index
-	AudioServer.add_bus()
-	index = AudioServer.bus_count - 1
-	AudioServer.set_bus_name(index, bus_name)
-	AudioServer.set_bus_send(index, &"Master")
-	return index
