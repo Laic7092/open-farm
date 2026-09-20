@@ -45,6 +45,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # 不是超时问题（134 是 SIGABRT），但导出确实偏慢，放宽上限兜底。
+      GODOT_TIMEOUT: "1800"
     steps:
       - uses: actions/checkout@v7
 
