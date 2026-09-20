@@ -62,6 +62,8 @@ var _saves: Array[Dictionary] = []
 
 
 func _ready() -> void:
+	ScreenScale.apply(get_window())
+	get_window().size_changed.connect(_on_window_resized)
 	PointerInput.sync_cursor()
 	sfx = SfxPlayer.attach(self)
 	_clouds = [_cloud_1, _cloud_2, _cloud_3]
@@ -78,6 +80,11 @@ func _ready() -> void:
 	_save_panel.visible = false
 	_refresh()
 	_focus_default()
+
+
+## 窗口尺寸变化（桌面 / Web 拖拽）后重新按整数倍铺满视口。
+func _on_window_resized() -> void:
+	ScreenScale.apply(get_window())
 
 
 func _process(delta: float) -> void:
