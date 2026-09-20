@@ -6,7 +6,6 @@ extends CanvasLayer
 ## 归属：它是「窗口方向」这个全局显示事实的 UI 投影——自己读 [method Window.size]，
 ## 监听 [signal Window.size_changed] 并逐帧比对兜底（Web 旋转时信号可能漏报），
 ## 不依赖任何域，也不新增 Autoload。
-## [ScreenScale] 只管视口怎么铺、不管提示，两者互不引用，只在同一处挂载点并存。
 
 ## 压在常驻 UI 之上（[code]UiRoot[/code] 是 10），保证竖屏时盖住一切。
 const LAYER: int = 100

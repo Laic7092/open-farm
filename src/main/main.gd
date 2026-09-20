@@ -95,8 +95,6 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	ScreenScale.apply(get_window())
-	get_window().size_changed.connect(_on_window_resized)
 	add_child(RotateOverlay.new())
 	PointerInput.sync_cursor()
 	player_profile.set_playtime_counting(true)
@@ -119,11 +117,6 @@ func _on_view_zoom_changed(zoom: float) -> void:
 	var player := get_tree().get_first_node_in_group(Player.GROUP) as Player
 	if player != null:
 		player.apply_view_zoom(zoom)
-
-
-## 窗口尺寸变化（桌面 / Web 拖拽）后重新按整数倍铺满视口。
-func _on_window_resized() -> void:
-	ScreenScale.apply(get_window())
 
 
 # ---------------------------------------------------------------- 组合根

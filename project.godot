@@ -31,9 +31,11 @@ window/size/viewport_width=640
 window/size/viewport_height=360
 window/size/window_width_override=1280
 window/size/window_height_override=720
-window/stretch/mode="viewport"
+; canvas_items + fractional：直接按原生分辨率铺满，缩放比可为小数（像素不求整数倍）。
+; 若改回 integer，Godot 会向下取整并居中留边，反而需要自己算视口尺寸。
+window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-window/stretch/scale_mode="integer"
+window/stretch/scale_mode="fractional"
 
 [gdunit4]
 

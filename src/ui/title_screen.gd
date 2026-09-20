@@ -65,8 +65,6 @@ var _saves: Array[Dictionary] = []
 
 
 func _ready() -> void:
-	ScreenScale.apply(get_window())
-	get_window().size_changed.connect(_on_window_resized)
 	add_child(RotateOverlay.new())
 	PointerInput.sync_cursor()
 	sfx = SfxPlayer.attach(self)
@@ -85,11 +83,6 @@ func _ready() -> void:
 	_refresh()
 	_focus_default()
 	_setup_start_veil()
-
-
-## 窗口尺寸变化（桌面 / Web 拖拽）后重新按整数倍铺满视口。
-func _on_window_resized() -> void:
-	ScreenScale.apply(get_window())
 
 
 func _process(delta: float) -> void:
