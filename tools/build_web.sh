@@ -47,24 +47,33 @@ fi
 echo "导出 Web：$OUT_DIR/index.html"
 code=0
 run_godot --export-release Web "$OUT_DIR/index.html" >>"$LOG" 2>&1 || code=$?
-if [ "$code" -ne 0 ]; then
-echo "✗ Web 导出失败（退出码 $code，124 = 超时），日志末尾：" >&2
-strip_ansi <"$LOG" | tail -25 | sed 's/^/    /' >&2
+
+# 先校验产物、再看退出码：Godot headless 导出存在「savepack 完成后
+# 退出阶段 abort」的毛病，产物齐全就不该把整个发布判死。
+missing=""
+for f in index.html index.js index.wasm index.pck; do
+[ -s "$OUT_DIR/$f" ] || missing="$missing $f"
+done
+
+pack_done=0
+strip_ansi <"$LOG" | grep -Eq 'DONE[^A-Za-z]*savepack' && pack_done=1
+
+if [ -n "$missing" ]; then
+echo "✗ Web 导出失败（退出码 $code），缺少/为空：$missing" >&2
+strip_ansi <"$LOG" | tail -60 | sed 's/^/    /' >&2
 echo "  若提示缺少导出模板，请安装 Godot 同版本的 export templates。" >&2
 exit 1
 fi
 
-missing=0
-for f in index.html index.js index.wasm index.pck; do
-if [ ! -f "$OUT_DIR/$f" ]; then
-echo "✗ 缺少产物：$OUT_DIR/$f" >&2
-missing=1
-fi
-done
-if [ "$missing" -ne 0 ]; then
-echo "  日志末尾：" >&2
-strip_ansi <"$LOG" | tail -15 | sed 's/^/    /' >&2
+if [ "$code" -ne 0 ]; then
+if [ "$pack_done" -ne 1 ]; then
+echo "✗ Web 导出失败（退出码 $code，124 = 超时），产物在但 savepack 未完成，不敢用。" >&2
+strip_ansi <"$LOG" | tail -60 | sed 's/^/    /' >&2
 exit 1
+fi
+echo "⚠ Godot 退出码 $code，但 savepack 已完成、产物齐全（疑似退出阶段崩溃），继续。" >&2
+echo "  崩溃日志末尾（供排查）：" >&2
+strip_ansi <"$LOG" | tail -40 | sed 's/^/    /' >&2
 fi
 
 echo "✓ web 已生成：$OUT_DIR/index.html"
