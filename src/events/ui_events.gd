@@ -31,6 +31,8 @@ signal pause_menu_toggle_requested()
 signal touch_controls_toggled(enabled: bool)
 ## 相机缩放（画面大小）被改变；系统菜单发出，相机的主人（玩家）应用。
 signal view_zoom_changed(zoom: float)
+## 常驻 UI（HUD / 触控控件）缩放被改变；系统菜单发出，各自的界面主人应用。
+signal ui_scale_changed(scale: float)
 ## 请求打开博物馆图鉴。
 signal museum_requested()
 ## 请求打开委托板。

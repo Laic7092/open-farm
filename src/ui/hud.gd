@@ -23,6 +23,8 @@ const NEGATIVE_NOTIFICATIONS: Array[StringName] = [
 	&"NOTIFY_LOAD_FAILED",
 ]
 
+@onready var status_panel: PanelContainer = $StatusPanel
+@onready var inventory_bar: HBoxContainer = %InventoryBar
 @onready var prompt_label: Label = %PromptLabel
 @onready var toast_label: Label = %ToastLabel
 
@@ -54,8 +56,30 @@ func _ready() -> void:
 	sfx = SfxPlayer.attach(self)
 	EventBus.ui.interaction_prompt_changed.connect(_on_prompt_changed)
 	EventBus.ui.notification_requested.connect(_on_notification)
+	EventBus.ui.ui_scale_changed.connect(_apply_ui_scale)
 	toast_label.modulate.a = 0.0
 	prompt_label.text = ""
+	# 底部三条的 pivot 要等布局拿到 size 才能算，延后一帧再套用存盘值。
+	for region: Control in [inventory_bar, prompt_label, toast_label]:
+		region.resized.connect(_refresh_ui_scale_pivots)
+	_apply_ui_scale.call_deferred(UiSettings.scale())
+
+
+## 常驻 UI 缩放：左上状态卡钉左上角；底部三条钉各自底边中点，
+## 于是放大只朝屏幕内侧长，不会被推出画面。
+func _apply_ui_scale(value: float) -> void:
+	var factor := Vector2(value, value)
+	status_panel.pivot_offset = Vector2.ZERO
+	status_panel.scale = factor
+	for region: Control in [inventory_bar, prompt_label, toast_label]:
+		region.scale = factor
+	_refresh_ui_scale_pivots()
+
+
+## 底部三条底边中点会随内容宽度变化，尺寸一变就重算 pivot。
+func _refresh_ui_scale_pivots() -> void:
+	for region: Control in [inventory_bar, prompt_label, toast_label]:
+		region.pivot_offset = Vector2(region.size.x * 0.5, region.size.y)
 
 
 ## 把注入原样转给实现了该方法的子视图；视图自己决定要不要读、什么时候读。

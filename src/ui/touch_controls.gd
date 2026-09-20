@@ -33,6 +33,8 @@ const RUN_ACTION: StringName = &"run"
 @onready var x_button: TouchButton = %XButton
 ## Y（上）：背包。
 @onready var y_button: TouchButton = %YButton
+## ABXY 整体缩放的宿主：四键围绕同一个屏幕右下角点等比放大，才不会互相重叠。
+@onready var action_pad: Control = %ActionPad
 
 ## 是否处于触控模式（设置值）。
 var _enabled: bool = false
@@ -42,6 +44,8 @@ var _paused: bool = false
 var _injected: Dictionary[StringName, bool] = {}
 ## 本层送出过按下事件的离散动作。
 var _held_actions: Dictionary[StringName, bool] = {}
+## 当前 UI 缩放；由设置广播驱动，只作用于本层。
+var _ui_scale: float = 1.0
 
 
 ## 方向 → 各 [code]move_*[/code] 动作的强度；零分量不入表（调用方据此释放该动作）。
@@ -63,7 +67,12 @@ func _ready() -> void:
 
 	EventBus.ui.touch_controls_toggled.connect(_on_touch_controls_toggled)
 	EventBus.ui.game_paused_changed.connect(_on_game_paused_changed)
+	EventBus.ui.ui_scale_changed.connect(_apply_ui_scale)
+	# pivot 依赖控件的 size，等布局完成后再套用存盘值。
+	joystick.resized.connect(_refresh_ui_scale)
+	action_pad.resized.connect(_refresh_ui_scale)
 	apply_enabled(TouchSettings.is_enabled())
+	_apply_ui_scale.call_deferred(UiSettings.scale())
 
 
 ## 切换触控模式；[param enabled] 为 false 时立刻释放所有注入的按键。
@@ -72,6 +81,21 @@ func apply_enabled(enabled: bool) -> void:
 	if not _enabled:
 		_release_all()
 	_sync_visible()
+
+
+## 触控层缩放：摇杆钉左下角、ABXY 整体钉屏幕右下角，放大只朝屏幕内侧长。
+func _apply_ui_scale(value: float) -> void:
+	_ui_scale = value
+	_refresh_ui_scale()
+
+
+## pivot 依赖控件尺寸；尺寸变化后重算，保证缩放始终绕屏幕角点。
+func _refresh_ui_scale() -> void:
+	var factor := Vector2(_ui_scale, _ui_scale)
+	joystick.pivot_offset = Vector2(0.0, joystick.size.y)
+	joystick.scale = factor
+	action_pad.pivot_offset = action_pad.size
+	action_pad.scale = factor
 
 
 ## 摇杆方向 → 输入动作；静止请传 [constant Vector2.ZERO]。

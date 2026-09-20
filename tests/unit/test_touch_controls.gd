@@ -115,6 +115,31 @@ func test_pointer_events_follow_the_setting() -> void:
 	assert_bool(PointerInput.swallows_pointer()).is_false()
 
 
+func test_ui_scale_applies_to_stick_and_pad() -> void:
+	# 走公开设置：_ready() 的延迟应用会读到它，和真实流程一致。
+	var previous: float = UiSettings.scale()
+	UiSettings.set_scale(2.0, false)
+	var touch := auto_free(load("res://scenes/ui/touch_controls.tscn").instantiate()) as TouchControls
+	add_child(touch)
+	# 等布局跑完，pivot 才会依赖到真实的 size。
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	assert_float(touch.joystick.scale.x).is_equal_approx(2.0, 0.001)
+	# 摇杆钉左下角：pivot 落在控件底边。
+	assert_float(touch.joystick.pivot_offset.y).is_equal_approx(touch.joystick.size.y, 0.001)
+
+	var pad := touch.find_child("ActionPad", true, false) as Control
+	assert_object(pad).is_not_null()
+	if pad == null:
+		return
+	assert_float(pad.scale.x).is_equal_approx(2.0, 0.001)
+	# ABXY 整体钉屏幕右下角：pivot 落在 ActionPad 的右下角。
+	assert_vector(pad.pivot_offset).is_equal_approx(pad.size, Vector2(0.001, 0.001))
+
+	UiSettings.set_scale(previous, false)
+
+
 ## 删掉用例自己的设置文件（存在与否都无所谓）。
 func _delete_settings_file() -> void:
 	if FileAccess.file_exists(TEST_PATH):

@@ -18,6 +18,8 @@ signal close_requested()
 @onready var sfx_slider: HSlider = %SfxSlider
 @onready var zoom_label: Label = %ZoomLabel
 @onready var zoom_slider: HSlider = %ZoomSlider
+@onready var ui_scale_label: Label = %UiScaleLabel
+@onready var ui_scale_slider: HSlider = %UiScaleSlider
 @onready var touch_toggle: Button = %TouchToggle
 @onready var touch_hint: Label = %TouchHint
 
@@ -39,6 +41,14 @@ func _ready() -> void:
 	zoom_slider.set_value_no_signal(ViewSettings.zoom())
 	_refresh_zoom_label(ViewSettings.zoom())
 	zoom_slider.value_changed.connect(_on_zoom_changed)
+
+	# UI 缩放只改 [UiSettings] 这个纯数据设置，应用交给 HUD 与触控层各自完成。
+	ui_scale_slider.min_value = UiSettings.SCALE_MIN
+	ui_scale_slider.max_value = UiSettings.SCALE_MAX
+	ui_scale_slider.step = UiSettings.SCALE_STEP
+	ui_scale_slider.set_value_no_signal(UiSettings.scale())
+	_refresh_ui_scale_label(UiSettings.scale())
+	ui_scale_slider.value_changed.connect(_on_ui_scale_changed)
 
 	# 音量滑杆只改 [AudioBus] 这个共享点。
 	# 先写值再连信号，避免初始化时把设置又存一遍。
@@ -62,6 +72,8 @@ func open() -> void:
 	_refresh_touch_toggle(TouchSettings.is_enabled())
 	zoom_slider.set_value_no_signal(ViewSettings.zoom())
 	_refresh_zoom_label(ViewSettings.zoom())
+	ui_scale_slider.set_value_no_signal(UiSettings.scale())
+	_refresh_ui_scale_label(UiSettings.scale())
 	resume_button.grab_focus()
 
 
@@ -97,6 +109,17 @@ func _on_zoom_changed(value: float) -> void:
 
 func _refresh_zoom_label(value: float) -> void:
 	zoom_label.text = Text.format(&"MENU_ZOOM", {"value": "%.2f" % value})
+
+
+## UI 缩放滑杆：只写 [UiSettings] 并广播，应用交给 HUD 与触控层各自完成。
+func _on_ui_scale_changed(value: float) -> void:
+	UiSettings.set_scale(value)
+	_refresh_ui_scale_label(UiSettings.scale())
+	EventBus.ui.ui_scale_changed.emit(UiSettings.scale())
+
+
+func _refresh_ui_scale_label(value: float) -> void:
+	ui_scale_label.text = Text.format(&"MENU_UI_SCALE", {"value": "%.2f" % value})
 
 
 func _on_quit_pressed() -> void:

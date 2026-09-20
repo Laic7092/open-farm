@@ -24,6 +24,7 @@ MENU_SFX,音效,Sound
 MENU_TITLE,回到标题,Back to Title
 MENU_TOUCH_CONTROLS,虚拟摇杆：{state},Touch controls: {state}
 MENU_ZOOM,画面大小：{value}x,View size: {value}x
+MENU_UI_SCALE,UI 大小：{value}x,UI scale: {value}x
 MUSEUM_CAT_ALL,全部,All
 MUSEUM_CAT_CROP,作物,Crops
 MUSEUM_CAT_FOOD,食物,Food
