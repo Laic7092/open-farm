@@ -8,11 +8,6 @@ func _check_calendar() -> void:
 	_check(_calendar.has_festival_today(), "春 1 日应当是新年祭")
 	_check_eq(_calendar.today_text(), Text.key(&"FESTIVAL_NEW_YEAR"), "今日节日文本应当是新年祭")
 
-	var hud := get_tree().root.find_child("Hud", true, false)
-	if hud != null:
-		var label := hud.find_child("FestivalLabel", true, false) as Label
-		_check(label != null and label.visible, "HUD 应当显示今日节日横幅")
-
 	# 会场 08:00 才开门。
 	_check(not _calendar.is_active(&"new_year"), "06:00 新年祭还没开门")
 	_clock.set_time(9, 0)

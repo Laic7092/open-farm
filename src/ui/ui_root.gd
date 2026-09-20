@@ -130,8 +130,6 @@ func _ready() -> void:
 	dialogue_box.finished.connect(_on_dialogue_finished)
 	dialogue_box.choice_selected.connect(_on_dialogue_choice_selected)
 	pause_menu.close_requested.connect(func() -> void: _close(pause_menu))
-	# 触控控件要抬 HUD 左下角（给摇杆让位），这是唯一的跨界面布局依赖，显式注入。
-	touch_controls.bind_hud(hud)
 
 
 func _unhandled_input(event: InputEvent) -> void:

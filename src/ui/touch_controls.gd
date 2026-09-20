@@ -34,8 +34,6 @@ const RUN_ACTION: StringName = &"run"
 ## Y（上）：背包。
 @onready var y_button: TouchButton = %YButton
 
-## 由 [UiRoot] 注入：触控模式下把 HUD 左下角抬高，给摇杆让位。
-var _hud: Hud
 ## 是否处于触控模式（设置值）。
 var _enabled: bool = false
 ## 当前是否被模态界面压住（暂停中）。
@@ -68,18 +66,11 @@ func _ready() -> void:
 	apply_enabled(TouchSettings.is_enabled())
 
 
-## 注入 HUD：触控模式下 HUD 左下角要腾出摇杆的位置。
-func bind_hud(hud: Hud) -> void:
-	_hud = hud
-	_sync_hud_layout()
-
-
 ## 切换触控模式；[param enabled] 为 false 时立刻释放所有注入的按键。
 func apply_enabled(enabled: bool) -> void:
 	_enabled = enabled
 	if not _enabled:
 		_release_all()
-	_sync_hud_layout()
 	_sync_visible()
 
 
@@ -129,11 +120,6 @@ func _sync_visible() -> void:
 	y_button.visible = world_controls
 	a_button.visible = _enabled
 	b_button.visible = _enabled
-
-
-func _sync_hud_layout() -> void:
-	if _hud != null:
-		_hud.set_touch_layout(_enabled)
 
 
 ## 释放本层注入过的所有输入。

@@ -2,12 +2,13 @@
 
 [ext_resource type="Script" uid="uid://dqfkut3fodt2o" path="res://src/ui/hud.gd" id="1_hud"]
 [ext_resource type="Script" uid="uid://ww2j3fgy3ncu" path="res://src/ui/hud_time_view.gd" id="5_time_view"]
-[ext_resource type="Script" uid="uid://nrghp2yid1fc" path="res://src/ui/hud_weather_view.gd" id="6_weather_view"]
 [ext_resource type="Script" uid="uid://64mp2c67u4pt" path="res://src/ui/hud_player_view.gd" id="7_player_view"]
 [ext_resource type="Script" uid="uid://bk0iedan3n4hn" path="res://src/ui/hud_item_bar_view.gd" id="8_item_bar_view"]
 [ext_resource type="Texture2D" uid="uid://cxwvbo4y1euor" path="res://assets/ui/icon_clock.png" id="2_icon_clock"]
 [ext_resource type="Texture2D" uid="uid://cs04cxjq1y015" path="res://assets/ui/icon_coin.png" id="3_icon_coin"]
 [ext_resource type="Texture2D" uid="uid://b874e60yfdnnv" path="res://assets/ui/icon_stamina.png" id="4_icon_stamina"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hud"]
 
 [node name="Hud" type="Control" unique_id=571582526]
 layout_mode = 3
@@ -19,36 +20,40 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_hud")
 
-[node name="TopLeft" type="VBoxContainer" parent="." unique_id=298731743]
+[node name="StatusPanel" type="PanelContainer" parent="." unique_id=298731743]
 layout_mode = 0
 offset_left = 6.0
 offset_top = 4.0
-offset_right = 220.0
-offset_bottom = 58.0
+offset_right = 6.0
+offset_bottom = 4.0
 mouse_filter = 2
-theme_override_constants/separation = 1
+theme_override_styles/panel = SubResource("StyleBoxEmpty_hud")
 
-[node name="DateLabel" type="Label" parent="TopLeft" unique_id=364590453]
+[node name="Content" type="VBoxContainer" parent="StatusPanel" unique_id=704549361]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3
+
+[node name="TopRow" type="HBoxContainer" parent="StatusPanel/Content" unique_id=859750173]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="DateLabel" type="Label" parent="StatusPanel/Content/TopRow" unique_id=364590453]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.96, 0.85, 1)
 theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
 theme_override_constants/outline_size = 4
 text = "第 1 年 春 1 日"
 
-[node name="FestivalLabel" type="Label" parent="TopLeft"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.94, 0.6, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
-theme_override_constants/outline_size = 4
-
-[node name="TimeRow" type="HBoxContainer" parent="TopLeft" unique_id=2100906547]
+[node name="TimeRow" type="HBoxContainer" parent="StatusPanel/Content/TopRow" unique_id=2100906547]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="ClockIcon" type="TextureRect" parent="TopLeft/TimeRow" unique_id=1172907267]
+[node name="ClockIcon" type="TextureRect" parent="StatusPanel/Content/TopRow/TimeRow" unique_id=1172907267]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -56,7 +61,7 @@ texture = ExtResource("2_icon_clock")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="TimeLabel" type="Label" parent="TopLeft/TimeRow" unique_id=1861985163]
+[node name="TimeLabel" type="Label" parent="StatusPanel/Content/TopRow/TimeRow" unique_id=1861985163]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -64,48 +69,23 @@ theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
 theme_override_constants/outline_size = 4
 text = "06:00"
 
-[node name="WeatherRow" type="HBoxContainer" parent="TopLeft" unique_id=357863367]
+[node name="Divider" type="ColorRect" parent="StatusPanel/Content" unique_id=357863367]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 0.12)
+
+[node name="BottomRow" type="HBoxContainer" parent="StatusPanel/Content" unique_id=1990157694]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="MoneyRow" type="HBoxContainer" parent="StatusPanel/Content/BottomRow" unique_id=1808800693]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="WeatherIcon" type="TextureRect" parent="TopLeft/WeatherRow" unique_id=696108441]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(16, 16)
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="WeatherLabel" type="Label" parent="TopLeft/WeatherRow" unique_id=655099155]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.92, 1, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
-theme_override_constants/outline_size = 4
-text = "晴"
-
-[node name="TopRight" type="VBoxContainer" parent="." unique_id=1990157694]
-layout_mode = 0
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -220.0
-offset_top = 4.0
-offset_right = -6.0
-offset_bottom = 44.0
-grow_horizontal = 0
-mouse_filter = 2
-theme_override_constants/separation = 1
-
-[node name="MoneyRow" type="HBoxContainer" parent="TopRight" unique_id=1808800693]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 4
-alignment = 2
-
-[node name="CoinIcon" type="TextureRect" parent="TopRight/MoneyRow" unique_id=1158429063]
+[node name="CoinIcon" type="TextureRect" parent="StatusPanel/Content/BottomRow/MoneyRow" unique_id=1158429063]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -113,7 +93,7 @@ texture = ExtResource("3_icon_coin")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="MoneyLabel" type="Label" parent="TopRight/MoneyRow" unique_id=1544352729]
+[node name="MoneyLabel" type="Label" parent="StatusPanel/Content/BottomRow/MoneyRow" unique_id=1544352729]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.92, 0.55, 1)
@@ -121,50 +101,14 @@ theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
 theme_override_constants/outline_size = 4
 text = "0G"
 
-[node name="ForecastRow" type="HBoxContainer" parent="TopRight" unique_id=1159005775]
+[node name="StaminaRow" type="HBoxContainer" parent="StatusPanel/Content/BottomRow" unique_id=1925072924]
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_constants/separation = 4
 alignment = 2
 
-[node name="ForecastIcon" type="TextureRect" parent="TopRight/ForecastRow" unique_id=1093612120]
-unique_name_in_owner = true
-modulate = Color(1, 1, 1, 0.8)
-custom_minimum_size = Vector2(16, 16)
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ForecastLabel" type="Label" parent="TopRight/ForecastRow" unique_id=337023466]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.85, 0.95, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
-theme_override_constants/outline_size = 4
-text = "明日 晴"
-
-[node name="BottomLeft" type="VBoxContainer" parent="." unique_id=704549361]
-unique_name_in_owner = true
-layout_mode = 0
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = -46.0
-offset_right = 220.0
-offset_bottom = -6.0
-grow_vertical = 0
-mouse_filter = 2
-theme_override_constants/separation = 3
-
-[node name="StaminaRow" type="HBoxContainer" parent="BottomLeft" unique_id=1925072924]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 4
-
-[node name="StaminaIcon" type="TextureRect" parent="BottomLeft/StaminaRow" unique_id=847948791]
+[node name="StaminaIcon" type="TextureRect" parent="StatusPanel/Content/BottomRow/StaminaRow" unique_id=847948791]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -172,36 +116,13 @@ texture = ExtResource("4_icon_stamina")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="StaminaBar" type="ProgressBar" parent="BottomLeft/StaminaRow" unique_id=2095294692]
+[node name="StaminaBar" type="ProgressBar" parent="StatusPanel/Content/BottomRow/StaminaRow" unique_id=2095294692]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 12)
+custom_minimum_size = Vector2(72, 10)
 layout_mode = 2
 size_flags_vertical = 4
 value = 100.0
 show_percentage = false
-
-[node name="ToolRow" type="HBoxContainer" parent="BottomLeft" unique_id=859750173]
-visible = false
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 4
-
-[node name="ToolIcon" type="TextureRect" parent="BottomLeft/ToolRow" unique_id=1281785081]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(16, 16)
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ToolLabel" type="Label" parent="BottomLeft/ToolRow" unique_id=1384791211]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
-theme_override_constants/outline_size = 4
-text = "手持"
 
 [node name="InventoryBar" type="HBoxContainer" parent="." unique_id=1451002251]
 unique_name_in_owner = true
@@ -261,9 +182,6 @@ autowrap_mode = 3
 
 [node name="TimeView" type="Node" parent="Views"]
 script = ExtResource("5_time_view")
-
-[node name="WeatherView" type="Node" parent="Views"]
-script = ExtResource("6_weather_view")
 
 [node name="PlayerView" type="Node" parent="Views"]
 script = ExtResource("7_player_view")

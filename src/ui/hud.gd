@@ -2,8 +2,8 @@ class_name Hud
 extends Control
 ## 常驻 HUD 的容器。
 ##
-## 它[b]只负责组装[/b]：时间 / 天气 / 金钱体力 / 物品栏各由自己的小视图
-## （[HudTimeView] / [HudWeatherView] / [HudPlayerView] / [HudItemBarView]）
+## 它[b]只负责组装[/b]：左上角状态卡（日期 / 时间 / 金钱 / 体力）与底部物品栏
+## 各由自己的小视图（[HudTimeView] / [HudPlayerView] / [HudItemBarView]）
 ## 订阅自己域的信号并渲染，容器不认识它们的状态，也不替它们保存一份。
 ##
 ## 交互提示与浮动提示是 UI 域自己的东西，所以留在这里。
@@ -23,18 +23,8 @@ const NEGATIVE_NOTIFICATIONS: Array[StringName] = [
 	&"NOTIFY_LOAD_FAILED",
 ]
 
-## 左下角信息块（体力 / 手持）的基准偏移，与 [code]hud.tscn[/code] 里一致。
-const BOTTOM_LEFT_TOP: float = -46.0
-const BOTTOM_LEFT_BOTTOM: float = -6.0
-## 触控模式下左下角让给虚拟摇杆的抬升量：摇杆控件高 96 + 下边距 8。
-##
-## 与 [code]touch_controls.tscn[/code] 的 Joystick 尺寸保持一致，
-## 否则 HUD 会和摇杆叠在一起。
-const TOUCH_LIFT: float = 104.0
-
 @onready var prompt_label: Label = %PromptLabel
 @onready var toast_label: Label = %ToastLabel
-@onready var bottom_left: VBoxContainer = %BottomLeft
 
 var _toast_tween: Tween
 ## 本界面自己的音效播放器：通知音由显示通知的界面发出。
@@ -58,15 +48,6 @@ func bind_services(
 ## 由 [UiRoot] 转发的"当前物品栏"提供者；下发给物品栏视图。
 func bind_item_bar(provider: Callable) -> void:
 	_dispatch(&"bind_item_bar", [provider])
-
-
-## 触控模式：把左下角信息块抬到虚拟摇杆上方，避免与摇杆叠在一起。
-##
-## 位置由常量推导、不读当前值，所以重复调用或与 [TouchControls] 的初始化乱序都安全。
-func set_touch_layout(enabled: bool) -> void:
-	var lift: float = TOUCH_LIFT if enabled else 0.0
-	bottom_left.offset_top = BOTTOM_LEFT_TOP - lift
-	bottom_left.offset_bottom = BOTTOM_LEFT_BOTTOM - lift
 
 
 func _ready() -> void:
