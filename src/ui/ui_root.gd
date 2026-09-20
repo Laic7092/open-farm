@@ -129,7 +129,7 @@ func _ready() -> void:
 
 	dialogue_box.finished.connect(_on_dialogue_finished)
 	dialogue_box.choice_selected.connect(_on_dialogue_choice_selected)
-	pause_menu.close_requested.connect(func() -> void: _close(pause_menu))
+	pause_menu.close_requested.connect(_on_pause_menu_close_requested)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -196,6 +196,8 @@ func is_modal_open() -> bool:
 ## 场景切换、读档、回到标题界面时都应该调用它，
 ## 否则会出现"菜单跨场景残留、时间被永久暂停"这类难查的状态泄漏。
 func close_all() -> void:
+	if pause_menu.visible:
+		EventBus.ui.pause_menu_toggled.emit(false)
 	dialogue_box.visible = false
 	inventory_ui.close()
 	shop_ui.close()
@@ -311,8 +313,18 @@ func _on_inventory_toggle() -> void:
 
 func _on_pause_menu_toggle() -> void:
 	if pause_menu.visible:
-		pause_menu.close()
-		_close(pause_menu)
+		_on_pause_menu_close_requested()
 		return
 	_open(pause_menu)
 	pause_menu.open()
+	EventBus.ui.pause_menu_toggled.emit(true)
+
+
+## 菜单内"继续"：先关面板再出栈（与 Esc / 触控 B 走同一条关闭路径）。
+##
+## [method _close] 只管模态栈与暂停，不负责隐藏面板；漏掉 [method PauseMenu.close]
+## 就会出现"游戏已恢复、菜单还贴在屏幕上"。
+func _on_pause_menu_close_requested() -> void:
+	pause_menu.close()
+	_close(pause_menu)
+	EventBus.ui.pause_menu_toggled.emit(false)

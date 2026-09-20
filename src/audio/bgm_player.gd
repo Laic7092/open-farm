@@ -4,7 +4,8 @@ extends Node
 ##
 ## 地图挂一个放自己的地图曲（含昼夜换曲），标题页挂一个放标题曲。
 ## 只做四件事：按 id 播放、淡入淡出、昼夜选曲、临时接管；总线与音量走
-## [AudioBus] 这个共享点。菜单 / 对话暂停整棵树时 BGM 继续播放。
+## [AudioBus] 这个共享点。对话 / 商店暂停整棵树时 BGM 继续播放；
+## 只有系统菜单会把 BGM 冻住（见 [signal UiEvents.pause_menu_toggled]）。
 
 const Catalog := preload("res://src/audio/audio_catalog.gd")
 
@@ -29,15 +30,18 @@ var _clock: GameDateClock
 
 func _enter_tree() -> void:
 	EventBus.hour_changed.connect(_on_hour_changed)
+	EventBus.ui.pause_menu_toggled.connect(_on_pause_menu_toggled)
 
 
 func _exit_tree() -> void:
 	if EventBus.hour_changed.is_connected(_on_hour_changed):
 		EventBus.hour_changed.disconnect(_on_hour_changed)
+	if EventBus.ui.pause_menu_toggled.is_connected(_on_pause_menu_toggled):
+		EventBus.ui.pause_menu_toggled.disconnect(_on_pause_menu_toggled)
 
 
 func _ready() -> void:
-	# 菜单 / 对话会把整棵树暂停，BGM 必须继续走（否则暂停后 BGM 也停了）。
+	# 对话 / 商店会把整棵树暂停，BGM 要照常走；系统菜单的静音单独处理。
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	AudioBus.ensure_buses()
 	_player = AudioStreamPlayer.new()
@@ -125,6 +129,12 @@ func pop_override() -> void:
 
 func _on_hour_changed(_hour: int) -> void:
 	refresh()
+
+
+## 系统菜单打开时冻住 BGM（不销毁，关掉菜单接着放）；对话 / 商店不受影响。
+func _on_pause_menu_toggled(opened: bool) -> void:
+	if _player != null:
+		_player.stream_paused = opened
 
 
 func _apply_current() -> void:
