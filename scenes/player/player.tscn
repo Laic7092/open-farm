@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://src/player/player.gd" id="1_player"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/actors/player_frames.tres" id="2_frames"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://src/tools/farm_interactor.gd" id="7_interactor"]
 [ext_resource type="Script" path="res://src/fishing/player_state_fishing.gd" id="8_fishing"]
 [ext_resource type="Script" path="res://src/fishing/fishing_bobber.gd" id="9_bobber"]
+[ext_resource type="Script" path="res://src/player/held_tool.gd" id="10_held_tool"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
 size = Vector2(10, 8)
@@ -28,6 +29,10 @@ offset = Vector2(0, -8)
 sprite_frames = ExtResource("2_frames")
 animation = &"idle_down"
 autoplay = "idle_down"
+
+[node name="HeldTool" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("10_held_tool")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 4)

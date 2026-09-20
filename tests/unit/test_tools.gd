@@ -57,3 +57,23 @@ func test_tools_own_their_sound() -> void:
 	# 播种不出自工具系统：种子的音效由 [FarmGrid] 在种成功时播放。
 	# 钓竿不在地面上结算，不出声。
 	assert_bool(ToolFishing.new().sfx_id() == &"").is_true()
+
+
+## 挥动曲线：从起手出发、经过蓄力与命中、再回到起手。
+func test_swing_curve_visits_windup_and_strike() -> void:
+	assert_float(ToolSwing.angle_deg(0.0)).is_equal_approx(ToolSwing.REST_DEG, 0.001)
+	assert_float(ToolSwing.angle_deg(1.0)).is_equal_approx(ToolSwing.REST_DEG, 0.001)
+	assert_float(ToolSwing.angle_deg(ToolSwing.WINDUP_END)).is_equal_approx(
+		ToolSwing.WINDUP_DEG, 0.001
+	)
+	assert_float(ToolSwing.angle_deg(ToolSwing.STRIKE_END)).is_equal_approx(
+		ToolSwing.STRIKE_DEG, 0.001
+	)
+	# 真的"挥"出去了：命中角大于起手角。
+	assert_bool(ToolSwing.STRIKE_DEG > ToolSwing.REST_DEG).is_true()
+
+
+## 进度越界不能甩出奇怪的角度。
+func test_swing_curve_clamps_out_of_range() -> void:
+	assert_float(ToolSwing.angle_deg(-3.0)).is_equal_approx(ToolSwing.REST_DEG, 0.001)
+	assert_float(ToolSwing.angle_deg(42.0)).is_equal_approx(ToolSwing.REST_DEG, 0.001)

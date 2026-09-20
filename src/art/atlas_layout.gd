@@ -160,6 +160,16 @@ const NPC_WALK_COLUMNS: Array[int] = [0, 1]
 ## [code]assets/sprites/items/<item_id>.png[/code]，一格 16×16。
 const ITEM_ICON_SIZE := Vector2i(16, 16)
 
+# ---------------------------------------------------------------- 手持工具
+
+## 角色挥动时手里那件工具的贴图：[code]assets/sprites/tools/<tool_id>.png[/code]。
+##
+## 每件工具一张独立小图，尺寸 16×24（宽 1 格、长 1.5 格），竖直摆放：
+## 工具头朝上、握柄在底部中心。[code]HeldToolView[/code] 以握柄为轴心旋转，
+## 于是挥动是"转出来"的，不需要为每件工具画一套逐帧挥动图。
+const TOOL_DIR: String = "res://assets/sprites/tools"
+const TOOL_SPRITE_SIZE := Vector2i(TILE, TILE + TILE / 2)
+
 # ---------------------------------------------------------------- 牲畜
 
 ## [code]assets/sprites/animals/<id>.png[/code] 固定 3 列。

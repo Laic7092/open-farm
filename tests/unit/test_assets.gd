@@ -208,6 +208,24 @@ func test_npc_png_matches_atlas_layout() -> void:
 		assert_int(texture.get_height()).is_equal(Layout.NPC_SIZE.y)
 
 
+## 每件工具都要有一张能拿在手里的大图（16×24），否则挥动时手里是空的。
+func test_every_tool_has_a_held_sprite() -> void:
+	for tool_id: StringName in Database.tools():
+		var path: String = "res://assets/sprites/tools/%s.png" % tool_id
+		var texture := load(path) as Texture2D
+		assert_object(texture).override_failure_message(
+			"工具 %s 没有手持贴图 %s（跑一次 ./tools/build_assets.sh）" % [tool_id, path]
+		).is_not_null()
+		if texture == null:
+			continue
+		assert_int(texture.get_width()).override_failure_message(
+			"%s 宽度应为 %d" % [path, Layout.TOOL_SPRITE_SIZE.x]
+		).is_equal(Layout.TOOL_SPRITE_SIZE.x)
+		assert_int(texture.get_height()).override_failure_message(
+			"%s 高度应为 %d" % [path, Layout.TOOL_SPRITE_SIZE.y]
+		).is_equal(Layout.TOOL_SPRITE_SIZE.y)
+
+
 ## 每栋住宅都必须是 64×64（场景里的落地碰撞盒按这个尺寸标定），
 ## 而且**剪影**必须各成一栋——只换配色不算换了房子。
 func test_npc_houses_are_distinct() -> void:

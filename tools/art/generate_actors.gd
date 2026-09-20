@@ -275,11 +275,11 @@ func _draw_actor(
 		Art.h_line(image, ox + 3, oy + 4, 10, bandana)
 		Art.rect(image, Rect2i(ox + 12, oy + 4, 1, 3), bandana)
 
-	# 手臂 / 手持工具
+	# 手臂：挥动姿势抬右臂。工具本身由 [HeldToolView] 单独画，不烘进角色图集，
+	# 这样每件工具才能有自己的造型，也能空挥。
 	if pose == 2:
 		Art.rect(image, Rect2i(ox + 11, oy + 6, 2, 5), skin)
-		Art.rect(image, Rect2i(ox + 12, oy + 0, 2, 7), P.WOOD)
-		Art.px(image, ox + 13, oy + 0, P.STONE_LIGHT)
+		Art.px(image, ox + 11, oy + 5, skin)
 	else:
 		Art.rect(image, Rect2i(ox + 3, oy + 14, 2, 8), skin_dark)
 		Art.rect(image, Rect2i(ox + 11, oy + 14, 2, 8), skin_dark)

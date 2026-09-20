@@ -113,6 +113,9 @@ func use_tool(tool: ToolData, cell: Vector2i) -> bool:
 	if success:
 		consume_stamina(tool)
 		_play_sfx(impl)
+	else:
+		# 空挥：没命中也要有"挥了一下"的反馈，否则手感像没反应。
+		_play_whiff()
 
 	action_finished.emit(tool.id, cell, success)
 	EventBus.farm.tool_used.emit(tool.id, cell, success)
@@ -152,6 +155,12 @@ func _play_sfx(impl: Tool) -> void:
 	var sfx_id := impl.sfx_id()
 	if sfx_id != &"" and player != null and player.sfx != null:
 		player.sfx.play(sfx_id, 1.0, -3.0)
+
+
+## 空挥的挥空音；比命中音轻一些。
+func _play_whiff() -> void:
+	if player != null and player.sfx != null:
+		player.sfx.play(AudioCatalog.SFX_TOOL_SWING, 1.0, -6.0)
 
 
 func consume_stamina(tool: ToolData) -> void:

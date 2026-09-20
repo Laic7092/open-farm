@@ -4,7 +4,8 @@ extends State
 ##
 ## 这里不写任何钓鱼逻辑——阶段时序、拉扯小游戏、浮标与音效都在
 ## [FishingSession] 里；本状态只负责"此刻玩家在钓鱼"这件事本身，
-## 并在单元结束时切回待机。
+## 并在单元结束时切回待机。钓鱼期间举着的钓竿由 [HeldToolView] 画，
+## 鱼线起点取自它的 [method HeldToolView.tip_position]。
 
 var player: Player
 
@@ -15,10 +16,14 @@ func enter(_previous: State) -> void:
 	if not player.fishing.finished.is_connected(_on_finished):
 		player.fishing.finished.connect(_on_finished)
 	player.fishing.begin()
+	# 举着钓竿：贴图与鱼线起点都由它给出，竿尖才跟画面一致。
+	player.held_tool.show_tool(player.selected_tool())
+	player.held_tool.apply_hold(player.facing)
 
 
 func exit() -> void:
 	player.fishing.end()
+	player.held_tool.hide_tool()
 	if player.fishing.finished.is_connected(_on_finished):
 		player.fishing.finished.disconnect(_on_finished)
 

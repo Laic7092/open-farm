@@ -54,6 +54,7 @@ GENERATORS=(
 	"tools/art/generate_animals.gd"   # 每种牲畜一张状态表
 	"tools/art/generate_flora.gd"     # 每种野生植被一张阶段表（树 / 草 / 石）
 	"tools/art/generate_items.gd"     # 道具图标
+	"tools/art/generate_tools.gd"     # 手持工具（16×24 大图）
 	"tools/art/generate_ui.gd"        # UI 九宫格与图标
 	"tools/art/generate_title.gd"     # 标题页背景与云
 	"tools/art/generate_weather.gd"   # 天气粒子贴图

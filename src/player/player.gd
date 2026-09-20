@@ -73,6 +73,7 @@ func bind_services(
 	_relationships = relationships
 
 @onready var sprite: AnimatedSprite2D = %Sprite
+@onready var held_tool: HeldToolView = %HeldTool
 @onready var state_machine: StateMachine = %StateMachine
 @onready var interaction_area: Area2D = %InteractionArea
 @onready var interactor: FarmInteractor = %FarmInteractor
@@ -338,9 +339,11 @@ func fishing_target_position(distance: float) -> Vector2:
 
 ## 竿尖的世界坐标（鱼线的起点）。
 ##
-## 只是一个跟着朝向走的近似点：抛竿时“手抬到哪”、鱼线就从哪开始。
+## 直接取手里那件工具的尖端：竿尖画在哪，鱼线就从哪出来。
 func rod_tip_position() -> Vector2:
-	return global_position + Vector2(facing_vector()) * 9.0 + Vector2(0.0, -9.0)
+	if held_tool == null:
+		return global_position
+	return global_position + held_tool.tip_position()
 
 
 ## 此刻能否下竿（手持钓竿 + 面前是水）。
