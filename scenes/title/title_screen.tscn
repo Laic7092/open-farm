@@ -274,4 +274,4 @@ autowrap_mode = 3
 unique_name_in_owner = true
 script = ExtResource("6_bgm")
 track = &"title"
-autoplay = true
+autoplay = false

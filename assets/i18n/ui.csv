@@ -124,6 +124,7 @@ TITLE_SAVE_EMPTY,暂无存档,No save data
 TITLE_SAVE_HINT,Enter 读取 · Delete 删除 · Esc 返回,Enter load · Delete remove · Esc back
 TITLE_SAVE_LABEL,存档 {slot},Slot {slot}
 TITLE_SAVE_TITLE,选择存档,Select Save
+TITLE_TAP_TO_START,点击或按任意键开始,Click or press any key to start
 UI_FISHING_CATCH,钓到了 {item}（{size} 厘米）,Caught {item} ({size} cm)
 UI_FISHING_CHARGE,蓄力,Charge
 UI_FISHING_PROGRESS,上钩,Catch

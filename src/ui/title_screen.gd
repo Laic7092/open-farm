@@ -48,8 +48,11 @@ const DELETE_KEY: Key = KEY_DELETE
 @onready var _cloud_1: TextureRect = %Cloud1
 @onready var _cloud_2: TextureRect = %Cloud2
 @onready var _cloud_3: TextureRect = %Cloud3
+@onready var _bgm: BgmPlayer = %Bgm
 
 var _clouds: Array[TextureRect] = []
+## 开局的“点击 / 按键开始”遮罩；默认所有平台都展示，用来接住第一次输入。
+var _audio_gate: Control
 ## 本页面自己的音效播放器。
 var sfx: SfxPlayer
 ## 标题底板的基准高度，用于做轻微的上下浮动。
@@ -80,6 +83,7 @@ func _ready() -> void:
 	_save_panel.visible = false
 	_refresh()
 	_focus_default()
+	_setup_audio_gate()
 
 
 ## 窗口尺寸变化（桌面 / Web 拖拽）后重新按整数倍铺满视口。
@@ -101,6 +105,12 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	# 开始遮罩还在时，先吞掉这次输入，只用来撤掉遮罩并开始 BGM。
+	if _audio_gate != null:
+		if event.is_pressed() and not event.is_echo():
+			_open_audio_gate()
+		get_viewport().set_input_as_handled()
+		return
 	# 纯键盘操作：指针事件一律吞掉，避免隐藏的光标误触按钮；
 	# 触控模式下放行，标题页 / 存档列表的按钮才能点。
 	if PointerInput.swallows_pointer() and PointerInput.is_pointer(event):
@@ -123,6 +133,43 @@ func _unhandled_input(event: InputEvent) -> void:
 	):
 		get_viewport().set_input_as_handled()
 		_delete_focused_save()
+
+
+# ---------------------------------------------------------------- 音频解锁
+
+## 默认展示“点击 / 按键开始”遮罩，等第一次输入后再播 BGM。
+## Web 上这是浏览器自动播放策略（用户手势前 AudioContext 静音）的硬性要求；
+## 原生上则作为跨平台一致的开始引导。
+func _setup_audio_gate() -> void:
+	_audio_gate = Control.new()
+	_audio_gate.name = "AudioGate"
+	_audio_gate.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_audio_gate.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_audio_gate)
+
+	var dim := ColorRect.new()
+	dim.color = Color(0.05, 0.06, 0.08, 0.72)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_audio_gate.add_child(dim)
+
+	var hint := Label.new()
+	hint.text = Text.key(&"TITLE_TAP_TO_START")
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hint.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hint.add_theme_font_size_override("font_size", 16)
+	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_audio_gate.add_child(hint)
+
+
+## 第一次输入：撤掉遮罩并开始标题 BGM。
+func _open_audio_gate() -> void:
+	if _audio_gate == null:
+		return
+	_audio_gate.queue_free()
+	_audio_gate = null
+	_bgm.refresh.call_deferred()
 
 
 # ---------------------------------------------------------------- 文本
