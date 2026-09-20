@@ -20,6 +20,11 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 静态 HTML（`.tmp/wiki/index.html`），含各系统卡片、对白分支、商店货架、文案对照与图片墙；
 `--strict` 可在有缺译 / 悬空引用时非零退出。
 
+线上站点（GitHub Pages，一次发布整站）：`/wiki/` 内容 wiki、`/game/` Web 试玩，根路径是导航页。
+push main 命中构建路径（`src/**`、`scenes/**`、`assets/**`、`data/**` 等）时全量重建两者，
+也可在 Actions 里手动 Run，或推 `v*` tag。
+本地导出 Web：`./tools/build_web.sh`（需先装同版本 export templates），产物在 `target/web/`。
+
 ## 操作
 
 键鼠：纯键盘，鼠标隐藏；菜单 / 商店 / 标题页可用方向键或 `WASD` 导航，回车 / 空格 / `E` 确认，`Esc` 返回。

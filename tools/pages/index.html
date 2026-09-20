@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>open-farm</title>
+<style>
+:root{--bg:#12141a;--panel:#1c1f28;--panel2:#232733;--line:#2f3542;--fg:#e6e9f0;--dim:#8a93a6;--accent:#ffd166}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--fg);font:14px/1.7 "Segoe UI",system-ui,"Microsoft YaHei",sans-serif}
+main{width:min(680px,92vw);padding:32px 0}
+h1{font-size:26px;margin:0 0 4px}
+p.sub{color:var(--dim);margin:0 0 28px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+a.card{display:block;padding:20px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--fg);text-decoration:none;transition:border-color .15s,transform .15s}
+a.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card h2{margin:0 0 6px;font-size:17px}
+.card p{margin:0;color:var(--dim);font-size:12.5px}
+.tag{display:inline-block;margin-bottom:12px;padding:2px 8px;border-radius:999px;background:var(--panel2);color:var(--accent);font-size:11px}
+@media(max-width:520px){.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <h1>open-farm</h1>
+  <p class="sub">牧场物语复刻 · 内容审阅与 Web 试玩</p>
+  <div class="cards">
+    <a class="card" href="wiki/">
+      <span class="tag">WIKI</span>
+      <h2>游戏内容 Wiki</h2>
+      <p>作物、NPC、对白、商店、文案对照与图片墙。</p>
+    </a>
+    <a class="card" href="game/">
+      <span class="tag">WEB</span>
+      <h2>Web 试玩</h2>
+      <p>Godot Web 导出，支持键盘与触控。</p>
+    </a>
+  </div>
+</main>
+</body>
+</html>

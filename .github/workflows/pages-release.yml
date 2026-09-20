@@ -1,0 +1,24 @@
+name: Deploy release tag
+
+# 打 v* tag 时复用 pages.yml 整站发布；单独拆出来是为了不让 push 的
+# paths 过滤误伤 tag（tag 事件没有“改了哪些文件”的可比对象）。
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

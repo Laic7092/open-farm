@@ -405,8 +405,8 @@ def sprites_section(ctx: Context) -> str:
     return f'<section id="sprites" class="sec"><header class="sec-head"><h2>图片墙</h2></header>{"".join(blocks)}</section>'
 
 
-def build(root: str, out_dir: str) -> tuple[str, list[tuple[str, str, str]]]:
-    ctx = Context(root, out_dir)
+def build(root: str, out_dir: str, data_path: str | None = None) -> tuple[str, list[tuple[str, str, str]]]:
+    ctx = Context(root, out_dir, data_path)
     problems = problems_of(ctx)
     warnings = Counter(kind for kind, _rid, _msg in problems if kind)
 
@@ -461,12 +461,13 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="生成 open-farm 内容 wiki（静态 HTML）")
     parser.add_argument("--root", default=ROOT, help="仓库根目录")
     parser.add_argument("--out", default=os.path.join(ROOT, ".tmp", "wiki"), help="输出目录")
+    parser.add_argument("--data", default=None, help="data.json 路径（默认 <输出目录>/data.json）")
     parser.add_argument("--open", action="store_true", help="生成后用浏览器打开")
     parser.add_argument("--strict", action="store_true", help="有缺译 / 悬空引用时以非零码退出")
     parser.add_argument("--serve", type=int, metavar="PORT", help="生成后起本地静态服务")
     args = parser.parse_args()
 
-    path, problems = build(args.root, args.out)
+    path, problems = build(args.root, args.out, args.data)
     print(f"wiki 已生成：{path}（{len(problems)} 个待查）")
     for kind, rid, message in problems:
         print(f"  ! {kind + ' ' + rid if kind else '全局'}：{message}")

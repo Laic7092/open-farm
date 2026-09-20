@@ -133,8 +133,12 @@ class Assets:
 class Context:
     """渲染层的数据入口：翻译、引用链接、反查。"""
 
-    def __init__(self, root: str, out_dir: str) -> None:
-        with open(os.path.join(out_dir, "data.json"), encoding="utf-8") as handle:
+    def __init__(self, root: str, out_dir: str, data_path: str | None = None) -> None:
+        # data.json 默认跟输出目录；由 --data 指定时可把 HTML 输出到任意子路径
+        # （例如站点里的 wiki/），而数据仍读 dump 的固定位置。
+        if data_path is None:
+            data_path = os.path.join(out_dir, "data.json")
+        with open(data_path, encoding="utf-8") as handle:
             payload = json.load(handle)
         self.version: str = payload.get("version", "")
         self.layout: dict = payload["layout"]

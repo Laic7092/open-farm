@@ -1,25 +1,36 @@
-name: Deploy wiki to GitHub Pages
+name: Deploy site (wiki + game) to GitHub Pages
 
-# 把「游戏内容 wiki」自动发布到 GitHub Pages：
-#   data/**（.tres）→ Godot 无头导出 data.json → Python 渲染静态站点 → Pages
-# 只改这些内容才触发，避免纯代码改动反复重发布。
+# 一次发布整站，覆盖三个路径：
+#   /        根导航页（tools/pages/index.html）
+#   /wiki/   游戏内容 wiki（data/** → data.json → 静态 HTML）
+#   /game/   Godot Web 导出
+#
+# 每次触发都全量重建 wiki + game，不缓存 /game 产物，最省心。
+# 触发方式：
+#   - push main 且命中 paths（游戏源码 / 数据 / 美术 / wiki 工具等）
+#   - Actions 页手动 Run workflow
+#   - push v* tag（见 pages-release.yml，复用本文件）
 on:
   push:
     branches: [main]
     paths:
+      - "src/**"
+      - "scenes/**"
+      - "assets/**"
       - "data/**"
-      - "assets/i18n/**"
-      - "assets/sprites/**"
-      - "src/autoload/database.gd"
-      - "src/data/**"
-      - "src/art/atlas_layout.gd"
+      - "addons/**"
+      - "project.godot"
+      - "export_presets.cfg"
+      - "icon.svg"
+      - "tools/build_web.sh"
       - "tools/build_wiki.py"
       - "tools/build_wiki.sh"
       - "tools/wiki/**"
       - "tools/wiki_dump.gd"
       - "tools/wiki_dump.tscn"
-      - "project.godot"
+      - "tools/pages/**"
       - ".github/workflows/pages.yml"
+  workflow_call:
   workflow_dispatch:
 
 permissions:
@@ -27,10 +38,9 @@ permissions:
   pages: write
   id-token: write
 
-# 同一时间只跑一次发布；新推送取消排队中的旧任务。
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -42,8 +52,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      # Godot 仅用于把 .tres 导出成 data.json；官方便携版静态链接，
-      # 无需额外系统库。
+      - name: 安装 Python 依赖
+        run: pip install --quiet pillow
+
+      # Godot 既用于导出 .tres → data.json，也用于 Web 导出。
       - name: 安装 Godot 4.7.2
         run: |
           curl -fsSL -o godot.zip \
@@ -53,14 +65,37 @@ jobs:
           chmod +x godot
           ./godot --version
 
-      - name: 安装 Python 依赖
-        run: pip install --quiet pillow
+      # 只缓存导出模板（几百 MB），不是缓存的 /game 产物。
+      - name: 缓存 Web 导出模板
+        id: tpl
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates/4.7.2.stable
+          key: godot-templates-4.7.2-stable
+
+      - name: 安装 Web 导出模板
+        if: steps.tpl.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL -o templates.tpz \
+            https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
+          mkdir -p /tmp/tpl ~/.local/share/godot/export_templates/4.7.2.stable
+          unzip -q templates.tpz -d /tmp/tpl
+          cp -a /tmp/tpl/templates/. ~/.local/share/godot/export_templates/4.7.2.stable/
 
       - name: 刷新 Godot 导入缓存
         run: ./godot --headless --path . --import
 
-      - name: 构建 wiki
-        run: ./tools/build_wiki.sh
+      - name: 构建 wiki（输出到站点的 /wiki）
+        run: ./tools/build_wiki.sh --out .tmp/site/wiki --data .tmp/wiki/data.json
+
+      - name: 导出 Web 游戏（输出到站点的 /game）
+        run: ./tools/build_web.sh .tmp/site/game
+
+      - name: 组装站点（根导航页 + .nojekyll）
+        run: |
+          cp tools/pages/index.html .tmp/site/index.html
+          touch .tmp/site/.nojekyll
+          find .tmp/site -maxdepth 2 -type f | sort
 
       # 首发布前需到 Settings → Pages 把 Source 选成 GitHub Actions（一次性）。
       # 不在这用 enablement: true：该选项要求 PAT / GitHub App 这类
@@ -69,7 +104,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: .tmp/wiki
+          path: .tmp/site
 
   deploy:
     needs: build
