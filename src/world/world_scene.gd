@@ -270,11 +270,8 @@ func _distribute_npc_field() -> void:
 
 func _apply_camera_limits() -> void:
 	var player := get_tree().get_first_node_in_group(Player.GROUP) as Player
-	if player == null or player.camera == null:
+	if player == null:
 		return
-	var camera: Camera2D = player.camera
-	camera.limit_left = int(camera_limits.position.x)
-	camera.limit_top = int(camera_limits.position.y)
-	camera.limit_right = int(camera_limits.end.x)
-	camera.limit_bottom = int(camera_limits.end.y)
-	camera.reset_smoothing()
+	# 相机由玩家持有；地图只把「本图可看范围」这一事实交过去，
+	# 由 [method Player.apply_camera_limits] 统一设置 limit 与最小 zoom。
+	player.apply_camera_limits(camera_limits)

@@ -8,8 +8,14 @@ extends RefCounted
 ## 有的 4px）且插值发糊，与像素风"整数倍"原则冲突。
 ##
 ## 做法：N = floor(min(宽/基准宽, 高/基准高))（至少 1），根视口 = ceil(宽/N) × ceil(高/N)。
-## 绝大多数手机 / 桌面分辨率都能整除（iPhone 2532×1170 → N=3 → 844×390 正好 3×）；
+## 绝大多数横向手机 / 桌面分辨率都能整除（iPhone 2532×1170 → N=3 → 844×390 正好 3×）；
 ## 不整除时最多裁 1~N-1 px，像素仍是 N×。
+##
+## 竖屏 / 窗口小于基准：整数覆盖无解——例如手机竖屏 390×844，继续套公式会得到
+## 根视口 390×844，把为 640×360 横向构图写死的布局塞进窄高画布，横向裁切、纵向拉爆。
+## 因此只在"横向且两个方向都容得下基准"时才做 integer cover；其余走 [method fallback_aspect]：
+## 横向窗口用 EXPAND 等比铺满（不引入左右黑边），竖屏 / 方屏用 KEEP 保住 16:9 构图
+## （代价是黑边，竖屏本就不是本作支持的构图）。横屏整数路径不受影响。
 ##
 ## 归属：这里只做纯计算，不碰场景树。"什么时候应用到 [Window]（含窗口尺寸变化）"
 ## 由场景壳决定——标题页与 [Main] 各自在 [code]_ready()[/code] 里应用并监听
@@ -30,10 +36,31 @@ static func base_size() -> Vector2i:
 	return Vector2i(width, height)
 
 
+## 窗口是否满足整数覆盖的前提：横向，且宽高都容得下基准。
+## 窗口比基准窄/矮时 floor(宽/基准宽) 会变成 0；竖屏/方屏即使装得下基准，
+## 根视口也会变成又高又窄的画布，必须交给 [method apply] 走等比回退。
+static func can_integer_cover(window_size: Vector2i, base: Vector2i = BASE_FALLBACK) -> bool:
+	if window_size.x <= 0 or window_size.y <= 0 or base.x <= 0 or base.y <= 0:
+		return false
+	if window_size.x < base.x or window_size.y < base.y:
+		return false
+	return window_size.x > window_size.y
+
+
+## 非整数覆盖时用哪种 aspect 兜底：横向窗口用 EXPAND 等比铺满，竖屏 / 方屏用 KEEP。
+static func fallback_aspect(window_size: Vector2i) -> int:
+	if window_size.x > window_size.y:
+		return Window.CONTENT_SCALE_ASPECT_EXPAND
+	return Window.CONTENT_SCALE_ASPECT_KEEP
+
+
 ## 纯函数：窗口像素尺寸 → 整数覆盖下的根视口尺寸；方便脱离设备跑规范。
+## 窗口不满足 [method can_integer_cover] 时返回 [param base]，调用方应改用等比回退。
 static func cover_size(window_size: Vector2i, base: Vector2i = BASE_FALLBACK) -> Vector2i:
 	if window_size.x <= 0 or window_size.y <= 0 or base.x <= 0 or base.y <= 0:
 		return BASE_FALLBACK
+	if not can_integer_cover(window_size, base):
+		return base
 	var nx: int = floori(float(window_size.x) / float(base.x))
 	var ny: int = floori(float(window_size.y) / float(base.y))
 	var n: int = maxi(1, mini(nx, ny))
@@ -46,8 +73,15 @@ static func cover_size(window_size: Vector2i, base: Vector2i = BASE_FALLBACK) ->
 static func apply(window: Window) -> void:
 	if window == null or window.size.x <= 0 or window.size.y <= 0:
 		return
+	var base := base_size()
 	window.content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
-	window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_IGNORE
 	# 覆盖尺寸已按窗口算好；拉伸若取整会把 N× 打成 (N-1)×，必须用 fractional。
+	# 回退分支还要靠 fractional 把基准视口缩进更小的窗口，因此两个分支都用它。
 	window.content_scale_stretch = Window.CONTENT_SCALE_STRETCH_FRACTIONAL
-	window.content_scale_size = cover_size(window.size, base_size())
+	if can_integer_cover(window.size, base):
+		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_IGNORE
+		window.content_scale_size = cover_size(window.size, base)
+	else:
+		# 横向窗口用 EXPAND 无黑边铺满；竖屏 / 方屏用 KEEP 保住横向构图。
+		window.content_scale_aspect = fallback_aspect(window.size)
+		window.content_scale_size = base

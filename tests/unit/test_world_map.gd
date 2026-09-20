@@ -196,6 +196,17 @@ func test_player_camera_zoom_is_integer() -> void:
 	player.free()
 
 
+## 视口世界尺寸超过地图边界时，相机会露出默认底色（左右黑边）。
+## [method Player.fit_zoom] 把用户 zoom 抬高到刚好让地图边界铺满视口。
+func test_camera_fit_zoom_keeps_view_inside_map_limits() -> void:
+	var home_limits := Rect2(0, 0, 384, 256)
+	assert_float(Player.fit_zoom(Vector2(844, 390), home_limits, 1.0)).is_equal(2.25)
+	assert_float(Player.fit_zoom(Vector2(844, 390), home_limits, 2.5)).is_equal(2.5)
+	assert_float(Player.fit_zoom(Vector2(640, 360), home_limits, 1.0)).is_equal(1.75)
+	var farm_limits := Rect2(0, 0, 768, 480)
+	assert_float(Player.fit_zoom(Vector2(844, 390), farm_limits, 1.0)).is_equal(1.25)
+
+
 # ---------------------------------------------------------------- 内部
 
 ## 场景路径 → 该场景里所有门的目标场景列表。

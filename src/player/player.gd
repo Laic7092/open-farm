@@ -52,6 +52,12 @@ var _nearby: Array[Interactable] = []
 var _clock: GameDateClock
 ## 组合根注入的关系服务；赠礼结算。
 var _relationships: RelationshipService
+## 用户请求的画面大小；实际相机 zoom 还会被地图边界抬高。
+var _view_zoom: float = 1.0
+## 本图可看边界；由 [WorldScene] 进图时下发。
+var _camera_limits: Rect2 = Rect2()
+## 登录过的根视口，用于进出树时连 / 断窗口尺寸变化。
+var _viewport: Viewport
 
 
 func bind_dependencies(_profile: PlayerProfile, clock: GameDateClock) -> void:
@@ -97,6 +103,9 @@ func _enter_tree() -> void:
 	Persistence.register(self, persistence_id)
 	if _clock != null:
 		_clock.register_day_hook(_on_day_rollover, DayPipeline.PRIORITY_WORLD)
+	_viewport = get_viewport()
+	if _viewport != null and not _viewport.size_changed.is_connected(_on_viewport_resized):
+		_viewport.size_changed.connect(_on_viewport_resized)
 
 
 func _ready() -> void:
@@ -118,15 +127,57 @@ func _ready() -> void:
 ##
 ## 显示设置本身是纯数据（[ViewSettings]）：系统菜单改它，组合根转达，玩家落地。
 func apply_view_zoom(zoom: float) -> void:
+	_view_zoom = zoom
+	_apply_camera_zoom()
+
+
+## 世界边界请求：地图拥有可看范围，相机拥有者是玩家，因此由地图把边界传进来。
+## 边界同时决定相机最小 zoom；见 [method fit_zoom]。
+func apply_camera_limits(limits: Rect2) -> void:
+	_camera_limits = limits
 	if camera == null:
 		return
+	camera.limit_left = int(limits.position.x)
+	camera.limit_top = int(limits.position.y)
+	camera.limit_right = int(limits.end.x)
+	camera.limit_bottom = int(limits.end.y)
+	_apply_camera_zoom()
+
+
+## 视口世界尺寸不能超过地图边界，否则 Camera2D 的 limit 挡不住、会露出默认底色。
+## 返回用户 zoom 与“边界铺满视口”所需 zoom 的较大值，并向上吸附到设置挡位。
+static func fit_zoom(viewport_size: Vector2, limits: Rect2, requested: float) -> float:
+	if limits.size.x <= 0.0 or limits.size.y <= 0.0:
+		return requested
+	var needed := maxf(
+		viewport_size.x / limits.size.x,
+		viewport_size.y / limits.size.y
+	)
+	if needed <= requested:
+		return requested
+	return ceilf(needed / ViewSettings.ZOOM_STEP) * ViewSettings.ZOOM_STEP
+
+
+func _apply_camera_zoom() -> void:
+	if camera == null:
+		return
+	var zoom := _view_zoom
+	if is_inside_tree():
+		zoom = fit_zoom(get_viewport_rect().size, _camera_limits, _view_zoom)
 	camera.zoom = Vector2(zoom, zoom)
 	camera.reset_smoothing()
+
+
+func _on_viewport_resized() -> void:
+	_apply_camera_zoom()
 
 
 func _exit_tree() -> void:
 	if _clock != null:
 		_clock.unregister_day_hook(_on_day_rollover)
+	if _viewport != null and _viewport.size_changed.is_connected(_on_viewport_resized):
+		_viewport.size_changed.disconnect(_on_viewport_resized)
+	_viewport = null
 
 
 # ---------------------------------------------------------------- 脚步

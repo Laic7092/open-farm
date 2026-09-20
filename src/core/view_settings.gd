@@ -7,6 +7,8 @@ extends RefCounted
 ##
 ## 只放纯状态 + 文件 IO，不碰场景树、不发信号——“改了设置要通知谁”由调用方
 ## （系统菜单）决定；相机归玩家，应用也在玩家（见 [method Player.apply_view_zoom]）。
+## 注意：这里保存的是用户请求的 zoom；若地图边界比当前视口小，[method Player.apply_camera_limits]
+## 会把实际相机 zoom 抬高到不露出地图外空白，避免预览时出现左右黑边。
 
 ## 默认设置文件；与 [TouchSettings] 共用，保存前先 load，避免互相覆盖。
 const DEFAULT_SETTINGS_PATH: String = "user://display_settings.cfg"
