@@ -1,0 +1,11 @@
+<aside class="sidebar">
+  <div class="brand"><b>open-farm wiki</b><span>v{{ version }} · {{ total }} 条数据</span></div>
+  <nav class="snav-list">
+    <a class="snav{{ ' on' if current == 'home' else '' }}" href="index.html">概览</a>
+    {% for item in nav %}
+    <a class="snav{{ ' on' if current == item.slug else '' }}" href="{{ item.slug }}.html">{{ item.label }}{% if item.warn %}<span class="warn">⚠{{ item.warn }}</span>{% endif %}<i>{{ item.count }}</i></a>
+    {% endfor %}
+    <a class="snav{{ ' on' if current == 'i18n' else '' }}" href="i18n.html">文案<i>{{ i18n_count }}</i></a>
+    <a class="snav{{ ' on' if current == 'sprites' else '' }}" href="sprites.html">图片墙<i>{{ sprite_count }}</i></a>
+  </nav>
+</aside>

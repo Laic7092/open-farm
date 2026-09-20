@@ -1,0 +1,16 @@
+{% extends "base.html.j2" %}
+{% block content %}
+<div class="hero">
+  {% if icon %}<img src="{{ icon }}" alt="">{% endif %}
+  <div>
+    <h1>{{ name }}</h1>
+    <span class="cid">{{ kind_label }} · {{ rid }}</span>
+  </div>
+</div>
+{% if cells %}
+<div class="kv">
+  {% for s in cells %}<div class="cell"><b>{{ s.value }}</b><span>{{ s.label }}</span></div>{% endfor %}
+</div>
+{% endif %}
+{{ body|safe }}
+{% endblock %}

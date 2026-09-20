@@ -56,7 +56,7 @@ jobs:
           python-version: "3.12"
 
       - name: 安装 Python 依赖
-        run: pip install --quiet pillow
+        run: pip install --quiet pillow jinja2
 
       # Godot 既用于导出 .tres → data.json，也用于 Web 导出。
       - name: 安装 Godot 4.7.2

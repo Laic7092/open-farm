@@ -1,0 +1,26 @@
+{% extends "base.html.j2" %}
+{% block content %}
+<section class="hero-card">
+  <h2>数据体检 {% if problems %}<span class="warn">⚠ {{ problems|length }} 待查</span>{% else %}<span class="ok">全部通过</span>{% endif %}</h2>
+  {% if problems %}
+  <ul>{% for p in problems %}<li>{{ p|safe }}</li>{% endfor %}</ul>
+  {% else %}
+  <p class="dim">validate_all()、缺译检查与引用检查均无问题。</p>
+  {% endif %}
+  <div class="quick">
+    <div><b>{{ total }}</b><span>条数据</span></div>
+    <div><b>{{ i18n_count }}</b><span>条文案</span></div>
+    <div><b>{{ sprite_count }}</b><span>张图片</span></div>
+  </div>
+</section>
+<h3 class="sect">分类</h3>
+<div class="cats">
+  {% for c in cats %}
+  <a class="cat" href="{{ c.slug }}.html">
+    {% if c.icon %}<img src="{{ c.icon }}" alt="">{% else %}<span class="ico-ph"></span>{% endif %}
+    <b>{{ c.label }}</b>
+    <span>{{ c.count }} 条{% if c.warn %} · <span class="warn">⚠{{ c.warn }}</span>{% endif %}</span>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

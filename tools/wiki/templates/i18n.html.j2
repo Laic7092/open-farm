@@ -1,0 +1,14 @@
+{% extends "base.html.j2" %}
+{% block content %}
+<div class="pagehead"><h2>文案 <span class="pill">{{ count }}</span></h2></div>
+<div class="list">
+  {% for r in rows %}
+  <div class="irow">
+    <span class="flag">{{ r.key }}</span>
+    <div class="izh">{{ r.zh|safe }}</div>
+    <div class="ien">{{ r.en|safe }}</div>
+    <div class="refs">{{ r.refs|safe }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

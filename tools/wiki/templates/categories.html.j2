@@ -1,0 +1,12 @@
+{% extends "base.html.j2" %}
+{% block content %}
+<div class="list">
+  {% for c in cats %}
+  <a class="row" href="{{ c.slug }}.html">
+    {% if c.icon %}<img src="{{ c.icon }}" alt="">{% else %}<span class="ico-ph"></span>{% endif %}
+    <div class="row-main"><span class="row-name">{{ c.label }}</span><span class="row-sub">{{ c.cls }}</span></div>
+    <div class="stat"><b>{{ c.count }}</b><span>条</span></div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

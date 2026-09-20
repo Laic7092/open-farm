@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from content import (
     ENUMS,
-    KINDS,
     REF_FIELDS,
     REF_LIST_FIELDS,
     SEASON_KEYS,
@@ -285,71 +284,26 @@ def format_field(ctx: Context, kind: str, name: str, value: object) -> str:
 
 # ---------------------------------------------------------------- 卡片
 
-def _thumb(ctx: Context, kind: str, res: dict) -> str:
-    if kind == "NpcData":
-        path = res.get("portrait") or _actor_sheet(res.get("frames"))
-    elif kind == "ItemData":
-        path = (res.get("icon") or {}).get("$texture")
+def icon_url(ctx: Context, kind: str, res: dict) -> str | None:
+    """条目的头像 / 图标；作物与鱼优先用收获物图标，退回切图。"""
+    if kind == "ItemData":
+        url = ctx.assets.url((res.get("icon") or {}).get("$texture"))
+    elif kind == "NpcData":
+        url = ctx.assets.url(res.get("portrait") or _actor_sheet(res.get("frames")))
     else:
-        path = (res.get("sprite_sheet") or {}).get("$texture")
-    url = ctx.assets.url(path)
-    if url is None:
-        return ""
-    width, height = ctx.assets.size(path)
-    scale = max(1, min(4, 64 // max(width, height) or 1))
-    return f'<img class="thumb" src="{url}" style="width:{width * scale}px;height:{height * scale}px" alt="">'
+        url = None
+        item_id = res.get("harvest_item_id") or res.get("item_id")
+        if kind in ("CropData", "FishData") and item_id:
+            url = ctx.assets.url(f"res://assets/sprites/items/{item_id}.png")
+        if url is None:
+            url = ctx.assets.url((res.get("sprite_sheet") or {}).get("$texture"))
+    return url
 
 
 def _actor_sheet(frames: object) -> str:
     if isinstance(frames, dict) and isinstance(frames.get("$frames"), str):
         return frames["$frames"].replace("_frames.tres", ".png")
     return ""
-
-
-def card(ctx: Context, kind: str, rid: str, res: dict) -> str:
-    if kind == "DialogueData":
-        title, cid = esc(rid), ""
-    else:
-        title, cid = esc(ctx.name(kind, rid)), f' <span class="cid">{esc(rid)}</span>'
-    search = esc(f"{rid} {ctx.name(kind, rid)} {ctx.label(kind)}".lower())
-    body = [
-        '<header class="card-head">',
-        _thumb(ctx, kind, res),
-        f'<div><h3>{title}{cid}</h3>',
-        f'<span class="kindtag">{esc(KINDS.get(kind, ("", kind))[1])}</span></div>',
-        "</header>",
-    ]
-    body.append(_special(ctx, kind, rid, res))
-    primary_names = PRIMARY.get(kind, [])
-    primary = {
-        n: res[n] for n in primary_names
-        if n in res and not _blank(n, res[n])
-    }
-    if primary:
-        body.append(_table(ctx, kind, primary))
-    skip = set(primary_names) | SPECIAL_FIELDS.get(kind, set()) | TITLE_FIELDS | {"id"}
-    rest = {
-        k: v for k, v in res.items()
-        if k != "$class" and k not in skip and v not in (None, "")
-    }
-    if rest:
-        body.append(
-            '<details class="more"><summary>全部字段（%d）</summary>%s</details>'
-            % (len(rest), _table(ctx, kind, rest))
-        )
-    refs = ctx.refs.get((kind, rid))
-    if refs:
-        unique = _unique(refs)
-        chips = " ".join(
-            f'<a class="chip ref" href="{ctx.url(src_kind, src_id)}">'
-            f'{esc(ctx.label(src_kind))}·{esc(ctx.name(src_kind, src_id))}</a>'
-            for src_kind, src_id, _ in unique
-        )
-        body.append(f'<footer class="refs"><span class="refs-n">被引用 {len(unique)}</span>{chips}</footer>')
-    return (
-        f'<article class="card" id="{ctx.slug(kind)}-{rid}" data-kind="{ctx.slug(kind)}"'
-        f' data-search="{search}">{"".join(body)}</article>'
-    )
 
 
 def _blank(name: str, value: object) -> bool:
@@ -473,7 +427,7 @@ def schedule_block(ctx: Context, schedule: object) -> str:
     )
     return (
         '<div class="block"><h4>日程 <span class="dim">每天循环</span></h4>'
-        f'<table class="fields"><tr><th>时刻</th><th>地点</th><th>活动</th><th>朝向</th></tr>{rows}</table></div>'
+        f'<table class="fields mini"><tr><th>时刻</th><th>地点</th><th>活动</th><th>朝向</th></tr>{rows}</table></div>'
     )
 
 
@@ -499,44 +453,89 @@ def stock_block(ctx: Context, res: dict) -> str:
         )
     return (
         '<div class="block"><h4>货架 <span class="dim">%d 件</span></h4>'
-        '<table class="fields"><tr><th>道具</th><th>售价</th><th>库存</th><th>条件</th><th>可购日</th></tr>'
+        '<table class="fields mini"><tr><th>道具</th><th>售价</th><th>库存</th><th>条件</th><th>可购日</th></tr>'
         f'{"".join(rows)}</table></div>' % len(stock)
     )
 
 
-def section(ctx: Context, kind: str) -> str:
-    items = ctx.items(kind)
-    if not items:
-        return ""
-    toggle = (
-        '<div class="viewtoggle" role="group">'
-        '<button type="button" data-view="cards" class="on">卡片</button>'
-        '<button type="button" data-view="table">表格</button></div>'
-        if kind in TABLE_COLUMNS else ""
+def summary(ctx: Context, kind: str, rid: str, res: dict) -> tuple[str, str, str]:
+    """列表 / 详情页共用摘要：返回 (副标题, 关键值, 关键值标签)。"""
+    if kind == "ItemData":
+        cat = ENUMS["ItemCategory"][int(res.get("category", 0))]
+        price = res.get("sell_price") or res.get("buy_price") or 0
+        return cat, (f"{number(price)} G" if price else ""), "售价"
+    if kind == "CropData":
+        total = sum(res.get("days_per_stage") or [])
+        seasons = "".join(ctx.tr_plain(SEASON_KEYS[int(s)]) for s in res.get("seasons") or [])
+        return f"{seasons} · 约 {total} 天成熟", f"{number(res.get('base_sell_price', 0))} G", "作物售价"
+    if kind == "FishData":
+        water = "/".join(ENUMS["WaterKind"][int(w)] for w in res.get("water") or []) or "任意水域"
+        size = res.get("size_cm") or {}
+        return (f"{water} · 难度 {res.get('difficulty', '?')}",
+                f"{number(size.get('x', '?'))}–{number(size.get('y', '?'))}", "体长 cm")
+    if kind == "AnimalData":
+        return f"成年 {res.get('mature_days', '?')} 天", str(res.get("produce_days", "?")), "产出间隔"
+    if kind == "NpcData":
+        return ("可攻略" if res.get("romanceable") else "村民"), str(res.get("max_affection", "?")), "好感上限"
+    if kind == "ShopData":
+        n = len(res.get("stock") or [])
+        return f"{n} 件商品", str(n), "货架"
+    if kind == "RecipeData":
+        return "料理", str(res.get("output_amount", 1)), "成品数量"
+    return "", "", ""
+
+
+def list_row(ctx: Context, kind: str, rid: str, res: dict) -> str:
+    """紧凑列表行：图标 + 名称 / 副标题 + 一个关键值。"""
+    subtitle, stat, stat_label = summary(ctx, kind, rid, res)
+    if kind == "DialogueData":
+        lines = res.get("lines") or []
+        first = ctx.tr_plain(lines[0].get("text_key")) if lines else ""
+        subtitle = f"{len(lines)} 句 · {first}" if lines else rid
+    icon = icon_url(ctx, kind, res)
+    ico = f'<img src="{icon}" alt="">' if icon else '<span class="ico-ph"></span>'
+    stat_html = (
+        f'<div class="stat"><b>{esc(stat)}</b><span>{esc(stat_label)}</span></div>' if stat else ""
     )
     return (
-        f'<section id="{ctx.slug(kind)}" class="sec" data-kind="{ctx.slug(kind)}">'
-        f'<header class="sec-head"><h2>{esc(ctx.label(kind))}'
-        f' <span class="count">{len(items)}</span></h2>{toggle}</header>'
-        f'<div class="view view-cards">{_cards_block(ctx, kind, items)}</div>'
-        f'{data_table(ctx, kind)}'
-        "</section>"
+        f'<a class="row" href="{ctx.url(kind, rid)}"'
+        f' data-search="{esc((rid + " " + ctx.name(kind, rid)).lower())}">'
+        f'{ico}<div class="row-main"><span class="row-name">{esc(ctx.name(kind, rid))}</span>'
+        f'<span class="row-sub">{esc(subtitle or rid)}</span></div>{stat_html}</a>'
     )
 
 
-def _cards_block(ctx: Context, kind: str, items: dict[str, dict]) -> str:
-    """对白按持有者分组，其余每种数据一个卡片网格。"""
-    if kind == "DialogueData":
-        return "".join(
-            f'<div class="dgroup"><h3 class="dgroup-head">{esc(label)}'
-            f' <span class="count">{len(rids)}</span></h3>'
-            f'<div class="grid">{"".join(card(ctx, kind, rid, items[rid]) for rid in rids)}</div></div>'
-            for label, rids in _dialogue_groups(ctx, items)
+def detail_body(ctx: Context, kind: str, rid: str) -> str:
+    """详情页正文：专用块 + 主要字段 + 全部字段 + 反向引用。"""
+    res = ctx.get(kind, rid) or {}
+    parts: list[str] = []
+    special = _special(ctx, kind, rid, res)
+    if special:
+        parts.append(special)
+    primary_names = PRIMARY.get(kind, [])
+    primary = {n: res[n] for n in primary_names if n in res and not _blank(n, res[n])}
+    if primary:
+        parts.append(f'<div class="fields-card">{_table(ctx, kind, primary)}</div>')
+    skip = set(primary_names) | SPECIAL_FIELDS.get(kind, set()) | TITLE_FIELDS | {"id", "$class"}
+    rest = {k: v for k, v in res.items() if k not in skip and v not in (None, "")}
+    if rest:
+        parts.append(
+            f'<details class="more"><summary>全部字段（{len(rest)}）</summary>'
+            f'<div class="fields-card">{_table(ctx, kind, rest)}</div></details>'
         )
-    return f'<div class="grid">{"".join(card(ctx, kind, rid, res) for rid, res in items.items())}</div>'
+    refs = ctx.refs.get((kind, rid))
+    if refs:
+        unique = _unique(refs)
+        chips = " ".join(
+            f'<a class="chip ref" href="{ctx.url(sk, sid)}">'
+            f'{esc(ctx.label(sk))}·{esc(ctx.name(sk, sid))}</a>'
+            for sk, sid, _ in unique
+        )
+        parts.append(f'<div class="refs"><span class="refs-n">被引用 {len(unique)}</span>{chips}</div>')
+    return "".join(parts)
 
 
-def _dialogue_groups(ctx: Context, items: dict[str, dict]) -> list[tuple[str, list[str]]]:
+def dialogue_groups(ctx: Context, items: dict[str, dict]) -> list[tuple[str, list[str]]]:
     npc_ids = sorted(ctx.items("NpcData"), key=len, reverse=True)
     buckets: dict[str, list[str]] = {}
     for rid in sorted(items):
@@ -570,6 +569,6 @@ def data_table(ctx: Context, kind: str) -> str:
             f' <span class="cid">{esc(rid)}</span></td>{cells}</tr>'
         )
     return (
-        '<div class="view view-table hidden"><table class="data-table"><thead><tr>'
-        f'<th>名称</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+        '<table class="data-table"><thead><tr>'
+        f'<th>名称</th>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table>'
     )

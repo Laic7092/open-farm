@@ -1,0 +1,25 @@
+{% extends "base.html.j2" %}
+{% block content %}
+<div class="pagehead">
+  <h2>{{ label }} <span class="pill">{{ count }}</span></h2>
+  {% if has_table %}
+  <div class="segmented" data-kind="{{ slug }}">
+    <button type="button" data-mode="list" class="on">列表</button>
+    <button type="button" data-mode="table">表格</button>
+  </div>
+  {% endif %}
+</div>
+{% if groups %}
+<div class="dgroups">
+  {% for g in groups %}
+  <div class="dgroup">
+    <h3 class="dgroup-head">{{ g.label }} <span class="count">{{ g.rows|length }}</span></h3>
+    <div class="list">{% for r in g.rows %}{{ r|safe }}{% endfor %}</div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="list">{% for r in rows %}{{ r|safe }}{% endfor %}</div>
+{% endif %}
+{% if has_table %}<div class="tblwrap" hidden>{{ table|safe }}</div>{% endif %}
+{% endblock %}

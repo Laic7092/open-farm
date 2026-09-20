@@ -1,0 +1,12 @@
+{% extends "base.html.j2" %}
+{% block content %}
+<div class="pagehead"><h2>图片墙 <span class="pill">{{ count }}</span></h2></div>
+{% for g in groups %}
+<div class="block wall-block">
+  <h4>{{ g.directory }} <span class="count">{{ g.files|length }}</span></h4>
+  <div class="wall">
+    {% for f in g.files %}<figure><img src="{{ f.url }}" loading="lazy" alt=""><figcaption>{{ f.rel }}</figcaption></figure>{% endfor %}
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

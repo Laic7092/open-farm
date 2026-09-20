@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# 生成「游戏内容 wiki」：静态 HTML，用浏览器审阅全部 data/**/*.tres 与文案。
+# 生成「游戏内容 wiki」：手机优先的多页静态 HTML，用浏览器审阅全部 data/**/*.tres 与文案。
 #
 # 两段式（详见 tools/build_wiki.py 顶部说明）：
 #   1. Godot 无头导出 .tmp/wiki/data.json（引擎侧解析引用、对齐切图常量）
-#   2. Python 渲染 .tmp/wiki/index.html 并把贴图复制到 .tmp/wiki/sprites/
+#   2. Python + Jinja2 铺页面（概览 / 每类列表 / 每条详情）并复制贴图与静态资源
 #
 # 用法：
 #   ./tools/build_wiki.sh              # 生成并打印路径

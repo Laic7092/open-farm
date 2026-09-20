@@ -184,7 +184,12 @@ class Context:
         return KINDS.get(kind, ("misc", kind))[1]
 
     def url(self, kind: str, rid: str) -> str:
-        return f"#{self.slug(kind)}-{rid}"
+        """资源详情页 URL（扁平文件名，本地 file:// 与 Pages 通用）。"""
+        return f"d_{self.slug(kind)}_{rid}.html"
+
+    def page_url(self, kind: str) -> str:
+        """某一类资源的列表页 URL。"""
+        return f"{self.slug(kind)}.html"
 
     def name(self, kind: str, rid: str) -> str:
         """资源的显示名（中文），缺失时退回 id。"""
@@ -210,6 +215,13 @@ class Context:
         if en and en != zh:
             text += f' <span class="en">{esc(en)}</span>'
         return text
+
+    def tr_plain(self, key: object) -> str:
+        """只要中文译文（不夹英文、不出 HTML），用于列表行等紧凑场景。"""
+        if not isinstance(key, str) or not key:
+            return ""
+        entry = self.i18n.get(key)
+        return entry["zh"] if entry and entry["zh"] else key
 
     def chip(self, kind: str, rid: str) -> str:
         res = self.get(kind, rid)

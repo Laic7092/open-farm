@@ -17,8 +17,9 @@ timeout 800 ./tools/build_assets.sh     # 重新生成全部 PNG / 字体 / WAV
 `GODOT_BIN=/path/to/godot` 指定引擎，`GODOT_TIMEOUT=120` 覆盖默认 60s 命令超时。
 
 审阅游戏内容（不启动游戏）：`./tools/build_wiki.sh --open` 把 `data/**/*.tres` 与文案渲染成
-静态 HTML（`.tmp/wiki/index.html`），含各系统卡片、对白分支、商店货架、文案对照与图片墙；
-`--strict` 可在有缺译 / 悬空引用时非零退出。
+手机优先的多页静态 wiki（入口 `.tmp/wiki/index.html`）：概览体检、每类列表（列表 / 表格视图）、
+每条资源详情页、对白分支 / 商店货架、文案对照与图片墙，底部标签栏 + 全局搜索；
+`--strict` 可在有缺译 / 悬空引用时非零退出，`--serve 8000` 起本地服务。
 
 线上站点（GitHub Pages，一次发布整站）：`/wiki/` 内容 wiki、`/game/` Web 试玩，根路径是导航页。
 push main 命中构建路径（`src/**`、`scenes/**`、`assets/**`、`data/**` 等）时全量重建两者，
