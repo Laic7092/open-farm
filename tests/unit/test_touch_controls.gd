@@ -108,11 +108,12 @@ func test_headless_defaults_to_keyboard() -> void:
 	assert_bool(TouchSettings.is_enabled()).is_false()
 
 
-func test_pointer_events_follow_the_setting() -> void:
+func test_pointer_is_independent_of_touch_toggle() -> void:
+	# 鼠标与触控开关无关：开关只影响屏幕控件，指针始终可用。
 	TouchSettings.set_enabled(false, false)
-	assert_bool(PointerInput.swallows_pointer()).is_true()
+	assert_bool(PointerInput.accepts_mouse()).is_true()
 	TouchSettings.set_enabled(true, false)
-	assert_bool(PointerInput.swallows_pointer()).is_false()
+	assert_bool(PointerInput.accepts_mouse()).is_true()
 
 
 func test_ui_scale_applies_to_stick_and_pad() -> void:

@@ -101,7 +101,6 @@ func _ready() -> void:
 	PointerInput.sync_cursor()
 	player_profile.set_playtime_counting(true)
 	EventBus.ui.pause_menu_toggle_requested.connect(_on_pause_menu_requested)
-	EventBus.ui.touch_controls_toggled.connect(_on_touch_controls_toggled)
 	EventBus.ui.view_zoom_changed.connect(_on_view_zoom_changed)
 
 	if boot_mode == BootMode.LOAD_SLOT and await _boot_from_save():
@@ -113,18 +112,6 @@ func _process(delta: float) -> void:
 	# 时钟与游玩时长由组合根统一驱动。
 	clock_state.tick(delta)
 	player_profile.tick(delta)
-
-
-func _input(event: InputEvent) -> void:
-	# 纯键盘操作：指针事件一律吞掉，避免隐藏的光标误触 UI；
-	# 触控模式下必须放行，否则虚拟摇杆与屏幕按钮收不到任何指针事件。
-	if PointerInput.swallows_pointer() and PointerInput.is_pointer(event):
-		get_viewport().set_input_as_handled()
-
-
-## 触控开关可能在游戏里被改（系统菜单），光标要跟着切。
-func _on_touch_controls_toggled(_enabled: bool) -> void:
-	PointerInput.sync_cursor()
 
 
 ## 画面大小在系统菜单里改；组合根只把请求转给当前世界里的玩家。

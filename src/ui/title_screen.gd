@@ -13,7 +13,7 @@ extends Control
 ## 焦点自动落到"新游戏"，避免键盘玩家停在按不动的按钮上；
 ## 有存档时两个按钮都出现，"继续游戏"打开存档列表让人选一局。
 ##
-## 操作：WASD / 方向键选择，Enter / 空格 确认；鼠标已关闭（见 [PointerInput]）。
+## 操作：WASD / 方向键选择，Enter / 空格 确认；鼠标指针可见，也可直接点按。
 ##
 ## W / A / S / D 已经并进内置的 ui_* 动作（见 [code]project.godot[/code] 的 InputMap），
 ## 所以菜单直接用 Godot 的焦点导航；存档列表也是按钮，方向键天然可选中。
@@ -112,10 +112,6 @@ func _input(event: InputEvent) -> void:
 			_dismiss_start_veil()
 		get_viewport().set_input_as_handled()
 		return
-	# 纯键盘操作：指针事件一律吞掉，避免隐藏的光标误触按钮；
-	# 触控模式下放行，标题页 / 存档列表的按钮才能点。
-	if PointerInput.swallows_pointer() and PointerInput.is_pointer(event):
-		get_viewport().set_input_as_handled()
 
 
 func _unhandled_input(event: InputEvent) -> void:

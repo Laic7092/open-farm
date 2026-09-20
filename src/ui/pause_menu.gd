@@ -81,7 +81,7 @@ func close() -> void:
 	visible = false
 
 
-## 存进 [TouchSettings] 并广播，让触控层与指针策略当场生效。
+## 存进 [TouchSettings] 并广播，让触控层当场生效。
 func _on_touch_toggled(toggled_on: bool) -> void:
 	TouchSettings.set_enabled(toggled_on)
 	_refresh_touch_toggle(toggled_on)

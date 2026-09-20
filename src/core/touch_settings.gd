@@ -6,8 +6,8 @@ extends RefCounted
 ## 读不到 / 写不进都静默降级（[code]user://[/code] 不可写时游戏照常能玩）。
 ##
 ## 缺省值取"这台机器有没有触摸屏"：手机 / 平板上开箱即用，桌面上保持纯键盘。
-## [Main] / [TitleScreen] 拿它决定"指针要不要隐藏、指针事件要不要吞掉"
-## （见 [method PointerInput.sync_cursor] / [method PointerInput.swallows_pointer]），
+## [TouchControls] 拿它决定"屏幕上要不要摆虚拟摇杆与动作键"；
+## 鼠标指针可见性由 [method PointerInput.sync_cursor] 统一保证，与本开关无关。
 ## 所以这里只放纯状态 + 文件 IO，不碰场景树、不发信号——
 ## "改了设置要通知谁"由调用方（系统菜单）决定。
 
