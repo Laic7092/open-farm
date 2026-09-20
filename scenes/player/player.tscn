@@ -24,6 +24,7 @@ script = ExtResource("1_player")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 unique_name_in_owner = true
+offset = Vector2(0, -8)
 sprite_frames = ExtResource("2_frames")
 animation = &"idle_down"
 autoplay = "idle_down"

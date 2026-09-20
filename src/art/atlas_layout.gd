@@ -122,12 +122,19 @@ static func crop_cell(stage: int) -> Vector2i:
 
 # ---------------------------------------------------------------- 角色图集
 
+## 角色单元格大小：宽 1 格、高 2 格。
+##
+## 占地（碰撞 / 寻路 / 落点）仍然只占底下一格，这里加高的是[b]视觉[/b]：
+## 角色比地砖高一个格子头，站在场景里才像个人而不是一块地砖。
+## 脚底对齐格子底边，节点原点仍在格子中心，Y-sort 不需要特殊处理。
+const ACTOR_CELL := Vector2i(TILE, TILE * 2)
+
 ## 玩家图集：[code]assets/sprites/actors/player.png[/code]
 ## 列：0/1 = 走路两帧、2 = 待机、3 = 挥动工具
 ## 行：0 = 朝下、1 = 朝上、2 = 朝侧面（左向由 [code]flip_h[/code] 复用）
 const ACTOR_COLUMNS: int = 4
 const ACTOR_ROWS: int = 3
-const ACTOR_SIZE := Vector2i(TILE * ACTOR_COLUMNS, TILE * ACTOR_ROWS)
+const ACTOR_SIZE := Vector2i(ACTOR_CELL.x * ACTOR_COLUMNS, ACTOR_CELL.y * ACTOR_ROWS)
 const ACTOR_IDLE_COLUMN: int = 2
 const ACTOR_USE_COLUMN: int = 3
 const ACTOR_WALK_COLUMNS: Array[int] = [0, 1]
@@ -142,7 +149,7 @@ const ACTOR_ROW_NAMES: Array[StringName] = [&"down", &"up", &"side"]
 ## 行：0 = 朝下、1 = 朝上、2 = 朝侧面（左向由 flip_h 复用）。
 const NPC_COLUMNS: int = 4
 const NPC_ROWS: int = 3
-const NPC_SIZE := Vector2i(TILE * NPC_COLUMNS, TILE * NPC_ROWS)
+const NPC_SIZE := Vector2i(ACTOR_CELL.x * NPC_COLUMNS, ACTOR_CELL.y * NPC_ROWS)
 const NPC_IDLE_COLUMN: int = 2
 const NPC_IDLE_BOB_COLUMN: int = 3
 const NPC_WALK_COLUMNS: Array[int] = [0, 1]

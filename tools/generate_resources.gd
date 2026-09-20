@@ -292,10 +292,10 @@ func _save(resource: Resource, path: String) -> void:
 		print("  → ", path)
 
 
-func _atlas(texture: Texture2D, column: int, row: int, cell: int) -> AtlasTexture:
+func _atlas(texture: Texture2D, column: int, row: int, cell: Vector2i) -> AtlasTexture:
 	var atlas := AtlasTexture.new()
 	atlas.atlas = texture
-	atlas.region = Rect2(column * cell, row * cell, cell, cell)
+	atlas.region = Rect2(column * cell.x, row * cell.y, cell.x, cell.y)
 	return atlas
 
 
@@ -311,4 +311,4 @@ func _add_animation(
 	frames.set_animation_speed(name, speed)
 	frames.set_animation_loop(name, loop)
 	for cell: Vector2i in cells:
-		frames.add_frame(name, _atlas(texture, cell.x, cell.y, Layout.TILE))
+		frames.add_frame(name, _atlas(texture, cell.x, cell.y, Layout.ACTOR_CELL))

@@ -162,7 +162,7 @@ func _build_npc(look: Dictionary) -> Image:
 
 # ---------------------------------------------------------------- 角色绘制
 
-## 画一个 16×16 的角色。
+## 画一个 16×32 的角色：脚底贴着格子底边，身体往上长。
 ##
 ## [param cell] 目标格坐标（列, 行）；[param pose] 0 = 站立、1 = 迈步、2 = 挥动；
 ## [param bob] 整体上移像素（NPC 的呼吸帧用）。
@@ -174,8 +174,8 @@ func _draw_actor(
 	bob: int = 0,
 	lift: int = 0
 ) -> void:
-	var ox: int = cell.x * Layout.TILE
-	var oy: int = cell.y * Layout.TILE - bob - lift
+	var ox: int = cell.x * Layout.ACTOR_CELL.x
+	var oy: int = cell.y * Layout.ACTOR_CELL.y - bob - lift
 	var row: int = cell.y
 
 	var skin: Color = P.SKIN
@@ -196,92 +196,92 @@ func _draw_actor(
 	var has_beard: bool = bool(look.get("beard", false))
 	var long_hair: bool = bool(look.get("hair_long", false))
 
-	# 落地阴影始终画在格子底部，不跟着 bob 移动，否则人会像在飘。
-	Art.ellipse(image, Vector2i(ox + 8, oy + 15), Vector2i(5, 2), P.SHADOW)
+	# 落地阴影固定在格子底部（不跟着 bob 移动，否则人会像在飘）。
+	Art.ellipse(image, Vector2i(ox + 8, oy + 29), Vector2i(6, 2), P.SHADOW)
 
-	# 腿：迈步时前后错开一像素。
-	var left_leg: int = oy + 11
-	var right_leg: int = oy + 11
+	# 腿：长裤 6px + 靴子 2px；迈步时前后错开一像素。
+	var left_leg: int = oy + 23
+	var right_leg: int = oy + 23
 	if pose == 1:
-		left_leg = oy + 10
-		right_leg = oy + 12
-	Art.rect(image, Rect2i(ox + 4, left_leg, 3, 3), pants)
-	Art.rect(image, Rect2i(ox + 9, right_leg, 3, 3), pants)
-	Art.h_line(image, ox + 4, left_leg + 3, 3, boot)
-	Art.h_line(image, ox + 9, right_leg + 3, 3, boot)
+		left_leg = oy + 22
+		right_leg = oy + 24
+	Art.rect(image, Rect2i(ox + 4, left_leg, 3, 8), pants)
+	Art.rect(image, Rect2i(ox + 9, right_leg, 3, 8), pants)
+	Art.rect(image, Rect2i(ox + 4, left_leg + 6, 3, 2), boot)
+	Art.rect(image, Rect2i(ox + 9, right_leg + 6, 3, 2), boot)
 
 	# 身体
-	Art.rect(image, Rect2i(ox + 4, oy + 6, 8, 6), shirt)
-	Art.h_line(image, ox + 4, oy + 6, 8, shirt_dark)
+	Art.rect(image, Rect2i(ox + 4, oy + 12, 8, 11), shirt)
+	Art.h_line(image, ox + 4, oy + 12, 8, shirt_dark)
 	if has_apron:
-		Art.rect(image, Rect2i(ox + 6, oy + 7, 4, 5), apron)
+		Art.rect(image, Rect2i(ox + 6, oy + 14, 4, 9), apron)
 	else:
-		Art.h_line(image, ox + 6, oy + 7, 4, shirt_dark)
+		Art.h_line(image, ox + 6, oy + 14, 4, shirt_dark)
 
 	# 头
-	Art.rect(image, Rect2i(ox + 5, oy + 1, 6, 5), skin)
-	Art.rect(image, Rect2i(ox + 5, oy + 1, 6, 2), hair)
-	Art.rect(image, Rect2i(ox + 4, oy + 2, 1, 3), hair)
-	Art.rect(image, Rect2i(ox + 11, oy + 2, 1, 3), hair)
+	Art.rect(image, Rect2i(ox + 4, oy + 2, 8, 10), skin)
+	Art.rect(image, Rect2i(ox + 4, oy + 2, 8, 3), hair)
+	Art.rect(image, Rect2i(ox + 3, oy + 3, 1, 5), hair)
+	Art.rect(image, Rect2i(ox + 12, oy + 3, 1, 5), hair)
 	if long_hair:
-		# 披肩长发：头两侧各多垂两像素。
-		Art.rect(image, Rect2i(ox + 4, oy + 4, 1, 3), hair)
-		Art.rect(image, Rect2i(ox + 11, oy + 4, 1, 3), hair)
+		# 披肩长发：头两侧各多垂几像素。
+		Art.rect(image, Rect2i(ox + 3, oy + 8, 1, 4), hair)
+		Art.rect(image, Rect2i(ox + 12, oy + 8, 1, 4), hair)
 
 	match row:
 		0:  # 朝下：两粒眼睛 + 一点腮红
-			Art.px(image, ox + 6, oy + 4, P.OUTLINE)
-			Art.px(image, ox + 9, oy + 4, P.OUTLINE)
-			Art.px(image, ox + 5, oy + 5, skin_dark)
-			Art.px(image, ox + 10, oy + 5, skin_dark)
+			Art.px(image, ox + 6, oy + 8, P.OUTLINE)
+			Art.px(image, ox + 9, oy + 8, P.OUTLINE)
+			Art.px(image, ox + 5, oy + 9, skin_dark)
+			Art.px(image, ox + 10, oy + 9, skin_dark)
 		1:  # 朝上：后脑勺
-			Art.rect(image, Rect2i(ox + 5, oy + 3, 6, 4), hair)
-			Art.h_line(image, ox + 6, oy + 4, 4, hair_light)
+			Art.rect(image, Rect2i(ox + 4, oy + 6, 8, 6), hair)
+			Art.h_line(image, ox + 5, oy + 8, 6, hair_light)
 		2:  # 朝侧面：单眼 + 侧脸轮廓
-			Art.px(image, ox + 9, oy + 4, P.OUTLINE)
-			Art.rect(image, Rect2i(ox + 4, oy + 3, 2, 4), hair)
-			Art.px(image, ox + 11, oy + 5, skin_dark)
+			Art.px(image, ox + 9, oy + 8, P.OUTLINE)
+			Art.rect(image, Rect2i(ox + 4, oy + 6, 3, 6), hair)
+			Art.px(image, ox + 11, oy + 9, skin_dark)
 
 	# 胡子：只画在下巴，朝上时看不到。
 	if has_beard and row != 1:
-		Art.h_line(image, ox + 5, oy + 5, 6, hair_light)
-		Art.px(image, ox + 4, oy + 5, hair_light)
+		Art.h_line(image, ox + 4, oy + 10, 8, hair_light)
+		Art.px(image, ox + 3, oy + 10, hair_light)
 
 	# 眼镜：横跨双眼的一片深色。
 	if has_glasses and row == 0:
-		Art.rect(image, Rect2i(ox + 5, oy + 4, 2, 1), P.GLASSES)
-		Art.rect(image, Rect2i(ox + 9, oy + 4, 2, 1), P.GLASSES)
-		Art.px(image, ox + 7, oy + 4, P.GLASSES)
+		Art.rect(image, Rect2i(ox + 5, oy + 8, 2, 1), P.GLASSES)
+		Art.rect(image, Rect2i(ox + 9, oy + 8, 2, 1), P.GLASSES)
+		Art.px(image, ox + 7, oy + 8, P.GLASSES)
 	elif has_glasses and row == 2:
-		Art.rect(image, Rect2i(ox + 8, oy + 4, 3, 1), P.GLASSES)
+		Art.rect(image, Rect2i(ox + 8, oy + 8, 3, 1), P.GLASSES)
 
 	if has_helmet:
 		# 矿工：圆顶安全帽 + 帽檐 + 头灯。
-		Art.rect(image, Rect2i(ox + 4, oy + 0, 8, 3), P.HELMET_YELLOW)
-		Art.h_line(image, ox + 5, oy, 6, P.HELMET_DARK)
-		Art.h_line(image, ox + 3, oy + 2, 10, P.HELMET_DARK)
-		Art.px(image, ox + 8, oy + 3, P.LAMP_GLOW)
+		Art.rect(image, Rect2i(ox + 3, oy + 0, 10, 3), P.HELMET_YELLOW)
+		Art.h_line(image, ox + 4, oy, 8, P.HELMET_DARK)
+		Art.h_line(image, ox + 2, oy + 3, 12, P.HELMET_DARK)
+		Art.px(image, ox + 8, oy + 4, P.LAMP_GLOW)
 	elif has_hat:
 		# 宽檐帽：商人 / 花匠，远远就能认出来。
 		var hat: Color = look.get("hat_color", P.WOOD)
 		var hat_dark: Color = look.get("hat_dark", P.WOOD_DARK)
 		var hat_light: Color = look.get("hat_light", P.WOOD_LIGHT)
-		Art.rect(image, Rect2i(ox + 3, oy + 1, 10, 2), hat)
-		Art.rect(image, Rect2i(ox + 5, oy - 1, 6, 2), hat_dark)
-		Art.h_line(image, ox + 4, oy + 1, 8, hat_light)
+		Art.rect(image, Rect2i(ox + 4, oy + 0, 8, 2), hat_dark)
+		Art.rect(image, Rect2i(ox + 2, oy + 2, 12, 2), hat)
+		Art.h_line(image, ox + 3, oy + 2, 10, hat_light)
 
 	if has_bandana:
 		# 头巾：绕头一圈。
-		Art.h_line(image, ox + 4, oy + 2, 8, bandana)
-		Art.rect(image, Rect2i(ox + 11, oy + 2, 1, 2), bandana)
+		Art.h_line(image, ox + 3, oy + 4, 10, bandana)
+		Art.rect(image, Rect2i(ox + 12, oy + 4, 1, 3), bandana)
 
 	# 手臂 / 手持工具
 	if pose == 2:
-		Art.rect(image, Rect2i(ox + 11, oy + 3, 2, 3), skin)
-		Art.rect(image, Rect2i(ox + 12, oy + 0, 2, 4), P.WOOD)
-		Art.px(image, ox + 13, oy - 1, P.STONE_LIGHT)
+		Art.rect(image, Rect2i(ox + 11, oy + 6, 2, 5), skin)
+		Art.rect(image, Rect2i(ox + 12, oy + 0, 2, 7), P.WOOD)
+		Art.px(image, ox + 13, oy + 0, P.STONE_LIGHT)
 	else:
-		Art.rect(image, Rect2i(ox + 3, oy + 7, 2, 4), skin_dark)
-		Art.rect(image, Rect2i(ox + 11, oy + 7, 2, 4), skin_dark)
-		Art.px(image, ox + 3, oy + 11, skin)
-		Art.px(image, ox + 12, oy + 11, skin)
+		Art.rect(image, Rect2i(ox + 3, oy + 14, 2, 8), skin_dark)
+		Art.rect(image, Rect2i(ox + 11, oy + 14, 2, 8), skin_dark)
+		Art.px(image, ox + 3, oy + 21, skin)
+		Art.px(image, ox + 12, oy + 21, skin)
