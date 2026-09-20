@@ -9,6 +9,7 @@
 #   ./tools/build_wiki.sh              # 生成并打印路径
 #   ./tools/build_wiki.sh --open       # 顺手用浏览器打开
 #   ./tools/build_wiki.sh --serve 8000 # 起本地静态服务
+#   ./tools/build_wiki.sh --serve 8000 --host 0.0.0.0   # 手机同网访问
 #   ./tools/build_wiki.sh --strict     # 有缺译 / 悬空引用时非零退出（可接 CI）
 #   ./tools/build_wiki.sh --out .tmp/site/wiki --data .tmp/wiki/data.json
 #                                       # 输出到站点子目录（Pages 的 /wiki）

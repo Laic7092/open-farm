@@ -252,6 +252,19 @@ def build(root: str, out_dir: str, data_path: str | None = None) -> tuple[str, l
     return os.path.join(out_dir, "index.html"), problems, pages
 
 
+def _lan_ip() -> str:
+    """取本机在局域网里的地址，供手机同网访问时提示。"""
+    import socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        sock.connect(("8.8.8.8", 80))
+        return sock.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+    finally:
+        sock.close()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="生成 open-farm 内容 wiki（多页静态 HTML）")
     parser.add_argument("--root", default=ROOT, help="仓库根目录")
@@ -260,6 +273,8 @@ def main() -> int:
     parser.add_argument("--open", action="store_true", help="生成后用浏览器打开")
     parser.add_argument("--strict", action="store_true", help="有缺译 / 悬空引用时以非零码退出")
     parser.add_argument("--serve", type=int, metavar="PORT", help="生成后起本地静态服务")
+    parser.add_argument("--host", default="127.0.0.1",
+                        help="--serve 的绑定地址（手机同网访问用 0.0.0.0）")
     args = parser.parse_args()
 
     path, problems, pages = build(args.root, args.out, args.data)
@@ -273,8 +288,11 @@ def main() -> int:
         import http.server
 
         handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=args.out)
-        print(f"服务地址：http://localhost:{args.serve}/")
-        http.server.ThreadingHTTPServer(("127.0.0.1", args.serve), handler).serve_forever()
+        if args.host == "0.0.0.0":
+            print(f"服务地址：http://{_lan_ip()}:{args.serve}/（手机同网可直接打开）")
+        else:
+            print(f"服务地址：http://{args.host}:{args.serve}/")
+        http.server.ThreadingHTTPServer((args.host, args.serve), handler).serve_forever()
     return 1 if problems and args.strict else 0
 
 
