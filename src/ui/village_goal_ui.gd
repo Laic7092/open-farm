@@ -153,8 +153,6 @@ func _claim() -> void:
 			EventBus.ui.notification_requested.emit(&"GOAL_CLAIMED", {})
 		VillageGoals.Result.LOCKED:
 			EventBus.ui.notification_requested.emit(&"GOAL_LOCKED", {})
-		_:
-			EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
 
 
 func _selected_goal() -> VillageGoalData:

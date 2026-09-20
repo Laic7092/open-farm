@@ -106,7 +106,6 @@ func current_weather() -> Weather.Type:
 ## 使用工具；返回是否真的产生了效果。
 func use_tool(tool: ToolData, cell: Vector2i) -> bool:
 	if tool == null:
-		_notify(&"NOTIFY_NOTHING_HAPPENED")
 		return false
 
 	var impl := _tool_for(tool.kind)
@@ -114,8 +113,6 @@ func use_tool(tool: ToolData, cell: Vector2i) -> bool:
 	if success:
 		consume_stamina(tool)
 		_play_sfx(impl)
-	else:
-		_notify(&"NOTIFY_NOTHING_HAPPENED")
 
 	action_finished.emit(tool.id, cell, success)
 	EventBus.farm.tool_used.emit(tool.id, cell, success)
@@ -164,7 +161,3 @@ func consume_stamina(tool: ToolData) -> void:
 	var cost: int = int(ceilf(float(tool.stamina_cost) * multiplier))
 	if cost > 0:
 		player.stats.consume(cost)
-
-
-func _notify(text_key: StringName, args: Dictionary = {}) -> void:
-	EventBus.ui.notification_requested.emit(text_key, args)

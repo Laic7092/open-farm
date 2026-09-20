@@ -44,8 +44,6 @@ func update(delta: float) -> void:
 			player.plant_seed(_seed, _cell)
 		elif _tool != null:
 			player.interactor.use_tool(_tool, _cell)
-		else:
-			EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
 	if _elapsed >= SWING_DURATION:
 		request_transition(&"idle")
 

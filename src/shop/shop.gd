@@ -15,8 +15,9 @@ signal rejected(reason_key: StringName)
 ## 拒绝原因（同时就是提示文案的翻译键）。
 const REASON_NO_MONEY: StringName = &"NOTIFY_NOT_ENOUGH_MONEY"
 const REASON_NO_STOCK: StringName = &"NOTIFY_OUT_OF_STOCK"
-const REASON_NO_ITEM: StringName = &"NOTIFY_NOTHING_HAPPENED"
 const REASON_NO_SPACE: StringName = &"NOTIFY_INVENTORY_FULL"
+## 只是"这一条不适用"，不值得打扰玩家，用空键静默拒绝。
+const REASON_SILENT: StringName = &""
 
 ## 静态定义。
 var data: ShopData
@@ -86,11 +87,11 @@ func stock_left(entry: ShopStock) -> int:
 ## 买下 [param count] 件。
 func buy(entry: ShopStock, count: int, inventory: Inventory) -> bool:
 	if entry == null or count <= 0 or inventory == null:
-		return _reject(REASON_NO_ITEM)
+		return _reject(REASON_SILENT)
 
 	var total: int = price_of(entry) * count
 	if total <= 0:
-		return _reject(REASON_NO_ITEM)
+		return _reject(REASON_SILENT)
 	if not _wallet.can_afford(total):
 		return _reject(REASON_NO_MONEY)
 
@@ -113,19 +114,19 @@ func buy(entry: ShopStock, count: int, inventory: Inventory) -> bool:
 ## 卖出 [param count] 件。
 func sell(item_id: StringName, count: int, inventory: Inventory) -> bool:
 	if inventory == null or count <= 0:
-		return _reject(REASON_NO_ITEM)
+		return _reject(REASON_SILENT)
 	if not inventory.has(item_id, count):
-		return _reject(REASON_NO_ITEM)
+		return _reject(REASON_SILENT)
 
 	var item: Variant = _catalog.get_item(item_id)
 	if item == null or not item.sellable:
-		return _reject(REASON_NO_ITEM)
+		return _reject(REASON_SILENT)
 
 	var total: int = buyback_price(item) * count
 	if total <= 0:
-		return _reject(REASON_NO_ITEM)
+		return _reject(REASON_SILENT)
 	if not data.buys_from_player:
-		return _reject(REASON_NO_ITEM)
+		return _reject(REASON_SILENT)
 
 	inventory.remove(item_id, count)
 	_wallet.earn(total)
@@ -143,5 +144,7 @@ func buyback_price(item: ItemData) -> int:
 
 
 func _reject(reason_key: StringName) -> bool:
-	rejected.emit(reason_key)
+	# 空键 = 不提示（例如"这条不适用"），只拒绝，不打扰玩家。
+	if not reason_key.is_empty():
+		rejected.emit(reason_key)
 	return false

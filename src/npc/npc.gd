@@ -387,7 +387,6 @@ func interact(actor: Node2D) -> void:
 
 	var dialogue := current_dialogue()
 	if dialogue == null or dialogue.is_empty():
-		EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
 		return
 
 	_face_actor(actor)

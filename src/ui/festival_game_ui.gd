@@ -155,7 +155,7 @@ func _submit() -> void:
 		FestivalGame.Result.NOT_ACCEPTED:
 			EventBus.ui.notification_requested.emit(&"NOTIFY_CONTEST_NOT_ACCEPTED", {})
 		FestivalGame.Result.NOT_ACTIVE, FestivalGame.Result.NO_GAME:
-			EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
+			pass
 		_:
 			EventBus.ui.notification_requested.emit(&"NOTIFY_CONTEST_MISSING", {})
 

@@ -300,12 +300,11 @@ func held_seed_id() -> StringName:
 ## 把手上的种子种进 [param cell]；成功才消耗一颗。
 ##
 ## 播种是"物品栏的用法"，不走工具系统；音效由 [FarmGrid] 在种成功时播放，
-## 这里只负责把结果告诉玩家。
+## 这里只负责在成功时把结果告诉玩家（失败不提示，避免刷屏）。
 func plant_seed(seed_id: StringName, cell: Vector2i) -> bool:
 	if not ItemUse.plant_seed(
 		interactor.current_grid(), inventory, seed_id, cell, current_season()
 	):
-		EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
 		return false
 	EventBus.ui.notification_requested.emit(
 		&"NOTIFY_PLANTED", {"item": Text.item_name(Database.get_item(seed_id))}

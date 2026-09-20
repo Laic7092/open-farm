@@ -156,8 +156,6 @@ func _cook() -> void:
 			EventBus.ui.notification_requested.emit(&"NOTIFY_INVENTORY_FULL", {})
 		Cooking.Result.LOCKED:
 			EventBus.ui.notification_requested.emit(&"COOKING_LOCKED", {})
-		_:
-			EventBus.ui.notification_requested.emit(&"NOTIFY_NOTHING_HAPPENED", {})
 
 
 func _selected_recipe() -> RecipeData:

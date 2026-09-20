@@ -68,7 +68,6 @@ NOTIFY_INVENTORY_FULL,背包满了,Inventory full
 NOTIFY_LOADED,已读取存档 {slot},Loaded slot {slot}
 NOTIFY_LOAD_FAILED,读档失败,Loading failed
 NOTIFY_MARRIED,你和{npc}结婚了！,You married {npc}!
-NOTIFY_NOTHING_HAPPENED,什么也没发生,Nothing happened
 NOTIFY_NOTHING_TO_SHIP,没有可以出货的东西,Nothing to ship
 NOTIFY_NOT_ENOUGH_MONEY,钱不够,Not enough money
 NOTIFY_NO_FEED,没有饲料了,No feed left
