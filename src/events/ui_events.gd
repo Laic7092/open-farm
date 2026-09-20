@@ -27,8 +27,16 @@ signal notification_requested(text_key: StringName, args: Dictionary)
 signal inventory_toggle_requested()
 ## 请求打开 / 关闭系统菜单。
 signal pause_menu_toggle_requested()
+## 系统菜单（暂停菜单）开 / 关。
+## [br]与 [signal game_paused_changed] 不同：对话 / 商店等"世界内"模态也算暂停，
+## 但只有系统菜单是真正的"挂起整局"，所以音频域只据此把 BGM 冻住。
+signal pause_menu_toggled(opened: bool)
 ## 触控控件（虚拟摇杆 / 屏幕按钮）开 / 关被改变。
 signal touch_controls_toggled(enabled: bool)
+## 触控控件占用的左右两侧宽度（虚拟画布坐标；[code]x[/code] 左、[code]y[/code] 右），
+## 关闭触控时为零向量。贴边 / 贴底的模态界面据此给内容让位，
+## 避免被左下摇杆与右下 ABXY 压住。
+signal touch_insets_changed(insets: Vector2)
 ## 相机缩放（画面大小）被改变；系统菜单发出，相机的主人（玩家）应用。
 signal view_zoom_changed(zoom: float)
 ## 常驻 UI（HUD / 触控控件）缩放被改变；系统菜单发出，各自的界面主人应用。

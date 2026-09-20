@@ -1,8 +1,9 @@
 extends GdUnitTestSuite
-## 触控控件的可执行规范：摇杆"位置 → 方向"的翻译、方向到动作名的映射，
+## 触控控件的可执行规范：摇杆"位置 → 方向"的翻译、方向到动作名的映射（世界移动与模态导航），
 ## 以及显示设置的落盘 / 读回。
 ##
-## 屏幕上的拖拽本身没法在无头环境里断言，所以这里只覆盖纯函数与设置这两层：
+## 屏幕上的拖拽本身没法在无头环境里断言，所以这里只覆盖纯函数与设置这两层，
+## 外加"模态打开时摇杆仍在并改为注入方向键"这一层显隐 / 注入契约；
 ## 真正"点了摇杆人会不会走"由 [code]tools/smoke[/code] 的端到端检查兜底。
 
 ## 用例自己的设置文件，绝不碰真实的 [code]user://display_settings.cfg[/code]。
@@ -78,6 +79,52 @@ func test_diagonal_direction_maps_to_two_actions() -> void:
 
 func test_centered_stick_maps_to_no_action() -> void:
 	assert_dict(TouchControls.action_strengths(Vector2.ZERO)).is_empty()
+
+
+# ---------------------------------------------------------------- 模态导航
+
+func test_cardinal_direction_maps_to_single_navigation_action() -> void:
+	assert_array(TouchControls.navigation_actions(Vector2.LEFT)).contains_exactly([&"ui_left"])
+	assert_array(TouchControls.navigation_actions(Vector2.RIGHT)).contains_exactly([&"ui_right"])
+	assert_array(TouchControls.navigation_actions(Vector2.UP)).contains_exactly([&"ui_up"])
+	assert_array(TouchControls.navigation_actions(Vector2.DOWN)).contains_exactly([&"ui_down"])
+
+
+func test_diagonal_push_picks_dominant_axis_only() -> void:
+	# 一次推杆只应该走一格，不能同时触发两个方向。
+	assert_array(TouchControls.navigation_actions(Vector2(0.9, -0.2))).contains_exactly(
+		[&"ui_right"]
+	)
+	assert_array(TouchControls.navigation_actions(Vector2(0.2, 0.9))).contains_exactly([&"ui_down"])
+
+
+func test_centered_stick_maps_to_no_navigation_action() -> void:
+	assert_array(TouchControls.navigation_actions(Vector2.ZERO)).is_empty()
+
+
+func test_joystick_keeps_navigating_while_modal_is_open() -> void:
+	var touch := auto_free(load("res://scenes/ui/touch_controls.tscn").instantiate()) as TouchControls
+	add_child(touch)
+
+	EventBus.ui.touch_controls_toggled.emit(true)
+	await get_tree().process_frame
+
+	# 模态打开（暂停）后摇杆必须还在，否则触控下没法导航菜单。
+	EventBus.ui.game_paused_changed.emit(true)
+	assert_bool(touch.joystick.visible).is_true()
+	assert_bool(touch.x_button.visible).is_false()
+
+	# 推杆改为注入方向键，而不是世界移动；回中要回收注入。
+	touch.set_stick(Vector2.RIGHT)
+	Input.flush_buffered_events()
+	assert_bool(Input.is_action_pressed(&"ui_right")).is_true()
+	touch.set_stick(Vector2.ZERO)
+	Input.flush_buffered_events()
+	assert_bool(Input.is_action_pressed(&"ui_right")).is_false()
+
+	EventBus.ui.game_paused_changed.emit(false)
+	EventBus.ui.touch_controls_toggled.emit(false)
+	await get_tree().process_frame
 
 
 # ---------------------------------------------------------------- 设置

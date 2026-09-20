@@ -10,10 +10,11 @@ extends Control
 ## [br]- 摇杆推到底自动奔跑
 ##
 ## 模态模式（背包 / 商店 / 对话 / 菜单等暂停场景树时）：
-## [br]- 只保留 A 确认、B 返回，隐藏摇杆与 X / Y
+## [br]- 保留 A 确认、B 返回[b]与摇杆[/b]，只隐藏 X / Y
 ## [br]- A 注入 [code]ui_accept[/code]，B 注入 [code]ui_cancel[/code]
+## [br]- 摇杆注入 [code]ui_left/right/up/down[/code]：触控没有方向键，模态导航全靠它
 ##
-## 因此本层[b]不能[/b]在暂停时整层隐藏：那样模态里就没有触控键可用了。
+## 因此本层[b]不能[/b]在暂停时整层隐藏：那样模态里既没有触控键、也没有触控导航。
 ## 上下文切换时会统一释放连续动作与已按下的离散动作，并把按钮高亮复位。
 
 ## 摇杆方向要落到哪四个动作上（顺序固定，便于逐个释放）。
@@ -23,6 +24,11 @@ const MOVE_ACTIONS: Array[StringName] = [
 
 ## 奔跑动作：摇杆推到底自动触发（触控没有第二根手指去按 Shift）。
 const RUN_ACTION: StringName = &"run"
+
+## 模态导航：到达方向后首次自动重复的延迟（秒）；太短会因为一次推杆连跳好几格。
+const NAV_REPEAT_DELAY: float = 0.35
+## 之后每次自动重复的间隔（秒）。
+const NAV_REPEAT_INTERVAL: float = 0.12
 
 @onready var joystick: TouchStick = %Joystick
 ## A（下）：世界主操作；模态确认。
@@ -46,6 +52,10 @@ var _injected: Dictionary[StringName, bool] = {}
 var _held_actions: Dictionary[StringName, bool] = {}
 ## 当前 UI 缩放；由设置广播驱动，只作用于本层。
 var _ui_scale: float = 1.0
+## 模态下已注入的导航动作（摇杆方向 → [code]ui_*[/code]）。
+var _nav_actions: Dictionary[StringName, bool] = {}
+## 距离下一次自动重复导航还剩多少秒。
+var _nav_repeat: float = 0.0
 
 
 ## 方向 → 各 [code]move_*[/code] 动作的强度；零分量不入表（调用方据此释放该动作）。
@@ -58,7 +68,22 @@ static func action_strengths(direction: Vector2) -> Dictionary[StringName, float
 	return strengths
 
 
+## 摇杆方向 → 模态导航动作；只取主轴，避免一次推杆同时触发两个方向。
+static func navigation_actions(direction: Vector2) -> Array[StringName]:
+	var actions: Array[StringName] = []
+	if direction.is_zero_approx():
+		return actions
+	if absf(direction.x) >= absf(direction.y):
+		actions.append(&"ui_right" if direction.x > 0.0 else &"ui_left")
+	elif direction.y > 0.0:
+		actions.append(&"ui_down")
+	else:
+		actions.append(&"ui_up")
+	return actions
+
+
 func _ready() -> void:
+	set_process(false)
 	joystick.direction_changed.connect(set_stick)
 	_bind_button(a_button)
 	_bind_button(b_button)
@@ -81,6 +106,7 @@ func apply_enabled(enabled: bool) -> void:
 	if not _enabled:
 		_release_all()
 	_sync_visible()
+	_publish_insets()
 
 
 ## 触控层缩放：摇杆钉左下角、ABXY 整体钉屏幕右下角，放大只朝屏幕内侧长。
@@ -96,12 +122,37 @@ func _refresh_ui_scale() -> void:
 	joystick.scale = factor
 	action_pad.pivot_offset = action_pad.size
 	action_pad.scale = factor
+	_publish_insets()
+
+
+## 本层当前占用的左右两侧宽度（虚拟画布坐标）：模态界面据此给内容让位。
+##
+## 不是控件本身的 [member Control.size]——摇杆钉左下角、ABXY 钉右下角，
+## 放大只朝屏幕内侧长，所以要从各自角点算到内侧边缘。
+func side_insets() -> Vector2:
+	if not _enabled or joystick == null or action_pad == null:
+		return Vector2.ZERO
+	return Vector2(
+		joystick.position.x + joystick.size.x * _ui_scale,
+		action_pad.size.x * _ui_scale
+	)
+
+
+## 广播本层占用的左右宽度；订阅者（如对话框）据此让出内容区。
+func _publish_insets() -> void:
+	EventBus.ui.touch_insets_changed.emit(side_insets())
 
 
 ## 摇杆方向 → 输入动作；静止请传 [constant Vector2.ZERO]。
+##
+## 模态里改为翻译成方向键（[method navigation_actions]）：世界移动被暂停，
+## 但摇杆是这个模式下唯一的方向输入，界面导航还得靠它。
 func set_stick(direction: Vector2) -> void:
-	if not _enabled or _paused:
+	if not _enabled:
 		direction = Vector2.ZERO
+	if _paused:
+		_set_navigation(direction)
+		return
 	var strengths := action_strengths(direction)
 	for action: StringName in MOVE_ACTIONS:
 		if strengths.has(action):
@@ -132,6 +183,7 @@ func _on_touch_controls_toggled(enabled: bool) -> void:
 
 func _on_game_paused_changed(paused: bool) -> void:
 	_paused = paused
+	set_process(paused)
 	_release_all()
 	_sync_visible()
 
@@ -139,7 +191,8 @@ func _on_game_paused_changed(paused: bool) -> void:
 func _sync_visible() -> void:
 	visible = _enabled
 	var world_controls: bool = _enabled and not _paused
-	joystick.visible = world_controls
+	# 摇杆在模态里[b]不[/b]隐藏：模态方向导航只能靠它，没有物理方向键兜底。
+	joystick.visible = _enabled
 	x_button.visible = world_controls
 	y_button.visible = world_controls
 	a_button.visible = _enabled
@@ -151,6 +204,7 @@ func _sync_visible() -> void:
 ## 界面切上下文 / 关掉触控时必须调用：注入的按键没有对应的物理按键兜底，
 ## 不回收就会永远停在按下状态。
 func _release_all() -> void:
+	_clear_navigation()
 	for action: StringName in _injected:
 		Input.action_release(action)
 	_injected.clear()
@@ -162,6 +216,46 @@ func _release_all() -> void:
 	b_button.reset_held()
 	x_button.reset_held()
 	y_button.reset_held()
+
+
+## 模态导航：摇杆方向变化时切换注入的 [code]ui_*[/code] 动作。
+##
+## 一次方向只送一次按下事件（按下即生效）；按住由 [method _process] 自动重复。
+func _set_navigation(direction: Vector2) -> void:
+	var desired := navigation_actions(direction)
+	var changed := false
+	for action: StringName in _nav_actions.keys():
+		if not desired.has(action):
+			_nav_actions.erase(action)
+			_send_action_event(action, false)
+			changed = true
+	for action: StringName in desired:
+		if not _nav_actions.has(action):
+			_nav_actions[action] = true
+			_send_action_event(action, true)
+			changed = true
+	if changed:
+		_nav_repeat = NAV_REPEAT_DELAY
+
+
+## 松开所有导航动作（离开模态 / 关掉触控时必须调用）。
+func _clear_navigation() -> void:
+	for action: StringName in _nav_actions.keys():
+		_send_action_event(action, false)
+	_nav_actions.clear()
+	_nav_repeat = 0.0
+
+
+## 模态里按住摇杆要能连续走格：按固定间隔重发方向键按下事件。
+func _process(delta: float) -> void:
+	if _nav_actions.is_empty():
+		return
+	_nav_repeat -= delta
+	if _nav_repeat > 0.0:
+		return
+	_nav_repeat = NAV_REPEAT_INTERVAL
+	for action: StringName in _nav_actions:
+		_send_action_event(action, true)
 
 
 ## 按下 / 松开的连续动作（[method Input.action_press] 那一类）。
