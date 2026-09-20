@@ -119,6 +119,10 @@ func place_player(host: WorldHost, spawn_id: StringName) -> void:
 		(player as Node2D).global_position = target.global_position
 	if player.has_method(&"face"):
 		player.call(&"face", target.facing)
+	# 缓存的旧地图会带着离图时的速度挂回来；落地先刹住，否则玩家会顺着
+	# 旧方向从出生点滑回出口，触发"来回切图"（详见 [method Player.reset_motion]）。
+	if player.has_method(&"reset_motion"):
+		player.call(&"reset_motion")
 
 
 func _find_spawn_point(tree: SceneTree, spawn_id: StringName) -> SpawnPoint:

@@ -268,6 +268,18 @@ func face(direction: Facing.Direction) -> void:
 	EventBus.player.player_facing_changed.emit(facing)
 
 
+## 传送落地时清掉遗留的运动状态。
+##
+## 世界场景会被 [SceneRouter] 缓存复用、带着玩家一起摘出 / 挂回场景树；
+## 摘出那一刻的 [member velocity] 会原样留到下次进图。若不归零，玩家会带着
+## 出生点位置 + 旧速度滑回出口，把刚走完的传送再触发一遍（来回切图）。
+## 状态机也一并回到待机，避免残留上一张图里的工具动作。
+func reset_motion() -> void:
+	velocity = Vector2.ZERO
+	if state_machine != null and state_machine.has_state(&"idle"):
+		state_machine.transition_to(&"idle")
+
+
 ## 播放 [code]prefix_方向[/code] 形式的动画；同一动画正在播放时不会重头开始。
 func play_animation(prefix: StringName) -> void:
 	var animation := StringName("%s_%s" % [prefix, Facing.animation_suffix(facing)])
