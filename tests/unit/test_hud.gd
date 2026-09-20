@@ -65,4 +65,10 @@ func test_ui_scale_applies_to_regions() -> void:
 	assert_float(bar.pivot_offset.x).is_equal_approx(bar.size.x * 0.5, 0.001)
 	assert_float(bar.pivot_offset.y).is_equal_approx(bar.size.y, 0.001)
 
+	var hints := hud.find_child("TopHints", true, false) as Control
+	assert_float(hints.scale.x).is_equal_approx(2.0, 0.001)
+	# 交互 / 浮动提示整体钉顶边中点，放大只朝下长，行距一起缩放。
+	assert_float(hints.pivot_offset.x).is_equal_approx(hints.size.x * 0.5, 0.001)
+	assert_float(hints.pivot_offset.y).is_equal_approx(0.0, 0.001)
+
 	UiSettings.set_scale(previous, false)
