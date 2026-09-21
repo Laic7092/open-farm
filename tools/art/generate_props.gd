@@ -28,8 +28,8 @@ func _initialize() -> void:
 	_write_tree("tree", 0)
 	_write_tree("tree_pine", 1)
 	Art.save_png(_stump(), DIR.path_join("stump.png"))
-	Art.save_png(_rock(16, 16, 0), DIR.path_join("rock.png"))
-	Art.save_png(_rock(32, 24, 1), DIR.path_join("rock_big.png"))
+	Art.save_png(_rock_at(&"rock", 0), DIR.path_join("rock.png"))
+	Art.save_png(_rock_at(&"rock_big", 1), DIR.path_join("rock_big.png"))
 	Art.save_png(_bed(), DIR.path_join("bed.png"))
 	Art.save_png(_shipping_bin(), DIR.path_join("shipping_bin.png"))
 	Art.save_png(_signpost(), DIR.path_join("signpost.png"))
@@ -89,7 +89,7 @@ func _build_tree_for(season: Season.Type, variant: int) -> Image:
 ## 农舍：64×64。3/4 视角：右山墙退后 9×6，前山墙 + 两坡屋顶 + 烟囱；
 ## 建筑走 [WorldProp] 的"身后淡出"，不做局部遮挡。
 func _house() -> Image:
-	var image := Art.new_image(64, 64)
+	var image := _canvas(&"house")
 	Art.ground_shadow(image, 64, 64, 8)
 	# 前山墙房子的 3/4：屋脊从前(27,18)向后(36,12)退，两坡屋顶各占一边。
 	var front_left := Vector2(3, 35)
@@ -169,7 +169,7 @@ func _window(image: Image, area: Rect2i) -> void:
 ## 谷仓：64×56。与农舍同构的 3/4，但更宽更矮，红顶 + 双开大门 + 干草阁楼窗。
 ## 建筑走 [WorldProp] 的"身后淡出"，不做局部遮挡。
 func _barn() -> Image:
-	var image := Art.new_image(64, 56)
+	var image := _canvas(&"barn")
 	Art.ground_shadow(image, 64, 56, 6)
 
 	# 与农舍同源的 3/4 结构，但更宽、更低，红顶 + 干草阁楼窗一眼认得出是谷仓。
@@ -239,8 +239,8 @@ func _barn() -> Image:
 
 ## [param variant] 0 = 阔叶树、1 = 松树。
 func _tree(variant: int) -> Image:
-	var image := Art.new_image(32, 48)
-	Art.ground_shadow(image, 32, 48, 8)
+	var image := _canvas(&"tree")
+	Art.ground_shadow(image, 32, 64, 8)
 	_tree_trunk(image)
 	_tree_canopy(image, variant)
 	Art.outline(image, P.OUTLINE)
@@ -249,17 +249,16 @@ func _tree(variant: int) -> Image:
 
 ## 树干：基部外扩出根盘，避免树像插在土里的一根棍。
 func _tree_trunk(image: Image) -> void:
-	Art.taper(image, Vector2i(16, 28), 18, 6, 9, P.TRUNK)
-	Art.v_line(image, 13, 30, 16, P.TRUNK_DARK)
-	Art.v_line(image, 19, 30, 16, P.WOOD_LIGHT)
+	Art.taper(image, Vector2i(16, 36), 24, 8, 13, P.TRUNK)
+	Art.v_line(image, 12, 40, 22, P.TRUNK_DARK)
+	Art.v_line(image, 20, 40, 22, P.WOOD_LIGHT)
 	# 根盘：左右各探出一像素，贴着地面。
-	Art.h_line(image, 11, 45, 11, P.TRUNK_DARK)
-	Art.px(image, 10, 44, P.TRUNK_DARK)
-	Art.px(image, 21, 44, P.TRUNK_DARK)
-	Art.h_line(image, 12, 46, 9, P.TRUNK)
+	Art.h_line(image, 9, 60, 15, P.TRUNK_DARK)
+	Art.px(image, 8, 59, P.TRUNK_DARK)
+	Art.px(image, 23, 59, P.TRUNK_DARK)
+	Art.h_line(image, 11, 61, 11, P.TRUNK)
 
 
-## 树冠（3/4 受光）：暗部偏右下、亮部偏左上，树冠下缘再压一层暗。
 func _tree_canopy(image: Image, variant: int) -> void:
 	if variant == 1:
 		_pine_canopy(image)
@@ -270,35 +269,34 @@ func _tree_canopy(image: Image, variant: int) -> void:
 ## 阔叶树：三团错位树冠 + 顶部受光 + 底部阴影。
 func _oak_canopy(image: Image) -> void:
 	var leaf := _mat(&"leaf")
-	Art.ellipse(image, Vector2i(12, 21), Vector2i(9, 8), leaf[1])
-	Art.ellipse(image, Vector2i(22, 20), Vector2i(9, 8), leaf[1])
-	Art.ellipse(image, Vector2i(17, 15), Vector2i(10, 8), leaf[1])
-	Art.ellipse(image, Vector2i(11, 19), Vector2i(8, 7), leaf[0])
-	Art.ellipse(image, Vector2i(21, 18), Vector2i(8, 7), leaf[0])
-	Art.ellipse(image, Vector2i(16, 13), Vector2i(9, 7), leaf[0])
-	Art.ellipse(image, Vector2i(12, 12), Vector2i(6, 4), leaf[2])
-	Art.ellipse(image, Vector2i(9, 17), Vector2i(4, 3), leaf[2])
-	Art.ellipse(image, Vector2i(20, 23), Vector2i(7, 3), leaf[1].lerp(P.OUTLINE, 0.18))
-	Art.px(image, 9, 18, P.FRUIT_RED)
-	Art.px(image, 24, 17, P.FRUIT_RED)
+	Art.ellipse(image, Vector2i(11, 30), Vector2i(10, 9), leaf[1])
+	Art.ellipse(image, Vector2i(21, 29), Vector2i(10, 9), leaf[1])
+	Art.ellipse(image, Vector2i(16, 21), Vector2i(12, 10), leaf[1])
+	Art.ellipse(image, Vector2i(10, 28), Vector2i(9, 8), leaf[0])
+	Art.ellipse(image, Vector2i(21, 27), Vector2i(9, 8), leaf[0])
+	Art.ellipse(image, Vector2i(16, 19), Vector2i(10, 8), leaf[0])
+	Art.ellipse(image, Vector2i(11, 15), Vector2i(7, 5), leaf[2])
+	Art.ellipse(image, Vector2i(8, 24), Vector2i(5, 4), leaf[2])
+	Art.ellipse(image, Vector2i(20, 33), Vector2i(8, 4), leaf[1].lerp(P.OUTLINE, 0.18))
+	Art.px(image, 8, 26, P.FRUIT_RED)
+	Art.px(image, 25, 23, P.FRUIT_RED)
 
 
-## 松树：三层三角，每层左亮右暗，越往上越小。
 func _pine_canopy(image: Image) -> void:
 	var leaf := _mat(&"leaf")
 	for layer: int in 3:
-		var base: int = 30 - layer * 8
-		var half: int = 11 - layer * 3
-		var apex := Vector2(16, base - 12)
+		var base: int = 46 - layer * 12
+		var half: int = 13 - layer * 3
+		var apex := Vector2(16, base - 16)
 		Art.triangle(image, apex, Vector2(16 - half, base), Vector2(16 + half, base), leaf[0])
 		Art.triangle(image, apex, Vector2(16 - half, base), Vector2(16 - half / 3, base), leaf[2])
 		Art.triangle(image, apex, Vector2(16, base), Vector2(16 + half, base), leaf[1])
 		Art.h_line(image, 16 - half, base, half * 2, leaf[1])
-	Art.v_line(image, 15, 2, 4, leaf[2])
+	Art.v_line(image, 15, 3, 5, leaf[2])
 
 
 func _stump() -> Image:
-	var image := Art.new_image(16, 16)
+	var image := _canvas(&"stump")
 	Art.ground_shadow(image, 16, 16, 3)
 	Art.ellipse(image, Vector2i(8, 10), Vector2i(6, 5), P.TRUNK_DARK)
 	Art.ellipse(image, Vector2i(8, 9), Vector2i(6, 4), P.TRUNK)
@@ -308,26 +306,42 @@ func _stump() -> Image:
 	return image
 
 
+## 按尺度表的 visual 开画布；具体像素坐标仍写在各画函数里。
+## 改表里的 visual 后，要回来把该件的内部坐标重画到新画布上。
+func _canvas(prop_id: StringName) -> Image:
+	var size := Layout.prop_visual(prop_id)
+	return Art.new_image(size.x, size.y)
+
+
+## 石头是参数化画法，尺寸直接取自尺度表。
+func _rock_at(prop_id: StringName, variant: int) -> Image:
+	var size := Layout.prop_visual(prop_id)
+	return _rock(size.x, size.y, variant)
+
+
 func _rock(width: int, height: int, variant: int) -> Image:
 	var image := Art.new_image(width, height)
 	Art.ground_shadow(image, width, height, 3)
-	var center := Vector2i(width / 2, height - 5)
-	var radius := Vector2i(width / 2 - 2, height / 2 - 2)
+	# 压扁的椭圆石丘：底边贴地，横向铺满画布，纵向约画布的三分之一。
+	var radius := Vector2i(maxi(width / 2 - 2, 2), maxi(height / 3, 2))
+	var center := Vector2i(width / 2, height - 3 - radius.y)
 	Art.ellipse(image, center, radius, P.STONE_DARK)
 	Art.ellipse(image, center - Vector2i(0, 1), radius - Vector2i(1, 1), P.STONE)
-	Art.ellipse(image, center - Vector2i(2, 2), Vector2i(maxi(radius.x / 2, 1), maxi(radius.y / 2, 1)), P.STONE_LIGHT)
+	Art.ellipse(
+		image,
+		center - Vector2i(2, 2),
+		Vector2i(maxi(radius.x / 2, 1), maxi(radius.y / 2, 1)),
+		P.STONE_LIGHT
+	)
 	if variant == 1:
-		Art.ellipse(image, center + Vector2i(5, -2), Vector2i(3, 2), P.STONE_LIGHT)
-		Art.h_line(image, center.x - radius.x + 2, center.y + radius.y - 1, 4, P.STONE_DARK)
+		Art.ellipse(image, center + Vector2i(6, -3), Vector2i(4, 3), P.STONE_LIGHT)
+		Art.h_line(image, center.x - radius.x + 2, center.y + radius.y - 1, 5, P.STONE_DARK)
 	Art.outline(image, P.OUTLINE)
 	return image
 
 
-# ---------------------------------------------------------------- 家具 / 交互物
-
-## 床：16×24，木框 + 枕头 + 被子。
 func _bed() -> Image:
-	var image := Art.new_image(16, 24)
+	var image := _canvas(&"bed")
 	Art.ground_shadow(image, 16, 24, 2)
 	Art.rect(image, Rect2i(1, 2, 14, 21), P.WOOD_DARK)
 	Art.rect(image, Rect2i(2, 3, 12, 19), P.WOOD)
@@ -344,7 +358,7 @@ func _bed() -> Image:
 
 ## 出货箱：24×20，敞口木箱 + 一小堆货物。
 func _shipping_bin() -> Image:
-	var image := Art.new_image(24, 20)
+	var image := _canvas(&"shipping_bin")
 	Art.ground_shadow(image, 24, 20, 3)
 	Art.rect(image, Rect2i(1, 5, 22, 14), P.WOOD)
 	Art.frame_rect(image, Rect2i(1, 5, 22, 14), P.WOOD_DARK)
@@ -363,7 +377,7 @@ func _shipping_bin() -> Image:
 
 ## 路牌：两根木柱 + 指路板。
 func _signpost() -> Image:
-	var image := Art.new_image(16, 24)
+	var image := _canvas(&"signpost")
 	Art.ground_shadow(image, 16, 24, 4)
 	Art.rect(image, Rect2i(7, 6, 3, 17), P.WOOD_DARK)
 	Art.rect(image, Rect2i(1, 3, 14, 7), P.WOOD)
@@ -377,7 +391,7 @@ func _signpost() -> Image:
 
 ## 矿洞爬梯：两根木梁 + 横档；站在上面按 E 下一层。
 func _ladder() -> Image:
-	var image := Art.new_image(16, 24)
+	var image := _canvas(&"ladder")
 	Art.ground_shadow(image, 16, 24, 5)
 	Art.rect(image, Rect2i(3, 3, 3, 19), P.WOOD_DARK)
 	Art.rect(image, Rect2i(10, 3, 3, 19), P.WOOD_DARK)
@@ -391,7 +405,7 @@ func _ladder() -> Image:
 
 ## 矿洞电梯：铁制轿厢 + 向下箭头；交互后可选择已解锁楼层。
 func _elevator() -> Image:
-	var image := Art.new_image(16, 24)
+	var image := _canvas(&"elevator")
 	Art.ground_shadow(image, 16, 24, 4)
 	Art.rect(image, Rect2i(2, 2, 12, 19), P.STONE_DARK)
 	Art.frame_rect(image, Rect2i(2, 2, 12, 19), P.STONE)
@@ -403,7 +417,7 @@ func _elevator() -> Image:
 
 ## 水井：石砌井台 + 木架 + 小屋顶。
 func _well() -> Image:
-	var image := Art.new_image(32, 32)
+	var image := _canvas(&"well")
 	Art.ground_shadow(image, 32, 32, 5)
 	Art.rect(image, Rect2i(5, 18, 22, 12), P.STONE)
 	Art.rect(image, Rect2i(5, 18, 22, 2), P.STONE_LIGHT)
@@ -422,7 +436,7 @@ func _well() -> Image:
 
 ## 信箱：木柱 + 箱体 + 红旗。
 func _mailbox() -> Image:
-	var image := Art.new_image(16, 24)
+	var image := _canvas(&"mailbox")
 	Art.ground_shadow(image, 16, 24, 4)
 	Art.rect(image, Rect2i(7, 10, 3, 13), P.WOOD_DARK)
 	Art.rect(image, Rect2i(2, 5, 12, 7), P.FRUIT_RED)
@@ -436,20 +450,22 @@ func _mailbox() -> Image:
 
 ## 路灯：铁柱 + 暖光灯笼。
 func _lamp() -> Image:
-	var image := Art.new_image(16, 32)
-	Art.ground_shadow(image, 16, 32, 5)
-	Art.rect(image, Rect2i(7, 12, 3, 19), P.STONE_DARK)
-	Art.rect(image, Rect2i(5, 30, 7, 2), P.STONE_DARK)
-	Art.rect(image, Rect2i(4, 5, 9, 8), P.WOOD_DARK)
-	Art.rect(image, Rect2i(5, 6, 7, 6), P.SUN)
-	Art.rect(image, Rect2i(6, 7, 5, 4), P.SUN_CORE)
+	var image := _canvas(&"lamp")
+	Art.ground_shadow(image, 16, 48, 5)
+	# 底座 + 加高到 3 格的灯柱（比 2 格玩家高一格）。
+	Art.rect(image, Rect2i(4, 44, 9, 3), P.STONE_DARK)
+	Art.rect(image, Rect2i(7, 17, 3, 28), P.STONE_DARK)
+	# 灯头：顶盖 + 暖光灯罩。
 	Art.rect(image, Rect2i(3, 3, 11, 2), P.WOOD_DARK)
+	Art.rect(image, Rect2i(4, 5, 9, 13), P.WOOD_DARK)
+	Art.rect(image, Rect2i(5, 6, 7, 11), P.SUN)
+	Art.rect(image, Rect2i(6, 7, 5, 9), P.SUN_CORE)
 	Art.outline(image, P.OUTLINE)
 	return image
 
 
 func _flower_pot() -> Image:
-	var image := Art.new_image(16, 16)
+	var image := _canvas(&"flower_pot")
 	Art.ground_shadow(image, 16, 16, 4)
 	Art.taper(image, Vector2i(8, 8), 7, 12, 8, P.FRUIT_ORANGE)
 	Art.rect(image, Rect2i(2, 7, 12, 2), P.ROOF_LIGHT)
@@ -467,7 +483,7 @@ func _flower_pot() -> Image:
 
 ## 鸡舍：比谷仓小一号，配色更暖，门口挂一个下蛋的草窝。
 func _coop() -> Image:
-	var image := Art.new_image(48, 44)
+	var image := _canvas(&"coop")
 	Art.ground_shadow(image, 48, 44, 6)
 
 	var body := Rect2i(6, 18, 36, 24)
@@ -500,7 +516,7 @@ func _coop() -> Image:
 
 ## 饲料槽：木槽 + 干草。
 func _trough() -> Image:
-	var image := Art.new_image(16, 16)
+	var image := _canvas(&"trough")
 	Art.ground_shadow(image, 16, 16, 3)
 	Art.taper(image, Vector2i(8, 8), 5, 12, 10, P.WOOD)
 	Art.rect(image, Rect2i(3, 7, 11, 2), P.WOOD_DARK)
@@ -513,7 +529,7 @@ func _trough() -> Image:
 
 ## 小鸡：牧场气氛组，纯装饰。
 func _chicken() -> Image:
-	var image := Art.new_image(16, 16)
+	var image := _canvas(&"chicken")
 	Art.ground_shadow(image, 16, 16, 4)
 	Art.ellipse(image, Vector2i(8, 9), Vector2i(5, 4), P.WHITE)
 	Art.ellipse(image, Vector2i(10, 6), Vector2i(3, 3), P.WHITE)
@@ -531,7 +547,7 @@ func _chicken() -> Image:
 
 ## 木栈桥：横向桥面 + 四根木桩，铺在沙滩与水面之间。
 func _dock() -> Image:
-	var image := Art.new_image(48, 24)
+	var image := _canvas(&"dock")
 	# 木桩先画，让桥面盖住它们的上端。
 	for x: int in [2, 14, 26, 38]:
 		Art.rect(image, Rect2i(x, 8, 3, 16), P.WOOD_DARK)
@@ -547,7 +563,7 @@ func _dock() -> Image:
 
 ## 小木船：倒梯形船身 + 一支横桨。
 func _boat() -> Image:
-	var image := Art.new_image(32, 24)
+	var image := _canvas(&"boat")
 	Art.taper(image, Vector2i(16, 7), 11, 16, 7, P.WOOD)
 	Art.h_line(image, 8, 7, 16, P.WOOD_LIGHT)
 	Art.h_line(image, 8, 8, 16, P.WOOD_DARK)
@@ -561,7 +577,7 @@ func _boat() -> Image:
 
 ## 矿洞入口：一堆岩石里挖出的黑洞，远处一眼能认出来。
 func _cave() -> Image:
-	var image := Art.new_image(48, 40)
+	var image := _canvas(&"cave")
 	Art.ground_shadow(image, 48, 40, 6)
 	Art.ellipse(image, Vector2i(24, 24), Vector2i(22, 16), P.STONE)
 	Art.ellipse(image, Vector2i(16, 18), Vector2i(12, 9), P.STONE_LIGHT)
@@ -575,7 +591,7 @@ func _cave() -> Image:
 
 ## 书架：木框 + 三层彩色书脊。
 func _bookshelf() -> Image:
-	var image := Art.new_image(32, 32)
+	var image := _canvas(&"bookshelf")
 	Art.ground_shadow(image, 32, 32, 4)
 	Art.rect(image, Rect2i(2, 2, 28, 28), P.WOOD)
 	Art.rect(image, Rect2i(4, 4, 24, 24), P.WOOD_DARK)
@@ -599,7 +615,7 @@ func _bookshelf() -> Image:
 
 ## 商店柜台：木台面 + 台面上的钱币与玻璃瓶。
 func _counter() -> Image:
-	var image := Art.new_image(48, 24)
+	var image := _canvas(&"counter")
 	Art.ground_shadow(image, 48, 24, 6)
 	Art.rect(image, Rect2i(2, 6, 44, 16), P.WOOD_DARK)
 	Art.rect(image, Rect2i(2, 6, 44, 5), P.PLANK)
@@ -614,7 +630,7 @@ func _counter() -> Image:
 
 ## 铁匠炉：石炉 + 炉火 + 铁砧。
 func _forge() -> Image:
-	var image := Art.new_image(32, 32)
+	var image := _canvas(&"forge")
 	Art.ground_shadow(image, 32, 32, 4)
 	Art.rect(image, Rect2i(3, 8, 14, 20), P.STONE)
 	Art.scatter(image, Rect2i(3, 8, 14, 20), P.STONE_DARK, 0.2, 37)
@@ -632,7 +648,7 @@ func _forge() -> Image:
 
 ## 花摊：双层木架，每层摆一排花盆。
 func _flower_stand() -> Image:
-	var image := Art.new_image(32, 32)
+	var image := _canvas(&"flower_stand")
 	Art.ground_shadow(image, 32, 32, 4)
 	Art.rect(image, Rect2i(3, 14, 26, 14), P.WOOD)
 	Art.rect(image, Rect2i(3, 14, 26, 2), P.WOOD_LIGHT)
@@ -656,7 +672,7 @@ func _flower_stand() -> Image:
 
 ## 老式电视机：深色外壳 + 玻璃屏 + 两根天线，放在客厅一角。
 func _tv() -> Image:
-	var image := Art.new_image(24, 24)
+	var image := _canvas(&"tv")
 	Art.ground_shadow(image, 24, 24, 4)
 	# 天线。
 	Art.line(image, Vector2(8, 6), Vector2(5, 1), P.STONE_DARK)
@@ -680,7 +696,7 @@ func _tv() -> Image:
 
 ## 木餐桌：桌面 + 两条桌腿，桌上放一只盘子。
 func _table() -> Image:
-	var image := Art.new_image(32, 24)
+	var image := _canvas(&"table")
 	Art.ground_shadow(image, 32, 24, 4)
 	Art.rect(image, Rect2i(1, 6, 30, 4), P.PLANK)
 	Art.h_line(image, 1, 6, 30, P.WOOD_LIGHT)
@@ -697,7 +713,7 @@ func _table() -> Image:
 
 ## 木椅：靠背 + 坐面 + 两条腿。
 func _chair() -> Image:
-	var image := Art.new_image(12, 16)
+	var image := _canvas(&"chair")
 	Art.ground_shadow(image, 12, 16, 2)
 	Art.rect(image, Rect2i(2, 1, 8, 8), P.WOOD)
 	Art.frame_rect(image, Rect2i(2, 1, 8, 8), P.WOOD_DARK)
@@ -711,7 +727,7 @@ func _chair() -> Image:
 
 ## 厨房灶台：石砌炉体 + 两个灶眼 + 一点炉火。
 func _stove() -> Image:
-	var image := Art.new_image(24, 28)
+	var image := _canvas(&"stove")
 	Art.ground_shadow(image, 24, 28, 3)
 	# 炉体。
 	Art.rect(image, Rect2i(2, 6, 20, 18), P.STONE)
@@ -735,7 +751,7 @@ func _stove() -> Image:
 
 ## 衣柜：双开门的大木柜，门上有把手。
 func _wardrobe() -> Image:
-	var image := Art.new_image(24, 32)
+	var image := _canvas(&"wardrobe")
 	Art.ground_shadow(image, 24, 32, 3)
 	Art.rect(image, Rect2i(2, 3, 20, 26), P.WOOD)
 	Art.frame_rect(image, Rect2i(2, 3, 20, 26), P.WOOD_DARK)
@@ -751,7 +767,7 @@ func _wardrobe() -> Image:
 
 ## 地毯：同心椭圆，可穿过，铺在客厅地板上。
 func _rug() -> Image:
-	var image := Art.new_image(32, 16)
+	var image := _canvas(&"rug")
 	Art.ellipse(image, Vector2i(16, 8), Vector2i(15, 7), P.ROOF_ROSE_DARK)
 	Art.ellipse(image, Vector2i(16, 8), Vector2i(13, 6), P.ROOF_ROSE)
 	Art.ellipse(image, Vector2i(16, 8), Vector2i(7, 3), P.ROOF_ROSE_LIGHT)
@@ -763,7 +779,7 @@ func _rug() -> Image:
 
 ## 博物馆展台：玻璃罩下的陈列品——图鉴台。
 func _museum_stand() -> Image:
-	var image := Art.new_image(32, 32)
+	var image := _canvas(&"museum_stand")
 	Art.ground_shadow(image, 32, 32, 6)
 	# 底座。
 	Art.rect(image, Rect2i(6, 22, 20, 8), P.WOOD)
@@ -784,7 +800,7 @@ func _museum_stand() -> Image:
 
 ## 委托板：木架上的告示板，钉着几张待办纸条。
 func _notice_board() -> Image:
-	var image := Art.new_image(32, 32)
+	var image := _canvas(&"notice_board")
 	Art.ground_shadow(image, 32, 32, 5)
 	# 两根立柱。
 	Art.rect(image, Rect2i(5, 14, 3, 17), P.WOOD_DARK)

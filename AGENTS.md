@@ -29,6 +29,7 @@
 | --- | --- |
 | 加物品 | `data/items/`（可持有物品总表；图标 = `assets/sprites/items/<id>.png`） |
 | 加对象 / 系统内容 | 同名 `data/<域>/` + `tools/art/generate_<域>.gd`，重跑 `build_assets.sh` |
+| 改摆件尺寸 / 占地 | `src/art/atlas_layout.gd` 的 `PROPS`（唯一来源），改完重跑 `build_assets.sh`；设计见 `docs/refactor-world-scale.md` |
 | 上架 / 定价 | `data/shops/` |
 | 加 / 改对话 | `data/dialogue/<npc_id>/`（四季 + 恋爱），共享节日 / 事件放 `data/dialogue/shared/`；生成器 `tools/sample/build_dialogues.gd`，文案进 `assets/i18n/dialogue.csv` |
 | 加文案 / 汉字 | `assets/i18n/*.csv` |

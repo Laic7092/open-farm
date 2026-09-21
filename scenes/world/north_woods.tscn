@@ -66,46 +66,38 @@ texture = ExtResource("23_sign")
 script = ExtResource("10_prop")
 
 [node name="CornerOak" type="Sprite2D" parent="Props"]
-position = Vector2(48, 56)
+position = Vector2(48, 48)
 texture = ExtResource("20_tree")
 script = ExtResource("10_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="CornerPine" type="Sprite2D" parent="Props"]
-position = Vector2(576, 64)
+position = Vector2(576, 56)
 texture = ExtResource("21_pine")
 script = ExtResource("10_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="CornerRock" type="Sprite2D" parent="Props"]
-position = Vector2(592, 336)
+position = Vector2(592, 332)
 texture = ExtResource("22_rock_big")
 script = ExtResource("10_prop")
-solid_size = Vector2(26, 10)
-solid_offset = Vector2(0, 6)
 
 [node name="OldStump" type="Sprite2D" parent="Props"]
 position = Vector2(80, 320)
 texture = ExtResource("25_stump")
 script = ExtResource("10_prop")
-solid_size = Vector2(16, 8)
-solid_offset = Vector2(0, 4)
 
 [node name="LampNorth" type="Sprite2D" parent="Props"]
-position = Vector2(368, 112)
+position = Vector2(368, 104)
 texture = ExtResource("24_lamp")
 script = ExtResource("10_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="LampSouth" type="Sprite2D" parent="Props"]
-position = Vector2(272, 296)
+position = Vector2(272, 288)
 texture = ExtResource("24_lamp")
 script = ExtResource("10_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="Spawns" type="Node2D" parent="."]
 

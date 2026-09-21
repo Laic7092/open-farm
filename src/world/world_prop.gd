@@ -14,6 +14,9 @@ extends Sprite2D
 ## 把"可通行区域"当成参数写清楚，比在每个场景里试坐标可靠得多。
 ## 灯光同理——场景里只填半径，亮度曲线由 [WorldLighting] 统一给。
 
+## 摆件 id（对应 [constant AtlasLayout.PROPS] 的键）。留空时从贴图文件名推断
+## （[code]props/lamp.png → &"lamp"[/code]），一般不用手填。
+@export var prop_id: StringName = &""
 ## 是否允许穿过。默认 false：绝大多数摆件都应当挡住玩家；
 ## 只有牧草这类显式标记的低矮装饰才设为 true。
 @export var passable: bool = false
@@ -83,9 +86,12 @@ var _player: Node2D
 var _fade_active: bool = false
 ## 首次 [method apply_season] 时缓存的基础贴图路径；之后一直从这个路径派生变体。
 var _base_texture_path: String = ""
+## 首次 [method _ready] 时解析并缓存的 prop id；避免季节换图后推断成 winter 变体。
+var _resolved_prop_id: StringName = &""
 
 
 func _ready() -> void:
+	_resolved_prop_id = _infer_prop_id()
 	if _effective_solid_size() != Vector2.ZERO:
 		add_child(_build_body())
 		_build_occluders()
@@ -111,12 +117,38 @@ func _build_body() -> StaticBody2D:
 	return body
 
 
-## 实际使用的碰撞盒尺寸：显式 [member solid_size] 优先，否则按贴图底部自动生成脚印。
+## 本摆件的 prop id：显式 [member prop_id] 优先，否则从贴图文件名推断。
+## [_ready] 会把结果缓存进 [member _resolved_prop_id]，季节换图后仍稳定。
+func resolve_prop_id() -> StringName:
+	if not _resolved_prop_id.is_empty():
+		return _resolved_prop_id
+	return _infer_prop_id()
+
+
+## 从贴图资源路径推断 prop id（[code]props/lamp.png → lamp[/code]）。
+func _infer_prop_id() -> StringName:
+	if not prop_id.is_empty():
+		return prop_id
+	if texture != null and not texture.resource_path.is_empty():
+		return StringName(texture.resource_path.get_file().get_basename())
+	return &""
+
+
+## 是否允许穿过：场景显式 [member passable]，或尺度表标记为可穿。
+func _effective_passable() -> bool:
+	return passable or AtlasLayout.prop_passable(resolve_prop_id())
+
+
+## 实际使用的碰撞盒尺寸：显式 [member solid_size] 优先，其次尺度表，
+## 最后才按贴图底部自动生成脚印。
 func _effective_solid_size() -> Vector2:
-	if passable:
+	if _effective_passable():
 		return Vector2.ZERO
 	if solid_size != Vector2.ZERO:
 		return solid_size
+	var spec := AtlasLayout.prop_spec(resolve_prop_id())
+	if not spec.is_empty():
+		return spec.get("solid", Vector2.ZERO)
 	if texture == null:
 		return Vector2.ZERO
 	var width := clampf(
@@ -127,10 +159,14 @@ func _effective_solid_size() -> Vector2:
 	return Vector2(width, AUTO_SOLID_HEIGHT)
 
 
-## 实际使用的碰撞盒偏移；没有显式 [member solid_size] 时按贴图底部对齐脚印。
+## 实际使用的碰撞盒偏移：显式 [member solid_size] 用 [member solid_offset]，
+## 尺度表用表里的偏移，其余按贴图底部对齐脚印。
 func _effective_solid_offset() -> Vector2:
 	if solid_size != Vector2.ZERO:
 		return solid_offset
+	var spec := AtlasLayout.prop_spec(resolve_prop_id())
+	if not spec.is_empty():
+		return spec.get("solid_offset", Vector2.ZERO)
 	var size := _effective_solid_size()
 	if size == Vector2.ZERO or texture == null:
 		return solid_offset

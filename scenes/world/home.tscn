@@ -65,14 +65,11 @@ z_index = -1
 position = Vector2(288, 168)
 texture = ExtResource("26_rug")
 script = ExtResource("9_prop")
-passable = true
 
 [node name="Wardrobe" type="Sprite2D" parent="Props"]
 position = Vector2(44, 176)
 texture = ExtResource("25_wardrobe")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 7)
 
 [node name="Bed" type="Area2D" parent="Props"]
 position = Vector2(60, 104)
@@ -104,36 +101,26 @@ shape = SubResource("RectangleShape2D_tile")
 position = Vector2(120, 152)
 texture = ExtResource("22_table")
 script = ExtResource("9_prop")
-solid_size = Vector2(28, 8)
-solid_offset = Vector2(0, 5)
 
 [node name="ChairLeft" type="Sprite2D" parent="Props"]
 position = Vector2(96, 152)
 texture = ExtResource("23_chair")
 script = ExtResource("9_prop")
-solid_size = Vector2(8, 6)
-solid_offset = Vector2(0, 4)
 
 [node name="ChairRight" type="Sprite2D" parent="Props"]
 position = Vector2(144, 152)
 texture = ExtResource("23_chair")
 script = ExtResource("9_prop")
-solid_size = Vector2(8, 6)
-solid_offset = Vector2(0, 4)
 
 [node name="Television" type="Sprite2D" parent="Props"]
 position = Vector2(320, 96)
 texture = ExtResource("21_tv")
 script = ExtResource("9_prop")
-solid_size = Vector2(16, 8)
-solid_offset = Vector2(0, 5)
 
 [node name="Bookshelf" type="Sprite2D" parent="Props"]
 position = Vector2(336, 208)
 texture = ExtResource("27_bookshelf")
 script = ExtResource("9_prop")
-solid_size = Vector2(28, 10)
-solid_offset = Vector2(0, 8)
 
 [node name="FlowerPot" type="Sprite2D" parent="Props"]
 position = Vector2(180, 216)
@@ -141,18 +128,18 @@ texture = ExtResource("28_pot")
 script = ExtResource("9_prop")
 
 [node name="LampLeft" type="Sprite2D" parent="Props"]
-position = Vector2(96, 72)
+position = Vector2(96, 64)
 texture = ExtResource("29_lamp")
 script = ExtResource("9_prop")
 light_radius = 80.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="LampRight" type="Sprite2D" parent="Props"]
-position = Vector2(288, 72)
+position = Vector2(288, 64)
 texture = ExtResource("29_lamp")
 script = ExtResource("9_prop")
 light_radius = 80.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="Spawns" type="Node2D" parent="."]
 

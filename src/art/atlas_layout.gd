@@ -12,7 +12,9 @@ extends RefCounted
 ## [br]2. [code]tileset_farm.png[/code] [b]只放地板[/b]：花木 / 栅栏 / 墙面这类
 ## "站在地板上的东西"一律导出成独立透明 PNG，由 [code]DecorPainter[/code]
 ## 或 [code]InteriorWalls[/code] 生成节点，不再占图集格子。
-## [br]3. 新增或调整排版后，跑一次 [code]./tools/build_assets.sh[/code]。
+## [br]3. 世界摆件的尺寸 / 占地只允许写在本文件的 [constant PROPS] 表，
+## 生成器、[WorldProp] 与测试都从那里读；新增或调整排版后跑一次
+## [code]./tools/build_assets.sh[/code]。
 ## [br]4. [code]tests/unit/test_assets.gd[/code] 会校验 PNG 尺寸、
 ## "每格都有像素"、以及 TileSet 里的瓦片与这里的常量一致。
 ##
@@ -239,3 +241,92 @@ const TITLE_BANNER_SIZE := Vector2i(24, 24)
 ## 所以所有 NPC 住宅都必须生成这个尺寸，换贴图才不会同时挪碰撞。
 ## 生成器见 [code]tools/art/generate_houses.gd[/code]。
 const HOUSE_SIZE := Vector2i(64, 64)
+
+# ---------------------------------------------------------------- 世界摆件尺度
+
+## 唯一参照物：玩家。占地 1 格、视觉 2 格高。
+##
+## 摆件尺寸一律用格（[constant TILE]）与格的比例表达，不使用现实单位——
+## 这是俯视角像素游戏，"真实"= 相对玩家可读。
+const PLAYER_FOOTPRINT := Vector2i(1, 1)
+const PLAYER_VISUAL := Vector2i(1, 2)
+
+## 世界摆件尺度表：[code]assets/sprites/props/*.png[/code] 的唯一事实来源。
+##
+## 每个 id 一条，字段：
+## [br]- [code]visual[/code]       贴图像素尺寸（生成器出图、测试校验都用它）；
+## [br]- [code]footprint[/code]    逻辑占地格数（"占几格"；具体数值仍在调整，先占位）；
+## [br]- [code]solid[/code]        实际阻挡盒像素尺寸（可与 footprint 不同：
+##   房子占地 4×4，但只有底部一条挡人）；
+## [br]- [code]solid_offset[/code] 阻挡盒相对精灵中心的偏移；
+## [br]- [code]passable[/code]     能否穿过。
+##
+## [b]约定[/b]：生成器按 [code]visual[/code] 出图；[WorldProp] 按
+## [code]solid[/code] / [code]solid_offset[/code] 建碰撞；测试断言 PNG 尺寸与
+## [code]visual[/code] 一致、[code]footprint[/code] 不超过视觉覆盖的格数。
+## 改 [code]visual[/code] 后，生成器里该件的内部像素坐标要跟着重画，否则会留白或裁切。
+const PROPS: Dictionary = {
+	&"barn": { "visual": Vector2i(64, 56), "footprint": Vector2i(4, 3), "solid": Vector2(54, 16), "solid_offset": Vector2(0, 20), "passable": false },  # explicit
+	&"bed": { "visual": Vector2i(16, 24), "footprint": Vector2i(1, 1), "solid": Vector2(8, 4), "solid_offset": Vector2(0, 9), "passable": false },  # auto
+	&"boat": { "visual": Vector2i(32, 24), "footprint": Vector2i(2, 1), "solid": Vector2(16, 4), "solid_offset": Vector2(0, 9), "passable": false },  # auto
+	&"bookshelf": { "visual": Vector2i(32, 32), "footprint": Vector2i(2, 2), "solid": Vector2(28, 10), "solid_offset": Vector2(0, 8), "passable": false },  # explicit
+	&"cave": { "visual": Vector2i(48, 40), "footprint": Vector2i(3, 2), "solid": Vector2(40, 16), "solid_offset": Vector2(0, 16), "passable": false },  # explicit
+	&"chair": { "visual": Vector2i(12, 16), "footprint": Vector2i(1, 1), "solid": Vector2(8, 6), "solid_offset": Vector2(0, 4), "passable": false },  # explicit
+	&"chicken": { "visual": Vector2i(16, 16), "footprint": Vector2i(1, 1), "solid": Vector2(8, 4), "solid_offset": Vector2(0, 5), "passable": false },  # auto
+	&"coop": { "visual": Vector2i(48, 44), "footprint": Vector2i(3, 2), "solid": Vector2(16, 4), "solid_offset": Vector2(0, 19), "passable": false },  # auto
+	&"counter": { "visual": Vector2i(48, 24), "footprint": Vector2i(3, 1), "solid": Vector2(44, 10), "solid_offset": Vector2(0, 6), "passable": false },  # explicit
+	&"dock": { "visual": Vector2i(48, 24), "footprint": Vector2i(3, 1), "solid": Vector2(16, 4), "solid_offset": Vector2(0, 9), "passable": false },  # auto
+	&"elevator": { "visual": Vector2i(16, 24), "footprint": Vector2i(1, 1), "solid": Vector2(8, 4), "solid_offset": Vector2(0, 9), "passable": false },  # auto
+	&"flower_pot": { "visual": Vector2i(16, 16), "footprint": Vector2i(1, 1), "solid": Vector2(8, 4), "solid_offset": Vector2(0, 5), "passable": false },  # auto
+	&"flower_stand": { "visual": Vector2i(32, 32), "footprint": Vector2i(2, 2), "solid": Vector2(28, 8), "solid_offset": Vector2(0, 6), "passable": false },  # explicit
+	&"forge": { "visual": Vector2i(32, 32), "footprint": Vector2i(2, 2), "solid": Vector2(26, 8), "solid_offset": Vector2(0, 6), "passable": false },  # explicit
+	&"house": { "visual": Vector2i(64, 64), "footprint": Vector2i(4, 4), "solid": Vector2(58, 14), "solid_offset": Vector2(0, 24), "passable": false },  # explicit
+	&"house_blacksmith": { "visual": Vector2i(64, 64), "footprint": Vector2i(4, 4), "solid": Vector2(60, 14), "solid_offset": Vector2(0, 24), "passable": false },  # explicit
+	&"house_child": { "visual": Vector2i(64, 64), "footprint": Vector2i(4, 4), "solid": Vector2(62, 14), "solid_offset": Vector2(0, 24), "passable": false },  # explicit
+	&"house_fisher": { "visual": Vector2i(64, 64), "footprint": Vector2i(4, 4), "solid": Vector2(44, 14), "solid_offset": Vector2(0, 24), "passable": false },  # explicit
+	&"house_florist": { "visual": Vector2i(64, 64), "footprint": Vector2i(4, 4), "solid": Vector2(60, 14), "solid_offset": Vector2(0, 24), "passable": false },  # explicit
+	&"house_librarian": { "visual": Vector2i(64, 64), "footprint": Vector2i(4, 4), "solid": Vector2(58, 14), "solid_offset": Vector2(0, 24), "passable": false },  # explicit
+	&"house_mayor": { "visual": Vector2i(64, 64), "footprint": Vector2i(4, 4), "solid": Vector2(60, 14), "solid_offset": Vector2(0, 24), "passable": false },  # explicit
+	&"house_merchant": { "visual": Vector2i(64, 64), "footprint": Vector2i(4, 4), "solid": Vector2(62, 14), "solid_offset": Vector2(0, 24), "passable": false },  # explicit
+	&"house_miner": { "visual": Vector2i(64, 64), "footprint": Vector2i(4, 4), "solid": Vector2(60, 14), "solid_offset": Vector2(0, 24), "passable": false },  # explicit
+	&"ladder": { "visual": Vector2i(16, 24), "footprint": Vector2i(1, 1), "solid": Vector2(8, 4), "solid_offset": Vector2(0, 9), "passable": false },  # auto
+	&"lamp": { "visual": Vector2i(16, 48), "footprint": Vector2i(1, 1), "solid": Vector2(8, 6), "solid_offset": Vector2(0, 21), "passable": false },  # 比玩家高 1 格
+	&"mailbox": { "visual": Vector2i(16, 24), "footprint": Vector2i(1, 1), "solid": Vector2(8, 4), "solid_offset": Vector2(0, 9), "passable": false },  # auto
+	&"museum_stand": { "visual": Vector2i(32, 32), "footprint": Vector2i(2, 2), "solid": Vector2(16, 4), "solid_offset": Vector2(0, 13), "passable": false },  # auto
+	&"notice_board": { "visual": Vector2i(32, 32), "footprint": Vector2i(2, 2), "solid": Vector2(16, 4), "solid_offset": Vector2(0, 13), "passable": false },  # auto
+	&"rock": { "visual": Vector2i(16, 16), "footprint": Vector2i(1, 1), "solid": Vector2(14, 8), "solid_offset": Vector2(0, 4), "passable": false },  # explicit
+	&"rock_big": { "visual": Vector2i(32, 32), "footprint": Vector2i(2, 2), "solid": Vector2(28, 16), "solid_offset": Vector2(0, 8), "passable": false },  # 占地 4 格
+	&"rug": { "visual": Vector2i(32, 16), "footprint": Vector2i(2, 1), "solid": Vector2(16, 4), "solid_offset": Vector2(0, 5), "passable": true },  # auto
+	&"shipping_bin": { "visual": Vector2i(24, 20), "footprint": Vector2i(1, 1), "solid": Vector2(12, 4), "solid_offset": Vector2(0, 7), "passable": false },  # auto
+	&"signpost": { "visual": Vector2i(16, 24), "footprint": Vector2i(1, 1), "solid": Vector2(8, 4), "solid_offset": Vector2(0, 9), "passable": false },  # auto
+	&"stove": { "visual": Vector2i(24, 28), "footprint": Vector2i(1, 1), "solid": Vector2(12, 4), "solid_offset": Vector2(0, 11), "passable": false },  # auto
+	&"stump": { "visual": Vector2i(16, 16), "footprint": Vector2i(1, 1), "solid": Vector2(16, 8), "solid_offset": Vector2(0, 4), "passable": false },  # explicit
+	&"table": { "visual": Vector2i(32, 24), "footprint": Vector2i(2, 1), "solid": Vector2(28, 8), "solid_offset": Vector2(0, 5), "passable": false },  # explicit
+	&"tree": { "visual": Vector2i(32, 64), "footprint": Vector2i(1, 1), "solid": Vector2(18, 8), "solid_offset": Vector2(0, 28), "passable": false },  # 2×4
+	&"tree_pine": { "visual": Vector2i(32, 64), "footprint": Vector2i(1, 1), "solid": Vector2(18, 8), "solid_offset": Vector2(0, 28), "passable": false },  # 2×4
+	&"trough": { "visual": Vector2i(16, 16), "footprint": Vector2i(1, 1), "solid": Vector2(8, 4), "solid_offset": Vector2(0, 5), "passable": false },  # auto
+	&"tv": { "visual": Vector2i(24, 24), "footprint": Vector2i(1, 1), "solid": Vector2(16, 8), "solid_offset": Vector2(0, 5), "passable": false },  # explicit
+	&"wardrobe": { "visual": Vector2i(24, 32), "footprint": Vector2i(1, 2), "solid": Vector2(18, 8), "solid_offset": Vector2(0, 7), "passable": false },  # explicit
+	&"well": { "visual": Vector2i(32, 32), "footprint": Vector2i(2, 2), "solid": Vector2(20, 10), "solid_offset": Vector2(0, 12), "passable": false },  # explicit
+}
+
+
+## 某个摆件的完整条目；未知 id 返回空字典。
+static func prop_spec(prop_id: StringName) -> Dictionary:
+	return PROPS.get(prop_id, {})
+
+
+## 摆件贴图像素尺寸；未知 id 返回 [constant Vector2i.ZERO]。
+static func prop_visual(prop_id: StringName) -> Vector2i:
+	return prop_spec(prop_id).get("visual", Vector2i.ZERO)
+
+
+## 摆件逻辑占地格数；未知 id 返回 [constant Vector2i.ZERO]。
+static func prop_footprint(prop_id: StringName) -> Vector2i:
+	return prop_spec(prop_id).get("footprint", Vector2i.ZERO)
+
+
+## 摆件是否可穿过；未知 id 按实心处理（[code]false[/code]）。
+static func prop_passable(prop_id: StringName) -> bool:
+	return bool(prop_spec(prop_id).get("passable", false))
+

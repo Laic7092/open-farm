@@ -65,15 +65,13 @@ y_sort_enabled = true
 position = Vector2(656, 96)
 texture = ExtResource("20_house")
 script = ExtResource("9_prop")
-solid_size = Vector2(60, 14)
-solid_offset = Vector2(0, 24)
 
 [node name="CampLamp" type="Sprite2D" parent="Props"]
-position = Vector2(704, 112)
+position = Vector2(704, 104)
 texture = ExtResource("22_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="Sign" type="Sprite2D" parent="Props"]
 position = Vector2(80, 200)
@@ -81,60 +79,50 @@ texture = ExtResource("21_sign")
 script = ExtResource("9_prop")
 
 [node name="Lamp1" type="Sprite2D" parent="Props"]
-position = Vector2(240, 200)
+position = Vector2(240, 192)
 texture = ExtResource("22_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="Lamp2" type="Sprite2D" parent="Props"]
-position = Vector2(400, 200)
+position = Vector2(400, 192)
 texture = ExtResource("22_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="Lamp3" type="Sprite2D" parent="Props"]
-position = Vector2(560, 336)
+position = Vector2(560, 328)
 texture = ExtResource("22_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="Rock1" type="Sprite2D" parent="Props"]
-position = Vector2(240, 320)
+position = Vector2(240, 316)
 texture = ExtResource("23_rock_big")
 script = ExtResource("9_prop")
-solid_size = Vector2(26, 10)
-solid_offset = Vector2(0, 6)
 
 [node name="Rock2" type="Sprite2D" parent="Props"]
-position = Vector2(384, 160)
+position = Vector2(384, 156)
 texture = ExtResource("23_rock_big")
 script = ExtResource("9_prop")
-solid_size = Vector2(26, 10)
-solid_offset = Vector2(0, 6)
 
 [node name="Rock3" type="Sprite2D" parent="Props"]
 position = Vector2(288, 144)
 texture = ExtResource("24_rock")
 script = ExtResource("9_prop")
-solid_size = Vector2(14, 8)
-solid_offset = Vector2(0, 4)
 
 [node name="Rock4" type="Sprite2D" parent="Props"]
 position = Vector2(464, 336)
 texture = ExtResource("24_rock")
 script = ExtResource("9_prop")
-solid_size = Vector2(14, 8)
-solid_offset = Vector2(0, 4)
 
 [node name="Rock5" type="Sprite2D" parent="Props"]
-position = Vector2(208, 400)
+position = Vector2(208, 396)
 texture = ExtResource("23_rock_big")
 script = ExtResource("9_prop")
-solid_size = Vector2(26, 10)
-solid_offset = Vector2(0, 6)
 
 [node name="Spawns" type="Node2D" parent="."]
 

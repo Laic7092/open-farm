@@ -79,29 +79,23 @@ y_sort_enabled = true
 position = Vector2(240, 424)
 texture = ExtResource("36_house_blacksmith")
 script = ExtResource("9_prop")
-solid_size = Vector2(60, 14)
-solid_offset = Vector2(0, 24)
 
 [node name="ForgeAnvil" type="Sprite2D" parent="Props"]
 position = Vector2(296, 452)
 texture = ExtResource("32_forge")
 script = ExtResource("9_prop")
-solid_size = Vector2(26, 8)
-solid_offset = Vector2(0, 6)
 
 [node name="ForgeLamp" type="Sprite2D" parent="Props"]
-position = Vector2(192, 440)
+position = Vector2(192, 432)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="GeneralStore" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(432, 424)
 texture = ExtResource("20_house")
 script = ExtResource("9_prop")
-solid_size = Vector2(62, 14)
-solid_offset = Vector2(0, 24)
 
 [node name="StoreMailbox" type="Sprite2D" parent="Props"]
 position = Vector2(520, 468)
@@ -117,8 +111,6 @@ script = ExtResource("9_prop")
 position = Vector2(672, 424)
 texture = ExtResource("35_house_mayor")
 script = ExtResource("9_prop")
-solid_size = Vector2(60, 14)
-solid_offset = Vector2(0, 24)
 
 [node name="HallMailbox" type="Sprite2D" parent="Props"]
 position = Vector2(760, 472)
@@ -134,15 +126,11 @@ script = ExtResource("9_prop")
 position = Vector2(928, 424)
 texture = ExtResource("37_house_florist")
 script = ExtResource("9_prop")
-solid_size = Vector2(60, 14)
-solid_offset = Vector2(0, 24)
 
 [node name="FlowerStand" type="Sprite2D" parent="Props"]
 position = Vector2(880, 452)
 texture = ExtResource("33_flower_stand")
 script = ExtResource("9_prop")
-solid_size = Vector2(28, 8)
-solid_offset = Vector2(0, 6)
 
 [node name="FlowerShopPot" type="Sprite2D" parent="Props"]
 position = Vector2(976, 476)
@@ -153,15 +141,13 @@ script = ExtResource("9_prop")
 position = Vector2(1200, 424)
 texture = ExtResource("38_house_librarian")
 script = ExtResource("9_prop")
-solid_size = Vector2(58, 14)
-solid_offset = Vector2(0, 24)
 
 [node name="LibraryLamp" type="Sprite2D" parent="Props"]
-position = Vector2(1152, 440)
+position = Vector2(1152, 432)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="LibrarySign" type="Sprite2D" parent="Props"]
 position = Vector2(1252, 476)
@@ -172,15 +158,13 @@ script = ExtResource("9_prop")
 position = Vector2(1392, 424)
 texture = ExtResource("39_house_child")
 script = ExtResource("9_prop")
-solid_size = Vector2(62, 14)
-solid_offset = Vector2(0, 24)
 
 [node name="ChildHomeLamp" type="Sprite2D" parent="Props"]
-position = Vector2(1344, 440)
+position = Vector2(1344, 432)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="EntranceSign" type="Sprite2D" parent="Props"]
 position = Vector2(112, 456)
@@ -196,15 +180,11 @@ script = ExtResource("9_prop")
 position = Vector2(672, 612)
 texture = ExtResource("24_well")
 script = ExtResource("9_prop")
-solid_size = Vector2(20, 10)
-solid_offset = Vector2(0, 12)
 
 [node name="Barn" type="Sprite2D" parent="Props" groups=["building"]]
 position = Vector2(1264, 672)
 texture = ExtResource("21_barn")
 script = ExtResource("9_prop")
-solid_size = Vector2(54, 16)
-solid_offset = Vector2(0, 20)
 
 [node name="Chicken1" type="Sprite2D" parent="Props"]
 position = Vector2(1360, 704)
@@ -217,172 +197,134 @@ texture = ExtResource("29_chicken")
 script = ExtResource("9_prop")
 
 [node name="Lamp1" type="Sprite2D" parent="Props"]
-position = Vector2(200, 528)
+position = Vector2(200, 520)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="Lamp2" type="Sprite2D" parent="Props"]
-position = Vector2(500, 528)
+position = Vector2(500, 520)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="Lamp3" type="Sprite2D" parent="Props"]
-position = Vector2(800, 528)
+position = Vector2(800, 520)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="Lamp4" type="Sprite2D" parent="Props"]
-position = Vector2(1100, 528)
+position = Vector2(1100, 520)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="Lamp5" type="Sprite2D" parent="Props"]
-position = Vector2(1400, 528)
+position = Vector2(1400, 520)
 texture = ExtResource("25_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="NorthTree1" type="Sprite2D" parent="Props"]
-position = Vector2(80, 40)
+position = Vector2(80, 32)
 texture = ExtResource("22_tree")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="NorthTree2" type="Sprite2D" parent="Props"]
-position = Vector2(320, 36)
+position = Vector2(320, 28)
 texture = ExtResource("23_pine")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="NorthTree3" type="Sprite2D" parent="Props"]
-position = Vector2(560, 40)
+position = Vector2(560, 32)
 texture = ExtResource("22_tree")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="NorthTree4" type="Sprite2D" parent="Props"]
-position = Vector2(800, 36)
+position = Vector2(800, 28)
 texture = ExtResource("23_pine")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="NorthTree5" type="Sprite2D" parent="Props"]
-position = Vector2(1040, 40)
+position = Vector2(1040, 32)
 texture = ExtResource("22_tree")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="NorthTree6" type="Sprite2D" parent="Props"]
-position = Vector2(1280, 36)
+position = Vector2(1280, 28)
 texture = ExtResource("23_pine")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="NorthTree7" type="Sprite2D" parent="Props"]
-position = Vector2(1472, 40)
+position = Vector2(1472, 32)
 texture = ExtResource("22_tree")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="PlazaTree1" type="Sprite2D" parent="Props"]
-position = Vector2(528, 592)
+position = Vector2(528, 584)
 texture = ExtResource("22_tree")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="PlazaTree2" type="Sprite2D" parent="Props"]
-position = Vector2(812, 592)
+position = Vector2(812, 584)
 texture = ExtResource("22_tree")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="GardenTree" type="Sprite2D" parent="Props"]
-position = Vector2(992, 592)
+position = Vector2(992, 584)
 texture = ExtResource("23_pine")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="PondTree" type="Sprite2D" parent="Props"]
-position = Vector2(288, 664)
+position = Vector2(288, 656)
 texture = ExtResource("22_tree")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="SouthTree1" type="Sprite2D" parent="Props"]
-position = Vector2(80, 880)
+position = Vector2(80, 872)
 texture = ExtResource("22_tree")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="SouthTree2" type="Sprite2D" parent="Props"]
-position = Vector2(240, 900)
+position = Vector2(240, 892)
 texture = ExtResource("23_pine")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="SouthTree3" type="Sprite2D" parent="Props"]
-position = Vector2(420, 880)
+position = Vector2(420, 872)
 texture = ExtResource("22_tree")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="SouthTree4" type="Sprite2D" parent="Props"]
-position = Vector2(1180, 880)
+position = Vector2(1180, 872)
 texture = ExtResource("22_tree")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="SouthTree5" type="Sprite2D" parent="Props"]
-position = Vector2(1440, 900)
+position = Vector2(1440, 892)
 texture = ExtResource("23_pine")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="EastTree" type="Sprite2D" parent="Props"]
-position = Vector2(1500, 780)
+position = Vector2(1500, 772)
 texture = ExtResource("22_tree")
 script = ExtResource("9_prop")
-solid_size = Vector2(18, 8)
-solid_offset = Vector2(0, 20)
 
 [node name="Rock1" type="Sprite2D" parent="Props"]
-position = Vector2(1120, 780)
+position = Vector2(1120, 776)
 texture = ExtResource("30_rock_big")
 script = ExtResource("9_prop")
-solid_size = Vector2(26, 10)
-solid_offset = Vector2(0, 6)
 
 [node name="Rock2" type="Sprite2D" parent="Props"]
-position = Vector2(480, 856)
+position = Vector2(480, 852)
 texture = ExtResource("30_rock_big")
 script = ExtResource("9_prop")
-solid_size = Vector2(26, 10)
-solid_offset = Vector2(0, 6)
 
 [node name="Spawns" type="Node2D" parent="."]
 

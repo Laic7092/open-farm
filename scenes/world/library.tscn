@@ -55,78 +55,60 @@ y_sort_enabled = true
 position = Vector2(48, 80)
 texture = ExtResource("20_bookshelf")
 script = ExtResource("9_prop")
-solid_size = Vector2(28, 10)
-solid_offset = Vector2(0, 8)
 
 [node name="Shelf2" type="Sprite2D" parent="Props"]
 position = Vector2(96, 80)
 texture = ExtResource("20_bookshelf")
 script = ExtResource("9_prop")
-solid_size = Vector2(28, 10)
-solid_offset = Vector2(0, 8)
 
 [node name="Shelf3" type="Sprite2D" parent="Props"]
 position = Vector2(144, 80)
 texture = ExtResource("20_bookshelf")
 script = ExtResource("9_prop")
-solid_size = Vector2(28, 10)
-solid_offset = Vector2(0, 8)
 
 [node name="Shelf4" type="Sprite2D" parent="Props"]
 position = Vector2(240, 80)
 texture = ExtResource("20_bookshelf")
 script = ExtResource("9_prop")
-solid_size = Vector2(28, 10)
-solid_offset = Vector2(0, 8)
 
 [node name="Shelf5" type="Sprite2D" parent="Props"]
 position = Vector2(288, 80)
 texture = ExtResource("20_bookshelf")
 script = ExtResource("9_prop")
-solid_size = Vector2(28, 10)
-solid_offset = Vector2(0, 8)
 
 [node name="Shelf6" type="Sprite2D" parent="Props"]
 position = Vector2(336, 80)
 texture = ExtResource("20_bookshelf")
 script = ExtResource("9_prop")
-solid_size = Vector2(28, 10)
-solid_offset = Vector2(0, 8)
 
 [node name="ShelfLeft" type="Sprite2D" parent="Props"]
 position = Vector2(48, 144)
 texture = ExtResource("20_bookshelf")
 script = ExtResource("9_prop")
-solid_size = Vector2(28, 10)
-solid_offset = Vector2(0, 8)
 
 [node name="ShelfRight" type="Sprite2D" parent="Props"]
 position = Vector2(336, 144)
 texture = ExtResource("20_bookshelf")
 script = ExtResource("9_prop")
-solid_size = Vector2(28, 10)
-solid_offset = Vector2(0, 8)
 
 [node name="Counter" type="Sprite2D" parent="Props"]
 position = Vector2(192, 112)
 texture = ExtResource("21_counter")
 script = ExtResource("9_prop")
-solid_size = Vector2(44, 10)
-solid_offset = Vector2(0, 6)
 
 [node name="Lamp1" type="Sprite2D" parent="Props"]
-position = Vector2(96, 176)
+position = Vector2(96, 168)
 texture = ExtResource("22_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="Lamp2" type="Sprite2D" parent="Props"]
-position = Vector2(288, 176)
+position = Vector2(288, 168)
 texture = ExtResource("22_lamp")
 script = ExtResource("9_prop")
 light_radius = 60.0
-light_offset = Vector2(0, -6)
+light_offset = Vector2(0, -13)
 
 [node name="Spawns" type="Node2D" parent="."]
 
