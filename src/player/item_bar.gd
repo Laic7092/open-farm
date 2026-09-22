@@ -12,7 +12,7 @@ extends RefCounted
 ## 通知 HUD。
 
 ## 物品栏显示背包的前多少格。
-const SIZE: int = 12
+const SIZE: int = 10
 
 ## 当前手持格变化；[param index] 为该格在背包中的下标。
 signal changed(item_id: StringName, index: int)

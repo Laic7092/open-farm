@@ -2,7 +2,7 @@ class_name InventoryUi
 extends Control
 ## 背包界面。
 ##
-## 槽位不是手写 24 个节点，而是从 [ItemSlot] 场景实例化——
+## 槽位不是手写固定数量的节点，而是从 [ItemSlot] 场景实例化——
 ## 这样"背包上限"这个数字只存在于 [constant Inventory.DEFAULT_CAPACITY] 一处。
 
 ## 每行显示多少个格子。

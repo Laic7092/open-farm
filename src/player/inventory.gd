@@ -7,7 +7,7 @@ extends RefCounted
 ## 堆叠上限由外部 [member _stack_limit_provider] 提供，默认 99。
 
 ## 默认格数。
-const DEFAULT_CAPACITY: int = 24
+const DEFAULT_CAPACITY: int = 30
 
 ## 内容发生任何变化时发出。
 signal changed()
