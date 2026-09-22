@@ -3,10 +3,8 @@
 [ext_resource type="Script" path="res://src/ui/hud_slot.gd" id="1_hud_slot"]
 
 [node name="HudSlot" type="PanelContainer"]
-custom_minimum_size = Vector2(22, 22)
-offset_right = 22.0
-offset_bottom = 22.0
 mouse_filter = 1
+theme_type_variation = &"HudSlot"
 script = ExtResource("1_hud_slot")
 
 [node name="Icon" type="TextureRect" parent="."]
@@ -40,9 +38,6 @@ offset_bottom = 1.0
 grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.96, 0.75, 1)
-theme_override_colors/font_outline_color = Color(0.08, 0.06, 0.04, 1)
-theme_override_font_sizes/font_size = 8
-theme_override_constants/outline_size = 3
+theme_type_variation = &"HudCountLabel"
 horizontal_alignment = 2
 vertical_alignment = 2

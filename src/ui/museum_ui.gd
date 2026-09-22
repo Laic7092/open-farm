@@ -17,12 +17,10 @@ const CATEGORIES: Array[Dictionary] = [
 	{"key": &"MUSEUM_CAT_MATERIAL", "filter": ItemData.Category.MATERIAL},
 ]
 
-@onready var title_label: Label = %TitleLabel
+@onready var shell: ModalShell = %Shell
 @onready var progress_label: Label = %ProgressLabel
 @onready var category_label: Label = %CategoryLabel
 @onready var list: ItemList = %List
-@onready var info_label: Label = %InfoLabel
-@onready var hint_label: Label = %HintLabel
 
 var _state: MuseumState
 ## 本界面自己的音效播放器。
@@ -35,7 +33,10 @@ var _entries: Array[StringName] = []
 func _ready() -> void:
 	sfx = SfxPlayer.attach(self)
 	visible = false
-	hint_label.text = Text.key(&"MUSEUM_HINT")
+	shell.set_status(progress_label)
+	shell.set_body(category_label)
+	shell.set_body(list)
+	shell.set_hint(Text.key(&"MUSEUM_HINT"))
 	list.item_selected.connect(func(_index: int) -> void: _refresh_info())
 
 
@@ -61,7 +62,7 @@ func close() -> void:
 func _rebuild() -> void:
 	list.clear()
 	_entries.clear()
-	title_label.text = Text.key(&"MUSEUM_TITLE")
+	shell.set_title(Text.key(&"MUSEUM_TITLE"))
 	_refresh_category_label()
 	_refresh_progress()
 
@@ -108,14 +109,14 @@ func _refresh_progress() -> void:
 func _refresh_info() -> void:
 	var index := _selected_index()
 	if index < 0 or index >= _entries.size():
-		info_label.text = ""
+		shell.set_info("")
 		return
 	var item := Database.get_item(_entries[index])
 	if not _state.is_discovered(_entries[index]):
-		info_label.text = Text.key(&"MUSEUM_UNKNOWN")
+		shell.set_info(Text.key(&"MUSEUM_UNKNOWN"))
 		return
 	var description := Text.key(item.description_key)
-	info_label.text = description if not description.is_empty() else Text.item_name(item)
+	shell.set_info(description if not description.is_empty() else Text.item_name(item))
 
 
 # ---------------------------------------------------------------- 键盘导航

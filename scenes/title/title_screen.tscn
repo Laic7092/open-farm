@@ -96,31 +96,26 @@ layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_plate")
 
 [node name="Text" type="VBoxContainer" parent="TitleBlock/Plate" unique_id=1692869970]
+theme_type_variation = &"DialogueVBox"
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 2
 
 [node name="TitleLabel" type="Label" parent="TitleBlock/Plate/Text" unique_id=6836325]
+theme_type_variation = &"TitleDisplayLabel"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.88, 0.55, 1)
-theme_override_colors/font_outline_color = Color(0.14, 0.09, 0.06, 1)
-theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 36
 text = "牧场物语 · 复刻"
 horizontal_alignment = 1
 
 [node name="SubtitleLabel" type="Label" parent="TitleBlock/Plate/Text" unique_id=461241290]
+theme_type_variation = &"HudLabel"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.94, 0.9, 0.82, 1)
-theme_override_colors/font_outline_color = Color(0.14, 0.09, 0.06, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 12
 text = "一个用 Godot 4 搭建的农场生活模拟原型"
 horizontal_alignment = 1
 
 [node name="Menu" type="VBoxContainer" parent="." unique_id=138094017]
+theme_type_variation = &"ModalVBox"
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 8
@@ -134,39 +129,32 @@ offset_right = 114.0
 offset_bottom = 115.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 6
 alignment = 1
 
 [node name="ContinueButton" type="Button" parent="Menu" unique_id=1781555007]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(228, 28)
 layout_mode = 2
 
 [node name="SaveInfoLabel" type="Label" parent="Menu" unique_id=911576230]
+theme_type_variation = &"HudLabel"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.92, 0.94, 1, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 12
 autowrap_mode = 3
 
 [node name="NewGameButton" type="Button" parent="Menu" unique_id=935501421]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(228, 28)
 layout_mode = 2
 
 [node name="LanguageButton" type="Button" parent="Menu" unique_id=43013447]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(228, 28)
 layout_mode = 2
 
 [node name="QuitButton" type="Button" parent="Menu" unique_id=1993821433]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(228, 28)
 layout_mode = 2
 
 [node name="Footer" type="HBoxContainer" parent="." unique_id=1152323833]
+theme_type_variation = &"TitleFooter"
 layout_mode = 0
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -176,24 +164,17 @@ offset_right = -12.0
 offset_bottom = -8.0
 grow_vertical = 0
 mouse_filter = 2
-theme_override_constants/separation = 12
 
 [node name="HintLabel" type="Label" parent="Footer" unique_id=1990680491]
+theme_type_variation = &"HudLabel"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 0.93, 0.72, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 12
 
 [node name="FooterLabel" type="Label" parent="Footer" unique_id=25877258]
+theme_type_variation = &"HudLabel"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.82, 0.85, 0.92, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 12
 horizontal_alignment = 2
 
 [node name="SavePanel" type="Control" parent="."]
@@ -231,20 +212,17 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Margin" type="MarginContainer" parent="SavePanel/Panel"]
+theme_type_variation = &"ModalMargin"
 layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 10
 
 [node name="VBox" type="VBoxContainer" parent="SavePanel/Panel/Margin"]
+theme_type_variation = &"ModalVBox"
 layout_mode = 2
-theme_override_constants/separation = 6
 
 [node name="SaveTitleLabel" type="Label" parent="SavePanel/Panel/Margin/VBox"]
+theme_type_variation = &"TitleLabel"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.92, 0.6, 1)
 text = "选择存档"
 horizontal_alignment = 1
 
@@ -254,18 +232,15 @@ size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
 [node name="SaveList" type="VBoxContainer" parent="SavePanel/Panel/Margin/VBox/Scroll"]
+theme_type_variation = &"TitleSaveList"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 4
 
 [node name="SaveHintLabel" type="Label" parent="SavePanel/Panel/Margin/VBox"]
+theme_type_variation = &"HudLabel"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.86, 0.88, 0.95, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 12
 text = "Enter 读取 · Delete 删除 · Esc 返回"
 horizontal_alignment = 1
 autowrap_mode = 3

@@ -7,11 +7,9 @@ extends Control
 ##
 ## [b]操作[/b]：WASD / 方向键选择，[code]E[/code] / 回车下锅，[code]Esc[/code] 离开。
 
-@onready var title_label: Label = %TitleLabel
+@onready var shell: ModalShell = %Shell
 @onready var count_label: Label = %CountLabel
 @onready var list: ItemList = %List
-@onready var info_label: Label = %InfoLabel
-@onready var hint_label: Label = %HintLabel
 
 ## 组合根注入的料理单元。
 var _cooking: Cooking
@@ -24,7 +22,9 @@ var _entries: Array[StringName] = []
 func _ready() -> void:
 	sfx = SfxPlayer.attach(self)
 	visible = false
-	hint_label.text = Text.key(&"COOKING_HINT")
+	shell.set_status(count_label)
+	shell.set_body(list)
+	shell.set_hint(Text.key(&"COOKING_HINT"))
 	list.item_selected.connect(func(_index: int) -> void: _refresh_info())
 
 
@@ -50,7 +50,7 @@ func close() -> void:
 func _rebuild() -> void:
 	list.clear()
 	_entries.clear()
-	title_label.text = Text.key(&"COOKING_TITLE")
+	shell.set_title(Text.key(&"COOKING_TITLE"))
 	count_label.text = Text.format(&"COOKING_KNOWN", {
 		"known": _cooking.state.known_count(),
 		"total": Database.recipes().size(),
@@ -82,10 +82,10 @@ func _row_text(recipe: RecipeData, unlocked: bool) -> String:
 func _refresh_info() -> void:
 	var recipe := _selected_recipe()
 	if recipe == null:
-		info_label.text = ""
+		shell.set_info("")
 		return
 	if not _cooking.is_unlocked(recipe):
-		info_label.text = Text.key(&"COOKING_LOCKED")
+		shell.set_info(Text.key(&"COOKING_LOCKED"))
 		return
 	var lines := PackedStringArray()
 	for ingredient: RecipeIngredient in recipe.ingredients:
@@ -99,7 +99,7 @@ func _refresh_info() -> void:
 			Text.key(&"COOKING_HAVE"),
 			have,
 		])
-	info_label.text = "\n".join(lines)
+	shell.set_info("\n".join(lines))
 
 
 # ---------------------------------------------------------------- 键盘导航

@@ -17,6 +17,7 @@ const Layout := preload("res://src/art/atlas_layout.gd")
 const Palette := preload("res://src/art/palette.gd")
 const SeasonPalette := preload("res://src/art/season_palette.gd")
 const TileCollision := preload("res://src/world/tile_collision.gd")
+const UiLayout := preload("res://src/ui/ui_layout.gd")
 
 const ACTOR_DIR: String = "res://assets/sprites/actors"
 const UI_DIR: String = "res://assets/ui"
@@ -188,12 +189,15 @@ func _build_npc_frames(npc_id: StringName) -> void:
 func _build_theme() -> void:
 	var theme := Theme.new()
 	theme.default_font = _build_font()
-	theme.default_font_size = Layout.TILE - 4  # 12：与像素字体字号一致
+	theme.default_font_size = UiLayout.FONT_BODY
 
 	var panel := _stylebox("panel.png", 8, 6)
 	var panel_flat := _stylebox("panel_flat.png", 8, 6)
 	var slot := _stylebox("slot.png", 2, 2)
 	var slot_selected := _stylebox("slot_selected.png", 2, 2)
+	var hud_slot := _stylebox("slot.png", 2, 2, UiLayout.HUD_SLOT_PATCH)
+	var hud_slot_selected := _stylebox("slot_selected.png", 2, 2, UiLayout.HUD_SLOT_PATCH)
+	var item_slot := _stylebox("slot.png", 3, 2, 2)
 
 	theme.set_stylebox(&"panel", &"Panel", panel)
 	theme.set_stylebox(&"panel", &"PanelContainer", panel)
@@ -213,7 +217,7 @@ func _build_theme() -> void:
 	theme.set_color(&"font_pressed_color", &"Button", Palette.UI_TEXT)
 	theme.set_color(&"font_disabled_color", &"Button", Palette.UI_TEXT_DIM)
 	theme.set_color(&"font_focus_color", &"Button", Palette.UI_GOLD)
-	theme.set_font_size(&"font_size", &"Button", Layout.TILE - 4)
+	theme.set_font_size(&"font_size", &"Button", UiLayout.FONT_BODY)
 
 	theme.set_stylebox(&"panel", &"ItemList", panel)
 	# 焦点框只画边：ItemList 会把它盖在条目上，填色会遮住整张列表。
@@ -222,7 +226,7 @@ func _build_theme() -> void:
 	theme.set_stylebox(&"selected_focus", &"ItemList", slot_selected)
 	theme.set_color(&"font_color", &"ItemList", Palette.UI_TEXT)
 	theme.set_color(&"font_selected_color", &"ItemList", Palette.UI_GOLD)
-	theme.set_font_size(&"font_size", &"ItemList", Layout.TILE - 4)
+	theme.set_font_size(&"font_size", &"ItemList", UiLayout.FONT_BODY)
 
 	theme.set_stylebox(&"background", &"ProgressBar", _stylebox("bar_back.png", 2, 2))
 	theme.set_stylebox(&"fill", &"ProgressBar", _stylebox("bar_fill.png", 2, 2))
@@ -231,7 +235,95 @@ func _build_theme() -> void:
 	theme.set_stylebox(&"panel", &"TooltipPanel", panel_flat)
 	theme.set_color(&"font_color", &"TooltipLabel", Palette.UI_TEXT)
 
+	_build_theme_variations(theme, panel, hud_slot, hud_slot_selected, item_slot)
 	_save(theme, THEME_PATH)
+
+
+## 类型变体：场景只声明"我演什么角色"，尺寸与配色全在这里（[UiLayout] + [ArtPalette]）。
+func _build_theme_variations(
+	theme: Theme,
+	panel: StyleBox,
+	hud_slot: StyleBox,
+	hud_slot_selected: StyleBox,
+	item_slot: StyleBox
+) -> void:
+	# 模态外壳。
+	theme.set_type_variation(&"ModalDim", &"Panel")
+	theme.set_stylebox(&"panel", &"ModalDim", _flat_style(Palette.UI_DIM))
+	theme.set_type_variation(&"ModalPanel", &"PanelContainer")
+	theme.set_stylebox(&"panel", &"ModalPanel", panel)
+	theme.set_type_variation(&"HudStatusPanel", &"PanelContainer")
+	theme.set_stylebox(&"panel", &"HudStatusPanel", StyleBoxEmpty.new())
+	theme.set_type_variation(&"HudDivider", &"Panel")
+	theme.set_stylebox(&"panel", &"HudDivider", _flat_style(Palette.UI_DIVIDER))
+	theme.set_type_variation(&"HudRowWide", &"HBoxContainer")
+	theme.set_constant(&"separation", &"HudRowWide", 8)
+	theme.set_type_variation(&"HudSlotRow", &"HBoxContainer")
+	theme.set_constant(&"separation", &"HudSlotRow", 2)
+	theme.set_type_variation(&"HudColumn", &"VBoxContainer")
+	theme.set_constant(&"separation", &"HudColumn", 3)
+	theme.set_type_variation(&"ModalMargin", &"MarginContainer")
+	theme.set_constant(&"margin_left", &"ModalMargin", UiLayout.MARGIN_PANEL_H)
+	theme.set_constant(&"margin_top", &"ModalMargin", UiLayout.MARGIN_PANEL_V)
+	theme.set_constant(&"margin_right", &"ModalMargin", UiLayout.MARGIN_PANEL_H)
+	theme.set_constant(&"margin_bottom", &"ModalMargin", UiLayout.MARGIN_PANEL_V)
+	theme.set_type_variation(&"ModalVBox", &"VBoxContainer")
+	theme.set_constant(&"separation", &"ModalVBox", UiLayout.GAP)
+	theme.set_type_variation(&"ModalVBoxTight", &"VBoxContainer")
+	theme.set_constant(&"separation", &"ModalVBoxTight", UiLayout.GRID)
+	theme.set_type_variation(&"DialogueMargin", &"MarginContainer")
+	theme.set_constant(&"margin_left", &"DialogueMargin", 10)
+	theme.set_constant(&"margin_top", &"DialogueMargin", 6)
+	theme.set_constant(&"margin_right", &"DialogueMargin", 10)
+	theme.set_constant(&"margin_bottom", &"DialogueMargin", 6)
+	theme.set_type_variation(&"DialogueVBox", &"VBoxContainer")
+	theme.set_constant(&"separation", &"DialogueVBox", 2)
+	theme.set_type_variation(&"TitleFooter", &"HBoxContainer")
+	theme.set_constant(&"separation", &"TitleFooter", 12)
+	theme.set_type_variation(&"TitleSaveList", &"VBoxContainer")
+	theme.set_constant(&"separation", &"TitleSaveList", 4)
+	theme.set_type_variation(&"ModalHBox", &"HBoxContainer")
+	theme.set_constant(&"separation", &"ModalHBox", UiLayout.GAP)
+	theme.set_type_variation(&"ModalGrid", &"GridContainer")
+	theme.set_constant(&"h_separation", &"ModalGrid", UiLayout.GRID)
+	theme.set_constant(&"v_separation", &"ModalGrid", UiLayout.GRID)
+
+	# 文字角色。
+	_set_label(theme, &"TitleLabel", Palette.UI_GOLD, UiLayout.FONT_TITLE, true)
+	_set_label(theme, &"TitleDisplayLabel", Palette.UI_GOLD, UiLayout.FONT_DISPLAY, true)
+	_set_label(theme, &"BodyLabel", Palette.UI_TEXT, UiLayout.FONT_BODY, false)
+	_set_label(theme, &"SubtleLabel", Palette.UI_TEXT_DIM, UiLayout.FONT_BODY, false)
+	_set_label(theme, &"HudLabel", Palette.UI_TEXT, UiLayout.FONT_BODY, true)
+
+	# 槽位。
+	theme.set_type_variation(&"HudSlot", &"PanelContainer")
+	theme.set_stylebox(&"panel", &"HudSlot", hud_slot)
+	theme.set_stylebox(&"selected", &"HudSlot", hud_slot_selected)
+	theme.set_type_variation(&"HudCountLabel", &"Label")
+	theme.set_color(&"font_color", &"HudCountLabel", Palette.UI_GOLD)
+	theme.set_color(&"font_outline_color", &"HudCountLabel", Palette.UI_OUTLINE)
+	theme.set_constant(&"outline_size", &"HudCountLabel", 3)
+	theme.set_font_size(&"font_size", &"HudCountLabel", UiLayout.FONT_SMALL)
+	theme.set_type_variation(&"ItemSlot", &"PanelContainer")
+	theme.set_stylebox(&"panel", &"ItemSlot", item_slot)
+
+
+## 一个"文字角色"变体：颜色 + 字号 + 可选描边。
+func _set_label(
+	theme: Theme, type: StringName, color: Color, size: int, outlined: bool
+) -> void:
+	theme.set_type_variation(type, &"Label")
+	theme.set_color(&"font_color", type, color)
+	theme.set_font_size(&"font_size", type, size)
+	if outlined:
+		theme.set_color(&"font_outline_color", type, Palette.UI_OUTLINE)
+		theme.set_constant(&"outline_size", type, UiLayout.OUTLINE_WIDTH)
+
+
+func _flat_style(color: Color) -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.bg_color = color
+	return box
 
 
 ## 主题字体：像素字体在前，系统字体作为"子集外字符"的兜底。
@@ -250,15 +342,17 @@ func _build_font() -> Font:
 	return variation
 
 
-func _stylebox(file_name: String, margin_h: int, margin_v: int) -> StyleBoxTexture:
+func _stylebox(
+	file_name: String, margin_h: int, margin_v: int, patch: int = -1
+) -> StyleBoxTexture:
 	var box := StyleBoxTexture.new()
 	var texture := _load_texture(UI_DIR.path_join(file_name))
 	box.texture = texture
-	var patch: int = Layout.UI_PATCH_MARGIN
-	box.texture_margin_left = patch
-	box.texture_margin_top = patch
-	box.texture_margin_right = patch
-	box.texture_margin_bottom = patch
+	var resolved_patch: int = Layout.UI_PATCH_MARGIN if patch < 0 else patch
+	box.texture_margin_left = resolved_patch
+	box.texture_margin_top = resolved_patch
+	box.texture_margin_right = resolved_patch
+	box.texture_margin_bottom = resolved_patch
 	box.content_margin_left = margin_h
 	box.content_margin_right = margin_h
 	box.content_margin_top = margin_v

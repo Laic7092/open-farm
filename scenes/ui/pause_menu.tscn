@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://src/ui/pause_menu.gd" id="1_pause"]
+[ext_resource type="Script" path="res://src/ui/pause_menu.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/ui/modal_shell.tscn" id="2_shell"]
 
 [node name="PauseMenu" type="Control"]
 anchors_preset = 15
@@ -9,125 +10,76 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-script = ExtResource("1_pause")
+script = ExtResource("1_script")
 
-[node name="Dim" type="ColorRect" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.05, 0.05, 0.08, 0.65)
-
-[node name="Panel" type="PanelContainer" parent="."]
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -104.0
-offset_top = -172.0
-offset_right = 104.0
-offset_bottom = 172.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Margin" type="MarginContainer" parent="Panel"]
-layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 10
-
-[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="TitleLabel" type="Label" parent="Panel/Margin/VBox"]
+[node name="Shell" parent="." instance=ExtResource("2_shell")]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.92, 0.6, 1)
-text = "游戏已暂停"
-horizontal_alignment = 1
 
-[node name="ResumeButton" type="Button" parent="Panel/Margin/VBox"]
+[node name="Content" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+theme_type_variation = &"ModalVBoxTight"
+
+[node name="ResumeButton" type="Button" parent="Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "继续游戏"
 
-[node name="MusicLabel" type="Label" parent="Panel/Margin/VBox"]
+[node name="MusicLabel" type="Label" parent="Content"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"BodyLabel"
 text = "音乐"
 
-[node name="MusicSlider" type="HSlider" parent="Panel/Margin/VBox"]
+[node name="MusicSlider" type="HSlider" parent="Content"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
-max_value = 1.0
-step = 0.05
-value = 0.7
 
-[node name="SfxLabel" type="Label" parent="Panel/Margin/VBox"]
+[node name="SfxLabel" type="Label" parent="Content"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"BodyLabel"
 text = "音效"
 
-[node name="SfxSlider" type="HSlider" parent="Panel/Margin/VBox"]
+[node name="SfxSlider" type="HSlider" parent="Content"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
-max_value = 1.0
-step = 0.05
-value = 0.85
 
-[node name="ZoomLabel" type="Label" parent="Panel/Margin/VBox"]
+[node name="ZoomLabel" type="Label" parent="Content"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "画面大小：1.00x"
+theme_type_variation = &"BodyLabel"
+text = "画面大小"
 
-[node name="ZoomSlider" type="HSlider" parent="Panel/Margin/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_vertical = 0
-min_value = 1.0
-max_value = 5.0
-step = 0.25
-value = 1.0
-
-[node name="UiScaleLabel" type="Label" parent="Panel/Margin/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "UI 大小：1.50x"
-
-[node name="UiScaleSlider" type="HSlider" parent="Panel/Margin/VBox"]
+[node name="ZoomSlider" type="HSlider" parent="Content"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
-min_value = 1.0
-max_value = 3.0
-step = 0.25
-value = 1.5
 
-[node name="TouchToggle" type="Button" parent="Panel/Margin/VBox"]
+[node name="UiScaleLabel" type="Label" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"BodyLabel"
+text = "UI 大小"
+
+[node name="UiScaleSlider" type="HSlider" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="TouchToggle" type="Button" parent="Content"]
 unique_name_in_owner = true
 layout_mode = 2
 toggle_mode = true
-text = "虚拟摇杆：开"
+text = "虚拟摇杆"
 
-[node name="TouchHint" type="Label" parent="Panel/Margin/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.72, 0.78, 1)
-text = "A 动作 · B 菜单/返回 · X 换具 · Y 背包"
-horizontal_alignment = 1
-
-[node name="TitleButton" type="Button" parent="Panel/Margin/VBox"]
+[node name="TitleButton" type="Button" parent="Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "回到标题"
 
-[node name="QuitButton" type="Button" parent="Panel/Margin/VBox"]
+[node name="QuitButton" type="Button" parent="Content"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "退出"

@@ -5,21 +5,19 @@ extends PanelContainer
 ## 与 [ItemSlot] 的区别是这个格子只占 22×22 像素，因此不显示道具名，
 ## 道具名放进 tooltip；数量大等于 2 时才显示数字，避免刺眼的“×1”。
 
-const SLOT_TEXTURE: Texture2D = preload("res://assets/ui/slot.png")
-const SELECTED_TEXTURE: Texture2D = preload("res://assets/ui/slot_selected.png")
-
 @onready var icon: TextureRect = %Icon
 @onready var count_label: Label = %CountLabel
 
-var _normal_style: StyleBoxTexture
-var _selected_style: StyleBoxTexture
+var _normal_style: StyleBox
+var _selected_style: StyleBox
 ## 图标左上角的品质星（普通品质时自动隐藏）。
 var _stars: QualityStars
 
 
 func _ready() -> void:
-	_normal_style = _make_style(SLOT_TEXTURE)
-	_selected_style = _make_style(SELECTED_TEXTURE)
+	custom_minimum_size = UiLayout.HUD_SLOT_SIZE
+	_normal_style = get_theme_stylebox(&"panel", &"HudSlot")
+	_selected_style = get_theme_stylebox(&"selected", &"HudSlot")
 	add_theme_stylebox_override(&"panel", _normal_style)
 	_stars = QualityStars.new()
 	_stars.name = "Stars"
@@ -58,13 +56,3 @@ func clear(selected: bool = false) -> void:
 
 func _set_selected(selected: bool) -> void:
 	add_theme_stylebox_override(&"panel", _selected_style if selected else _normal_style)
-
-
-func _make_style(texture: Texture2D) -> StyleBoxTexture:
-	var style := StyleBoxTexture.new()
-	style.texture = texture
-	style.texture_margin_left = 3.0
-	style.texture_margin_top = 3.0
-	style.texture_margin_right = 3.0
-	style.texture_margin_bottom = 3.0
-	return style

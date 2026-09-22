@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://src/ui/village_goal_ui.gd" id="1_goals"]
+[ext_resource type="Script" path="res://src/ui/village_goal_ui.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/ui/modal_shell.tscn" id="2_shell"]
 
 [node name="VillageGoalUi" type="Control"]
 anchors_preset = 15
@@ -9,71 +10,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-script = ExtResource("1_goals")
+script = ExtResource("1_script")
 
-[node name="Dim" type="ColorRect" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.05, 0.05, 0.08, 0.6)
-
-[node name="Panel" type="PanelContainer" parent="."]
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -240.0
-offset_top = -140.0
-offset_right = 240.0
-offset_bottom = 140.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Margin" type="MarginContainer" parent="Panel"]
-layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 10
-
-[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Header" type="HBoxContainer" parent="Panel/Margin/VBox"]
-layout_mode = 2
-
-[node name="TitleLabel" type="Label" parent="Panel/Margin/VBox/Header"]
+[node name="Shell" parent="." instance=ExtResource("2_shell")]
 unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 0.92, 0.6, 1)
-text = "村庄目标"
 
-[node name="ProgressLabel" type="Label" parent="Panel/Margin/VBox/Header"]
+[node name="ProgressLabel" type="Label" parent="."]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.84, 0.9, 1)
+theme_type_variation = &"SubtleLabel"
 horizontal_alignment = 2
 
-[node name="List" type="ItemList" parent="Panel/Margin/VBox"]
+[node name="List" type="ItemList" parent="."]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(440, 170)
-layout_mode = 2
 size_flags_vertical = 3
-
-[node name="InfoLabel" type="Label" parent="Panel/Margin/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-text = ""
-autowrap_mode = 2
-
-[node name="HintLabel" type="Label" parent="Panel/Margin/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.72, 0.78, 1)
-text = "方向键选择 · E 领奖 · Esc 离开"
-horizontal_alignment = 2

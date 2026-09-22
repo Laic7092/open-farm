@@ -11,9 +11,8 @@ extends Control
 ## 改动其中任何一个都要同步检查另外两个，否则文字会被裁掉。
 const COLUMNS: int = 4
 
+@onready var shell: ModalShell = %Shell
 @onready var grid: GridContainer = %Slots
-@onready var title_label: Label = %TitleLabel
-@onready var hint_label: Label = %HintLabel
 
 var _slot_nodes: Array[ItemSlot] = []
 
@@ -21,8 +20,9 @@ var _slot_nodes: Array[ItemSlot] = []
 func _ready() -> void:
 	visible = false
 	grid.columns = COLUMNS
-	title_label.text = Text.key(&"INVENTORY_TITLE")
-	hint_label.text = Text.key(&"INVENTORY_HINT")
+	shell.set_title(Text.key(&"INVENTORY_TITLE"))
+	shell.set_body(grid)
+	shell.set_hint(Text.key(&"INVENTORY_HINT"))
 	_build_slots()
 	EventBus.player.inventory_changed.connect(refresh)
 

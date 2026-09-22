@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://src/fishing/fishing_ui.gd" id="1_ui"]
 [ext_resource type="Texture2D" path="res://assets/ui/fish_track.png" id="2_track"]
@@ -40,20 +40,17 @@ offset_bottom = -98.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
-theme_override_constants/separation = 2
+theme_type_variation = &"DialogueVBox"
 
 [node name="ChargeLabel" type="Label" parent="ChargeBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 0.85, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
-theme_override_constants/outline_size = 4
+theme_type_variation = &"HudLabel"
 text = "蓄力"
 horizontal_alignment = 1
 
 [node name="ChargeBar" type="ProgressBar" parent="ChargeBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(144, 12)
 layout_mode = 2
 show_percentage = false
 
@@ -73,10 +70,9 @@ offset_bottom = 78.0
 grow_horizontal = 0
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
 
 [node name="TrackArea" type="Control" parent="FightBox"]
-custom_minimum_size = Vector2(18, 88)
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 4
 mouse_filter = 2
@@ -84,8 +80,6 @@ mouse_filter = 2
 [node name="Track" type="TextureRect" parent="FightBox/TrackArea"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_right = 18.0
-offset_bottom = 88.0
 mouse_filter = 2
 texture = ExtResource("2_track")
 expand_mode = 1
@@ -94,8 +88,6 @@ stretch_mode = 1
 [node name="Zone" type="TextureRect" parent="FightBox/TrackArea"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_right = 18.0
-offset_bottom = 14.0
 mouse_filter = 2
 texture = ExtResource("3_zone")
 expand_mode = 1
@@ -104,8 +96,6 @@ stretch_mode = 1
 [node name="FishMark" type="TextureRect" parent="FightBox/TrackArea"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_right = 12.0
-offset_bottom = 10.0
 mouse_filter = 2
 texture = ExtResource("4_fish")
 expand_mode = 1
@@ -114,8 +104,6 @@ stretch_mode = 1
 [node name="HookMark" type="TextureRect" parent="FightBox/TrackArea"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
 mouse_filter = 2
 texture = ExtResource("5_hook")
 expand_mode = 1
@@ -124,20 +112,16 @@ stretch_mode = 1
 [node name="ProgressRow" type="HBoxContainer" parent="FightBox"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
 alignment = 1
 
 [node name="ProgressLabel" type="Label" parent="FightBox/ProgressRow"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
-theme_override_constants/outline_size = 4
+theme_type_variation = &"HudLabel"
 text = "上钩"
 
 [node name="ProgressBar" type="ProgressBar" parent="FightBox/ProgressRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(72, 10)
 layout_mode = 2
 size_flags_vertical = 4
 show_percentage = false
@@ -145,20 +129,16 @@ show_percentage = false
 [node name="TensionRow" type="HBoxContainer" parent="FightBox"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
 alignment = 1
 
 [node name="TensionLabel" type="Label" parent="FightBox/TensionRow"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.82, 0.78, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
-theme_override_constants/outline_size = 4
+theme_type_variation = &"HudLabel"
 text = "张力"
 
 [node name="TensionBar" type="ProgressBar" parent="FightBox/TensionRow"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(72, 10)
 layout_mode = 2
 size_flags_vertical = 4
 show_percentage = false
@@ -177,12 +157,10 @@ offset_right = 140.0
 offset_bottom = 68.0
 grow_horizontal = 2
 mouse_filter = 2
-theme_override_constants/separation = 6
 alignment = 1
 
 [node name="CatchIcon" type="TextureRect" parent="CatchBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(16, 16)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -192,7 +170,5 @@ stretch_mode = 5
 [node name="CatchLabel" type="Label" parent="CatchBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.94, 0.6, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.08, 0.06, 1)
-theme_override_constants/outline_size = 4
+theme_type_variation = &"HudLabel"
 vertical_alignment = 1

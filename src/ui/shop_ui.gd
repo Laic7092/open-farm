@@ -20,12 +20,11 @@ enum ShopSide {
 	SELL,  ## 右边的卖出列表
 }
 
-@onready var title_label: Label = %TitleLabel
+@onready var shell: ModalShell = %Shell
 @onready var money_label: Label = %MoneyLabel
+@onready var lists: HBoxContainer = %Lists
 @onready var buy_list: ItemList = %BuyList
 @onready var sell_list: ItemList = %SellList
-@onready var info_label: Label = %InfoLabel
-@onready var hint_label: Label = %HintLabel
 
 var _shop: Shop
 ## 本界面自己的音效播放器。
@@ -44,7 +43,9 @@ var _clock
 func _ready() -> void:
 	sfx = SfxPlayer.attach(self)
 	visible = false
-	hint_label.text = Text.key(&"SHOP_UI_HINT")
+	shell.set_status(money_label)
+	shell.set_body(lists)
+	shell.set_hint(Text.key(&"SHOP_UI_HINT"))
 	buy_list.item_selected.connect(func(_index: int) -> void: _refresh_info())
 	sell_list.item_selected.connect(func(_index: int) -> void: _refresh_sell_info())
 
@@ -76,7 +77,7 @@ func open(shop_data: ShopData) -> void:
 	_shop.purchased.connect(_on_purchased)
 	_shop.sold.connect(_on_sold)
 	_shop.rejected.connect(_on_rejected)
-	title_label.text = Text.key(shop_data.display_name_key)
+	shell.set_title(Text.key(shop_data.display_name_key))
 	_side = ShopSide.BUY
 	refresh()
 	visible = true
@@ -164,26 +165,26 @@ func _refresh_sell_list() -> void:
 func _refresh_info() -> void:
 	var index := _selected_index(buy_list)
 	if index < 0 or index >= _entries.size():
-		info_label.text = ""
+		shell.set_info("")
 		return
 	var entry: ShopStock = _entries[index]
-	info_label.text = "%s  %s" % [
+	shell.set_info("%s  %s" % [
 		Text.item_name(_catalog.get_item(entry.item_id)),
 		Text.format(&"SHOP_UI_PRICE", {"value": _shop.price_of(entry)}),
-	]
+	])
 
 
 func _refresh_sell_info() -> void:
 	var index := _selected_index(sell_list)
 	if index < 0 or index >= _sellable_ids.size():
-		info_label.text = ""
+		shell.set_info("")
 		return
 	var item: Variant = _catalog.get_item(_sellable_ids[index])
 	if item != null:
-		info_label.text = "%s  %s" % [
+		shell.set_info("%s  %s" % [
 			Text.item_name(item),
 			Text.format(&"SHOP_UI_PRICE", {"value": _shop.buyback_price(item)}),
-		]
+		])
 
 
 ## 按当前所在的一侧刷新底部说明。

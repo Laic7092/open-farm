@@ -7,11 +7,9 @@ extends Control
 ##
 ## [b]操作[/b]：WASD / 方向键选择，[code]E[/code] / 回车提交，[code]Esc[/code] 离开。
 
-@onready var title_label: Label = %TitleLabel
+@onready var shell: ModalShell = %Shell
 @onready var best_label: Label = %BestLabel
 @onready var list: ItemList = %List
-@onready var info_label: Label = %InfoLabel
-@onready var hint_label: Label = %HintLabel
 
 ## 组合根注入的小游戏单元。
 var _game: FestivalGame
@@ -26,7 +24,9 @@ var _entries: Array[Dictionary] = []
 func _ready() -> void:
 	sfx = SfxPlayer.attach(self)
 	visible = false
-	hint_label.text = Text.key(&"FESTIVAL_GAME_HINT")
+	shell.set_status(best_label)
+	shell.set_body(list)
+	shell.set_hint(Text.key(&"FESTIVAL_GAME_HINT"))
 	list.item_selected.connect(func(_index: int) -> void: _refresh_info())
 
 
@@ -54,9 +54,9 @@ func _rebuild() -> void:
 	list.clear()
 	_entries.clear()
 	var game := _game.game_for(_festival_id)
-	title_label.text = Text.key(&"FESTIVAL_GAME_TITLE")
+	shell.set_title(Text.key(&"FESTIVAL_GAME_TITLE"))
 	if game != null:
-		title_label.text = Text.key(game.display_name_key)
+		shell.set_title(Text.key(game.display_name_key))
 	best_label.text = Text.format(&"FESTIVAL_GAME_BEST", {
 		"score": _game.state.best_score(_festival_id),
 		"target": game.min_score if game != null else 0,
@@ -86,12 +86,12 @@ func _row_text(item: ItemData, entry: Dictionary) -> String:
 
 func _refresh_info() -> void:
 	if _entries.is_empty():
-		info_label.text = Text.key(&"FESTIVAL_GAME_DONE")
+		shell.set_info(Text.key(&"FESTIVAL_GAME_DONE"))
 		return
 	var entry: Dictionary = _entries[_selected_index()]
-	info_label.text = "%s：%d" % [
+	shell.set_info("%s：%d" % [
 		Text.key(&"FESTIVAL_GAME_SCORE"), entry["score"]
-	]
+	])
 
 
 # ---------------------------------------------------------------- 键盘导航

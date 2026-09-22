@@ -7,7 +7,7 @@ extends HBoxContainer
 
 const STAR_TEXTURE: Texture2D = preload("res://assets/ui/star.png")
 ## 单颗星的边长；贴图是 12×12，这里缩到角落刚好不盖住道具。
-const STAR_SIZE: float = 6.0
+const STAR_SIZE: float = UiLayout.QUALITY_STAR_SIZE
 
 
 func _ready() -> void:

@@ -32,6 +32,9 @@ const NEGATIVE_NOTIFICATIONS: Array[StringName] = [
 @onready var top_hints: VBoxContainer = %TopHints
 @onready var prompt_label: Label = %PromptLabel
 @onready var toast_label: Label = %ToastLabel
+@onready var stamina_row: HBoxContainer = %StaminaRow
+@onready var stamina_bar: ProgressBar = %StaminaBar
+@onready var divider: Panel = %Divider
 
 var _toast_tween: Tween
 ## 本界面自己的音效播放器：通知音由显示通知的界面发出。
@@ -40,6 +43,8 @@ var sfx: SfxPlayer
 var _ui_scale: float = 1.0
 ## 触控控件占用的左右宽度（[EventBus.ui] 广播）；触控关闭时为零。
 var _touch_insets: Vector2 = Vector2.ZERO
+## 显示安全区换算后的四周内边距（虚拟画布单位）。
+var _safe: Vector4 = Vector4.ZERO
 ## 底部物品栏场景里的原始上下 offset；抬高时以此为基准。
 var _bar_base_top: float = 0.0
 var _bar_base_bottom: float = 0.0
@@ -70,10 +75,14 @@ func _ready() -> void:
 	EventBus.ui.notification_requested.connect(_on_notification)
 	EventBus.ui.ui_scale_changed.connect(_apply_ui_scale)
 	EventBus.ui.touch_insets_changed.connect(_on_touch_insets_changed)
+	EventBus.ui.safe_insets_changed.connect(_on_safe_insets_changed)
 	toast_label.modulate.a = 0.0
 	prompt_label.text = ""
-	_bar_base_top = inventory_bar.offset_top
-	_bar_base_bottom = inventory_bar.offset_bottom
+	stamina_bar.custom_minimum_size = UiLayout.BAR_SIZE
+	divider.custom_minimum_size = Vector2(0.0, UiLayout.DIVIDER_HEIGHT)
+	resized.connect(_apply_layout)
+	status_panel.resized.connect(_apply_layout)
+	_apply_layout()
 	# 底部物品栏的 pivot 要等布局拿到 size 才能算，延后一帧再套用存盘值。
 	for region: Control in [inventory_bar, top_hints]:
 		region.resized.connect(_refresh_ui_scale_pivots)
@@ -85,6 +94,40 @@ func _on_touch_insets_changed(insets: Vector2) -> void:
 	_refresh_bottom_lift()
 
 
+func _on_safe_insets_changed(insets: Vector4) -> void:
+	_safe = insets
+	_apply_layout()
+
+
+## 按视口与安全区摆好三块常驻 UI。
+##
+## 触发源是窗口尺寸 / 安全区变化；[method UiLayout.is_compact] 决定窄高比下是否隐藏
+## 次要信息（顶部提示行），避免与左上状态卡重叠。
+func _apply_layout() -> void:
+	# 窄屏只收起次要数值（体力条），交互提示必须保留。
+	var compact := UiLayout.is_compact(size)
+	stamina_row.visible = not compact
+	status_panel.position = UiLayout.HUD_STATUS_MARGIN + Vector2(_safe.x, _safe.y)
+	# 提示行铺满整宽（左右锚点 0/1），长提示居中也不会压到状态卡。
+	top_hints.anchor_left = 0.0
+	top_hints.anchor_right = 1.0
+	top_hints.offset_left = UiLayout.HUD_HINTS_SIDE + _safe.x
+	top_hints.offset_right = -(UiLayout.HUD_HINTS_SIDE + _safe.z)
+	# 提示行放到状态卡下方，避免长提示 / 浮动提示压到日期与金钱上。
+	var status_bottom := status_panel.position.y + status_panel.size.y * _ui_scale
+	top_hints.offset_top = maxf(
+		UiLayout.HUD_HINTS_TOP + _safe.y, status_bottom + UiLayout.GAP
+	)
+	top_hints.offset_bottom = top_hints.offset_top
+	inventory_bar.offset_left = 0.0
+	inventory_bar.offset_right = 0.0
+	inventory_bar.offset_bottom = -(UiLayout.HUD_BAR_BOTTOM + _safe.w)
+	inventory_bar.offset_top = inventory_bar.offset_bottom
+	_bar_base_top = inventory_bar.offset_top
+	_bar_base_bottom = inventory_bar.offset_bottom
+	_refresh_ui_scale_pivots()
+
+
 ## 常驻 UI 缩放：左上状态卡钉左上角；顶部提示钉顶边中点（朝下长）、
 ## 底部物品栏钉底边中点（朝上长），于是放大只朝屏幕内侧长，不会被推出画面。
 func _apply_ui_scale(value: float) -> void:
@@ -94,7 +137,7 @@ func _apply_ui_scale(value: float) -> void:
 	status_panel.scale = factor
 	for region: Control in [inventory_bar, top_hints]:
 		region.scale = factor
-	_refresh_ui_scale_pivots()
+	_apply_layout()
 
 
 ## 顶部提示重算顶边中点；底部物品栏重算底边中点。

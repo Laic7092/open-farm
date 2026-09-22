@@ -185,6 +185,12 @@ const UI_BUTTON_HOVER := Color8(132, 102, 146)
 const UI_BUTTON_PRESSED := Color8(72, 54, 82)
 const UI_SLOT := Color8(62, 46, 72)
 const UI_SLOT_HOVER := Color8(104, 82, 118)
+## 模态遮罩：压暗世界、透出背后内容。
+const UI_DIM := Color(0.05, 0.05, 0.08, 0.6)
+## 压在场景上的 UI 文字描边（HUD / 钓鱼 / 提示）。
+const UI_OUTLINE := Color(0.1, 0.08, 0.06, 1.0)
+## HUD 状态卡里的分隔线。
+const UI_DIVIDER := Color(1.0, 1.0, 1.0, 0.12)
 
 const STAMINA_FILL := Color8(122, 200, 108)
 const STAMINA_BACK := Color8(46, 44, 62)

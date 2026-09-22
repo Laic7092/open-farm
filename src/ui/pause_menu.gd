@@ -8,7 +8,8 @@ extends Control
 ## 请求关闭菜单。
 signal close_requested()
 
-@onready var title_label: Label = %TitleLabel
+@onready var shell: ModalShell = %Shell
+@onready var content: VBoxContainer = %Content
 @onready var resume_button: Button = %ResumeButton
 @onready var quit_button: Button = %QuitButton
 @onready var title_button: Button = %TitleButton
@@ -21,11 +22,12 @@ signal close_requested()
 @onready var ui_scale_label: Label = %UiScaleLabel
 @onready var ui_scale_slider: HSlider = %UiScaleSlider
 @onready var touch_toggle: Button = %TouchToggle
-@onready var touch_hint: Label = %TouchHint
 
 func _ready() -> void:
 	visible = false
-	title_label.text = Text.key(&"MENU_PAUSED")
+	shell.set_title(Text.key(&"MENU_PAUSED"))
+	shell.title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	shell.set_body(content)
 	resume_button.text = Text.key(&"MENU_RESUME")
 	quit_button.text = Text.key(&"MENU_QUIT")
 	title_button.text = Text.key(&"MENU_TITLE")
@@ -96,8 +98,7 @@ func _refresh_touch_toggle(enabled: bool) -> void:
 	touch_toggle.text = Text.format(&"MENU_TOUCH_CONTROLS", {
 		"state": Text.key(&"MENU_ON" if enabled else &"MENU_OFF"),
 	})
-	touch_hint.text = Text.key(&"TOUCH_HINT")
-	touch_hint.visible = enabled
+	shell.set_hint(Text.key(&"TOUCH_HINT") if enabled else "")
 
 
 ## 画面大小滑杆：只写 [ViewSettings] 并广播，应用由相机的主人决定。

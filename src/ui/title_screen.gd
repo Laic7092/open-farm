@@ -75,6 +75,9 @@ func _ready() -> void:
 	_language_button.pressed.connect(_on_language_pressed)
 	_quit_button.pressed.connect(_on_quit_pressed)
 	for button: Button in [_continue_button, _new_game_button, _language_button, _quit_button]:
+		button.custom_minimum_size = Vector2(
+			UiLayout.TITLE_MENU_WIDTH, UiLayout.TITLE_MENU_BUTTON_HEIGHT
+		)
 		button.focus_entered.connect(_on_menu_focus)
 	# 对话 / 商店等模态界面可能在切换场景时留下暂停状态。
 	get_tree().paused = false
@@ -148,7 +151,7 @@ func _setup_start_veil() -> void:
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hint.set_anchors_preset(Control.PRESET_FULL_RECT)
-	hint.add_theme_font_size_override("font_size", 16)
+	hint.add_theme_font_size_override("font_size", UiLayout.FONT_TITLE)
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_start_veil.add_child(hint)
 
@@ -244,7 +247,7 @@ func _refresh_save_list() -> void:
 		var slot := int(meta.get("slot", 0))
 		var button := Button.new()
 		button.text = _slot_text(meta)
-		button.custom_minimum_size = Vector2(0.0, 24.0)
+		button.custom_minimum_size = Vector2(0.0, UiLayout.TITLE_SAVE_ROW_HEIGHT)
 		button.pressed.connect(_on_slot_chosen.bind(slot))
 		button.focus_entered.connect(_on_menu_focus)
 		_save_list.add_child(button)

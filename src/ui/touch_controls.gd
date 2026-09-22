@@ -52,6 +52,8 @@ var _injected: Dictionary[StringName, bool] = {}
 var _held_actions: Dictionary[StringName, bool] = {}
 ## 当前 UI 缩放；由设置广播驱动，只作用于本层。
 var _ui_scale: float = 1.0
+## 显示安全区换算后的四周内边距（虚拟画布单位）。
+var _safe: Vector4 = Vector4.ZERO
 ## 模态下已注入的导航动作（摇杆方向 → [code]ui_*[/code]）。
 var _nav_actions: Dictionary[StringName, bool] = {}
 ## 距离下一次自动重复导航还剩多少秒。
@@ -93,6 +95,8 @@ func _ready() -> void:
 	EventBus.ui.touch_controls_toggled.connect(_on_touch_controls_toggled)
 	EventBus.ui.game_paused_changed.connect(_on_game_paused_changed)
 	EventBus.ui.ui_scale_changed.connect(_apply_ui_scale)
+	EventBus.ui.safe_insets_changed.connect(_on_safe_insets_changed)
+	_layout()
 	# pivot 依赖控件的 size，等布局完成后再套用存盘值。
 	joystick.resized.connect(_refresh_ui_scale)
 	action_pad.resized.connect(_refresh_ui_scale)
@@ -107,6 +111,44 @@ func apply_enabled(enabled: bool) -> void:
 		_release_all()
 	_sync_visible()
 	_publish_insets()
+
+
+func _on_safe_insets_changed(insets: Vector4) -> void:
+	_safe = insets
+	_layout()
+
+
+## 按令牌把摇杆与 ABXY 钉到屏幕左下 / 右下，并让开安全区。
+##
+## 尺寸全部来自 [UiLayout]，场景里不写裸偏移；ABXY 四个键围绕同一角点等比放大。
+func _layout() -> void:
+	var stick := UiLayout.TOUCH_STICK_SIZE
+	var pad := UiLayout.TOUCH_PAD_SIZE
+	var button := UiLayout.TOUCH_BUTTON_SIZE
+	var left := UiLayout.TOUCH_PAD_MARGIN + _safe.x
+	var right := UiLayout.TOUCH_PAD_MARGIN + _safe.z
+	var bottom := UiLayout.TOUCH_PAD_MARGIN + _safe.w
+	joystick.offset_left = left
+	joystick.offset_right = left + stick
+	joystick.offset_bottom = -bottom
+	joystick.offset_top = joystick.offset_bottom - stick
+	action_pad.offset_right = -right
+	action_pad.offset_left = action_pad.offset_right - pad
+	action_pad.offset_bottom = -bottom
+	action_pad.offset_top = action_pad.offset_bottom - pad
+	var mid := (pad - button) * 0.5
+	_place_button(y_button, Vector2(mid, 0.0), button)
+	_place_button(x_button, Vector2(0.0, mid), button)
+	_place_button(b_button, Vector2(mid * 2.0, mid), button)
+	_place_button(a_button, Vector2(mid, mid * 2.0), button)
+	_refresh_ui_scale()
+
+
+func _place_button(button_node: Control, origin: Vector2, size: float) -> void:
+	button_node.offset_left = origin.x
+	button_node.offset_top = origin.y
+	button_node.offset_right = origin.x + size
+	button_node.offset_bottom = origin.y + size
 
 
 ## 触控层缩放：摇杆钉左下角、ABXY 整体钉屏幕右下角，放大只朝屏幕内侧长。

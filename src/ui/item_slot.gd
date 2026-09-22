@@ -14,6 +14,8 @@ var _stars: QualityStars
 
 
 func _ready() -> void:
+	custom_minimum_size = UiLayout.ITEM_SLOT_SIZE
+	icon.custom_minimum_size = UiLayout.ITEM_ICON_SIZE
 	_stars = QualityStars.new()
 	_stars.name = "Stars"
 	icon.add_child(_stars)

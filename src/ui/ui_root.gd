@@ -35,6 +35,8 @@ var _relationship_service: RelationshipService
 var _calendar_service: CalendarService
 ## UI / 交互域事件对象；与 [code]EventBus.ui[/code] 是同一实例，常驻订阅者共用一份。
 var events: UiEvents = EventBus.ui
+## 用来在退出时断开窗口尺寸信号。
+var _window: Window
 
 
 ## 由 [Main] 在 UI 子树进入树之前调用；依赖会继续下发给各界面。
@@ -130,6 +132,34 @@ func _ready() -> void:
 	dialogue_box.finished.connect(_on_dialogue_finished)
 	dialogue_box.choice_selected.connect(_on_dialogue_choice_selected)
 	pause_menu.close_requested.connect(_on_pause_menu_close_requested)
+
+	# 窗口尺寸 / 安全区是全局显示事实，由本层统一换算后广播给贴边界面。
+	_window = get_window()
+	if _window != null and not _window.size_changed.is_connected(_refresh_safe_insets):
+		_window.size_changed.connect(_refresh_safe_insets)
+	_refresh_safe_insets.call_deferred()
+
+
+func _exit_tree() -> void:
+	if _window != null and _window.size_changed.is_connected(_refresh_safe_insets):
+		_window.size_changed.disconnect(_refresh_safe_insets)
+	_window = null
+
+
+## 把显示安全区（刘海 / 圆角）换算成虚拟画布边距并广播。
+##
+## headless（测试 / CI）没有真实安全区，一律为零；桌面窗口也通常得到零向量。
+func _refresh_safe_insets() -> void:
+	if DisplayServer.get_name() == "headless":
+		EventBus.ui.safe_insets_changed.emit(Vector4.ZERO)
+		return
+	var window := _window
+	if window == null:
+		EventBus.ui.safe_insets_changed.emit(Vector4.ZERO)
+		return
+	var safe := DisplayServer.get_display_safe_area()
+	var viewport := get_viewport().get_visible_rect().size
+	EventBus.ui.safe_insets_changed.emit(UiLayout.safe_insets(safe, window.size, viewport))
 
 
 func _unhandled_input(event: InputEvent) -> void:

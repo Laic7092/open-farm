@@ -39,8 +39,11 @@ signal touch_controls_toggled(enabled: bool)
 signal touch_insets_changed(insets: Vector2)
 ## 相机缩放（画面大小）被改变；系统菜单发出，相机的主人（玩家）应用。
 signal view_zoom_changed(zoom: float)
-## 常驻 UI（HUD / 触控控件）缩放被改变；系统菜单发出，各自的界面主人应用。
+## UI 缩放被改变；系统菜单发出，各界面主人自己订阅并应用（统一约定）。
 signal ui_scale_changed(scale: float)
+## 显示安全区（刘海 / 圆角）换算后的四周内边距（虚拟画布单位）；
+## [UiRoot] 在窗口尺寸变化时发出，贴边界面据此让位。
+signal safe_insets_changed(insets: Vector4)
 ## 请求打开博物馆图鉴。
 signal museum_requested()
 ## 请求打开委托板。

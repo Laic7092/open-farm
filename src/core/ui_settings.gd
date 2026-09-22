@@ -6,8 +6,10 @@ extends RefCounted
 ## 各写各的 section，读不到 / 写不进都静默降级（[code]user://[/code] 不可写时游戏照常能玩）。
 ##
 ## 只放纯状态 + 文件 IO，不碰场景树、不发信号——“改了设置要通知谁”由调用方
-## （系统菜单）决定；应用由 UI 的主人（[Hud] / [TouchControls]）各自完成。
-## 世界相机与模态界面不在这里，也就不会被这个缩放带着一起变。
+## （系统菜单）决定；应用由各界面主人自己完成：所有响应式界面（[Hud] /
+## [TouchControls] / [ModalShell] / [DialogueBox]）都订阅 [signal UiEvents.ui_scale_changed]，
+## 于是 HUD、触控、模态与对话统一缩放。
+## 世界相机不在这里，不会被这个缩放带着一起变。
 
 ## 默认设置文件；与 [ViewSettings] / [TouchSettings] 共用，保存前先 load，避免互相覆盖。
 const DEFAULT_SETTINGS_PATH: String = "user://display_settings.cfg"

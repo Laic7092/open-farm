@@ -19,10 +19,6 @@ unique_name_in_owner = true
 layout_mode = 1
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 8.0
-offset_top = -104.0
-offset_right = 104.0
-offset_bottom = -8.0
 grow_vertical = 0
 script = ExtResource("2_joystick")
 
@@ -33,49 +29,29 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -126.0
-offset_top = -126.0
-offset_right = -10.0
-offset_bottom = -10.0
 grow_horizontal = 0
 grow_vertical = 0
 
 [node name="YButton" type="Control" parent="ActionPad"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 36.0
-offset_top = 0.0
-offset_right = 80.0
-offset_bottom = 44.0
 script = ExtResource("3_button")
 text = "Y"
 
 [node name="XButton" type="Control" parent="ActionPad"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 0.0
-offset_top = 36.0
-offset_right = 44.0
-offset_bottom = 80.0
 script = ExtResource("3_button")
 text = "X"
 
 [node name="BButton" type="Control" parent="ActionPad"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 72.0
-offset_top = 36.0
-offset_right = 116.0
-offset_bottom = 80.0
 script = ExtResource("3_button")
 text = "B"
 
 [node name="AButton" type="Control" parent="ActionPad"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 36.0
-offset_top = 72.0
-offset_right = 80.0
-offset_bottom = 116.0
 script = ExtResource("3_button")
 text = "A"

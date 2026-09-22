@@ -7,11 +7,9 @@ extends Control
 ##
 ## [b]操作[/b]：WASD / 方向键选择，[code]E[/code] / 回车交付，[code]Esc[/code] 关闭。
 
-@onready var title_label: Label = %TitleLabel
+@onready var shell: ModalShell = %Shell
 @onready var date_label: Label = %DateLabel
 @onready var list: ItemList = %List
-@onready var info_label: Label = %InfoLabel
-@onready var hint_label: Label = %HintLabel
 
 ## 组合根注入的委托单元。
 var _commission: Commission
@@ -25,7 +23,9 @@ var _entries: Array[StringName] = []
 func _ready() -> void:
 	sfx = SfxPlayer.attach(self)
 	visible = false
-	hint_label.text = Text.key(&"COMMISSION_HINT")
+	shell.set_status(date_label)
+	shell.set_body(list)
+	shell.set_hint(Text.key(&"COMMISSION_HINT"))
 	list.item_selected.connect(func(_index: int) -> void: _refresh_info())
 
 
@@ -54,7 +54,7 @@ func close() -> void:
 func _rebuild() -> void:
 	list.clear()
 	_entries.clear()
-	title_label.text = Text.key(&"COMMISSION_TITLE")
+	shell.set_title(Text.key(&"COMMISSION_TITLE"))
 	date_label.text = Text.date_text(_clock.date)
 
 	for commission_id: StringName in _commission.offers():
@@ -88,18 +88,18 @@ func _row_text(data: CommissionData, done: bool) -> String:
 func _refresh_info() -> void:
 	var index := _selected_index()
 	if index < 0 or index >= _entries.size():
-		info_label.text = ""
+		shell.set_info("")
 		return
 	var data := Database.get_commission(_entries[index])
 	if data == null:
-		info_label.text = ""
+		shell.set_info("")
 		return
 	var item := Database.get_item(data.item_id)
-	info_label.text = "%s ×%d → %s" % [
+	shell.set_info("%s ×%d → %s" % [
 		Text.item_name(item),
 		data.amount,
 		Text.format(&"HUD_MONEY", {"value": CommissionRules.reward_of(data)}),
-	]
+	])
 
 
 # ---------------------------------------------------------------- 键盘导航

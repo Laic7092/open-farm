@@ -7,11 +7,9 @@ extends Control
 ##
 ## [b]操作[/b]：WASD / 方向键选择，[code]E[/code] / 回车领奖，[code]Esc[/code] 离开。
 
-@onready var title_label: Label = %TitleLabel
+@onready var shell: ModalShell = %Shell
 @onready var progress_label: Label = %ProgressLabel
 @onready var list: ItemList = %List
-@onready var info_label: Label = %InfoLabel
-@onready var hint_label: Label = %HintLabel
 
 ## 组合根注入的目标单元。
 var _goals: VillageGoals
@@ -24,7 +22,9 @@ var _entries: Array[StringName] = []
 func _ready() -> void:
 	sfx = SfxPlayer.attach(self)
 	visible = false
-	hint_label.text = Text.key(&"GOAL_HINT")
+	shell.set_status(progress_label)
+	shell.set_body(list)
+	shell.set_hint(Text.key(&"GOAL_HINT"))
 	list.item_selected.connect(func(_index: int) -> void: _refresh_info())
 
 
@@ -50,7 +50,7 @@ func close() -> void:
 func _rebuild() -> void:
 	list.clear()
 	_entries.clear()
-	title_label.text = Text.key(&"GOAL_TITLE")
+	shell.set_title(Text.key(&"GOAL_TITLE"))
 
 	var claimed: int = 0
 	for goal: VillageGoalData in _goals.goals():
@@ -86,7 +86,7 @@ func _row_text(goal: VillageGoalData, done: bool) -> String:
 func _refresh_info() -> void:
 	var goal := _selected_goal()
 	if goal == null or not _goals.is_unlocked(goal):
-		info_label.text = Text.key(&"GOAL_LOCKED")
+		shell.set_info(Text.key(&"GOAL_LOCKED"))
 		return
 	var lines := PackedStringArray()
 	lines.append(Text.key(goal.description_key))
@@ -96,7 +96,7 @@ func _refresh_info() -> void:
 		lines.append(Text.format(&"GOAL_REWARD", {
 			"money": goal.reward_money,
 		}))
-	info_label.text = "\n".join(lines)
+	shell.set_info("\n".join(lines))
 
 
 # ---------------------------------------------------------------- 键盘导航

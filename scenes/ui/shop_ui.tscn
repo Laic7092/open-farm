@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://src/ui/shop_ui.gd" id="1_shop"]
+[ext_resource type="Script" path="res://src/ui/shop_ui.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/ui/modal_shell.tscn" id="2_shell"]
 
 [node name="ShopUi" type="Control"]
 anchors_preset = 15
@@ -9,98 +10,47 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-script = ExtResource("1_shop")
+script = ExtResource("1_script")
 
-[node name="Dim" type="ColorRect" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.05, 0.05, 0.08, 0.55)
-
-[node name="Panel" type="PanelContainer" parent="."]
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -250.0
-offset_top = -140.0
-offset_right = 250.0
-offset_bottom = 140.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Margin" type="MarginContainer" parent="Panel"]
-layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 10
-
-[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Header" type="HBoxContainer" parent="Panel/Margin/VBox"]
-layout_mode = 2
-
-[node name="TitleLabel" type="Label" parent="Panel/Margin/VBox/Header"]
+[node name="Shell" parent="." instance=ExtResource("2_shell")]
 unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(1, 0.92, 0.6, 1)
-text = "商店"
 
-[node name="MoneyLabel" type="Label" parent="Panel/Margin/VBox/Header"]
+[node name="MoneyLabel" type="Label" parent="."]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.92, 0.55, 1)
-text = "0G"
+theme_type_variation = &"SubtleLabel"
 horizontal_alignment = 2
 
-[node name="Lists" type="HBoxContainer" parent="Panel/Margin/VBox"]
-layout_mode = 2
+[node name="Lists" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
 size_flags_vertical = 3
-theme_override_constants/separation = 10
+theme_type_variation = &"ModalHBox"
 
-[node name="BuyColumn" type="VBoxContainer" parent="Panel/Margin/VBox/Lists"]
+[node name="BuyColumn" type="VBoxContainer" parent="Lists"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"ModalVBox"
 
-[node name="BuyLabel" type="Label" parent="Panel/Margin/VBox/Lists/BuyColumn"]
+[node name="BuyLabel" type="Label" parent="Lists/BuyColumn"]
 layout_mode = 2
+theme_type_variation = &"BodyLabel"
 text = "购买"
 
-[node name="BuyList" type="ItemList" parent="Panel/Margin/VBox/Lists/BuyColumn"]
+[node name="BuyList" type="ItemList" parent="Lists/BuyColumn"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(210, 140)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="SellColumn" type="VBoxContainer" parent="Panel/Margin/VBox/Lists"]
+[node name="SellColumn" type="VBoxContainer" parent="Lists"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_type_variation = &"ModalVBox"
 
-[node name="SellLabel" type="Label" parent="Panel/Margin/VBox/Lists/SellColumn"]
+[node name="SellLabel" type="Label" parent="Lists/SellColumn"]
 layout_mode = 2
+theme_type_variation = &"BodyLabel"
 text = "卖出"
 
-[node name="SellList" type="ItemList" parent="Panel/Margin/VBox/Lists/SellColumn"]
+[node name="SellList" type="ItemList" parent="Lists/SellColumn"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(210, 140)
 layout_mode = 2
 size_flags_vertical = 3
-
-[node name="InfoLabel" type="Label" parent="Panel/Margin/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-text = ""
-
-[node name="HintLabel" type="Label" parent="Panel/Margin/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.72, 0.78, 1)
-text = "方向键选择，E 确认，Esc 离开"
-horizontal_alignment = 2

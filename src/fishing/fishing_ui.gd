@@ -20,6 +20,7 @@ const CATCH_DURATION: float = 1.8
 @onready var charge_label: Label = %ChargeLabel
 @onready var charge_bar: ProgressBar = %ChargeBar
 @onready var fight_box: VBoxContainer = %FightBox
+@onready var track_area: Control = %TrackArea
 @onready var track: TextureRect = %Track
 @onready var zone: TextureRect = %Zone
 @onready var fish_mark: TextureRect = %FishMark
@@ -35,9 +36,23 @@ const CATCH_DURATION: float = 1.8
 var _catch_timer: float = 0.0
 ## 组合根注入的"当前钓鱼单元"提供者；没有它时整块不显示。
 var _session_provider: Callable = Callable()
+## 触控控件占用的左右宽度；右侧 ABXY 会压住拉扯水槽，必须让位。
+var _touch_insets: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
+	# 尺寸令牌：水槽与标记的大小只从 [UiLayout] 来，场景里不写裸数字。
+	track_area.custom_minimum_size = UiLayout.FISH_TRACK_SIZE
+	track.size = UiLayout.FISH_TRACK_SIZE
+	zone.size = UiLayout.FISH_ZONE_SIZE
+	fish_mark.size = UiLayout.FISH_MARK_SIZE
+	hook_mark.size = UiLayout.FISH_HOOK_SIZE
+	charge_bar.custom_minimum_size = UiLayout.FISH_CHARGE_BAR
+	progress_bar.custom_minimum_size = UiLayout.BAR_SIZE
+	tension_bar.custom_minimum_size = UiLayout.BAR_SIZE
+	catch_icon.custom_minimum_size = UiLayout.ITEM_ICON_SIZE
+	EventBus.ui.touch_insets_changed.connect(_on_touch_insets_changed)
+	_layout_fight()
 	charge_box.visible = false
 	fight_box.visible = false
 	catch_box.visible = false
@@ -53,6 +68,21 @@ func _ready() -> void:
 ## 组合根注入"当前钓鱼单元"的提供者；界面只读它，不去翻玩家状态机。
 func bind_fishing(provider: Callable) -> void:
 	_session_provider = provider
+
+
+func _on_touch_insets_changed(insets: Vector2) -> void:
+	_touch_insets = insets
+	_layout_fight()
+
+
+## 把拉扯水槽放到右侧触控控件左边；触控关闭时退回令牌给定的屏幕右边距。
+func _layout_fight() -> void:
+	var right_margin := UiLayout.MARGIN_SCREEN
+	if _touch_insets.y > 0.0:
+		# 让开 ABXY：右侧占位不含它自己的屏幕边距，这里要一并算进去。
+		right_margin = UiLayout.TOUCH_PAD_MARGIN + _touch_insets.y + UiLayout.FISH_FIGHT_GAP
+	fight_box.offset_right = -right_margin
+	fight_box.offset_left = fight_box.offset_right - UiLayout.FISH_FIGHT_WIDTH
 
 
 func _process(delta: float) -> void:
