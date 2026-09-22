@@ -31,10 +31,15 @@
    因为 Godot 的"可编辑子节点"只在编辑器存在，运行时 instantiate() 会丢掉。
 4. **缩放统一约定**：每个会缩放的界面订阅 EventBus.ui.ui_scale_changed 并自己实现
    apply_ui_scale(value)；放大只朝屏幕内侧长（pivot 由 UiLayout.grow_pivot 决定）。
+   **整体缩放会把内容最小尺寸一起放大**：布局必须先用 UiLayout.fitted_scale() 把缩放
+   夹到内容放得下，再除以缩放算未缩放尺寸，否则调大一档就会把内容顶出屏幕。
 5. **安全区**：UiRoot 在窗口尺寸变化时调用 UiLayout.safe_insets() 并广播
    EventBus.ui.safe_insets_changed；HUD / 触控 / 模态 / 对话据此让位。
 6. **窄屏**：UiLayout.is_compact()（宽高比 < 1.6）时 HUD 隐藏顶部提示行，避免与
    左上状态卡重叠。
+7. **竖向菜单贴内容**：暂停菜单这类竖列表在 _ready() 里调
+   shell.set_fit_width_to_content()，宽度取内容最小尺寸（下限 PANEL_MIN），
+   不铺满 PANEL_RATIO 的宽度。
 
 ## 多分辨率策略
 
@@ -42,7 +47,8 @@
 aspect=expand：超宽 / 4:3 时虚拟画布自行扩展，界面靠锚点与比例夹取适配。
 
 - 模态面板：UiLayout.modal_size() = 视口 × PANEL_RATIO，再被内容最小尺寸与
-  PANEL_MIN / PANEL_MAX 夹取，并除以 UI 缩放（放大后仍不出屏）。
+  PANEL_MIN / PANEL_MAX 夹取，并除以 UI 缩放；调用方先用 UiLayout.fitted_scale()
+  把缩放夹到「内容最小尺寸 × 缩放 ≤ 安全屏」，放大后仍不出屏。
 - 贴边界面：锚点 + grow_* 决定放大方向；安全区作为额外边距。
 - 竖屏：由 src/ui/rotate_overlay.gd 拦截，不在本模型内。
 - 最小窗口：640×360（project.godot 的 window/size/min_*）。
@@ -52,9 +58,11 @@ aspect=expand：超宽 / 4:3 时虚拟画布自行扩展，界面靠锚点与比
 tests/unit/test_ui_layout.gd：令牌纯函数（分辨率矩阵 / 安全区换算 / 断点 / pivot）
 + 硬编码门禁 + 每个模态的外壳接线 + 模态跟随 UI 缩放，以及一组**几何断言**：
 
-- 每个模态在 640×360 ~ 2560×1080 都被夹在视口内且不小于内容最小尺寸；
-- 触控打开时面板落在摇杆与 ABXY 之间的安全带；
-- HUD 左上状态卡与顶部提示行不重叠、都在屏内；
+- 每个模态在 640×360 ~ 2560×1080、UI 缩放 1.0~3.0（含触控占位）都被夹在视口内
+  且不小于内容最小尺寸；
+- 触控打开时面板优先落在摇杆与 ABXY 之间的安全带，装不下时退回整屏居中但不出屏；
+- 对话框同模态一样让开摇杆 / ABXY，放大后不出屏；
+- HUD 左上状态卡与顶部提示行不重叠、都在屏内；底部物品栏在 1.0~3.0 缩放下都在屏内；
 - 钓鱼拉扯水槽让开右下 ABXY。
 
 下限是 project.godot 的最小窗口 640×360；更小的窗口不在支持范围（内容会溢出）。

@@ -15,9 +15,6 @@ signal choice_selected(dialogue: DialogueData, choice: DialogueChoice)
 ## 每秒显示多少个字。
 const CHARS_PER_SECOND: float = 45.0
 
-## 触控控件很大时正文至少留出的宽度，避免内容被左右占位压成零宽。
-const MIN_CONTENT_WIDTH: float = 240.0
-
 ## 情绪 → 正文颜色。只做轻微染色，保证在各种主题下都读得清。
 const EMOTION_COLORS: Dictionary = {
 	DialogueLine.Emotion.NEUTRAL: Color(1.0, 1.0, 1.0),
@@ -32,9 +29,6 @@ const EMOTION_COLORS: Dictionary = {
 @onready var text_label: Label = %TextLabel
 @onready var hint_label: Label = %HintLabel
 @onready var choices_box: VBoxContainer = %ChoicesBox
-## 内容边距容器：触控控件占位加在它身上；面板背景不动，仍贴底全宽。
-@onready var content_margin: MarginContainer = $Panel/Margin
-
 ## 组合根注入的玩家档案；选项的旗标条件靠它判定。
 var _profile: PlayerProfile
 
@@ -49,11 +43,10 @@ var _awaiting_choice: bool = false
 ## 触控控件占用的左右宽度（由 [EventBus.ui] 广播）；非触控 / 世界模式为零。
 ## 模态里摇杆保持可见，正文与选项必须让开这两块。
 var _touch_insets: Vector2 = Vector2.ZERO
-## 场景里 MarginContainer 的原始左右内边距；加占位时以此为基准。
-var _base_margin_left: int = 0
-var _base_margin_right: int = 0
 ## 当前 UI 缩放；对话框贴底，绕底边中点放大。
 var _ui_scale: float = 1.0
+## 实际生效的面板缩放：被内容最小尺寸与屏幕夹取后的值。
+var _panel_scale: float = 1.0
 ## 显示安全区换算后的四周内边距（虚拟画布单位）。
 var _safe: Vector4 = Vector4.ZERO
 
@@ -71,8 +64,6 @@ func _ready() -> void:
 	sfx = SfxPlayer.attach(self)
 	visible = false
 	choices_box.visible = false
-	_base_margin_left = content_margin.get_theme_constant(&"margin_left")
-	_base_margin_right = content_margin.get_theme_constant(&"margin_right")
 	text_label.custom_minimum_size = Vector2(0.0, UiLayout.DIALOGUE_TEXT_MIN_HEIGHT)
 	_layout_panel()
 	EventBus.ui.touch_insets_changed.connect(_on_touch_insets_changed)
@@ -80,7 +71,6 @@ func _ready() -> void:
 	EventBus.ui.ui_scale_changed.connect(apply_ui_scale)
 	resized.connect(_layout_panel)
 	panel.resized.connect(_refresh_scale)
-	content_margin.resized.connect(_apply_side_insets)
 	apply_ui_scale.call_deferred(UiSettings.scale())
 
 
@@ -189,7 +179,7 @@ func _apply_emotion(emotion: DialogueLine.Emotion) -> void:
 
 func _on_touch_insets_changed(insets: Vector2) -> void:
 	_touch_insets = insets
-	_apply_side_insets()
+	_layout_panel()
 
 
 func _on_safe_insets_changed(insets: Vector4) -> void:
@@ -197,47 +187,58 @@ func _on_safe_insets_changed(insets: Vector4) -> void:
 	_layout_panel()
 
 
-## 按令牌摆好贴底面板：左右留 [constant UiLayout.DIALOGUE_SIDE]，
-## 底部至少留 [constant UiLayout.DIALOGUE_BOTTOM] + 安全区。
+## 按令牌摆好贴底面板：宽度落在摇杆与 ABXY 之间的安全带里，
+## 底部留 [constant UiLayout.DIALOGUE_BOTTOM] + 安全区；整体缩放后也不会出屏。
+##
+## [b]为什么要夹缩放[/b]：面板用 [code]Control.scale[/code] 整体放大，内容最小尺寸
+## 会被一起放大；先把缩放夹到内容放得下，面板才不会在放大后顶出屏幕或压到触控键。
 func _layout_panel() -> void:
-	panel.offset_left = UiLayout.DIALOGUE_SIDE
-	panel.offset_right = -UiLayout.DIALOGUE_SIDE
+	var viewport := size
+	if viewport.x <= 0.0 or viewport.y <= 0.0:
+		viewport = get_viewport_rect().size
+	if viewport.x <= 0.0 or viewport.y <= 0.0:
+		return
+	var screen := Rect2(
+		Vector2(_safe.x, _safe.y),
+		(viewport - Vector2(_safe.x + _safe.z, _safe.y + _safe.w)).max(Vector2.ZERO)
+	)
+	var side := UiLayout.DIALOGUE_SIDE
+	var band := UiLayout.usable_rect(viewport, _safe, _touch_insets)
+	var content_min := panel.get_combined_minimum_size()
+	var available := Vector2(
+		maxf(screen.size.x - side * 2.0, 0.0),
+		maxf(screen.size.y - UiLayout.DIALOGUE_BOTTOM, 0.0)
+	)
+	_panel_scale = UiLayout.fitted_scale(available, content_min, _ui_scale)
+	# 视觉宽度优先取安全带；装不下时退回内容最小宽度，但都夹在屏内。
+	var widest := maxf(screen.size.x - side * 2.0, 0.0)
+	var visual := maxf(minf(band.size.x - side * 2.0, widest), content_min.x * _panel_scale)
+	visual = clampf(visual, 0.0, widest)
+	var left := band.position.x + band.size.x * 0.5 - visual * 0.5
+	left = clampf(
+		left, screen.position.x + side, maxf(screen.end.x - side - visual, screen.position.x + side)
+	)
+	var center_x := left + visual * 0.5
+	var width := visual / _panel_scale
+	panel.offset_left = center_x - width * 0.5
+	panel.offset_right = center_x + width * 0.5 - viewport.x
 	var bottom := -(UiLayout.DIALOGUE_BOTTOM + _safe.w)
-	panel.custom_minimum_size = Vector2(0.0, UiLayout.DIALOGUE_MIN_HEIGHT)
 	# 先给零高度，让 PanelContainer 的最小尺寸把它向上撑：选项多也不会顶出屏幕。
 	panel.offset_bottom = bottom
 	panel.offset_top = bottom
+	panel.custom_minimum_size = Vector2(0.0, UiLayout.DIALOGUE_MIN_HEIGHT)
 	_refresh_scale()
 
 
 ## 贴底长大：pivot 放底边中点，放大只朝上 / 朝内。
 func apply_ui_scale(value: float) -> void:
 	_ui_scale = value
-	_refresh_scale()
+	_layout_panel()
 
 
 func _refresh_scale() -> void:
 	panel.pivot_offset = Vector2(panel.size.x * 0.5, panel.size.y)
-	panel.scale = Vector2(_ui_scale, _ui_scale)
-
-
-## 把触控控件的左右占位加到内容内边距上；面板背景不动，仍贴底全宽。
-##
-## 摇杆刚在模态里也保持可见（用于导航），不这样做会盖住正文并吞掉选项按钮的点击。
-func _apply_side_insets() -> void:
-	var available: float = content_margin.size.x - float(_base_margin_left + _base_margin_right)
-	var limit: float = maxf(available - MIN_CONTENT_WIDTH, 0.0)
-	var insets := _touch_insets + Vector2(_safe.x, _safe.z)
-	var total: float = insets.x + insets.y
-	# 缩放很大时占位可能超过可用宽度：等比压缩，至少给正文留 MIN_CONTENT_WIDTH。
-	if total > limit and total > 0.0:
-		insets *= limit / total
-	content_margin.add_theme_constant_override(
-		&"margin_left", _base_margin_left + int(roundf(insets.x))
-	)
-	content_margin.add_theme_constant_override(
-		&"margin_right", _base_margin_right + int(roundf(insets.y))
-	)
+	panel.scale = Vector2(_panel_scale, _panel_scale)
 
 
 # ---------------------------------------------------------------- 选项
@@ -270,6 +271,8 @@ func _build_choice_buttons() -> void:
 		choices_box.add_child(button)
 	choices_box.visible = true
 	_highlight_choice(0)
+	# 选项出现会改内容最小尺寸，重排一次，缩放才不会把它顶出屏幕。
+	_layout_panel.call_deferred()
 
 
 ## 清空选项状态（按钮 + 数据 + 等待标记）。
@@ -287,6 +290,7 @@ func _clear_choice_buttons() -> void:
 		choices_box.remove_child(child)
 		child.queue_free()
 	choices_box.visible = false
+	_layout_panel.call_deferred()
 
 
 func _move_choice(step: int) -> void:

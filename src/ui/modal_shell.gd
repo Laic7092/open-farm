@@ -28,6 +28,8 @@ var _ui_scale: float = 1.0
 var _safe: Vector4 = Vector4.ZERO
 ## 触控控件占用的左右宽度（左、右）；关闭触控时为零。
 var _touch_insets: Vector2 = Vector2.ZERO
+## 宽度是否贴内容最小尺寸；默认铺满可用区的 [constant UiLayout.PANEL_RATIO]。
+var _fit_width_to_content: bool = false
 
 
 func _ready() -> void:
@@ -58,6 +60,13 @@ func set_status(control: Control) -> void:
 ## 把一个内容控件（列表 / 网格）收编到正文容器。
 func set_body(control: Control) -> void:
 	control.reparent(body, false)
+
+
+## 让面板宽度贴内容最小尺寸（下限 [constant UiLayout.PANEL_MIN]），
+## 而不是铺满可用区的 [constant UiLayout.PANEL_RATIO]。竖向菜单（暂停菜单）用它免去两侧留白。
+func set_fit_width_to_content() -> void:
+	_fit_width_to_content = true
+	_fit.call_deferred()
 
 
 ## 设置底部说明；空串时整行隐藏，不占高度。
@@ -92,19 +101,19 @@ func _on_minimum_size_changed() -> void:
 	_fit.call_deferred()
 
 
-## 可用区域：扣掉安全区与触控控件占位。
+## 可用区域：扣掉安全区与触控控件占位（委托 [method UiLayout.usable_rect]）。
 ##
 ## 摇杆钉左下、ABXY 钉右下，面板如果仍按整屏居中就会被压在两角上；
 ## 这里把左右两侧让出来，面板只落在两者之间的安全带里。
 func _usable_rect(viewport: Vector2) -> Rect2:
-	var left := maxf(_safe.x, _touch_insets.x)
-	var right := maxf(_safe.z, _touch_insets.y)
-	var origin := Vector2(left, _safe.y)
-	var size := viewport - Vector2(left + right, _safe.y + _safe.w)
-	return Rect2(origin, size.max(Vector2.ZERO))
+	return UiLayout.usable_rect(viewport, _safe, _touch_insets)
 
 
-## 按"可用区域比例 + 内容最小尺寸 + UI 缩放"重排面板，并把它夹进可用区域。
+## 按"可用区域比例 + 内容最小尺寸 + UI 缩放"重排面板。
+##
+## [b]两个约束[/b]：整体缩放后内容最小尺寸也被一起放大，所以先把缩放夹到安全屏放得下
+## （[method UiLayout.fitted_scale]）；面板优先落在摇杆与 ABXY 之间的安全带里，
+## 装不下时退回整屏居中，但绝不越过屏幕。
 func _fit() -> void:
 	if panel == null:
 		return
@@ -114,9 +123,31 @@ func _fit() -> void:
 	if viewport.x <= 0.0 or viewport.y <= 0.0:
 		return
 
+	var screen := Rect2(
+		Vector2(_safe.x, _safe.y),
+		(viewport - Vector2(_safe.x + _safe.z, _safe.y + _safe.w)).max(Vector2.ZERO)
+	)
 	var area := _usable_rect(viewport)
-	var target := UiLayout.modal_size(area.size, panel.get_combined_minimum_size(), _ui_scale)
+	var content_min := panel.get_combined_minimum_size()
+	# 面板的实际下限还包含 PANEL_MIN；夹缩放时要把这层算进去，否则可用区退化时
+	# 面板会停在 PANEL_MIN，再乘缩放又出屏（内容最小尺寸更小时必现）。
+	var panel_min := content_min.max(
+		Vector2(UiLayout.PANEL_MIN.x, UiLayout.PANEL_MIN.y)
+	)
+	var available := (
+		(screen.size - Vector2(UiLayout.MARGIN_SCREEN, UiLayout.MARGIN_SCREEN) * 2.0)
+		.max(Vector2.ONE)
+	)
+	var scale := UiLayout.fitted_scale(available, panel_min, _ui_scale)
+	var ratio := UiLayout.PANEL_RATIO
+	if _fit_width_to_content:
+		ratio.x = 0.0
+	var target := UiLayout.modal_size(area.size, content_min, scale, ratio)
+	var scaled := target * scale
+	var position := area.position + (area.size - scaled).max(Vector2.ZERO) * 0.5
+	position.x = clampf(position.x, screen.position.x, maxf(screen.end.x - scaled.x, screen.position.x))
+	position.y = clampf(position.y, screen.position.y, maxf(screen.end.y - scaled.y, screen.position.y))
 	panel.size = target
-	panel.position = area.position + (area.size - target).max(Vector2.ZERO) * 0.5
 	panel.pivot_offset = target * 0.5
-	panel.scale = Vector2(_ui_scale, _ui_scale)
+	panel.scale = Vector2(scale, scale)
+	panel.position = position - panel.pivot_offset * (Vector2.ONE - panel.scale)

@@ -88,30 +88,32 @@ const TOUCH_PAD_MARGIN: float = 10.0
 
 # ---------------------------------------------------------------- 响应式
 
-## 模态面板的目标尺寸。
+## 模态面板的目标尺寸（[b]未缩放[/b]）。
 ##
 ## [param area] 是"可用区域"（已经扣掉安全区与触控占位），[param content_min] 是内容
-## 最小尺寸，[param scale] 是 UI 缩放。目标取可用区域的 [constant PANEL_RATIO]，
-## 再被内容最小尺寸、[constant PANEL_MIN] / [constant PANEL_MAX] 与可用区域上限夹取；
-## 因为调用方会把面板整体放大约 [param scale] 倍，所以先除以 [param scale]，
+## 最小尺寸，[param scale] 是实际生效的 UI 缩放（调用方先用 [method fitted_scale] 夹好），
+## [param ratio] 是目标相对可用区的比例：某轴传 0 表示该轴贴内容最小尺寸（竖向菜单用）。
+## 目标取可用区域的 [param ratio]，再被 [constant PANEL_MIN] / [constant PANEL_MAX]
+## 与可用区域上限夹取；因为调用方会把面板整体放大 [param scale] 倍，所以这里先除以它，
 ## 于是"放大 UI"不会把面板顶出画面。
 ##
-## [b]注意[/b]：如果 [param content_min] 本身大于可用上限，返回值会停在可用上限，
-## 但 Godot 会把控件撑到最小尺寸而溢出——这是内容没排好的信号，应回去压缩内容。
-static func modal_size(area: Vector2, content_min: Vector2, scale: float) -> Vector2:
+## [b]内容最小尺寸是硬下限[/b]：宁可撑破 [constant PANEL_MAX] / 可用上限，也不被容器压小，
+## 因此调用方必须先用 [method fitted_scale] 保证 [code]content_min * scale[/code] 放得下。
+static func modal_size(
+	area: Vector2, content_min: Vector2, scale: float, ratio: Vector2 = PANEL_RATIO
+) -> Vector2:
 	var safe_scale: float = maxf(scale, 0.01)
 	if area.x <= 0.0 or area.y <= 0.0:
 		return PANEL_MIN.max(content_min)
 	var limit := (area - Vector2(MARGIN_SCREEN, MARGIN_SCREEN) * 2.0) / safe_scale
 	limit = limit.max(Vector2.ONE)
-	var desired := area * PANEL_RATIO / safe_scale
+	var desired := area * ratio / safe_scale
 	var lower := PANEL_MIN.min(limit)
-	var upper := PANEL_MAX.min(limit).max(lower)
 	var target := desired.max(content_min)
-	return Vector2(
-		clampf(target.x, lower.x, upper.x),
-		clampf(target.y, lower.y, upper.y),
-	)
+	target = target.min(PANEL_MAX)
+	target = target.min(limit)
+	target = target.max(content_min)
+	return target.max(lower)
 
 
 ## 居中的模态面板矩形：尺寸为 [method modal_size]，坐标在 [param area] 里居中。
@@ -120,6 +122,28 @@ static func modal_size(area: Vector2, content_min: Vector2, scale: float) -> Vec
 static func modal_rect(area: Vector2, content_min: Vector2, scale: float) -> Rect2:
 	var target := modal_size(area, content_min, scale)
 	return Rect2((area - target) * 0.5, target)
+
+
+## 在 [param available] 内完整容纳 [param content_min] 的前提下，最接近
+## [param requested] 的缩放。内容比可用区还大时会低于 1，但绝不溢出。
+## 因为界面是整体缩放（[code]Control.scale[/code]），内容最小尺寸也被一起放大，
+## 所以必须用它先把请求的 UI 缩放夹到"内容放得下"。
+static func fitted_scale(available: Vector2, content_min: Vector2, requested: float) -> float:
+	var scale: float = maxf(requested, 0.01)
+	if available.x > 0.0 and content_min.x > 0.0:
+		scale = minf(scale, available.x / content_min.x)
+	if available.y > 0.0 and content_min.y > 0.0:
+		scale = minf(scale, available.y / content_min.y)
+	return maxf(scale, 0.01)
+
+
+## 扣掉安全区与触控控件占位后的可用区域；模态与对话都按它排布。
+static func usable_rect(viewport: Vector2, safe: Vector4, touch_insets: Vector2) -> Rect2:
+	var left := maxf(safe.x, touch_insets.x)
+	var right := maxf(safe.z, touch_insets.y)
+	var origin := Vector2(left, safe.y)
+	var size := viewport - Vector2(left + right, safe.y + safe.w)
+	return Rect2(origin, size.max(Vector2.ZERO))
 
 
 ## 是否进入精简布局（窄高比不够）。宽高比为 0（窗口未就绪）不算精简。

@@ -28,6 +28,8 @@ func _ready() -> void:
 	shell.set_title(Text.key(&"MENU_PAUSED"))
 	shell.title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shell.set_body(content)
+	# 竖向菜单：宽度贴内容，不铺满可用区比例。
+	shell.set_fit_width_to_content()
 	resume_button.text = Text.key(&"MENU_RESUME")
 	quit_button.text = Text.key(&"MENU_QUIT")
 	title_button.text = Text.key(&"MENU_TITLE")

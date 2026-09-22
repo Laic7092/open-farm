@@ -121,10 +121,10 @@ func _apply_layout() -> void:
 	top_hints.offset_bottom = top_hints.offset_top
 	inventory_bar.offset_left = 0.0
 	inventory_bar.offset_right = 0.0
-	inventory_bar.offset_bottom = -(UiLayout.HUD_BAR_BOTTOM + _safe.w)
-	inventory_bar.offset_top = inventory_bar.offset_bottom
-	_bar_base_top = inventory_bar.offset_top
-	_bar_base_bottom = inventory_bar.offset_bottom
+	# 底边基准只由令牌决定，不要回读 live offset：抬升会写回它，
+	# 回读会把上一次的抬升当成新基准，逐次累积直到物品栏被顶出屏幕。
+	_bar_base_bottom = -(UiLayout.HUD_BAR_BOTTOM + _safe.w)
+	_bar_base_top = _bar_base_bottom
 	_refresh_ui_scale_pivots()
 
 
@@ -149,7 +149,7 @@ func _refresh_ui_scale_pivots() -> void:
 
 ## 触控控件压在底部物品栏两端时，把整条抬到控件上方。
 ##
-## 物品栏是 12 格定宽内容（见 [code]hud_slot.tscn[/code]），有最小宽度、缩不下去，
+## 物品栏是 10 格定宽内容（见 [code]hud_slot.tscn[/code]），有最小宽度、缩不下去，
 ## 抬高是保留缩放又不把两端压在摇杆 / ABXY 下的做法。触控关闭或宽度够放时不起作用。
 ## 交互提示 / 浮动提示已移到屏幕上方，下方只需要照顾物品栏一条。
 func _refresh_bottom_lift() -> void:
@@ -158,8 +158,11 @@ func _refresh_bottom_lift() -> void:
 	var lift: float = 0.0
 	if bar_width > 0.0 and bar_width > safe_width:
 		lift = maxf(_touch_insets.x, _touch_insets.y) + BOTTOM_LIFT_GAP
-		# 高缩放下控件很高，别把物品栏顶出画面。
-		var max_lift: float = size.y + _bar_base_top - BOTTOM_TOP_MARGIN
+		# 高缩放下控件很高，别把物品栏顶出画面：顶边要留在屏内，
+		# 所以上限要扣掉物品栏自身缩放后的高度。用最小高度而不是 live size：
+		# 设 offset 会触发 resized 重入，live size 在重入途中是中间值，会来回震荡。
+		var bar_height := inventory_bar.get_combined_minimum_size().y * _ui_scale
+		var max_lift := size.y + _bar_base_bottom - bar_height - BOTTOM_TOP_MARGIN
 		lift = minf(lift, maxf(max_lift, 0.0))
 	inventory_bar.offset_top = _bar_base_top - lift
 	inventory_bar.offset_bottom = _bar_base_bottom - lift

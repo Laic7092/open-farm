@@ -209,6 +209,118 @@ func test_fishing_fight_box_avoids_touch_pad() -> void:
 	EventBus.ui.touch_insets_changed.emit(Vector2.ZERO)
 
 
+func test_modal_panels_fit_at_large_ui_scale() -> void:
+	var previous: float = UiSettings.scale()
+	var viewport := Vector2(640, 360)
+	for scale: float in [1.0, 1.5, 2.0, 3.0]:
+		UiSettings.set_scale(scale, false)
+		for path: String in MODAL_SCENES:
+			var host := _host(viewport)
+			var modal := (load(path) as PackedScene).instantiate() as Control
+			host.add_child(modal)
+			EventBus.ui.touch_insets_changed.emit(_touch_insets(scale))
+			EventBus.ui.ui_scale_changed.emit(scale)
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var shell := modal.find_child("Shell", true, false) as ModalShell
+			if shell != null:
+				var rect := _scaled_rect(shell.panel)
+				var content := shell.panel.get_combined_minimum_size()
+				assert_bool(_inside(rect, viewport)).is_true()
+				assert_bool(shell.panel.size.x + 0.5 >= content.x).is_true()
+				assert_bool(shell.panel.size.y + 0.5 >= content.y).is_true()
+			host.queue_free()
+			await get_tree().process_frame
+	EventBus.ui.touch_insets_changed.emit(Vector2.ZERO)
+	UiSettings.set_scale(previous, false)
+
+
+func test_dialogue_box_avoids_touch_controls() -> void:
+	var previous: float = UiSettings.scale()
+	var viewport := Vector2(640, 360)
+	for scale: float in [1.0, 1.5]:
+		UiSettings.set_scale(scale, false)
+		var host := _host(viewport)
+		var box := (load("res://scenes/ui/dialogue_box.tscn") as PackedScene).instantiate() as DialogueBox
+		host.add_child(box)
+		box.visible = true
+		var insets := _touch_insets(scale)
+		EventBus.ui.touch_insets_changed.emit(insets)
+		EventBus.ui.ui_scale_changed.emit(scale)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var rect := _scaled_rect(box.panel)
+		assert_bool(_inside(rect, viewport)).is_true()
+		assert_bool(rect.position.x >= insets.x - 0.5).is_true()
+		assert_bool(rect.end.x <= viewport.x - insets.y + 0.5).is_true()
+		host.queue_free()
+		await get_tree().process_frame
+	EventBus.ui.touch_insets_changed.emit(Vector2.ZERO)
+	UiSettings.set_scale(previous, false)
+
+
+func test_dialogue_box_fits_at_large_ui_scale() -> void:
+	var previous: float = UiSettings.scale()
+	var viewport := Vector2(640, 360)
+	for scale: float in [2.0, 3.0]:
+		UiSettings.set_scale(scale, false)
+		var host := _host(viewport)
+		var box := (load("res://scenes/ui/dialogue_box.tscn") as PackedScene).instantiate() as DialogueBox
+		host.add_child(box)
+		box.visible = true
+		EventBus.ui.touch_insets_changed.emit(_touch_insets(scale))
+		EventBus.ui.ui_scale_changed.emit(scale)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		assert_bool(_inside(_scaled_rect(box.panel), viewport)).is_true()
+		host.queue_free()
+		await get_tree().process_frame
+	EventBus.ui.touch_insets_changed.emit(Vector2.ZERO)
+	UiSettings.set_scale(previous, false)
+
+
+func test_hud_item_bar_stays_onscreen_at_large_scale() -> void:
+	var previous: float = UiSettings.scale()
+	var viewport := Vector2(640, 360)
+	var host := _host(viewport)
+	var hud := (load("res://scenes/ui/hud.tscn") as PackedScene).instantiate() as Hud
+	host.add_child(hud)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	for scale: float in [1.0, 1.5, 2.0, 2.5, 3.0]:
+		UiSettings.set_scale(scale, false)
+		EventBus.ui.ui_scale_changed.emit(scale)
+		EventBus.ui.touch_insets_changed.emit(_touch_insets(scale))
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var rect := _scaled_rect(hud.inventory_bar)
+		assert_bool(rect.position.y >= -0.5).is_true()
+		assert_bool(rect.end.y <= viewport.y + 0.5).is_true()
+	host.queue_free()
+	EventBus.ui.ui_scale_changed.emit(previous)
+	EventBus.ui.touch_insets_changed.emit(Vector2.ZERO)
+	UiSettings.set_scale(previous, false)
+
+
+func test_pause_menu_hugs_its_content_width() -> void:
+	var previous: float = UiSettings.scale()
+	var viewport := Vector2(640, 360)
+	var host := _host(viewport)
+	var modal := (load("res://scenes/ui/pause_menu.tscn") as PackedScene).instantiate() as Control
+	host.add_child(modal)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var shell := modal.find_child("Shell", true, false) as ModalShell
+	assert_object(shell).is_not_null()
+	if shell != null:
+		var content := shell.panel.get_combined_minimum_size()
+		var floor_width: float = maxf(content.x, UiLayout.PANEL_MIN.x)
+		assert_bool(shell.panel.size.x + 0.5 >= content.x).is_true()
+		assert_bool(shell.panel.size.x <= floor_width + 0.5).is_true()
+	host.queue_free()
+	UiSettings.set_scale(previous, false)
+
+
 func _host(viewport: Vector2) -> Control:
 	var host := Control.new()
 	host.size = viewport
@@ -216,8 +328,18 @@ func _host(viewport: Vector2) -> Control:
 	return host
 
 
+## 控件缩放绕 [member Control.pivot_offset]，所以视觉矩形也要按 pivot 换算。
 func _scaled_rect(node: Control) -> Rect2:
-	return Rect2(node.position, node.size * node.scale.x)
+	var scale := node.scale.x
+	return Rect2(node.position + node.pivot_offset * (1.0 - scale), node.size * scale)
+
+
+## 触控层放大后实际占用的左右宽度（与 [method TouchControls.side_insets] 同式）。
+func _touch_insets(scale: float) -> Vector2:
+	return Vector2(
+		UiLayout.TOUCH_PAD_MARGIN + UiLayout.TOUCH_STICK_SIZE * scale,
+		UiLayout.TOUCH_PAD_SIZE * scale
+	)
 
 
 func _inside(rect: Rect2, viewport: Vector2) -> bool:
