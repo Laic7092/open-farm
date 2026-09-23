@@ -125,8 +125,8 @@ func _layout() -> void:
 	var stick := UiLayout.TOUCH_STICK_SIZE
 	var pad := UiLayout.TOUCH_PAD_SIZE
 	var button := UiLayout.TOUCH_BUTTON_SIZE
-	var left := UiLayout.TOUCH_PAD_MARGIN + _safe.x
-	var right := UiLayout.TOUCH_PAD_MARGIN + _safe.z
+	var left := UiLayout.TOUCH_PAD_MARGIN + UiLayout.edge_inset(_safe.x, UiLayout.TOUCH_PAD_PADDING)
+	var right := UiLayout.TOUCH_PAD_MARGIN + UiLayout.edge_inset(_safe.z, UiLayout.TOUCH_PAD_PADDING)
 	var bottom := UiLayout.TOUCH_PAD_MARGIN + _safe.w
 	joystick.offset_left = left
 	joystick.offset_right = left + stick
@@ -170,13 +170,13 @@ func _refresh_ui_scale() -> void:
 ## 本层当前占用的左右两侧宽度（虚拟画布坐标）：模态界面据此给内容让位。
 ##
 ## 不是控件本身的 [member Control.size]——摇杆钉左下角、ABXY 钉右下角，
-## 放大只朝屏幕内侧长，所以要从各自角点算到内侧边缘。
+## 放大只朝屏幕内侧长，所以要从各自角点算到屏幕边缘（含安全区 / 横向留白）。
 func side_insets() -> Vector2:
 	if not _enabled or joystick == null or action_pad == null:
 		return Vector2.ZERO
 	return Vector2(
 		joystick.position.x + joystick.size.x * _ui_scale,
-		action_pad.size.x * _ui_scale
+		absf(action_pad.offset_right) + action_pad.size.x * _ui_scale
 	)
 
 

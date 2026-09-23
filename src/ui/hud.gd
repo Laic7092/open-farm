@@ -119,8 +119,10 @@ func _apply_layout() -> void:
 		UiLayout.HUD_HINTS_TOP + _safe.y, status_bottom + UiLayout.GAP
 	)
 	top_hints.offset_bottom = top_hints.offset_top
-	inventory_bar.offset_left = 0.0
-	inventory_bar.offset_right = 0.0
+	# 物品栏在安全区里居中：刘海 / 圆角不对称时，屏幕中心与安全区中心不重合。
+	var center_shift := (_safe.x - _safe.z) * 0.5
+	inventory_bar.offset_left = center_shift
+	inventory_bar.offset_right = center_shift
 	# 底边基准只由令牌决定，不要回读 live offset：抬升会写回它，
 	# 回读会把上一次的抬升当成新基准，逐次累积直到物品栏被顶出屏幕。
 	_bar_base_bottom = -(UiLayout.HUD_BAR_BOTTOM + _safe.w)
@@ -154,10 +156,18 @@ func _refresh_ui_scale_pivots() -> void:
 ## 交互提示 / 浮动提示已移到屏幕上方，下方只需要照顾物品栏一条。
 func _refresh_bottom_lift() -> void:
 	var bar_width: float = inventory_bar.size.x * _ui_scale
-	var safe_width: float = size.x - _touch_insets.x - _touch_insets.y
+	# 两侧实际要让出的距离：安全区与触控控件占位取较大者（触控占位已含安全区，
+	# 但触控关闭时也要让开刘海 / 圆角）。
+	var side := Vector2(
+		UiLayout.edge_clearance(_safe.x, _touch_insets.x),
+		UiLayout.edge_clearance(_safe.z, _touch_insets.y)
+	)
+	var safe_width: float = size.x - side.x - side.y
+	var touch_span := maxf(_touch_insets.x, _touch_insets.y)
 	var lift: float = 0.0
-	if bar_width > 0.0 and bar_width > safe_width:
-		lift = maxf(_touch_insets.x, _touch_insets.y) + BOTTOM_LIFT_GAP
+	# 只有触控控件才会真的压住底部两角：安全区只收窄可摆放宽度，不构成抬升理由。
+	if bar_width > 0.0 and bar_width > safe_width and touch_span > 0.0:
+		lift = touch_span + BOTTOM_LIFT_GAP
 		# 高缩放下控件很高，别把物品栏顶出画面：顶边要留在屏内，
 		# 所以上限要扣掉物品栏自身缩放后的高度。用最小高度而不是 live size：
 		# 设 offset 会触发 resized 重入，live size 在重入途中是中间值，会来回震荡。

@@ -202,7 +202,7 @@ func test_fishing_fight_box_avoids_touch_pad() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var rect := _scaled_rect(fight)
-	var pad_left := viewport.x - (UiLayout.TOUCH_PAD_MARGIN + TOUCH_INSETS.y)
+	var pad_left := viewport.x - TOUCH_INSETS.y
 	assert_bool(_inside(rect, viewport)).is_true()
 	assert_bool(rect.end.x <= pad_left + 0.5).is_true()
 	host.queue_free()
@@ -337,8 +337,8 @@ func _scaled_rect(node: Control) -> Rect2:
 ## 触控层放大后实际占用的左右宽度（与 [method TouchControls.side_insets] 同式）。
 func _touch_insets(scale: float) -> Vector2:
 	return Vector2(
-		UiLayout.TOUCH_PAD_MARGIN + UiLayout.TOUCH_STICK_SIZE * scale,
-		UiLayout.TOUCH_PAD_SIZE * scale
+		UiLayout.TOUCH_PAD_MARGIN + UiLayout.TOUCH_PAD_PADDING + UiLayout.TOUCH_STICK_SIZE * scale,
+		UiLayout.TOUCH_PAD_MARGIN + UiLayout.TOUCH_PAD_PADDING + UiLayout.TOUCH_PAD_SIZE * scale
 	)
 
 

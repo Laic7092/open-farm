@@ -82,8 +82,10 @@ const DIALOGUE_MIN_HEIGHT: float = 140.0
 const DIALOGUE_TEXT_MIN_HEIGHT: float = 40.0
 const DIALOGUE_SIDE: float = 16.0
 const DIALOGUE_BOTTOM: float = 10.0
-const TOUCH_STICK_SIZE: float = 96.0
+const TOUCH_STICK_SIZE: float = 128.0
 const TOUCH_PAD_MARGIN: float = 10.0
+## 触控面板的横向默认留白：没有安全区（桌面 / headless）时至少让出这么多。
+const TOUCH_PAD_PADDING: float = 48.0
 
 
 # ---------------------------------------------------------------- 响应式
@@ -135,6 +137,24 @@ static func fitted_scale(available: Vector2, content_min: Vector2, requested: fl
 	if available.y > 0.0 and content_min.y > 0.0:
 		scale = minf(scale, available.y / content_min.y)
 	return maxf(scale, 0.01)
+
+
+## 贴边留白：显示安全区为 0（桌面 / headless）时退回 [param fallback]。
+## 触控面板等贴边界面统一用它把安全区补成“安全区或默认值”，不再各自写 maxf。
+static func edge_inset(safe: float, fallback: float = 0.0) -> float:
+	return maxf(safe, fallback)
+
+
+## 贴边界面单侧实际要让出的距离：显示安全区与触控控件占位取较大者。
+static func edge_clearance(safe: float, touch: float) -> float:
+	return maxf(safe, touch)
+
+
+## 扣掉显示安全区后的屏幕矩形；模态 / 对话在它里面夹取，不贴到刘海 / 圆角。
+static func safe_rect(viewport: Vector2, safe: Vector4) -> Rect2:
+	var origin := Vector2(safe.x, safe.y)
+	var size := viewport - Vector2(safe.x + safe.z, safe.y + safe.w)
+	return Rect2(origin, size.max(Vector2.ZERO))
 
 
 ## 扣掉安全区与触控控件占位后的可用区域；模态与对话都按它排布。

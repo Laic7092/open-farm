@@ -79,8 +79,8 @@ func _on_touch_insets_changed(insets: Vector2) -> void:
 func _layout_fight() -> void:
 	var right_margin := UiLayout.MARGIN_SCREEN
 	if _touch_insets.y > 0.0:
-		# 让开 ABXY：右侧占位不含它自己的屏幕边距，这里要一并算进去。
-		right_margin = UiLayout.TOUCH_PAD_MARGIN + _touch_insets.y + UiLayout.FISH_FIGHT_GAP
+		# 右侧占位已含屏幕边距与横向留白，这里只留两者之间的间隙。
+		right_margin = _touch_insets.y + UiLayout.FISH_FIGHT_GAP
 	fight_box.offset_right = -right_margin
 	fight_box.offset_left = fight_box.offset_right - UiLayout.FISH_FIGHT_WIDTH
 

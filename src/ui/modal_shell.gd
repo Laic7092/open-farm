@@ -123,10 +123,7 @@ func _fit() -> void:
 	if viewport.x <= 0.0 or viewport.y <= 0.0:
 		return
 
-	var screen := Rect2(
-		Vector2(_safe.x, _safe.y),
-		(viewport - Vector2(_safe.x + _safe.z, _safe.y + _safe.w)).max(Vector2.ZERO)
-	)
+	var screen := UiLayout.safe_rect(viewport, _safe)
 	var area := _usable_rect(viewport)
 	var content_min := panel.get_combined_minimum_size()
 	# 面板的实际下限还包含 PANEL_MIN；夹缩放时要把这层算进去，否则可用区退化时

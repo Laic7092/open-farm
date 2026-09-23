@@ -198,10 +198,7 @@ func _layout_panel() -> void:
 		viewport = get_viewport_rect().size
 	if viewport.x <= 0.0 or viewport.y <= 0.0:
 		return
-	var screen := Rect2(
-		Vector2(_safe.x, _safe.y),
-		(viewport - Vector2(_safe.x + _safe.z, _safe.y + _safe.w)).max(Vector2.ZERO)
-	)
+	var screen := UiLayout.safe_rect(viewport, _safe)
 	var side := UiLayout.DIALOGUE_SIDE
 	var band := UiLayout.usable_rect(viewport, _safe, _touch_insets)
 	var content_min := panel.get_combined_minimum_size()
