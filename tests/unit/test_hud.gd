@@ -59,6 +59,25 @@ func test_tapping_a_slot_selects_that_hand_item() -> void:
 	assert_int(item_bar.hand_index()).is_equal(1)
 
 
+func test_item_bar_restores_when_activated() -> void:
+	var hud := _hud()
+	var backpack := Inventory.new(6)
+	backpack.add(&"turnip_seed", 5)
+	hud.bind_item_bar(func() -> ItemBar: return ItemBar.new(backpack))
+	await get_tree().process_frame
+
+	var bar := hud.find_child("InventoryBar", true, false) as Control
+	var view := hud.find_child("ItemBarView", true, false) as HudItemBarView
+	var full := bar.scale.x
+	# 空闲缩小后再点格子（激活）应当恢复正常档；过渡是动画，等它跑完再断言。
+	view._set_shrunk(true)
+	await get_tree().create_timer(HudItemBarView.SHRINK_DURATION + 0.05).timeout
+	assert_bool(bar.scale.x < full).is_true()
+	_slot(hud, 0).pressed.emit()
+	await get_tree().create_timer(HudItemBarView.SHRINK_DURATION + 0.05).timeout
+	assert_float(bar.scale.x).is_equal_approx(full, 0.01)
+
+
 func test_ui_scale_applies_to_regions() -> void:
 	# 走公开设置：_ready() 的延迟应用会读到它，和真实流程一致。
 	var previous: float = UiSettings.scale()

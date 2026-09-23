@@ -42,6 +42,9 @@
 7. **竖向菜单贴内容**：暂停菜单这类竖列表在 _ready() 里调
    shell.set_fit_width_to_content()，宽度取内容最小尺寸（下限 PANEL_MIN），
    不铺满 PANEL_RATIO 的宽度。
+8. **底部物品栏自管缩放**：HudItemBarView 空闲 SHRINK_DELAY 秒后缩到
+   UiLayout.HUD_BAR_SHRINK_SCALE，点格子 / 换手持 / 背包变动会恢复并重置计时；
+   Hud 不再统一缩放它，也不再为它做安全区偏移与触控让位（避免约束打架）。
 
 ## 多分辨率策略
 

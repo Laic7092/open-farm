@@ -9,14 +9,11 @@ extends Control
 ## 交互提示与浮动提示是 UI 域自己的东西，所以留在这里。
 ##
 ## 底部常驻物品栏只是背包前几格的[b]快捷访问视图[/b]，不存放任何道具；
-## 工具与种子都放在背包里。Q / R 在装有可用道具的格子之间切换。
+## 工具与种子都放在背包里。Q / R 在装有可用道具的格子之间切换，
+## 触控下点物品栏格子选中；空闲后它会自动缩小（见 [HudItemBarView]）。
 
 ## 浮动提示停留时长（秒）。
 const TOAST_DURATION: float = 2.2
-## 物品栏被触控控件压住时，抬到控件上方留出的间隙（像素）。
-const BOTTOM_LIFT_GAP: float = 6.0
-## 抬高后物品栏顶边至少留出的屏内边距，避免高缩放下被顶出画面。
-const BOTTOM_TOP_MARGIN: float = 4.0
 ## 专属音效之后这段时间内的通用通知音会被抑制，避免"一个动作两声"（毫秒）。
 const NOTIFY_SUPPRESS_MS: int = 140
 ## 这些通知意味着"没做成"，用低沉的失败音。
@@ -39,17 +36,12 @@ const NEGATIVE_NOTIFICATIONS: Array[StringName] = [
 var _toast_tween: Tween
 ## 本界面自己的音效播放器：通知音由显示通知的界面发出。
 var sfx: SfxPlayer
-## 当前 UI 缩放（底部物品栏按它估算实际宽度）。
+## 当前 UI 缩放（顶部提示行按它缩放）。
 var _ui_scale: float = 1.0
-## 触控控件占用的左右宽度（[EventBus.ui] 广播）；触控关闭时为零。
-var _touch_insets: Vector2 = Vector2.ZERO
 ## 右上角独立键占用的边距（从右 / 从上）；无该键时为零。
 var _touch_top: Vector2 = Vector2.ZERO
 ## 显示安全区换算后的四周内边距（虚拟画布单位）。
 var _safe: Vector4 = Vector4.ZERO
-## 底部物品栏场景里的原始上下 offset；抬高时以此为基准。
-var _bar_base_top: float = 0.0
-var _bar_base_bottom: float = 0.0
 
 
 ## 由 [UiRoot] 转发的组合根依赖；继续下发给各小视图。
@@ -76,7 +68,6 @@ func _ready() -> void:
 	EventBus.ui.interaction_prompt_changed.connect(_on_prompt_changed)
 	EventBus.ui.notification_requested.connect(_on_notification)
 	EventBus.ui.ui_scale_changed.connect(_apply_ui_scale)
-	EventBus.ui.touch_insets_changed.connect(_on_touch_insets_changed)
 	EventBus.ui.touch_top_insets_changed.connect(_on_touch_top_insets_changed)
 	EventBus.ui.safe_insets_changed.connect(_on_safe_insets_changed)
 	toast_label.modulate.a = 0.0
@@ -86,15 +77,9 @@ func _ready() -> void:
 	resized.connect(_apply_layout)
 	status_panel.resized.connect(_apply_layout)
 	_apply_layout()
-	# 底部物品栏的 pivot 要等布局拿到 size 才能算，延后一帧再套用存盘值。
-	for region: Control in [inventory_bar, top_hints]:
-		region.resized.connect(_refresh_ui_scale_pivots)
+	# 顶部提示行的 pivot 要等布局拿到 size 才能算。
+	top_hints.resized.connect(_refresh_ui_scale_pivots)
 	_apply_ui_scale.call_deferred(UiSettings.scale())
-
-
-func _on_touch_insets_changed(insets: Vector2) -> void:
-	_touch_insets = insets
-	_refresh_bottom_lift()
 
 
 func _on_touch_top_insets_changed(insets: Vector2) -> void:
@@ -139,64 +124,28 @@ func _apply_layout() -> void:
 		_touch_top.y + UiLayout.GAP
 	)
 	top_hints.offset_bottom = top_hints.offset_top
-	# 物品栏在安全区里居中：刘海 / 圆角不对称时，屏幕中心与安全区中心不重合。
-	var center_shift := (pad.x - pad.y) * 0.5
-	inventory_bar.offset_left = center_shift
-	inventory_bar.offset_right = center_shift
-	# 底边基准只由令牌决定，不要回读 live offset：抬升会写回它，
-	# 回读会把上一次的抬升当成新基准，逐次累积直到物品栏被顶出屏幕。
-	_bar_base_bottom = -(UiLayout.HUD_BAR_BOTTOM + _safe.w)
-	_bar_base_top = _bar_base_bottom
+	# 物品栏自己管缩放与避让（见 [HudItemBarView]）：这里只把它钉在底边中点。
+	inventory_bar.offset_left = 0.0
+	inventory_bar.offset_right = 0.0
+	inventory_bar.offset_bottom = -(UiLayout.HUD_BAR_BOTTOM + _safe.w)
+	inventory_bar.offset_top = inventory_bar.offset_bottom
 	_refresh_ui_scale_pivots()
 
 
-## 常驻 UI 缩放：左上状态卡钉左上角；顶部提示钉顶边中点（朝下长）、
-## 底部物品栏钉底边中点（朝上长），于是放大只朝屏幕内侧长，不会被推出画面。
+## 常驻 UI 缩放：左上状态卡钉左上角；顶部提示钉顶边中点（朝下长），
+## 放大只朝屏幕内侧长，不会被推出画面。物品栏缩放由 [HudItemBarView] 自管。
 func _apply_ui_scale(value: float) -> void:
 	_ui_scale = value
 	var factor := Vector2(value, value)
 	status_panel.pivot_offset = Vector2.ZERO
 	status_panel.scale = factor
-	for region: Control in [inventory_bar, top_hints]:
-		region.scale = factor
+	top_hints.scale = factor
 	_apply_layout()
 
 
-## 顶部提示重算顶边中点；底部物品栏重算底边中点。
+## 顶部提示重算顶边中点。
 func _refresh_ui_scale_pivots() -> void:
-	inventory_bar.pivot_offset = Vector2(inventory_bar.size.x * 0.5, inventory_bar.size.y)
 	top_hints.pivot_offset = Vector2(top_hints.size.x * 0.5, 0.0)
-	_refresh_bottom_lift()
-
-
-## 触控控件压在底部物品栏两端时，把整条抬到控件上方。
-##
-## 物品栏是 10 格定宽内容（见 [code]hud_slot.tscn[/code]），有最小宽度、缩不下去，
-## 抬高是保留缩放又不把两端压在摇杆 / ABXY 下的做法。触控关闭或宽度够放时不起作用。
-## 交互提示 / 浮动提示已移到屏幕上方，下方只需要照顾物品栏一条。
-func _refresh_bottom_lift() -> void:
-	var bar_width: float = inventory_bar.size.x * _ui_scale
-	# 两侧实际要让出的距离：安全区与触控控件占位取较大者（触控占位已含安全区，
-	# 但触控关闭时也要让开刘海 / 圆角 + 默认留白）。
-	var pad := _side_padding()
-	var side := Vector2(
-		UiLayout.edge_clearance(pad.x, _touch_insets.x),
-		UiLayout.edge_clearance(pad.y, _touch_insets.y)
-	)
-	var safe_width: float = size.x - side.x - side.y
-	var touch_span := maxf(_touch_insets.x, _touch_insets.y)
-	var lift: float = 0.0
-	# 只有触控控件才会真的压住底部两角：安全区只收窄可摆放宽度，不构成抬升理由。
-	if bar_width > 0.0 and bar_width > safe_width and touch_span > 0.0:
-		lift = touch_span + BOTTOM_LIFT_GAP
-		# 高缩放下控件很高，别把物品栏顶出画面：顶边要留在屏内，
-		# 所以上限要扣掉物品栏自身缩放后的高度。用最小高度而不是 live size：
-		# 设 offset 会触发 resized 重入，live size 在重入途中是中间值，会来回震荡。
-		var bar_height := inventory_bar.get_combined_minimum_size().y * _ui_scale
-		var max_lift := size.y + _bar_base_bottom - bar_height - BOTTOM_TOP_MARGIN
-		lift = minf(lift, maxf(max_lift, 0.0))
-	inventory_bar.offset_top = _bar_base_top - lift
-	inventory_bar.offset_bottom = _bar_base_bottom - lift
 
 
 ## 把注入原样转给实现了该方法的子视图；视图自己决定要不要读、什么时候读。

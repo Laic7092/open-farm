@@ -72,6 +72,8 @@ const TOUCH_PAD_SIZE: float = 116.0
 const HUD_STATUS_MARGIN := Vector2(6, 4)
 ## 底部物品栏距屏幕底边的距离。
 const HUD_BAR_BOTTOM: float = 10.0
+## 底部物品栏空闲缩小后的缩放（相对正常 UI 缩放）。
+const HUD_BAR_SHRINK_SCALE: float = 0.5
 ## 顶部提示行距屏幕顶边 / 左右的安全距离。
 const HUD_HINTS_TOP: float = 6.0
 const HUD_HINTS_SIDE: float = 20.0
@@ -146,10 +148,6 @@ static func edge_inset(safe: float, fallback: float = 0.0) -> float:
 
 
 ## 贴边界面单侧实际要让出的距离：显示安全区与触控控件占位取较大者。
-static func edge_clearance(safe: float, touch: float) -> float:
-	return maxf(safe, touch)
-
-
 ## 扣掉显示安全区后的屏幕矩形；模态 / 对话在它里面夹取，不贴到刘海 / 圆角。
 static func safe_rect(viewport: Vector2, safe: Vector4) -> Rect2:
 	var origin := Vector2(safe.x, safe.y)
