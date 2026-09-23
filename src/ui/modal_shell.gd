@@ -26,8 +26,6 @@ extends Control
 
 var _ui_scale: float = 1.0
 var _safe: Vector4 = Vector4.ZERO
-## 触控控件占用的左右宽度（左、右）；关闭触控时为零。
-var _touch_insets: Vector2 = Vector2.ZERO
 ## 宽度是否贴内容最小尺寸；默认铺满可用区的 [constant UiLayout.PANEL_RATIO]。
 var _fit_width_to_content: bool = false
 
@@ -37,7 +35,6 @@ func _ready() -> void:
 	resized.connect(_fit)
 	EventBus.ui.ui_scale_changed.connect(apply_ui_scale)
 	EventBus.ui.safe_insets_changed.connect(_on_safe_insets_changed)
-	EventBus.ui.touch_insets_changed.connect(_on_touch_insets_changed)
 	# 空说明 / 空提示不占高度，否则每个模态都会白白多出两行。
 	info_label.visible = false
 	hint_label.visible = false
@@ -92,28 +89,16 @@ func _on_safe_insets_changed(insets: Vector4) -> void:
 	_fit.call_deferred()
 
 
-func _on_touch_insets_changed(insets: Vector2) -> void:
-	_touch_insets = insets
-	_fit.call_deferred()
-
-
 func _on_minimum_size_changed() -> void:
 	_fit.call_deferred()
 
 
-## 可用区域：扣掉安全区与触控控件占位（委托 [method UiLayout.usable_rect]）。
+## 按"安全屏比例 + 内容最小尺寸 + UI 缩放"重排面板。
 ##
-## 摇杆钉左下、ABXY 钉右下，面板如果仍按整屏居中就会被压在两角上；
-## 这里把左右两侧让出来，面板只落在两者之间的安全带里。
-func _usable_rect(viewport: Vector2) -> Rect2:
-	return UiLayout.usable_rect(viewport, _safe, _touch_insets)
-
-
-## 按"可用区域比例 + 内容最小尺寸 + UI 缩放"重排面板。
-##
-## [b]两个约束[/b]：整体缩放后内容最小尺寸也被一起放大，所以先把缩放夹到安全屏放得下
-## （[method UiLayout.fitted_scale]）；面板优先落在摇杆与 ABXY 之间的安全带里，
-## 装不下时退回整屏居中，但绝不越过屏幕。
+## [b]只受显示安全区约束[/b]：不再根据触控占位把面板塞进"安全带"。触控占位会随 UI
+## 缩放变大，而左右占位（摇杆 vs A / B）不对称，把它算进居中会让面板随缩放平移；
+## 模态是瞬态界面，触控键（z_index 更高）叠在上面完全可用，不值得为它偏移。
+## 内容最小尺寸是硬下限：先用 [method UiLayout.fitted_scale] 把缩放夹到安全屏放得下。
 func _fit() -> void:
 	if panel == null:
 		return
@@ -124,7 +109,6 @@ func _fit() -> void:
 		return
 
 	var screen := UiLayout.safe_rect(viewport, _safe)
-	var area := _usable_rect(viewport)
 	var content_min := panel.get_combined_minimum_size()
 	# 面板的实际下限还包含 PANEL_MIN；夹缩放时要把这层算进去，否则可用区退化时
 	# 面板会停在 PANEL_MIN，再乘缩放又出屏（内容最小尺寸更小时必现）。
@@ -139,11 +123,12 @@ func _fit() -> void:
 	var ratio := UiLayout.PANEL_RATIO
 	if _fit_width_to_content:
 		ratio.x = 0.0
-	var target := UiLayout.modal_size(area.size, content_min, scale, ratio)
+	var target := UiLayout.modal_size(screen.size, content_min, scale, ratio)
 	var scaled := target * scale
-	var position := area.position + (area.size - scaled).max(Vector2.ZERO) * 0.5
-	position.x = clampf(position.x, screen.position.x, maxf(screen.end.x - scaled.x, screen.position.x))
-	position.y = clampf(position.y, screen.position.y, maxf(screen.end.y - scaled.y, screen.position.y))
+	var position := screen.position + (screen.size - scaled).max(Vector2.ZERO) * 0.5
+	position = position.clamp(
+		screen.position, (screen.end - scaled).max(screen.position)
+	)
 	panel.size = target
 	panel.pivot_offset = target * 0.5
 	panel.scale = Vector2(scale, scale)

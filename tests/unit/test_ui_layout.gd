@@ -152,20 +152,24 @@ func test_modal_panels_fit_viewport() -> void:
 	UiSettings.set_scale(previous, false)
 
 
-func test_modal_panel_avoids_touch_controls() -> void:
+func test_modal_panel_ignores_touch_insets() -> void:
+	# 触控占位会随 UI 缩放变大且左右不对称，模态不再据此让位，否则会随缩放平移。
 	var previous: float = UiSettings.scale()
 	UiSettings.set_scale(1.0, false)
 	var viewport := Vector2(640, 360)
 	var host := _host(viewport)
 	var modal := (load("res://scenes/ui/pause_menu.tscn") as PackedScene).instantiate() as Control
 	host.add_child(modal)
-	EventBus.ui.touch_insets_changed.emit(TOUCH_INSETS)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var shell := modal.find_child("Shell", true, false) as ModalShell
-	var rect := _scaled_rect(shell.panel)
-	assert_bool(rect.position.x >= TOUCH_INSETS.x - 0.5).is_true()
-	assert_bool(rect.end.x <= viewport.x - TOUCH_INSETS.y + 0.5).is_true()
+	var before := _scaled_rect(shell.panel)
+	EventBus.ui.touch_insets_changed.emit(TOUCH_INSETS)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var after := _scaled_rect(shell.panel)
+	assert_vector(after.position).is_equal_approx(before.position, Vector2(0.001, 0.001))
+	assert_vector(after.size).is_equal_approx(before.size, Vector2(0.001, 0.001))
 	host.queue_free()
 	EventBus.ui.touch_insets_changed.emit(Vector2.ZERO)
 	UiSettings.set_scale(previous, false)
