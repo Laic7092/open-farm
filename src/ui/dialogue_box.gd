@@ -202,8 +202,10 @@ func _layout_panel() -> void:
 	var side := UiLayout.DIALOGUE_SIDE
 	var band := UiLayout.usable_rect(viewport, _safe, _touch_insets)
 	var content_min := panel.get_combined_minimum_size()
+	# 缩放先夹到“安全带放得下”：触控占位会把可用宽度压窄，只按整屏夹会让
+	# 内容顶着摇杆 / ABXY。安全带太窄时 [method UiLayout.fitted_scale] 会自然缩小。
 	var available := Vector2(
-		maxf(screen.size.x - side * 2.0, 0.0),
+		maxf(band.size.x - side * 2.0, 0.0),
 		maxf(screen.size.y - UiLayout.DIALOGUE_BOTTOM, 0.0)
 	)
 	_panel_scale = UiLayout.fitted_scale(available, content_min, _ui_scale)

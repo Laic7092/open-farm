@@ -1,12 +1,12 @@
 class_name TouchControls
 extends Control
-## 触控控件层：左下角虚拟摇杆 + 右下角 ABXY 四个动作键。
+## 触控控件层：左下角虚拟摇杆 + 右下角 ABXY 动作键，Y（背包）单独钉在右上角。
 ##
 ## 世界模式：
 ## [br]- A：主操作（收获 / 送礼 / 交互 / 使用工具 / 钓鱼）
 ## [br]- B：菜单
 ## [br]- X：切换手持物品
-## [br]- Y：背包
+## [br]- Y：背包（右上角，远离拇指的常用区）
 ## [br]- 摇杆推到底自动奔跑
 ##
 ## 模态模式（背包 / 商店 / 对话 / 菜单等暂停场景树时）：
@@ -41,6 +41,8 @@ const NAV_REPEAT_INTERVAL: float = 0.12
 @onready var y_button: TouchButton = %YButton
 ## ABXY 整体缩放的宿主：四键围绕同一个屏幕右下角点等比放大，才不会互相重叠。
 @onready var action_pad: Control = %ActionPad
+## 右上角独立动作键（Y / 背包）的宿主：钉右上角，放大只朝左下长。
+@onready var top_pad: Control = %TopPad
 
 ## 是否处于触控模式（设置值）。
 var _enabled: bool = false
@@ -100,6 +102,7 @@ func _ready() -> void:
 	# pivot 依赖控件的 size，等布局完成后再套用存盘值。
 	joystick.resized.connect(_refresh_ui_scale)
 	action_pad.resized.connect(_refresh_ui_scale)
+	top_pad.resized.connect(_refresh_ui_scale)
 	apply_enabled(TouchSettings.is_enabled())
 	_apply_ui_scale.call_deferred(UiSettings.scale())
 
@@ -118,9 +121,9 @@ func _on_safe_insets_changed(insets: Vector4) -> void:
 	_layout()
 
 
-## 按令牌把摇杆与 ABXY 钉到屏幕左下 / 右下，并让开安全区。
+## 按令牌把摇杆钉左下、ABXY 钉右下、Y 钉右上，并让开安全区。
 ##
-## 尺寸全部来自 [UiLayout]，场景里不写裸偏移；ABXY 四个键围绕同一角点等比放大。
+## 尺寸全部来自 [UiLayout]，场景里不写裸偏移；同一角点上的键围绕该角点等比放大。
 func _layout() -> void:
 	var stick := UiLayout.TOUCH_STICK_SIZE
 	var pad := UiLayout.TOUCH_PAD_SIZE
@@ -136,8 +139,14 @@ func _layout() -> void:
 	action_pad.offset_left = action_pad.offset_right - pad
 	action_pad.offset_bottom = -bottom
 	action_pad.offset_top = action_pad.offset_bottom - pad
+	# 右上角 Y（背包）：横向与触控面板同档留白，纵向只让开上下安全区。
+	var top := UiLayout.TOUCH_PAD_MARGIN + _safe.y
+	top_pad.offset_right = -right
+	top_pad.offset_left = top_pad.offset_right - button
+	top_pad.offset_top = top
+	top_pad.offset_bottom = top + button
 	var mid := (pad - button) * 0.5
-	_place_button(y_button, Vector2(mid, 0.0), button)
+	_place_button(y_button, Vector2.ZERO, button)
 	_place_button(x_button, Vector2(0.0, mid), button)
 	_place_button(b_button, Vector2(mid * 2.0, mid), button)
 	_place_button(a_button, Vector2(mid, mid * 2.0), button)
@@ -151,7 +160,7 @@ func _place_button(button_node: Control, origin: Vector2, size: float) -> void:
 	button_node.offset_bottom = origin.y + size
 
 
-## 触控层缩放：摇杆钉左下角、ABXY 整体钉屏幕右下角，放大只朝屏幕内侧长。
+## 触控层缩放：摇杆钉左下角、ABXY 整体钉屏幕右下角、Y 钉右上角，放大只朝屏幕内侧长。
 func _apply_ui_scale(value: float) -> void:
 	_ui_scale = value
 	_refresh_ui_scale()
@@ -164,6 +173,8 @@ func _refresh_ui_scale() -> void:
 	joystick.scale = factor
 	action_pad.pivot_offset = action_pad.size
 	action_pad.scale = factor
+	top_pad.pivot_offset = Vector2(top_pad.size.x, 0.0)
+	top_pad.scale = factor
 	_publish_insets()
 
 
@@ -180,9 +191,21 @@ func side_insets() -> Vector2:
 	)
 
 
-## 广播本层占用的左右宽度；订阅者（如对话框）据此让出内容区。
+## 右上角独立键（Y / 背包）占用的边距：[code]x[/code] 从右边缘、[code]y[/code] 从顶边缘；
+## 隐藏（模态 / 关触控）时为零。顶部内容据此避开右上角。
+func top_insets() -> Vector2:
+	if not _enabled or top_pad == null or y_button == null or not y_button.visible:
+		return Vector2.ZERO
+	return Vector2(
+		absf(top_pad.offset_right) + top_pad.size.x * _ui_scale,
+		top_pad.offset_top + top_pad.size.y * _ui_scale
+	)
+
+
+## 广播本层占用的边距：左右宽度（模态 / 对话框 / HUD 让位）与右上角占位（顶部提示避开）。
 func _publish_insets() -> void:
 	EventBus.ui.touch_insets_changed.emit(side_insets())
+	EventBus.ui.touch_top_insets_changed.emit(top_insets())
 
 
 ## 摇杆方向 → 输入动作；静止请传 [constant Vector2.ZERO]。
@@ -228,6 +251,8 @@ func _on_game_paused_changed(paused: bool) -> void:
 	set_process(paused)
 	_release_all()
 	_sync_visible()
+	# Y 在模态里隐藏，右上角占位随之归零，要让订阅者重排。
+	_publish_insets()
 
 
 func _sync_visible() -> void:

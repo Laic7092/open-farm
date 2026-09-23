@@ -35,6 +35,8 @@
    夹到内容放得下，再除以缩放算未缩放尺寸，否则调大一档就会把内容顶出屏幕。
 5. **安全区**：UiRoot 在窗口尺寸变化时调用 UiLayout.safe_insets() 并广播
    EventBus.ui.safe_insets_changed；HUD / 触控 / 模态 / 对话据此让位。
+   触控层另外用 EventBus.ui.touch_insets_changed（左右占位）与
+   touch_top_insets_changed（右上角独立键占位）告诉内容该避开哪里。
 6. **窄屏**：UiLayout.is_compact()（宽高比 < 1.6）时 HUD 隐藏顶部提示行，避免与
    左上状态卡重叠。
 7. **竖向菜单贴内容**：暂停菜单这类竖列表在 _ready() 里调

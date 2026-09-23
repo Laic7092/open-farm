@@ -187,6 +187,15 @@ func test_ui_scale_applies_to_stick_and_pad() -> void:
 	# ABXY 整体钉屏幕右下角：pivot 落在 ActionPad 的右下角。
 	assert_vector(pad.pivot_offset).is_equal_approx(pad.size, Vector2(0.001, 0.001))
 
+	var top_pad := touch.find_child("TopPad", true, false) as Control
+	assert_object(top_pad).is_not_null()
+	if top_pad != null:
+		assert_float(top_pad.scale.x).is_equal_approx(2.0, 0.001)
+		# Y 钉屏幕右上角：pivot 落在 TopPad 的右上角。
+		assert_vector(top_pad.pivot_offset).is_equal_approx(
+			Vector2(top_pad.size.x, 0.0), Vector2(0.001, 0.001)
+		)
+
 	UiSettings.set_scale(previous, false)
 
 

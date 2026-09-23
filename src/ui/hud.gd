@@ -43,6 +43,8 @@ var sfx: SfxPlayer
 var _ui_scale: float = 1.0
 ## 触控控件占用的左右宽度（[EventBus.ui] 广播）；触控关闭时为零。
 var _touch_insets: Vector2 = Vector2.ZERO
+## 右上角独立键占用的边距（从右 / 从上）；无该键时为零。
+var _touch_top: Vector2 = Vector2.ZERO
 ## 显示安全区换算后的四周内边距（虚拟画布单位）。
 var _safe: Vector4 = Vector4.ZERO
 ## 底部物品栏场景里的原始上下 offset；抬高时以此为基准。
@@ -75,6 +77,7 @@ func _ready() -> void:
 	EventBus.ui.notification_requested.connect(_on_notification)
 	EventBus.ui.ui_scale_changed.connect(_apply_ui_scale)
 	EventBus.ui.touch_insets_changed.connect(_on_touch_insets_changed)
+	EventBus.ui.touch_top_insets_changed.connect(_on_touch_top_insets_changed)
 	EventBus.ui.safe_insets_changed.connect(_on_safe_insets_changed)
 	toast_label.modulate.a = 0.0
 	prompt_label.text = ""
@@ -92,6 +95,11 @@ func _ready() -> void:
 func _on_touch_insets_changed(insets: Vector2) -> void:
 	_touch_insets = insets
 	_refresh_bottom_lift()
+
+
+func _on_touch_top_insets_changed(insets: Vector2) -> void:
+	_touch_top = insets
+	_apply_layout()
 
 
 func _on_safe_insets_changed(insets: Vector4) -> void:
@@ -115,8 +123,10 @@ func _apply_layout() -> void:
 	top_hints.offset_right = -(UiLayout.HUD_HINTS_SIDE + _safe.z)
 	# 提示行放到状态卡下方，避免长提示 / 浮动提示压到日期与金钱上。
 	var status_bottom := status_panel.position.y + status_panel.size.y * _ui_scale
+	# 右上角 Y 键占了顶边一段：提示行落到它下方，避免长提示压到按键上。
 	top_hints.offset_top = maxf(
-		UiLayout.HUD_HINTS_TOP + _safe.y, status_bottom + UiLayout.GAP
+		maxf(UiLayout.HUD_HINTS_TOP + _safe.y, status_bottom + UiLayout.GAP),
+		_touch_top.y + UiLayout.GAP
 	)
 	top_hints.offset_bottom = top_hints.offset_top
 	# 物品栏在安全区里居中：刘海 / 圆角不对称时，屏幕中心与安全区中心不重合。

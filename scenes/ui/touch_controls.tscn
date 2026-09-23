@@ -22,6 +22,19 @@ anchor_bottom = 1.0
 grow_vertical = 0
 script = ExtResource("2_joystick")
 
+[node name="TopPad" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+grow_horizontal = 0
+
+[node name="YButton" type="Control" parent="TopPad"]
+unique_name_in_owner = true
+layout_mode = 0
+script = ExtResource("3_button")
+text = "Y"
+
 [node name="ActionPad" type="Control" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
@@ -31,12 +44,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 0
 grow_vertical = 0
-
-[node name="YButton" type="Control" parent="ActionPad"]
-unique_name_in_owner = true
-layout_mode = 0
-script = ExtResource("3_button")
-text = "Y"
 
 [node name="XButton" type="Control" parent="ActionPad"]
 unique_name_in_owner = true

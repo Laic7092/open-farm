@@ -37,6 +37,10 @@ signal touch_controls_toggled(enabled: bool)
 ## 关闭触控时为零向量。贴边 / 贴底的模态界面据此给内容让位，
 ## 避免被左下摇杆与右下 ABXY 压住。
 signal touch_insets_changed(insets: Vector2)
+## 右上角独立动作键（当前是 Y / 背包）占用的边距：
+## [code]x[/code] 为从右边缘算起的宽度，[code]y[/code] 为从顶边缘算起的高度；隐藏时为零。
+## 顶部内容（HUD 提示行）据此避开右上角。
+signal touch_top_insets_changed(insets: Vector2)
 ## 相机缩放（画面大小）被改变；系统菜单发出，相机的主人（玩家）应用。
 signal view_zoom_changed(zoom: float)
 ## UI 缩放被改变；系统菜单发出，各界面主人自己订阅并应用（统一约定）。
