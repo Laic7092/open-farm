@@ -66,7 +66,11 @@ const FISH_CHARGE_BAR := Vector2(144, 12)
 ## 拉扯水槽宽度与它同触控控件之间的间隙。
 const FISH_FIGHT_WIDTH: float = 118.0
 const FISH_FIGHT_GAP: float = 4.0
-const TOUCH_BUTTON_SIZE: float = 44.0
+## 右下角动作键：A 主操作最大、贴角；B 次之。
+const TOUCH_A_SIZE: float = 60.0
+const TOUCH_B_SIZE: float = 36.0
+## 右上角 Y（背包）：低频，大幅缩小。
+const TOUCH_Y_SIZE: float = 24.0
 const TOUCH_PAD_SIZE: float = 116.0
 ## HUD 左上状态卡相对屏幕左上角的内边距。
 const HUD_STATUS_MARGIN := Vector2(6, 4)

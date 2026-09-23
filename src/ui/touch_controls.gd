@@ -125,7 +125,9 @@ func _on_safe_insets_changed(insets: Vector4) -> void:
 func _layout() -> void:
 	var stick := UiLayout.TOUCH_STICK_SIZE
 	var pad := UiLayout.TOUCH_PAD_SIZE
-	var button := UiLayout.TOUCH_BUTTON_SIZE
+	var a_size := UiLayout.TOUCH_A_SIZE
+	var b_size := UiLayout.TOUCH_B_SIZE
+	var y_size := UiLayout.TOUCH_Y_SIZE
 	var left := UiLayout.TOUCH_PAD_MARGIN + UiLayout.edge_inset(_safe.x, UiLayout.EDGE_PADDING)
 	var right := UiLayout.TOUCH_PAD_MARGIN + UiLayout.edge_inset(_safe.z, UiLayout.EDGE_PADDING)
 	var bottom := UiLayout.TOUCH_PAD_MARGIN + _safe.w
@@ -140,13 +142,16 @@ func _layout() -> void:
 	# 右上角 Y（背包）：横向与触控面板同档留白，纵向只让开上下安全区。
 	var top := UiLayout.TOUCH_PAD_MARGIN + _safe.y
 	top_pad.offset_right = -right
-	top_pad.offset_left = top_pad.offset_right - button
+	top_pad.offset_left = top_pad.offset_right - y_size
 	top_pad.offset_top = top
-	top_pad.offset_bottom = top + button
-	var mid := (pad - button) * 0.5
-	_place_button(y_button, Vector2.ZERO, button)
-	_place_button(b_button, Vector2(mid * 2.0, mid), button)
-	_place_button(a_button, Vector2(mid, mid * 2.0), button)
+	top_pad.offset_bottom = top + y_size
+	# A 最大、贴右下角；B 较小，堆在 A 上方、右对齐，中间留一个 GAP。
+	var a_origin := Vector2(pad - a_size, pad - a_size)
+	_place_button(y_button, Vector2.ZERO, y_size)
+	_place_button(a_button, a_origin, a_size)
+	_place_button(
+		b_button, Vector2(pad - b_size, a_origin.y - UiLayout.GAP - b_size), b_size
+	)
 	_refresh_ui_scale()
 
 
