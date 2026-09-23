@@ -84,8 +84,8 @@ const DIALOGUE_SIDE: float = 16.0
 const DIALOGUE_BOTTOM: float = 10.0
 const TOUCH_STICK_SIZE: float = 128.0
 const TOUCH_PAD_MARGIN: float = 10.0
-## 触控面板的横向默认留白：没有安全区（桌面 / headless）时至少让出这么多。
-const TOUCH_PAD_PADDING: float = 32.0
+## 贴边界面（触控面板 / HUD 等）的横向默认留白：没有安全区时至少让出这么多。
+const EDGE_PADDING: float = 32.0
 
 
 # ---------------------------------------------------------------- 响应式

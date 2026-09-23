@@ -337,8 +337,8 @@ func _scaled_rect(node: Control) -> Rect2:
 ## 触控层放大后实际占用的左右宽度（与 [method TouchControls.side_insets] 同式）。
 func _touch_insets(scale: float) -> Vector2:
 	return Vector2(
-		UiLayout.TOUCH_PAD_MARGIN + UiLayout.TOUCH_PAD_PADDING + UiLayout.TOUCH_STICK_SIZE * scale,
-		UiLayout.TOUCH_PAD_MARGIN + UiLayout.TOUCH_PAD_PADDING + UiLayout.TOUCH_PAD_SIZE * scale
+		UiLayout.TOUCH_PAD_MARGIN + UiLayout.EDGE_PADDING + UiLayout.TOUCH_STICK_SIZE * scale,
+		UiLayout.TOUCH_PAD_MARGIN + UiLayout.EDGE_PADDING + UiLayout.TOUCH_PAD_SIZE * scale
 	)
 
 

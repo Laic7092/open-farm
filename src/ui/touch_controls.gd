@@ -128,8 +128,8 @@ func _layout() -> void:
 	var stick := UiLayout.TOUCH_STICK_SIZE
 	var pad := UiLayout.TOUCH_PAD_SIZE
 	var button := UiLayout.TOUCH_BUTTON_SIZE
-	var left := UiLayout.TOUCH_PAD_MARGIN + UiLayout.edge_inset(_safe.x, UiLayout.TOUCH_PAD_PADDING)
-	var right := UiLayout.TOUCH_PAD_MARGIN + UiLayout.edge_inset(_safe.z, UiLayout.TOUCH_PAD_PADDING)
+	var left := UiLayout.TOUCH_PAD_MARGIN + UiLayout.edge_inset(_safe.x, UiLayout.EDGE_PADDING)
+	var right := UiLayout.TOUCH_PAD_MARGIN + UiLayout.edge_inset(_safe.z, UiLayout.EDGE_PADDING)
 	var bottom := UiLayout.TOUCH_PAD_MARGIN + _safe.w
 	joystick.offset_left = left
 	joystick.offset_right = left + stick

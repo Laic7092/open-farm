@@ -107,6 +107,14 @@ func _on_safe_insets_changed(insets: Vector4) -> void:
 	_apply_layout()
 
 
+## HUD 左右留白：显示安全区或默认值（与触控面板同档）。
+func _side_padding() -> Vector2:
+	return Vector2(
+		UiLayout.edge_inset(_safe.x, UiLayout.EDGE_PADDING),
+		UiLayout.edge_inset(_safe.z, UiLayout.EDGE_PADDING)
+	)
+
+
 ## 按视口与安全区摆好三块常驻 UI。
 ##
 ## 触发源是窗口尺寸 / 安全区变化；[method UiLayout.is_compact] 决定窄高比下是否隐藏
@@ -115,12 +123,14 @@ func _apply_layout() -> void:
 	# 窄屏只收起次要数值（体力条），交互提示必须保留。
 	var compact := UiLayout.is_compact(size)
 	stamina_row.visible = not compact
-	status_panel.position = UiLayout.HUD_STATUS_MARGIN + Vector2(_safe.x, _safe.y)
+	# 左右留白与触控面板同档：安全区或默认值。
+	var pad := _side_padding()
+	status_panel.position = UiLayout.HUD_STATUS_MARGIN + Vector2(pad.x, _safe.y)
 	# 提示行铺满整宽（左右锚点 0/1），长提示居中也不会压到状态卡。
 	top_hints.anchor_left = 0.0
 	top_hints.anchor_right = 1.0
-	top_hints.offset_left = UiLayout.HUD_HINTS_SIDE + _safe.x
-	top_hints.offset_right = -(UiLayout.HUD_HINTS_SIDE + _safe.z)
+	top_hints.offset_left = UiLayout.HUD_HINTS_SIDE + pad.x
+	top_hints.offset_right = -(UiLayout.HUD_HINTS_SIDE + pad.y)
 	# 提示行放到状态卡下方，避免长提示 / 浮动提示压到日期与金钱上。
 	var status_bottom := status_panel.position.y + status_panel.size.y * _ui_scale
 	# 右上角 Y 键占了顶边一段：提示行落到它下方，避免长提示压到按键上。
@@ -130,7 +140,7 @@ func _apply_layout() -> void:
 	)
 	top_hints.offset_bottom = top_hints.offset_top
 	# 物品栏在安全区里居中：刘海 / 圆角不对称时，屏幕中心与安全区中心不重合。
-	var center_shift := (_safe.x - _safe.z) * 0.5
+	var center_shift := (pad.x - pad.y) * 0.5
 	inventory_bar.offset_left = center_shift
 	inventory_bar.offset_right = center_shift
 	# 底边基准只由令牌决定，不要回读 live offset：抬升会写回它，
@@ -167,10 +177,11 @@ func _refresh_ui_scale_pivots() -> void:
 func _refresh_bottom_lift() -> void:
 	var bar_width: float = inventory_bar.size.x * _ui_scale
 	# 两侧实际要让出的距离：安全区与触控控件占位取较大者（触控占位已含安全区，
-	# 但触控关闭时也要让开刘海 / 圆角）。
+	# 但触控关闭时也要让开刘海 / 圆角 + 默认留白）。
+	var pad := _side_padding()
 	var side := Vector2(
-		UiLayout.edge_clearance(_safe.x, _touch_insets.x),
-		UiLayout.edge_clearance(_safe.z, _touch_insets.y)
+		UiLayout.edge_clearance(pad.x, _touch_insets.x),
+		UiLayout.edge_clearance(pad.y, _touch_insets.y)
 	)
 	var safe_width: float = size.x - side.x - side.y
 	var touch_span := maxf(_touch_insets.x, _touch_insets.y)
