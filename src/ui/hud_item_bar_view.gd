@@ -52,9 +52,11 @@ func _build() -> void:
 		push_error("HudItemBarView: 找不到 hud_slot.tscn")
 		return
 
-	for _index: int in ItemBar.SIZE:
+	for index: int in ItemBar.SIZE:
 		var slot := HUD_SLOT_SCENE.instantiate() as HudSlot
 		inventory_bar.add_child(slot)
+		# 点某格 → 请求把它设为手持（不可用道具由 [method ItemBar.select] 忽略）。
+		slot.pressed.connect(_on_slot_pressed.bind(index))
 		_slots.append(slot)
 
 
@@ -83,3 +85,13 @@ func _refresh_bar() -> void:
 
 func _on_hand_changed(_item_id: StringName, _index: int) -> void:
 	refresh()
+
+
+## 点按物品栏某一格：把它对应的背包格设为手持。
+func _on_slot_pressed(bar_index: int) -> void:
+	var item_bar := _item_bar()
+	if item_bar == null:
+		return
+	var backpack_index := item_bar.slot_index(bar_index)
+	if backpack_index >= 0:
+		item_bar.select(backpack_index)

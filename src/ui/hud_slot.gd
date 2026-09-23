@@ -1,9 +1,14 @@
 class_name HudSlot
 extends PanelContainer
-## HUD 物品栏中的一格：图标 + 数量。
+## HUD 物品栏中的一格：图标 + 数量，可点按选中。
 ##
 ## 与 [ItemSlot] 的区别是这个格子只占 22×22 像素，因此不显示道具名，
 ## 道具名放进 tooltip；数量大等于 2 时才显示数字，避免刺眼的“×1”。
+##
+## 只报告“被点按”，选中哪一格、算不算可用道具由 [HudItemBarView] / [ItemBar] 决定。
+
+## 被点按（触摸或鼠标左键按下）；外层据此请求选中这一格。
+signal pressed()
 
 @onready var icon: TextureRect = %Icon
 @onready var count_label: Label = %CountLabel
@@ -16,6 +21,8 @@ var _stars: QualityStars
 
 func _ready() -> void:
 	custom_minimum_size = UiLayout.HUD_SLOT_SIZE
+	# 触控选中要能收到点按：父容器是 IGNORE，格子自己必须 STOP。
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	_normal_style = get_theme_stylebox(&"panel", &"HudSlot")
 	_selected_style = get_theme_stylebox(&"selected", &"HudSlot")
 	add_theme_stylebox_override(&"panel", _normal_style)
@@ -56,3 +63,14 @@ func clear(selected: bool = false) -> void:
 
 func _set_selected(selected: bool) -> void:
 	add_theme_stylebox_override(&"panel", _selected_style if selected else _normal_style)
+
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		if (event as InputEventScreenTouch).pressed:
+			pressed.emit()
+	elif PointerInput.accepts_mouse() and event is InputEventMouseButton:
+		# 桌面（含触屏笔记本调试 / 网页版）用鼠标也能点选。
+		var button := event as InputEventMouseButton
+		if button.pressed and button.button_index == MOUSE_BUTTON_LEFT:
+			pressed.emit()

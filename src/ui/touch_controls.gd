@@ -1,16 +1,17 @@
 class_name TouchControls
 extends Control
-## 触控控件层：左下角虚拟摇杆 + 右下角 ABXY 动作键，Y（背包）单独钉在右上角。
+## 触控控件层：左下角虚拟摇杆 + 右下角 A / B 动作键，Y（背包）单独钉在右上角。
 ##
 ## 世界模式：
 ## [br]- A：主操作（收获 / 送礼 / 交互 / 使用工具 / 钓鱼）
 ## [br]- B：菜单
-## [br]- X：切换手持物品
 ## [br]- Y：背包（右上角，远离拇指的常用区）
 ## [br]- 摇杆推到底自动奔跑
 ##
+## 切换手持物品不再占键位：直接点底部物品栏的格子选中（[HudItemBarView]）。
+##
 ## 模态模式（背包 / 商店 / 对话 / 菜单等暂停场景树时）：
-## [br]- 保留 A 确认、B 返回[b]与摇杆[/b]，只隐藏 X / Y
+## [br]- 保留 A 确认、B 返回[b]与摇杆[/b]，只隐藏 Y
 ## [br]- A 注入 [code]ui_accept[/code]，B 注入 [code]ui_cancel[/code]
 ## [br]- 摇杆注入 [code]ui_left/right/up/down[/code]：触控没有方向键，模态导航全靠它
 ##
@@ -35,11 +36,9 @@ const NAV_REPEAT_INTERVAL: float = 0.12
 @onready var a_button: TouchButton = %AButton
 ## B（右）：世界菜单；模态返回。
 @onready var b_button: TouchButton = %BButton
-## X（左）：切换手持物品。
-@onready var x_button: TouchButton = %XButton
-## Y（上）：背包。
+## Y（右上角）：背包。
 @onready var y_button: TouchButton = %YButton
-## ABXY 整体缩放的宿主：四键围绕同一个屏幕右下角点等比放大，才不会互相重叠。
+## A / B 缩放的宿主：围绕屏幕右下角点等比放大，才不会互相重叠。
 @onready var action_pad: Control = %ActionPad
 ## 右上角独立动作键（Y / 背包）的宿主：钉右上角，放大只朝左下长。
 @onready var top_pad: Control = %TopPad
@@ -91,7 +90,6 @@ func _ready() -> void:
 	joystick.direction_changed.connect(set_stick)
 	_bind_button(a_button)
 	_bind_button(b_button)
-	_bind_button(x_button)
 	_bind_button(y_button)
 
 	EventBus.ui.touch_controls_toggled.connect(_on_touch_controls_toggled)
@@ -121,7 +119,7 @@ func _on_safe_insets_changed(insets: Vector4) -> void:
 	_layout()
 
 
-## 按令牌把摇杆钉左下、ABXY 钉右下、Y 钉右上，并让开安全区。
+## 按令牌把摇杆钉左下、A / B 钉右下、Y 钉右上，并让开安全区。
 ##
 ## 尺寸全部来自 [UiLayout]，场景里不写裸偏移；同一角点上的键围绕该角点等比放大。
 func _layout() -> void:
@@ -147,7 +145,6 @@ func _layout() -> void:
 	top_pad.offset_bottom = top + button
 	var mid := (pad - button) * 0.5
 	_place_button(y_button, Vector2.ZERO, button)
-	_place_button(x_button, Vector2(0.0, mid), button)
 	_place_button(b_button, Vector2(mid * 2.0, mid), button)
 	_place_button(a_button, Vector2(mid, mid * 2.0), button)
 	_refresh_ui_scale()
@@ -160,7 +157,7 @@ func _place_button(button_node: Control, origin: Vector2, size: float) -> void:
 	button_node.offset_bottom = origin.y + size
 
 
-## 触控层缩放：摇杆钉左下角、ABXY 整体钉屏幕右下角、Y 钉右上角，放大只朝屏幕内侧长。
+## 触控层缩放：摇杆钉左下角、A / B 整体钉屏幕右下角、Y 钉右上角，放大只朝屏幕内侧长。
 func _apply_ui_scale(value: float) -> void:
 	_ui_scale = value
 	_refresh_ui_scale()
@@ -180,7 +177,7 @@ func _refresh_ui_scale() -> void:
 
 ## 本层当前占用的左右两侧宽度（虚拟画布坐标）：模态界面据此给内容让位。
 ##
-## 不是控件本身的 [member Control.size]——摇杆钉左下角、ABXY 钉右下角，
+## 不是控件本身的 [member Control.size]——摇杆钉左下角、A / B 钉右下角，
 ## 放大只朝屏幕内侧长，所以要从各自角点算到屏幕边缘（含安全区 / 横向留白）。
 func side_insets() -> Vector2:
 	if not _enabled or joystick == null or action_pad == null:
@@ -260,7 +257,6 @@ func _sync_visible() -> void:
 	var world_controls: bool = _enabled and not _paused
 	# 摇杆在模态里[b]不[/b]隐藏：模态方向导航只能靠它，没有物理方向键兜底。
 	joystick.visible = _enabled
-	x_button.visible = world_controls
 	y_button.visible = world_controls
 	a_button.visible = _enabled
 	b_button.visible = _enabled
@@ -281,7 +277,6 @@ func _release_all() -> void:
 	joystick.reset()
 	a_button.reset_held()
 	b_button.reset_held()
-	x_button.reset_held()
 	y_button.reset_held()
 
 
@@ -352,8 +347,6 @@ func _action_for(button: TouchButton) -> StringName:
 		return &"primary_action"
 	if button == b_button:
 		return &"open_menu"
-	if button == x_button:
-		return &"tool_next"
 	if button == y_button:
 		return &"open_inventory"
 	return &""

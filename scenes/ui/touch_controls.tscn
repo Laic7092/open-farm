@@ -45,12 +45,6 @@ anchor_bottom = 1.0
 grow_horizontal = 0
 grow_vertical = 0
 
-[node name="XButton" type="Control" parent="ActionPad"]
-unique_name_in_owner = true
-layout_mode = 0
-script = ExtResource("3_button")
-text = "X"
-
 [node name="BButton" type="Control" parent="ActionPad"]
 unique_name_in_owner = true
 layout_mode = 0

@@ -94,7 +94,7 @@ func _on_touch_toggled(toggled_on: bool) -> void:
 
 ## 文案跟着状态走，所以是"虚拟摇杆：开 / 关"而不是一个复选框。
 ##
-## 顺便把 ABXY 的键位写在这里：圆里塞不下中文，屏幕上的摇杆自己说不清楚。
+## 顺便把触控键位写在这里：圆里塞不下中文，屏幕上的摇杆自己说不清楚。
 func _refresh_touch_toggle(enabled: bool) -> void:
 	touch_toggle.set_pressed_no_signal(enabled)
 	touch_toggle.text = Text.format(&"MENU_TOUCH_CONTROLS", {

@@ -153,7 +153,7 @@ MINE_SURFACE,地面,Surface
 MINE_FLOOR,第{n}层,Floor {n}
 MINE_CURRENT,（当前）, (current)
 NOTIFY_MINE_STRATUM,进入{name}（第{depth}层）,Entering {name} (Floor {depth})
-TOUCH_HINT,A 动作 · B 菜单/返回 · X 换具 · Y 背包,A Action · B Menu/Back · X Swap · Y Bag
+TOUCH_HINT,A 动作 · B 菜单/返回 · Y 背包 · 点物品栏换具,A Action · B Menu/Back · Y Bag · Tap bar to swap
 PROMPT_COOK,按 E 做饭,Cook
 PROMPT_GOALS,按 E 查看村庄目标,Village goals
 COOKING_TITLE,料理台,Kitchen

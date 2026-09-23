@@ -112,7 +112,7 @@ func test_joystick_keeps_navigating_while_modal_is_open() -> void:
 	# 模态打开（暂停）后摇杆必须还在，否则触控下没法导航菜单。
 	EventBus.ui.game_paused_changed.emit(true)
 	assert_bool(touch.joystick.visible).is_true()
-	assert_bool(touch.x_button.visible).is_false()
+	assert_bool(touch.y_button.visible).is_false()
 
 	# 推杆改为注入方向键，而不是世界移动；回中要回收注入。
 	touch.set_stick(Vector2.RIGHT)
@@ -184,7 +184,7 @@ func test_ui_scale_applies_to_stick_and_pad() -> void:
 	if pad == null:
 		return
 	assert_float(pad.scale.x).is_equal_approx(2.0, 0.001)
-	# ABXY 整体钉屏幕右下角：pivot 落在 ActionPad 的右下角。
+	# A / B 整体钉屏幕右下角：pivot 落在 ActionPad 的右下角。
 	assert_vector(pad.pivot_offset).is_equal_approx(pad.size, Vector2(0.001, 0.001))
 
 	var top_pad := touch.find_child("TopPad", true, false) as Control

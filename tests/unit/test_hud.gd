@@ -45,6 +45,20 @@ func test_item_bar_view_goes_empty_without_a_player() -> void:
 	assert_bool(_slot(hud, 0).icon.visible).is_false()
 
 
+func test_tapping_a_slot_selects_that_hand_item() -> void:
+	var hud := _hud()
+	var backpack := Inventory.new(6)
+	backpack.add(&"turnip_seed", 5)
+	backpack.add(&"hoe", 1)
+	var item_bar := ItemBar.new(backpack)
+	hud.bind_item_bar(func() -> ItemBar: return item_bar)
+
+	# 初始手持落在第一个可用格（第 0 格）；点第 1 格应当把它换为手持。
+	assert_int(item_bar.hand_index()).is_equal(0)
+	_slot(hud, 1).pressed.emit()
+	assert_int(item_bar.hand_index()).is_equal(1)
+
+
 func test_ui_scale_applies_to_regions() -> void:
 	# 走公开设置：_ready() 的延迟应用会读到它，和真实流程一致。
 	var previous: float = UiSettings.scale()
