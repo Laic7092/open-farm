@@ -47,6 +47,11 @@
 8. **底部物品栏自管缩放**：HudItemBarView 空闲 SHRINK_DELAY 秒后缩到
    UiLayout.HUD_BAR_SHRINK_SCALE，点格子 / 换手持 / 背包变动会恢复并重置计时；
    Hud 不再统一缩放它，也不再为它做安全区偏移与触控让位（避免约束打架）。
+9. **层级**：UiRoot 是 CanvasLayer(layer=10)，模态 / HUD 默认 z_index=0，
+   触控层 z_index=50 压在其上，保证重叠处每次点得到触控键；但只有摇杆 / 按钮自己
+   STOP，ActionPad / TopPad 容器 IGNORE，否则它们的空白区会吞掉下层 UI。
+   更高的 CanvasLayer 是"真正该在上面"的例外：MineElevatorUi(layer=40)、
+   RotateOverlay(layer=100，竖屏遮罩必须盖住一切并吞输入)。
 
 ## 多分辨率策略
 

@@ -199,6 +199,22 @@ func test_ui_scale_applies_to_stick_and_pad() -> void:
 	UiSettings.set_scale(previous, false)
 
 
+func test_touch_layer_is_above_panels_but_does_not_block_the_rest() -> void:
+	var touch := auto_free(load("res://scenes/ui/touch_controls.tscn").instantiate()) as TouchControls
+	add_child(touch)
+	await get_tree().process_frame
+
+	# 常驻模态 / HUD 的 z_index 都是 0；触控层必须压在它们之上，否则重叠处点不到按钮。
+	assert_bool(touch.z_index > 0).is_true()
+	# 但只有摇杆 / 按钮自己收输入：两个 pad 容器必须 IGNORE，不然它们的空白区会吞掉下层 UI。
+	assert_int(touch.joystick.mouse_filter).is_equal(Control.MOUSE_FILTER_STOP)
+	for node_name: String in ["ActionPad", "TopPad"]:
+		var pad := touch.find_child(node_name, true, false) as Control
+		assert_object(pad).is_not_null()
+		if pad != null:
+			assert_int(pad.mouse_filter).is_equal(Control.MOUSE_FILTER_IGNORE)
+
+
 ## 删掉用例自己的设置文件（存在与否都无所谓）。
 func _delete_settings_file() -> void:
 	if FileAccess.file_exists(TEST_PATH):

@@ -28,6 +28,7 @@ layout_mode = 1
 anchor_left = 1.0
 anchor_right = 1.0
 grow_horizontal = 0
+mouse_filter = 2
 
 [node name="YButton" type="Control" parent="TopPad"]
 unique_name_in_owner = true
@@ -44,6 +45,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 0
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="BButton" type="Control" parent="ActionPad"]
 unique_name_in_owner = true
