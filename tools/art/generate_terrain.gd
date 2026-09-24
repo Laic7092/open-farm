@@ -19,7 +19,7 @@ const SeasonPalette := preload("res://src/art/season_palette.gd")
 const SeasonExport := preload("res://tools/art/season_export.gd")
 
 ## 过渡瓦片的基底材质。
-enum Surface { PATH, STONE, SAND, DIRT }
+enum Surface { PATH, STONE, SAND, DIRT, GRASS_DARK }
 
 ## 当前这一遍在画哪个季节的材质三色。
 ##
@@ -29,6 +29,7 @@ var _season: Season.Type = SeasonPalette.BASE_SEASON
 
 func _initialize() -> void:
 	SeasonExport.write(Layout.TILESET_PATH, _build_atlas)
+	SeasonExport.write(Layout.GRASS_EDGE_PATH, _build_grass_edges)
 	# 装饰与室内构件不季节化（雪顶 / 秃枝属于第二档），始终用基础色导出一份。
 	_write_decor_sprites()
 	_write_interior_sprites()
@@ -73,6 +74,15 @@ func _build_atlas(season: Season.Type) -> Image:
 	_transition_block(image, Layout.SAND_TRANSITION_BLOCK, Surface.SAND)
 	_transition_block(image, Layout.DIRT_TRANSITION_BLOCK, Surface.DIRT)
 
+	return image
+
+
+## 深/浅草过渡图集：16 个 mask 的底色都是 [method _grass_lush]，
+## 再按 mask 在对应边压普通浅草草缘。季节换色由 [method _mat] 自动完成。
+func _build_grass_edges(season: Season.Type) -> Image:
+	_season = season
+	var image := Art.new_image(Layout.GRASS_EDGE_SIZE.x, Layout.GRASS_EDGE_SIZE.y)
+	_transition_block(image, Layout.GRASS_EDGE_TRANSITION_BLOCK, Surface.GRASS_DARK)
 	return image
 
 
@@ -188,35 +198,94 @@ func _grass_base(image: Image, cell: Vector2i, alternate: bool = false) -> void:
 
 func _grass(image: Image, cell: Vector2i, alternate: bool) -> void:
 	var area := _cell_rect(cell)
-	var ground := _mat(&"grass")
-	Art.rect(image, area, ground[0] if not alternate else ground[0].lerp(ground[1], 0.25))
-	Art.scatter(image, area, ground[1], 0.16, cell.x * 7 + cell.y)
-	# 固定位置的草簇：不用随机，保证每次生成完全一致。
-	var tufts: Array[Vector2i] = [Vector2i(2, 3), Vector2i(9, 5), Vector2i(5, 11), Vector2i(12, 12)]
-	if alternate:
-		tufts = [Vector2i(3, 2), Vector2i(11, 8), Vector2i(6, 6), Vector2i(13, 13)]
 	var origin := _origin(cell)
-	for tuft: Vector2i in tufts:
-		var at := origin + tuft
-		Art.px(image, at.x, at.y, ground[2])
-		Art.px(image, at.x + 1, at.y, ground[2])
-		Art.px(image, at.x + 1, at.y - 1, ground[2])
+	var ground := _mat(&"grass")
+	var leaf := _mat(&"leaf")
+	var base: Color = ground[0]
+	if alternate:
+		base = ground[0].lerp(ground[1], 0.12)
+	Art.rect(image, area, base)
+	Art.scatter(image, area, ground[1], 0.14, cell.x * 7 + cell.y)
+	Art.scatter(image, area, ground[2], 0.10, cell.x * 11 + cell.y * 3)
+	# 顶层草簇本体；暗根层往右下错 1px，短而厚。
+	var body := ground[0].lerp(ground[2], 0.55)
+	var shadow := ground[1].lerp(P.OUTLINE, 0.18)
+	var highlight := ground[2].lerp(leaf[2], 0.45)
+	var slots: Array[Vector2i] = [
+		Vector2i(3, 6), Vector2i(8, 5), Vector2i(12, 7),
+		Vector2i(5, 11), Vector2i(10, 12), Vector2i(13, 15),
+	]
+	if alternate:
+		slots = [
+			Vector2i(2, 7), Vector2i(7, 5), Vector2i(11, 8),
+			Vector2i(4, 12), Vector2i(9, 15), Vector2i(13, 11),
+		]
+	for at: Vector2i in slots:
+		_turf_clump(image, origin + at, body, shadow, highlight, 3)
 
 
-## 低矮茂密的草皮：更暗、草簇更多，用来做低频明暗片里的「暗片」。
+## 低矮茂密的草皮：墨绿底层 + 更多短草簇，用来做低频明暗片里的「暗片」。
 func _grass_lush(image: Image, cell: Vector2i) -> void:
 	var area := _cell_rect(cell)
 	var origin := _origin(cell)
 	var ground := _mat(&"grass")
 	var leaf := _mat(&"leaf")
 	var seed: int = cell.x * 17 + cell.y * 29
-	Art.rect(image, area, ground[0].lerp(ground[1], 0.18))
-	Art.scatter(image, area, ground[1], 0.26, seed)
-	for at: Vector2i in [Vector2i(2, 4), Vector2i(6, 9), Vector2i(11, 5), Vector2i(13, 12)]:
-		var p := origin + at
-		Art.v_line(image, p.x, p.y - 3, 4, leaf[1])
-		Art.px(image, p.x, p.y - 4, leaf[0])
-		Art.px(image, p.x + 1, p.y - 4, ground[2])
+	# 墨绿底层：比普通草低一档明度，作为第二层草皮的「深色根」。
+	var base := ground[0].lerp(leaf[1], 0.58)
+	var under := ground[1].lerp(leaf[1], 0.55)
+	Art.rect(image, area, base)
+	Art.scatter(image, area, under, 0.30, seed)
+	Art.scatter(image, area, ground[1].lerp(P.OUTLINE, 0.18), 0.08, seed + 7)
+	var body := ground[1].lerp(ground[2], 0.45)
+	var shadow := ground[1].lerp(P.OUTLINE, 0.35)
+	var highlight := ground[0].lerp(leaf[2], 0.45)
+	var slots: Array[Vector2i] = [
+		Vector2i(3, 4), Vector2i(8, 6), Vector2i(12, 4),
+		Vector2i(5, 9), Vector2i(10, 10), Vector2i(13, 8),
+		Vector2i(3, 14), Vector2i(8, 14), Vector2i(12, 15),
+	]
+	for at: Vector2i in slots:
+		_turf_clump(image, origin + at, body, shadow, highlight, 3)
+
+
+## 一簇低矮茂密的草：由多根 1~3px 短线排成，不再画三四片长叶。
+##
+## [param root] 是簇的中心根部；下层整体向右下错 1px，形成厚度。
+func _turf_clump(
+	image: Image,
+	root: Vector2i,
+	body: Color,
+	shadow: Color,
+	highlight: Color,
+	height: int
+) -> void:
+	_short_tuft(image, root + Vector2i(1, 1), shadow, height + 1)
+	_short_tuft(image, root, body, height, highlight)
+	# 根部压深，让短簇和底层咬合。
+	Art.h_line(
+		image, root.x - height, root.y, height * 2 + 1, body.lerp(shadow, 0.55)
+	)
+
+
+## 一排参差的短草叶；[param highlight] 透明时不画高光。
+func _short_tuft(
+	image: Image,
+	center: Vector2i,
+	color: Color,
+	height: int,
+	highlight: Color = Color(0, 0, 0, 0)
+) -> void:
+	var half: int = mini(height, 3)
+	for dx: int in range(-half, half + 1):
+		var blade_h: int = 1 + int(
+			Art.noise(center.x + dx, center.y, 31) * float(height)
+		)
+		blade_h = clampi(blade_h, 1, height)
+		var top: Vector2i = Vector2i(center.x + dx, center.y - blade_h + 1)
+		Art.v_line(image, top.x, top.y, blade_h, color)
+		if highlight.a > 0.0 and blade_h >= 2:
+			Art.px(image, top.x, top.y, highlight)
 
 
 ## 发干的草皮：掺一点沙色，做低频明暗片里的「亮片」。
@@ -235,28 +304,27 @@ func _grass_dry(image: Image, cell: Vector2i) -> void:
 		Art.px(image, p.x + 1, p.y - 1, sand[2])
 
 
-## 斑驳草皮：在普通草上撒浅色小片，制造被云影 / 踩踏打破的色块。
+## 斑驳草皮：在普通双层草上撒浅色小片，制造被云影 / 踩踏打破的色块。
 func _grass_dappled(image: Image, cell: Vector2i) -> void:
+	_grass(image, cell, true)
 	var area := _cell_rect(cell)
 	var origin := _origin(cell)
 	var ground := _mat(&"grass")
 	var seed: int = cell.x * 13 + cell.y * 23
-	Art.rect(image, area, ground[0])
-	Art.scatter(image, area, ground[1], 0.10, seed + 3)
-	Art.scatter(image, area, ground[2], 0.26, seed)
+	Art.scatter(image, area, ground[2], 0.14, seed)
 	for at: Vector2i in [Vector2i(2, 3), Vector2i(7, 8), Vector2i(12, 5)]:
 		Art.h_line(image, origin.x + at.x, origin.y + at.y, 3, ground[2])
 
 
-## 带小野花的草甸，稀疏点缀，不喧宾夺主。
+## 带小野花的草甸：双层草底 + 稀疏野花，不喧宾夺主。
 func _grass_meadow(image: Image, cell: Vector2i) -> void:
+	_grass(image, cell, false)
 	var area := _cell_rect(cell)
 	var origin := _origin(cell)
 	var ground := _mat(&"grass")
 	var leaf := _mat(&"leaf")
 	var seed: int = cell.x * 19 + cell.y * 11
-	Art.rect(image, area, ground[0].lerp(ground[1], 0.06))
-	Art.scatter(image, area, ground[2], 0.12, seed)
+	Art.scatter(image, area, ground[2], 0.10, seed)
 	for at: Vector2i in [Vector2i(4, 6), Vector2i(11, 9)]:
 		var p := origin + at
 		Art.px(image, p.x, p.y - 1, P.FLOWER_WHITE)
@@ -441,8 +509,10 @@ func _base_material(image: Image, cell: Vector2i, surface: int) -> void:
 		_path_stone(image, cell)
 	elif surface == Surface.SAND:
 		_sand(image, cell)
-	else:
+	elif surface == Surface.DIRT:
 		_dirt(image, cell)
+	else:
+		_grass_lush(image, cell)
 
 
 ## 在 [param mask] 指定的边压草缘；草缘厚度 2~4px 且沿边参差。

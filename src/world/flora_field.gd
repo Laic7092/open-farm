@@ -425,9 +425,12 @@ func _water_field() -> WaterField:
 func _on_natural_ground(cell: Vector2i) -> bool:
 	if ground_layer == null:
 		return false
-	if ground_layer.get_cell_source_id(cell) == -1:
+	var source := ground_layer.get_cell_source_id(cell)
+	if source == -1:
 		return false
-	return FloraGrowth.is_natural_ground(ground_layer.get_cell_atlas_coords(cell))
+	return FloraGrowth.is_natural_ground(
+		ground_layer.get_cell_atlas_coords(cell), source
+	)
 
 
 ## 农田上的特殊规则：翻过的地、种着作物的地一律不长；

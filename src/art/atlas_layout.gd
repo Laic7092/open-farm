@@ -107,6 +107,21 @@ const DIRT_TRANSITION_BLOCK := Vector2i(4, 4)
 static func transition_cell(block: Vector2i, mask: int) -> Vector2i:
 	return block + Vector2i(mask & 0b0011, (mask >> 2) & 0b0011)
 
+
+# ---------------------------------------------------------------- 深/浅草过渡
+#
+# 主图 9×9 已满，塞不下第五块 4×4 过渡。深/浅草之间单独出一张 4×4
+# 小图集，作为同一个 TileSet 的 source 1；mask 含义与上面四种基底完全一致，
+# 只是底色换成 [constant GRASS_LUSH]，草缘换成普通浅草。
+const GRASS_EDGE_PATH: String = "res://assets/sprites/tileset_grass_edges.png"
+const GRASS_EDGE_COLUMNS: int = 4
+const GRASS_EDGE_ROWS: int = 4
+const GRASS_EDGE_SIZE := Vector2i(TILE * GRASS_EDGE_COLUMNS, TILE * GRASS_EDGE_ROWS)
+## 深/浅草过渡在 TileSet 里的 Atlas source 下标。
+const GRASS_EDGE_SOURCE_ID: int = 1
+## 深/浅草过渡块的左上角坐标（新图集内部坐标）。
+const GRASS_EDGE_TRANSITION_BLOCK := Vector2i.ZERO
+
 # ---------------------------------------------------------------- 作物图集
 
 ## 每种作物一张 [code]assets/sprites/crops/<crop_id>.png[/code]：

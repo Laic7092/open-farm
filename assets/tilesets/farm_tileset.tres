@@ -1,9 +1,10 @@
 [gd_resource type="TileSet" format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/tileset_farm.png" id="1_4w5dv"]
+[ext_resource type="Texture2D" path="res://assets/sprites/tileset_farm.png" id="1_mwbg4"]
+[ext_resource type="Texture2D" path="res://assets/sprites/tileset_grass_edges.png" id="2_vg54p"]
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mwbg4"]
-texture = ExtResource("1_4w5dv")
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_nclas"]
+texture = ExtResource("1_mwbg4")
 0:0/0 = 0
 1:0/0 = 0
 2:0/0 = 0
@@ -87,7 +88,27 @@ texture = ExtResource("1_4w5dv")
 7:8/0 = 0
 8:8/0 = 0
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5ctgw"]
+texture = ExtResource("2_vg54p")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+
 [resource]
 physics_layer_0/collision_layer = 1
 physics_layer_0/collision_mask = 0
-sources/0 = SubResource("TileSetAtlasSource_mwbg4")
+sources/0 = SubResource("TileSetAtlasSource_nclas")
+sources/1 = SubResource("TileSetAtlasSource_5ctgw")

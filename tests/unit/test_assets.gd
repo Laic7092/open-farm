@@ -28,6 +28,7 @@ const SILHOUETTE_MIN_DIFFERENT_ROWS: int = 32
 ## 否则"冬季没换色"只能等玩家看见冬天才发现。
 const SEASONAL_BASES: Array[String] = [
 	"res://assets/sprites/tileset_farm.png",
+	"res://assets/sprites/tileset_grass_edges.png",
 	"res://assets/sprites/flora/tree_oak.png",
 	"res://assets/sprites/flora/tree_pine.png",
 	"res://assets/sprites/flora/weed.png",
@@ -38,7 +39,7 @@ const SEASONAL_BASES: Array[String] = [
 ## 变体命名检查：目录 → 该目录里的"基础名"清单。
 ## 带 [code]_<key>[/code] 后缀的文件里，key 必须是合法季节 key（防手写 [code]_winter2[/code]）。
 const SEASONAL_DIRS: Dictionary = {
-	"res://assets/sprites": ["tileset_farm"],
+	"res://assets/sprites": ["tileset_farm", "tileset_grass_edges"],
 	"res://assets/sprites/flora": ["tree_oak", "tree_pine", "weed"],
 	"res://assets/sprites/props": ["tree", "tree_pine"],
 }
@@ -46,6 +47,7 @@ const SEASONAL_DIRS: Dictionary = {
 ## 所有生成器都必须产出的文件。
 const REQUIRED_ASSETS: Array[String] = [
 	"res://assets/sprites/tileset_farm.png",
+	"res://assets/sprites/tileset_grass_edges.png",
 	"res://assets/sprites/water/town_0.png",
 	"res://assets/sprites/water/twon_0.png",
 	"res://assets/sprites/water/beach_0.png",
@@ -158,6 +160,15 @@ func test_tileset_png_matches_atlas_layout() -> void:
 		return
 	assert_int(texture.get_width()).is_equal(Layout.TILESET_SIZE.x)
 	assert_int(texture.get_height()).is_equal(Layout.TILESET_SIZE.y)
+
+
+func test_grass_edge_png_matches_atlas_layout() -> void:
+	var texture := load(Layout.GRASS_EDGE_PATH) as Texture2D
+	assert_object(texture).is_not_null()
+	if texture == null:
+		return
+	assert_int(texture.get_width()).is_equal(Layout.GRASS_EDGE_SIZE.x)
+	assert_int(texture.get_height()).is_equal(Layout.GRASS_EDGE_SIZE.y)
 
 
 ## 每片水体的贴图尺寸必须与 [WaterLayout] 声明的一致：运行期按同一份
@@ -382,7 +393,7 @@ func test_only_solid_ground_tiles_have_collision() -> void:
 		return
 	assert_int(tileset.get_physics_layers_count()).is_equal(1)
 	assert_int(tileset.get_physics_layer_collision_layer(0)).is_equal(1)
-	var source := tileset.get_source(0) as TileSetAtlasSource
+	var source := tileset.get_source(FarmAtlas.SOURCE_ID) as TileSetAtlasSource
 	assert_object(source).is_not_null()
 	if source == null:
 		return
@@ -400,16 +411,32 @@ func test_only_solid_ground_tiles_have_collision() -> void:
 			assert_int(data.get_collision_polygons_count(0)).override_failure_message(
 				"地板瓦片 %s 不该有碰撞" % atlas
 			).is_equal(0)
+	# 深/浅草过渡全部是地板，source 1 不允许挂碰撞。
+	var edge_source := tileset.get_source(Layout.GRASS_EDGE_SOURCE_ID) as TileSetAtlasSource
+	assert_object(edge_source).is_not_null()
+	if edge_source == null:
+		return
+	for index: int in edge_source.get_tiles_count():
+		var atlas: Vector2i = edge_source.get_tile_id(index)
+		var data := edge_source.get_tile_data(atlas, 0)
+		assert_object(data).override_failure_message("草缘瓦片 %s 没有 TileData" % atlas).is_not_null()
+		if data == null:
+			continue
+		assert_int(data.get_collision_polygons_count(0)).override_failure_message(
+			"草缘瓦片 %s 不该有碰撞" % atlas
+		).is_equal(0)
 
 
 ## 图集的每一格都必须是真地面：声明的地面格都在，且没有全透明占位格。
+##
+## 主图 source 0 仍是 9×9 的 64+17 格；深/浅草过渡是 source 1 的 4×4。
 func test_tileset_contains_every_declared_tile() -> void:
 	var tileset := load(TILESET_PATH) as TileSet
 	assert_object(tileset).is_not_null()
 	if tileset == null:
 		return
-	assert_int(tileset.get_source_count()).is_equal(1)
-	var source := tileset.get_source(0) as TileSetAtlasSource
+	assert_int(tileset.get_source_count()).is_equal(2)
+	var source := tileset.get_source(FarmAtlas.SOURCE_ID) as TileSetAtlasSource
 	assert_object(source).is_not_null()
 	if source == null:
 		return
@@ -429,24 +456,48 @@ func test_tileset_contains_every_declared_tile() -> void:
 		assert_bool(source.has_tile(cell)).override_failure_message(
 			"TileSet 缺少瓦片 %s" % cell
 		).is_true()
-	assert_int(source.get_tiles_count()).is_equal(Layout.TILESET_COLUMNS * Layout.TILESET_ROWS)
+	assert_int(source.get_tiles_count()).is_equal(
+		Layout.TILESET_COLUMNS * Layout.TILESET_ROWS
+	)
+
+	var edge_source := tileset.get_source(Layout.GRASS_EDGE_SOURCE_ID) as TileSetAtlasSource
+	assert_object(edge_source).override_failure_message("TileSet 缺少深/浅草过渡 source").is_not_null()
+	if edge_source == null:
+		return
+	for row: int in Layout.GRASS_EDGE_ROWS:
+		for column: int in Layout.GRASS_EDGE_COLUMNS:
+			var cell := Vector2i(column, row)
+			assert_bool(edge_source.has_tile(cell)).override_failure_message(
+				"深/浅草过渡缺少瓦片 %s" % cell
+			).is_true()
+	assert_int(edge_source.get_tiles_count()).is_equal(
+		Layout.GRASS_EDGE_COLUMNS * Layout.GRASS_EDGE_ROWS
+	)
+
 	_assert_tileset_has_no_placeholder_cell()
+	_assert_tileset_has_no_placeholder_cell(
+		Layout.GRASS_EDGE_PATH, Layout.GRASS_EDGE_COLUMNS, Layout.GRASS_EDGE_ROWS
+	)
 
 
 ## 占位格（整格透明）是旧布局的残留；图集应当正好被地面瓦片填满。
-func _assert_tileset_has_no_placeholder_cell() -> void:
-	var texture := load(Layout.TILESET_PATH) as Texture2D
-	assert_object(texture).is_not_null()
+func _assert_tileset_has_no_placeholder_cell(
+	path: String = Layout.TILESET_PATH,
+	columns: int = Layout.TILESET_COLUMNS,
+	rows: int = Layout.TILESET_ROWS
+) -> void:
+	var texture := load(path) as Texture2D
+	assert_object(texture).override_failure_message("缺少图集 %s" % path).is_not_null()
 	if texture == null:
 		return
 	var image := texture.get_image()
 	assert_object(image).is_not_null()
 	if image == null:
 		return
-	for row: int in Layout.TILESET_ROWS:
-		for column: int in Layout.TILESET_COLUMNS:
+	for row: int in rows:
+		for column: int in columns:
 			assert_bool(_has_opaque_pixel(image, Vector2i(column, row))).override_failure_message(
-				"图集第 %s 格是空的：地面图集不该留占位格" % Vector2i(column, row)
+				"图集 %s 第 %s 格是空的：地面图集不该留占位格" % [path, Vector2i(column, row)]
 			).is_true()
 
 
@@ -457,6 +508,44 @@ func _has_opaque_pixel(image: Image, cell: Vector2i) -> bool:
 			if image.get_pixelv(at).a > 0.0:
 				return true
 	return false
+
+
+## 深/浅草过渡必须真的落到 source 1：
+## 单块深草四周是浅草时四边发草缘；深草块内部不能两个深草互相压边。
+func test_dark_grass_transition_uses_edge_source() -> void:
+	var tileset := load(TILESET_PATH) as TileSet
+	assert_object(tileset).is_not_null()
+	if tileset == null:
+		return
+
+	var single := auto_free(TileMapLayer.new()) as TileMapLayer
+	single.tile_set = tileset
+	var area := Rect2i(0, 0, 4, 4)
+	for cell: Vector2i in GridUtils.cells_in_area(area.position, area.size):
+		single.set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.GRASS)
+	single.set_cell(Vector2i(1, 1), FarmAtlas.SOURCE_ID, FarmAtlas.GRASS_LUSH)
+	GroundPainter.transitions(single, area)
+	assert_int(
+		single.get_cell_source_id(Vector2i(1, 1))
+	).override_failure_message("深草四周是浅草，应该写入 source 1").is_equal(
+		FarmAtlas.GRASS_EDGE_SOURCE_ID
+	)
+
+	var block := auto_free(TileMapLayer.new()) as TileMapLayer
+	block.tile_set = tileset
+	var block_area := Rect2i(0, 0, 5, 5)
+	for cell: Vector2i in GridUtils.cells_in_area(block_area.position, block_area.size):
+		block.set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.GRASS_LUSH)
+	block.set_cell(Vector2i(0, 0), FarmAtlas.SOURCE_ID, FarmAtlas.GRASS)
+	GroundPainter.transitions(block, block_area)
+	assert_int(
+		block.get_cell_source_id(Vector2i(1, 0))
+	).override_failure_message("边缘深草挨着浅草，应该发草缘").is_equal(
+		FarmAtlas.GRASS_EDGE_SOURCE_ID
+	)
+	assert_int(
+		block.get_cell_source_id(Vector2i(2, 2))
+	).override_failure_message("深草块内部不应互相压边").is_equal(FarmAtlas.SOURCE_ID)
 
 
 ## 室内墙面构件同样不占图集格子：每张一张，被 [InteriorWalls] 登记。
@@ -617,6 +706,8 @@ func test_season_variant_suffixes_are_valid_season_keys() -> void:
 
 ## 冬季 TileSet 的瓦片数、坐标与碰撞必须与基础表一致：
 ## 换季只该换图，不该把碰撞一起换掉。
+##
+## 主图 source 0 与深/浅草过渡 source 1 都要逐一比对。
 func test_winter_tileset_matches_base_structure() -> void:
 	var winter_path := SeasonPalette.variant_path(
 		Layout.TILESET_RESOURCE_PATH, Season.Type.WINTER
@@ -629,24 +720,28 @@ func test_winter_tileset_matches_base_structure() -> void:
 	if base == null or winter == null:
 		return
 	assert_int(winter.get_physics_layers_count()).is_equal(base.get_physics_layers_count())
-	var base_source := base.get_source(0) as TileSetAtlasSource
-	var winter_source := winter.get_source(0) as TileSetAtlasSource
-	assert_object(winter_source).is_not_null()
-	if base_source == null or winter_source == null:
-		return
-	assert_int(winter_source.get_tiles_count()).is_equal(base_source.get_tiles_count())
-	for index: int in base_source.get_tiles_count():
-		var atlas: Vector2i = base_source.get_tile_id(index)
-		assert_bool(winter_source.has_tile(atlas)).override_failure_message(
-			"冬季 TileSet 缺少瓦片 %s" % atlas
-		).is_true()
-		var base_data := base_source.get_tile_data(atlas, 0)
-		var winter_data := winter_source.get_tile_data(atlas, 0)
-		if base_data == null or winter_data == null:
+	assert_int(winter.get_source_count()).is_equal(base.get_source_count())
+	for source_id: int in [FarmAtlas.SOURCE_ID, Layout.GRASS_EDGE_SOURCE_ID]:
+		var base_source := base.get_source(source_id) as TileSetAtlasSource
+		var winter_source := winter.get_source(source_id) as TileSetAtlasSource
+		assert_object(winter_source).override_failure_message(
+			"冬季 TileSet 缺少 source %d" % source_id
+		).is_not_null()
+		if base_source == null or winter_source == null:
 			continue
-		assert_int(winter_data.get_collision_polygons_count(0)).override_failure_message(
-			"瓦片 %s 的碰撞与基础表不一致" % atlas
-		).is_equal(base_data.get_collision_polygons_count(0))
+		assert_int(winter_source.get_tiles_count()).is_equal(base_source.get_tiles_count())
+		for index: int in base_source.get_tiles_count():
+			var atlas: Vector2i = base_source.get_tile_id(index)
+			assert_bool(winter_source.has_tile(atlas)).override_failure_message(
+				"冬季 TileSet source %d 缺少瓦片 %s" % [source_id, atlas]
+			).is_true()
+			var base_data := base_source.get_tile_data(atlas, 0)
+			var winter_data := winter_source.get_tile_data(atlas, 0)
+			if base_data == null or winter_data == null:
+				continue
+			assert_int(winter_data.get_collision_polygons_count(0)).override_failure_message(
+				"瓦片 %s 的碰撞与基础表不一致" % atlas
+			).is_equal(base_data.get_collision_polygons_count(0))
 
 
 func _assert_same_alpha_mask(base_image: Image, variant_image: Image, path: String) -> void:

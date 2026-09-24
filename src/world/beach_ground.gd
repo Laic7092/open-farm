@@ -39,10 +39,7 @@ func paint() -> void:
 		set_cell(cell, FarmAtlas.SOURCE_ID, FarmAtlas.SAND)
 
 	# 上方草坡：与内陆接壤，也给野生植被一点变化。
-	for y: int in 4:
-		for x: int in size.x:
-			var cell := Vector2i(origin.x + x, origin.y + y)
-			set_cell(cell, FarmAtlas.SOURCE_ID, GroundPainter.grass_variant(cell))
+	GroundPainter.fill_grass(self, Rect2i(origin.x, origin.y, size.x, 4))
 
 	# 下方海面：形状与贴图由 [WaterLayout] / [WaterField] 负责，
 	# Ground 只把沙滩铺满——水不在瓦片层里，岸线因此是弯的。

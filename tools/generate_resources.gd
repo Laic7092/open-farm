@@ -85,7 +85,26 @@ func _build_tileset(season: Season.Type) -> void:
 	tileset.set_physics_layer_collision_mask(0, 0)
 	tileset.add_source(source, 0)
 	_apply_tile_collisions(source)
+	_add_grass_edge_source(tileset, season)
 	_save(tileset, resource_path)
+
+
+## 深/浅草过渡在单独一张 4×4 小图集里，作为 source 1 加进同一个 TileSet。
+##
+## 这样场景里的 Ground 仍是一个 TileMapLayer，只是换边时写不同的 source；
+## 不碰撞、不参与 [method _apply_tile_collisions] 的扫描。
+func _add_grass_edge_source(tileset: TileSet, season: Season.Type) -> void:
+	var texture_path := SeasonPalette.variant_suffix_path(Layout.GRASS_EDGE_PATH, season)
+	var texture := _load_texture(texture_path)
+	if texture == null:
+		return
+	var source := TileSetAtlasSource.new()
+	source.texture = texture
+	source.texture_region_size = Vector2i(Layout.TILE, Layout.TILE)
+	for row: int in Layout.GRASS_EDGE_ROWS:
+		for column: int in Layout.GRASS_EDGE_COLUMNS:
+			source.create_tile(Vector2i(column, row))
+	tileset.add_source(source, Layout.GRASS_EDGE_SOURCE_ID)
 
 
 ## 给实心装饰瓦片写满格碰撞；牧草等可穿过瓦片保持无碰撞。

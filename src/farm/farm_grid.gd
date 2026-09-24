@@ -288,8 +288,7 @@ func paint_ground() -> void:
 	ground_layer.clear()
 	var center_row: int = ground_area.position.y + ground_area.size.y / 2
 
-	for cell: Vector2i in GridUtils.cells_in_area(ground_area.position, ground_area.size):
-		ground_layer.set_cell(cell, FarmAtlas.SOURCE_ID, _grass_variant(cell))
+	GroundPainter.fill_grass(ground_layer, ground_area)
 
 	# 乡道：与村庄西口的那条路同宽同高，走到地图边缘就是下一条路。
 	GroundPainter.horizontal_road(
@@ -323,13 +322,6 @@ func paint_ground() -> void:
 ## 东侧纵向乡道所在的格列（三条出口共用的那条南北路）。
 func _north_south_column() -> int:
 	return ground_area.end.x - 4
-
-
-## 草地明暗：与 [GroundPainter.grass_variant] 共用同一套低频噪声，
-## 农场与其它地图的草地不会在拼接处出现两种选片规则。
-func _grass_variant(cell: Vector2i) -> Vector2i:
-	return GroundPainter.grass_variant(cell)
-
 
 
 ## 撒装饰：农田上方一排栅栏（中间留门）、四周点缀花丛、灌木与杂物。

@@ -34,12 +34,19 @@ const NATURAL_GROUND: Array[Vector2i] = [
 
 
 ## 这块地表是不是"自然的"（能长东西）。
-static func is_natural_ground(atlas: Vector2i) -> bool:
-	if NATURAL_GROUND.has(atlas):
+##
+## [param source] 来自 TileMapLayer：深/浅草过渡在 source 1，坐标与主图重号，
+## 只靠 atlas 坐标无法区分。
+static func is_natural_ground(
+	atlas: Vector2i,
+	source: int = FarmAtlas.SOURCE_ID
+) -> bool:
+	if source == FarmAtlas.SOURCE_ID and NATURAL_GROUND.has(atlas):
 		return true
 	return (
-		FarmAtlas.is_transition_of(FarmAtlas.Surface.SAND, atlas)
-		or FarmAtlas.is_transition_of(FarmAtlas.Surface.DIRT, atlas)
+		FarmAtlas.is_transition_of(FarmAtlas.Surface.SAND, atlas, source)
+		or FarmAtlas.is_transition_of(FarmAtlas.Surface.DIRT, atlas, source)
+		or FarmAtlas.is_transition_of(FarmAtlas.Surface.GRASS_DARK, atlas, source)
 	)
 
 

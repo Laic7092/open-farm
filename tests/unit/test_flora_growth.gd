@@ -188,6 +188,12 @@ func test_only_natural_ground_can_grow() -> void:
 	assert_bool(
 		FloraGrowth.is_natural_ground(FarmAtlas.transition_atlas(FarmAtlas.Surface.DIRT, 9))
 	).is_true()
+	# 深/浅草过渡在 source 1，坐标与主图重号，必须连 source 一起判。
+	var grass_edge := FarmAtlas.transition_atlas(FarmAtlas.Surface.GRASS_DARK, 5)
+	assert_bool(
+		FloraGrowth.is_natural_ground(grass_edge, FarmAtlas.GRASS_EDGE_SOURCE_ID)
+	).is_true()
+	assert_bool(FloraGrowth.is_natural_ground(grass_edge)).is_false()
 	# 人铺过 / 建过的地方不长东西；装饰占住的格子由 FloraField 按 decor_props 判。
 	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.PATH)).is_false()
 	assert_bool(FloraGrowth.is_natural_ground(FarmAtlas.PATH_STONE)).is_false()

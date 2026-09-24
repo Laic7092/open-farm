@@ -9,8 +9,10 @@ extends RefCounted
 ## [b]规范[/b]：不要在别处再写死坐标；需要新格子时先加到 [AtlasLayout]，
 ## 在这里补一行别名，然后跑 [code]./tools/build_assets.sh[/code]。
 
-## TileSet 中唯一图集源的下标。
+## TileSet 中主地形图集源的下标。
 const SOURCE_ID: int = 0
+## 深/浅草过渡图集源的下标（见 [AtlasLayout.GRASS_EDGE_PATH]）。
+const GRASS_EDGE_SOURCE_ID: int = AtlasLayout.GRASS_EDGE_SOURCE_ID
 
 # ---- 基础地表
 const GRASS := AtlasLayout.GRASS
@@ -38,12 +40,14 @@ const PATH_STONE_ALT := AtlasLayout.PATH_STONE_ALT
 # ---------------------------------------------------------------- 地表过渡
 
 ## 可被草缘替换的基底材质；见 [AtlasLayout] 的过渡块。
-enum Surface { NONE, PATH, STONE, SAND, DIRT }
+## [constant Surface.GRASS_DARK] 是浅草边缘压进深草区的那一层，底色在 source 1。
+enum Surface { NONE, PATH, STONE, SAND, DIRT, GRASS_DARK }
 
 const PATH_TRANSITION_BLOCK := AtlasLayout.PATH_TRANSITION_BLOCK
 const STONE_TRANSITION_BLOCK := AtlasLayout.STONE_TRANSITION_BLOCK
 const SAND_TRANSITION_BLOCK := AtlasLayout.SAND_TRANSITION_BLOCK
 const DIRT_TRANSITION_BLOCK := AtlasLayout.DIRT_TRANSITION_BLOCK
+const GRASS_DARK_TRANSITION_BLOCK := AtlasLayout.GRASS_EDGE_TRANSITION_BLOCK
 
 
 ## 这块地表属于哪一种可过渡基底；不是基底返回 [constant Surface.NONE]。
@@ -56,6 +60,8 @@ static func surface_of(atlas: Vector2i) -> int:
 		return Surface.SAND
 	if atlas == DIRT:
 		return Surface.DIRT
+	if atlas == GRASS_LUSH:
+		return Surface.GRASS_DARK
 	return Surface.NONE
 
 
@@ -68,7 +74,17 @@ static func transition_block(surface: int) -> Vector2i:
 		return SAND_TRANSITION_BLOCK
 	if surface == Surface.DIRT:
 		return DIRT_TRANSITION_BLOCK
+	if surface == Surface.GRASS_DARK:
+		return GRASS_DARK_TRANSITION_BLOCK
 	return Vector2i(-1, -1)
+
+
+## 某种基底过渡瓦片所在的 TileSet source。主图 9×9 放不下第五块草缘，
+## 所以深/浅草过渡单独占 source 1。
+static func transition_source(surface: int) -> int:
+	if surface == Surface.GRASS_DARK:
+		return GRASS_EDGE_SOURCE_ID
+	return SOURCE_ID
 
 
 ## 某种基底在 [param mask]（位见 AtlasLayout.TRANSITION_N/E/S/W）下的过渡瓦片。
@@ -79,8 +95,17 @@ static func transition_atlas(surface: int, mask: int) -> Vector2i:
 	return AtlasLayout.transition_cell(block, mask)
 
 
-## 这一格是不是某种基底的过渡瓦片。野生植被白名单用它把沙/土过渡格也算回自然地表。
-static func is_transition_of(surface: int, atlas: Vector2i) -> bool:
+## 这一格是不是某种基底的过渡瓦片。
+##
+## [param source] 必须一起传：深/浅草过渡在 source 1，坐标会与主图重号；
+## 野生植被白名单用它把沙/土/深草过渡格也算回自然地表。
+static func is_transition_of(
+	surface: int,
+	atlas: Vector2i,
+	source: int = SOURCE_ID
+) -> bool:
+	if transition_source(surface) != source:
+		return false
 	var block := transition_block(surface)
 	if block.x < 0:
 		return false
@@ -92,6 +117,8 @@ static func is_transition_of(surface: int, atlas: Vector2i) -> bool:
 ##
 ## 装饰（花 / 灌木 / 栅栏）不占图集格子，所以这里只剩草地本身：
 ## 沙 / 土 / 石 / 木 / 路都不算草地，铺在它们旁边的路才会有草缘。
+##
+## [b]新增草地变体时必须同步加进来[/b]，否则铺在它旁边的路会缺一段草缘。
 const GRASS_LIKE: Array[Vector2i] = [
 	GRASS, GRASS_ALT, GRASS_LUSH, GRASS_DRY, GRASS_DAPPLED, GRASS_MEADOW,
 ]
@@ -99,3 +126,13 @@ const GRASS_LIKE: Array[Vector2i] = [
 
 static func is_grass_like(atlas: Vector2i) -> bool:
 	return GRASS_LIKE.has(atlas)
+
+
+## 哪些瓦片是「浅草」：深草过渡只往这些瓦片方向压浅色草缘。
+const LIGHT_GRASS_LIKE: Array[Vector2i] = [
+	GRASS, GRASS_ALT, GRASS_DRY, GRASS_DAPPLED, GRASS_MEADOW,
+]
+
+
+static func is_light_grass(atlas: Vector2i) -> bool:
+	return LIGHT_GRASS_LIKE.has(atlas)
