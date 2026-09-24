@@ -1,5 +1,5 @@
 class_name CookingUi
-extends Control
+extends UiModal
 ## 料理台界面：挑一道食谱、看材料够不够、按 E 下锅。
 ##
 ## "能不能做、扣哪些材料、放不放得下"都在 [Cooking] 单元里；界面只展示与发请求，
@@ -20,8 +20,8 @@ var _entries: Array[StringName] = []
 
 
 func _ready() -> void:
+	super._ready()
 	sfx = SfxPlayer.attach(self)
-	visible = false
 	shell.set_status(count_label)
 	shell.set_body(list)
 	shell.set_hint(Text.key(&"COOKING_HINT"))
@@ -42,7 +42,7 @@ func open() -> void:
 
 
 func close() -> void:
-	visible = false
+	super.close()
 
 
 # ---------------------------------------------------------------- 列表

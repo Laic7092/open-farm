@@ -137,7 +137,7 @@ func _apply_layout() -> void:
 func _apply_ui_scale(value: float) -> void:
 	_ui_scale = value
 	var factor := Vector2(value, value)
-	status_panel.pivot_offset = Vector2.ZERO
+	status_panel.pivot_offset = UiLayout.grow_pivot(Vector2.ZERO, status_panel.size)
 	status_panel.scale = factor
 	top_hints.scale = factor
 	_apply_layout()
@@ -145,7 +145,7 @@ func _apply_ui_scale(value: float) -> void:
 
 ## 顶部提示重算顶边中点。
 func _refresh_ui_scale_pivots() -> void:
-	top_hints.pivot_offset = Vector2(top_hints.size.x * 0.5, 0.0)
+	top_hints.pivot_offset = UiLayout.grow_pivot(Vector2(0.5, 0.0), top_hints.size)
 
 
 ## 把注入原样转给实现了该方法的子视图；视图自己决定要不要读、什么时候读。

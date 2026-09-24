@@ -16,7 +16,9 @@
 | 令牌 | src/ui/ui_layout.gd（UiLayout） | 边距 / 间距 / 字号 / 最小尺寸 / 比例上限；纯静态函数负责响应式计算 |
 | 主题 | tools/generate_resources.gd → assets/themes/game_theme.tres | 把令牌与调色板组装成类型变体（ModalPanel / TitleLabel / HudSlot …） |
 | 外壳 | scenes/ui/modal_shell.tscn + src/ui/modal_shell.gd | 模态统一排版：遮罩 + 居中面板 + 标题 / 正文 / 说明 / 提示；按视口、安全区、UI 缩放重排 |
-| 宿主 | src/ui/ui_root.gd | 模态栈与暂停；窗口尺寸变化时把安全区换算成虚拟边距并广播 |
+| 模态契约 | src/ui/ui_modal.gd | 模态生命周期与取消协议：close / request_cancel / closed；不碰暂停真值 |
+| 模态宿主 | src/ui/ui_modal_host.gd | 唯一维护模态栈与 SceneTree.paused；只认 UiModal 契约，不按具体界面分支 |
+| 宿主 | src/ui/ui_root.gd | 组合根注入、全局输入路由、安全区广播；具体模态参数仍在这里翻译 |
 
 ## 约定
 
@@ -25,16 +27,19 @@
    由 tests/unit/test_ui_layout.gd 守卫。
 2. **新样式先进主题变体**：要改"按钮 / 标题 / 面板长什么样"，改
    tools/generate_resources.gd 后重跑 ./tools/build_assets.sh，不手改 .tres。
-3. **模态一律用 ModalShell**：场景实例化它，脚本在 _ready() 里
-   shell.set_title(...) / shell.set_status(控件) / shell.set_body(控件)。
-   内容控件声明在模态场景根部（编辑器里看着是平级），运行时被收编进外壳——
-   因为 Godot 的"可编辑子节点"只在编辑器存在，运行时 instantiate() 会丢掉。
+3. **模态一律用 ModalShell + UiModal**：场景实例化 ModalShell，脚本继承 UiModal，
+   并在 _ready() 里先 super._ready()，再 shell.set_title(...) / shell.set_status(控件) /
+   shell.set_body(控件)。内容控件声明在模态场景根部（编辑器里看着是平级），运行时被
+   收编进外壳——因为 Godot 的"可编辑子节点"只在编辑器存在，运行时 instantiate()
+   会丢掉。关闭时先清理自己的状态，最后 super.close() 通知 UiModalHost 出栈。
 4. **缩放统一约定**：每个会缩放的界面订阅 EventBus.ui.ui_scale_changed 并自己实现
    apply_ui_scale(value)；放大只朝屏幕内侧长（pivot 由 UiLayout.grow_pivot 决定）。
    **整体缩放会把内容最小尺寸一起放大**：布局必须先用 UiLayout.fitted_scale() 把缩放
    夹到内容放得下，再除以缩放算未缩放尺寸，否则调大一档就会把内容顶出屏幕。
 5. **安全区**：UiRoot 在窗口尺寸变化时调用 UiLayout.safe_insets() 并广播
    EventBus.ui.safe_insets_changed；HUD / 触控 / 模态 / 对话据此让位。
+   世界切换由 EventBus.scene_transition_started 触发 UiRoot.close_all()，先熔断所有
+   模态再切图，避免跨场景残留与暂停泄漏。
    触控层另外用 EventBus.ui.touch_insets_changed（左右占位）与
    touch_top_insets_changed（右上角独立键占位）告诉内容该避开哪里；
    **模态除外**：它只按安全屏居中，不跟触控占位（占位随 UI 缩放变大且左右不对称，
@@ -47,11 +52,13 @@
 8. **底部物品栏自管缩放**：HudItemBarView 空闲 SHRINK_DELAY 秒后缩到
    UiLayout.HUD_BAR_SHRINK_SCALE，点格子 / 换手持 / 背包变动会恢复并重置计时；
    Hud 不再统一缩放它，也不再为它做安全区偏移与触控让位（避免约束打架）。
-9. **层级**：UiRoot 是 CanvasLayer(layer=10)，模态 / HUD 默认 z_index=0，
-   触控层 z_index=50 压在其上，保证重叠处每次点得到触控键；但只有摇杆 / 按钮自己
-   STOP，ActionPad / TopPad 容器 IGNORE，否则它们的空白区会吞掉下层 UI。
-   更高的 CanvasLayer 是"真正该在上面"的例外：MineElevatorUi(layer=40)、
-   RotateOverlay(layer=100，竖屏遮罩必须盖住一切并吞输入)。
+9. **层级**：UiRoot 是 CanvasLayer(layer=10)，模态 / HUD 默认 z_index=0；
+   触控层独立为 TouchLayer(CanvasLayer layer=90)，保证压在普通 UI 与
+   MineElevatorUi(layer=40) 之上，重叠处每次点得到触控键。触控控件内部
+   z_index=50，且只有摇杆 / 按钮自己 STOP，ActionPad / TopPad 容器 IGNORE，
+   否则它们的空白区会吞掉下层 UI。
+   竖屏安全遮罩 RotateOverlay(layer=100) 仍是唯一例外：它必须盖住触控层并吞输入。
+   触控端始终显示，不提供系统菜单开关。
 
 ## 多分辨率策略
 

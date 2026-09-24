@@ -1,5 +1,5 @@
 class_name DialogueBox
-extends Control
+extends UiModal
 ## 对话框：逐字显示 + 按键推进 + 分支选项。
 ##
 ## 只负责"把 [DialogueData] 演出来"：
@@ -61,8 +61,8 @@ var sfx: SfxPlayer
 
 
 func _ready() -> void:
+	super._ready()
 	sfx = SfxPlayer.attach(self)
-	visible = false
 	choices_box.visible = false
 	text_label.custom_minimum_size = Vector2(0.0, UiLayout.DIALOGUE_TEXT_MIN_HEIGHT)
 	_layout_panel()
@@ -236,7 +236,7 @@ func apply_ui_scale(value: float) -> void:
 
 
 func _refresh_scale() -> void:
-	panel.pivot_offset = Vector2(panel.size.x * 0.5, panel.size.y)
+	panel.pivot_offset = UiLayout.grow_pivot(Vector2(0.5, 1.0), panel.size)
 	panel.scale = Vector2(_panel_scale, _panel_scale)
 
 
@@ -328,6 +328,16 @@ func choose(index: int) -> void:
 
 # ---------------------------------------------------------------- 收尾
 
+## 对话不可被取消键打断；只能推进到结束。
+func can_cancel() -> bool:
+	return false
+
+
+## 公开关闭入口，给 [UiModalHost] / [UiRoot] 的统一关闭路径使用。
+func close() -> void:
+	_close()
+
+
 func _close() -> void:
 	var dialogue: DialogueData = _dialogue
 	_dialogue = null
@@ -335,9 +345,9 @@ func _close() -> void:
 	_reset_choices()
 	if _type_tween != null and _type_tween.is_valid():
 		_type_tween.kill()
-	visible = false
 	EventBus.ui.dialogue_finished.emit(dialogue)
 	finished.emit(dialogue)
+	super.close()
 
 
 func _current_line() -> DialogueLine:

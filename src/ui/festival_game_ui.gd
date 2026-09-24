@@ -1,5 +1,5 @@
 class_name FestivalGameUi
-extends Control
+extends UiModal
 ## 节日小游戏界面：挑一件自家产物参赛，按价值评奖。
 ##
 ## 评分、收走参赛品与发奖都在 [FestivalGame] 单元里；界面只列候选与发请求。
@@ -22,8 +22,8 @@ var _entries: Array[Dictionary] = []
 
 
 func _ready() -> void:
+	super._ready()
 	sfx = SfxPlayer.attach(self)
-	visible = false
 	shell.set_status(best_label)
 	shell.set_body(list)
 	shell.set_hint(Text.key(&"FESTIVAL_GAME_HINT"))
@@ -45,7 +45,7 @@ func open(festival_id: StringName) -> void:
 
 
 func close() -> void:
-	visible = false
+	super.close()
 
 
 # ---------------------------------------------------------------- 列表

@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://src/ui/ui_root.gd" id="1_ui_root"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="2_hud"]
@@ -13,15 +13,23 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/cooking_ui.tscn" id="11_cooking"]
 [ext_resource type="PackedScene" path="res://scenes/ui/festival_game_ui.tscn" id="12_contest"]
 [ext_resource type="PackedScene" path="res://scenes/ui/village_goal_ui.tscn" id="13_goals"]
+[ext_resource type="Script" path="res://src/ui/ui_modal_host.gd" id="14_modal_host"]
 
 [node name="UiRoot" type="CanvasLayer"]
 layer = 10
 script = ExtResource("1_ui_root")
 
+[node name="ModalHost" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("14_modal_host")
+
 [node name="Hud" parent="." instance=ExtResource("2_hud")]
 unique_name_in_owner = true
 
-[node name="TouchControls" parent="." instance=ExtResource("10_touch")]
+[node name="TouchLayer" type="CanvasLayer" parent="."]
+layer = 90
+
+[node name="TouchControls" parent="TouchLayer" instance=ExtResource("10_touch")]
 unique_name_in_owner = true
 
 [node name="DialogueBox" parent="." instance=ExtResource("3_dialogue")]

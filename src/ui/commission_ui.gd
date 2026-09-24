@@ -1,5 +1,5 @@
 class_name CommissionUi
-extends Control
+extends UiModal
 ## 委托板界面：展示今日委托、交付道具换报酬。
 ##
 ## 委托的"出题、刷新、结算"都在 [Commission] 单元里；界面只做展示与发请求，
@@ -21,8 +21,8 @@ var _entries: Array[StringName] = []
 
 
 func _ready() -> void:
+	super._ready()
 	sfx = SfxPlayer.attach(self)
-	visible = false
 	shell.set_status(date_label)
 	shell.set_body(list)
 	shell.set_hint(Text.key(&"COMMISSION_HINT"))
@@ -48,7 +48,7 @@ func open() -> void:
 
 
 func close() -> void:
-	visible = false
+	super.close()
 
 
 func _rebuild() -> void:

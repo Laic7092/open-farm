@@ -17,6 +17,8 @@ extends Control
 ##
 ## 因此本层[b]不能[/b]在暂停时整层隐藏：那样模态里既没有触控键、也没有触控导航。
 ## 上下文切换时会统一释放连续动作与已按下的离散动作，并把按钮高亮复位。
+##
+## 触控端始终显示，不提供系统菜单开关；非触控环境下本层保持隐藏。
 
 ## 摇杆方向要落到哪四个动作上（顺序固定，便于逐个释放）。
 const MOVE_ACTIONS: Array[StringName] = [
@@ -43,7 +45,7 @@ const NAV_REPEAT_INTERVAL: float = 0.12
 ## 右上角独立动作键（Y / 背包）的宿主：钉右上角，放大只朝左下长。
 @onready var top_pad: Control = %TopPad
 
-## 是否处于触控模式（设置值）。
+## 当前是否显示。触控端由设备能力强制为 true。
 var _enabled: bool = false
 ## 当前是否被模态界面压住（暂停中）。
 var _paused: bool = false
@@ -101,13 +103,16 @@ func _ready() -> void:
 	joystick.resized.connect(_refresh_ui_scale)
 	action_pad.resized.connect(_refresh_ui_scale)
 	top_pad.resized.connect(_refresh_ui_scale)
-	apply_enabled(TouchSettings.is_enabled())
+	# 触控端永远显示；设置文件只保留给非触控环境的调试入口。
+	apply_enabled(DisplayServer.is_touchscreen_available())
 	_apply_ui_scale.call_deferred(UiSettings.scale())
 
 
-## 切换触控模式；[param enabled] 为 false 时立刻释放所有注入的按键。
+## 切换触控模式；触控端强制为 true，非触控端才允许隐藏。
+##
+## [param enabled] 为 false 时立刻释放所有注入的按键。
 func apply_enabled(enabled: bool) -> void:
-	_enabled = enabled
+	_enabled = enabled or DisplayServer.is_touchscreen_available()
 	if not _enabled:
 		_release_all()
 	_sync_visible()
@@ -171,11 +176,11 @@ func _apply_ui_scale(value: float) -> void:
 ## pivot 依赖控件尺寸；尺寸变化后重算，保证缩放始终绕屏幕角点。
 func _refresh_ui_scale() -> void:
 	var factor := Vector2(_ui_scale, _ui_scale)
-	joystick.pivot_offset = Vector2(0.0, joystick.size.y)
+	joystick.pivot_offset = UiLayout.grow_pivot(Vector2(0.0, 1.0), joystick.size)
 	joystick.scale = factor
-	action_pad.pivot_offset = action_pad.size
+	action_pad.pivot_offset = UiLayout.grow_pivot(Vector2(1.0, 1.0), action_pad.size)
 	action_pad.scale = factor
-	top_pad.pivot_offset = Vector2(top_pad.size.x, 0.0)
+	top_pad.pivot_offset = UiLayout.grow_pivot(Vector2(1.0, 0.0), top_pad.size)
 	top_pad.scale = factor
 	_publish_insets()
 

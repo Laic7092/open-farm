@@ -130,6 +130,6 @@ func _fit() -> void:
 		screen.position, (screen.end - scaled).max(screen.position)
 	)
 	panel.size = target
-	panel.pivot_offset = target * 0.5
+	panel.pivot_offset = UiLayout.grow_pivot(Vector2(0.5, 0.5), target)
 	panel.scale = Vector2(scale, scale)
 	panel.position = position - panel.pivot_offset * (Vector2.ONE - panel.scale)

@@ -1,5 +1,5 @@
 class_name ShopUi
-extends Control
+extends UiModal
 ## 商店界面。
 ##
 ## 界面本身[b]不含任何价格 / 库存 / 找零逻辑[/b]——那些都在 [Shop] 里。
@@ -38,11 +38,13 @@ var _wallet
 var _catalog
 var _events
 var _clock
+## 组合根注入的"当前背包"提供者；界面不按分组找玩家。
+var _inventory_provider: Callable
 
 
 func _ready() -> void:
+	super._ready()
 	sfx = SfxPlayer.attach(self)
-	visible = false
 	shell.set_status(money_label)
 	shell.set_body(lists)
 	shell.set_hint(Text.key(&"SHOP_UI_HINT"))
@@ -85,8 +87,11 @@ func open(shop_data: ShopData) -> void:
 
 
 func close() -> void:
-	visible = false
+	var was_visible := visible
 	_shop = null
+	super.close()
+	if was_visible:
+		EventBus.ui.shop_closed.emit()
 
 
 ## 重建两个列表。
@@ -326,6 +331,12 @@ func _on_rejected(reason_key: StringName) -> void:
 		_events.ui.notification_requested.emit(reason_key, {})
 
 
+## 组合根注入当前背包提供者；provider 可以返回 null。
+func bind_inventory_provider(provider: Callable) -> void:
+	_inventory_provider = provider
+
+
 func _player_inventory() -> Inventory:
-	var player := get_tree().get_first_node_in_group(Player.GROUP) as Player
-	return player.inventory if player != null else null
+	if not _inventory_provider.is_valid():
+		return null
+	return _inventory_provider.call() as Inventory

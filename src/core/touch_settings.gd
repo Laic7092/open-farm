@@ -1,15 +1,10 @@
 class_name TouchSettings
 extends RefCounted
-## 显示 / 输入设置：要不要在屏幕上摆虚拟摇杆与动作按钮。
+## 旧触控开关设置。
 ##
-## 与 [BgmPlayer] 的音量设置同构：写进 [code]user://display_settings.cfg[/code]，
-## 读不到 / 写不进都静默降级（[code]user://[/code] 不可写时游戏照常能玩）。
-##
-## 缺省值取"这台机器有没有触摸屏"：手机 / 平板上开箱即用，桌面上保持纯键盘。
-## [TouchControls] 拿它决定"屏幕上要不要摆虚拟摇杆与动作键"；
-## 鼠标指针可见性由 [method PointerInput.sync_cursor] 统一保证，与本开关无关。
-## 所以这里只放纯状态 + 文件 IO，不碰场景树、不发信号——
-## "改了设置要通知谁"由调用方（系统菜单）决定。
+## 生产 UI 已不提供开关：[TouchControls] 直接按设备是否有触摸屏显示，
+## 触控端始终显示、桌面不出现。本类保留给测试 / 旧配置读取，不再被
+## 系统菜单或触控层消费者使用。文件读写失败仍静默降级。
 
 ## 默认设置文件；与音频设置分开，互不覆盖。
 const DEFAULT_SETTINGS_PATH: String = "user://display_settings.cfg"

@@ -1,5 +1,5 @@
 class_name MuseumUi
-extends Control
+extends UiModal
 ## 博物馆图鉴界面。
 ##
 ## 只读展示 [MuseumState]：已发现的条目标出图标与名字，未发现的显示 ???。
@@ -31,8 +31,8 @@ var _entries: Array[StringName] = []
 
 
 func _ready() -> void:
+	super._ready()
 	sfx = SfxPlayer.attach(self)
-	visible = false
 	shell.set_status(progress_label)
 	shell.set_body(category_label)
 	shell.set_body(list)
@@ -55,7 +55,7 @@ func open() -> void:
 
 
 func close() -> void:
-	visible = false
+	super.close()
 
 
 ## 重建列表：按分类过滤 + 按 id 排序，保证每次打开顺序稳定。

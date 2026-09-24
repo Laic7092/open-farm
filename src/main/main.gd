@@ -235,6 +235,8 @@ func _bind_dependencies() -> void:
 		ui_root.call(&"bind_fishing", Callable(self, &"_current_fishing"))
 	if ui_root != null and ui_root.has_method(&"bind_item_bar"):
 		ui_root.call(&"bind_item_bar", Callable(self, &"_current_item_bar"))
+	if ui_root != null and ui_root.has_method(&"bind_inventory_provider"):
+		ui_root.call(&"bind_inventory_provider", Callable(self, &"_current_inventory"))
 
 
 # ---------------------------------------------------------------- 启动

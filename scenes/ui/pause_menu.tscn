@@ -68,12 +68,6 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 
-[node name="TouchToggle" type="Button" parent="Content"]
-unique_name_in_owner = true
-layout_mode = 2
-toggle_mode = true
-text = "虚拟摇杆"
-
 [node name="TitleButton" type="Button" parent="Content"]
 unique_name_in_owner = true
 layout_mode = 2

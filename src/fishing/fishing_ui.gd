@@ -38,6 +38,8 @@ var _catch_timer: float = 0.0
 var _session_provider: Callable = Callable()
 ## 触控控件占用的左右宽度；右侧 ABXY 会压住拉扯水槽，必须让位。
 var _touch_insets: Vector2 = Vector2.ZERO
+## 常驻 UI 缩放；与其他响应式界面共用 [UiSettings]。
+var _ui_scale: float = 1.0
 
 
 func _ready() -> void:
@@ -52,6 +54,10 @@ func _ready() -> void:
 	tension_bar.custom_minimum_size = UiLayout.BAR_SIZE
 	catch_icon.custom_minimum_size = UiLayout.ITEM_ICON_SIZE
 	EventBus.ui.touch_insets_changed.connect(_on_touch_insets_changed)
+	EventBus.ui.ui_scale_changed.connect(apply_ui_scale)
+	charge_box.resized.connect(_refresh_scale)
+	fight_box.resized.connect(_refresh_scale)
+	catch_box.resized.connect(_refresh_scale)
 	_layout_fight()
 	charge_box.visible = false
 	fight_box.visible = false
@@ -63,6 +69,8 @@ func _ready() -> void:
 	progress_label.text = Text.key(&"UI_FISHING_PROGRESS")
 	tension_label.text = Text.key(&"UI_FISHING_TENSION")
 	EventBus.farm.fish_caught.connect(_on_fish_caught)
+	# pivot 依赖布局后的 size，延后一帧套用存盘缩放。
+	apply_ui_scale.call_deferred(UiSettings.scale())
 
 
 ## 组合根注入"当前钓鱼单元"的提供者；界面只读它，不去翻玩家状态机。
@@ -73,6 +81,24 @@ func bind_fishing(provider: Callable) -> void:
 func _on_touch_insets_changed(insets: Vector2) -> void:
 	_touch_insets = insets
 	_layout_fight()
+	_refresh_scale()
+
+
+## UI 缩放变化：只缩放大块，不改玩法数据。
+func apply_ui_scale(value: float) -> void:
+	_ui_scale = value
+	_refresh_scale()
+
+
+## 各块的 pivot 由 UiLayout 统一决定：蓄力条贴底中、水槽贴右中、上钩横幅贴顶中。
+func _refresh_scale() -> void:
+	var factor := Vector2(_ui_scale, _ui_scale)
+	charge_box.pivot_offset = UiLayout.grow_pivot(Vector2(0.5, 1.0), charge_box.size)
+	charge_box.scale = factor
+	fight_box.pivot_offset = UiLayout.grow_pivot(Vector2(1.0, 0.5), fight_box.size)
+	fight_box.scale = factor
+	catch_box.pivot_offset = UiLayout.grow_pivot(Vector2(0.5, 0.0), catch_box.size)
+	catch_box.scale = factor
 
 
 ## 把拉扯水槽放到右侧触控控件左边；触控关闭时退回令牌给定的屏幕右边距。

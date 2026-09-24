@@ -1,5 +1,5 @@
 class_name VillageGoalUi
-extends Control
+extends UiModal
 ## 长期村庄目标板：看进度、达标领奖。
 ##
 ## 目标本身不产生行为，只汇总玩家自由玩出来的数字；判定与发奖都在
@@ -20,8 +20,8 @@ var _entries: Array[StringName] = []
 
 
 func _ready() -> void:
+	super._ready()
 	sfx = SfxPlayer.attach(self)
-	visible = false
 	shell.set_status(progress_label)
 	shell.set_body(list)
 	shell.set_hint(Text.key(&"GOAL_HINT"))
@@ -42,7 +42,7 @@ func open() -> void:
 
 
 func close() -> void:
-	visible = false
+	super.close()
 
 
 # ---------------------------------------------------------------- 列表

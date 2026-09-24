@@ -1,5 +1,5 @@
 class_name PauseMenu
-extends Control
+extends UiModal
 ## 系统菜单：继续 / 画面与音量设置 / 回标题 / 退出。
 ##
 ## 只发请求（关菜单、回标题、改设置），不直接碰任何游戏状态；
@@ -21,10 +21,9 @@ signal close_requested()
 @onready var zoom_slider: HSlider = %ZoomSlider
 @onready var ui_scale_label: Label = %UiScaleLabel
 @onready var ui_scale_slider: HSlider = %UiScaleSlider
-@onready var touch_toggle: Button = %TouchToggle
 
 func _ready() -> void:
-	visible = false
+	super._ready()
 	shell.set_title(Text.key(&"MENU_PAUSED"))
 	shell.title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	shell.set_body(content)
@@ -35,8 +34,6 @@ func _ready() -> void:
 	title_button.text = Text.key(&"MENU_TITLE")
 	music_label.text = Text.key(&"MENU_MUSIC")
 	sfx_label.text = Text.key(&"MENU_SFX")
-	_refresh_touch_toggle(TouchSettings.is_enabled())
-	touch_toggle.toggled.connect(_on_touch_toggled)
 
 	# 画面大小只改 [ViewSettings] 这个纯数据设置，应用交给相机的主人（玩家）。
 	zoom_slider.min_value = ViewSettings.ZOOM_MIN
@@ -73,7 +70,6 @@ func open() -> void:
 	# 面板可能来自更早的设置改动（或读档后），打开时同步一次。
 	music_slider.set_value_no_signal(AudioBus.bgm_volume)
 	sfx_slider.set_value_no_signal(AudioBus.sfx_volume)
-	_refresh_touch_toggle(TouchSettings.is_enabled())
 	zoom_slider.set_value_no_signal(ViewSettings.zoom())
 	_refresh_zoom_label(ViewSettings.zoom())
 	ui_scale_slider.set_value_no_signal(UiSettings.scale())
@@ -82,25 +78,10 @@ func open() -> void:
 
 
 func close() -> void:
-	visible = false
-
-
-## 存进 [TouchSettings] 并广播，让触控层当场生效。
-func _on_touch_toggled(toggled_on: bool) -> void:
-	TouchSettings.set_enabled(toggled_on)
-	_refresh_touch_toggle(toggled_on)
-	EventBus.ui.touch_controls_toggled.emit(toggled_on)
-
-
-## 文案跟着状态走，所以是"虚拟摇杆：开 / 关"而不是一个复选框。
-##
-## 顺便把触控键位写在这里：圆里塞不下中文，屏幕上的摇杆自己说不清楚。
-func _refresh_touch_toggle(enabled: bool) -> void:
-	touch_toggle.set_pressed_no_signal(enabled)
-	touch_toggle.text = Text.format(&"MENU_TOUCH_CONTROLS", {
-		"state": Text.key(&"MENU_ON" if enabled else &"MENU_OFF"),
-	})
-	shell.set_hint(Text.key(&"TOUCH_HINT") if enabled else "")
+	var was_visible := visible
+	super.close()
+	if was_visible:
+		EventBus.ui.pause_menu_toggled.emit(false)
 
 
 ## 画面大小滑杆：只写 [ViewSettings] 并广播，应用由相机的主人决定。

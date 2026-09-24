@@ -128,7 +128,7 @@ func _apply_ui_scale(value: float) -> void:
 
 ## 绕底边中点缩放（缩小只朝屏幕内侧收，不会脱离底边）。
 func _refresh_pivot() -> void:
-	inventory_bar.pivot_offset = Vector2(inventory_bar.size.x * 0.5, inventory_bar.size.y)
+	inventory_bar.pivot_offset = UiLayout.grow_pivot(Vector2(0.5, 1.0), inventory_bar.size)
 
 
 ## 缩放到当前档位；[param animate] 为 true 时用过渡动画。
